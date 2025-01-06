@@ -1,0 +1,12 @@
+# 构建输出目录
+.next
+out
+build
+dist
+
+# 依赖目录
+node_modules
+
+# 其他不需要格式化的文件
+package-lock.json
+public
