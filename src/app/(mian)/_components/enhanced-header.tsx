@@ -22,7 +22,7 @@ export function EnhancedHeader({ isLoading, data }: EnhancedHeaderProps) {
     >
       <div className="container mx-auto text-center">
         <motion.h1
-          className="text-6xl font-bold mb-6"
+          className="text-6xl font-bold mb-6 drop-shadow-lg"
           initial={{ scale: 0.9 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.5 }}
@@ -30,7 +30,7 @@ export function EnhancedHeader({ isLoading, data }: EnhancedHeaderProps) {
           高性能 高效率的管理系统
         </motion.h1>
         <motion.h2
-          className="text-4xl font-semibold mb-8"
+          className="text-6xl font-semibold mb-8 drop-shadow-lg"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -39,7 +39,7 @@ export function EnhancedHeader({ isLoading, data }: EnhancedHeaderProps) {
         </motion.h2>
         <Show when={!isLoading} fallback={<Loading />}>
           <motion.p
-            className="text-xl mb-8"
+            className=" mb-8 text-lg text-muted-foreground"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
