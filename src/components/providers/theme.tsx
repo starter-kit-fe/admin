@@ -14,6 +14,7 @@ export function ThemeProvider({ children }: React.PropsWithChildren) {
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
+      enableColorScheme
     >
       {/* <ProgressBar className="fixed h-1 shadow-lg shadow-sky-500/20 bg-black top-0" /> */}
       <TooltipProvider>{children}</TooltipProvider>

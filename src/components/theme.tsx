@@ -20,7 +20,7 @@ import {
   RefAttributes,
 } from 'react';
 
-export default function ThemeToggle() {
+export default function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
   const [ThemeIcon, setThemeIcon] =
     useState<
