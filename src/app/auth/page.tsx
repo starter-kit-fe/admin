@@ -2,8 +2,13 @@
 import ThemeToggle from '@/components/theme';
 import LangToggle from '@/components/lang';
 import AuthForm from './_components/form';
+import { useAuthStore } from './_store';
+import { redirect } from 'next/navigation';
 
 export default function Auth() {
+  // 如果有用户信息 直接回到首页
+  const { user } = useAuthStore();
+  if (user) redirect('/');
   return (
     <div className="w-full lg:grid min-h-screen lg:grid-cols-2">
       <div className="flex items-center bg-[rgba(255,255,255,.7)] dark:bg-[rgba(0,0,0,.1)] justify-center py-12 relative z-10 h-screen">

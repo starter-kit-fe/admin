@@ -1,12 +1,12 @@
 {
   "name": "admin",
   "description": "admin template.",
-  "shortName": "admin template",
+  "shortName": "The admin",
   "author": {
     "name": "rirh<i@tigerzh.com>"
   },
-  "license": "./LICENSE",
-  "version": "25.0115.1052",
+  "license": "./license",
+  "version": "25.0115.1911",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -64,7 +64,7 @@
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.171.0",
     "zod": "^3.24.1",
-    "zustand": "^5.0.2"
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",

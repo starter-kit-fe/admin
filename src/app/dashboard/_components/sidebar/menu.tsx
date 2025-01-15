@@ -102,7 +102,7 @@ export const data: MenuItemProps[] = [
         icon: BookA,
         items: [
           { title: '新增', url: '/dashboard/lookup/create' },
-          { title: '列表', url: '/dashboard/lookup/list' },
+          { title: '列表', url: '/dashboard/lookup' },
         ],
       },
       {

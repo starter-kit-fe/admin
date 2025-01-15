@@ -9,6 +9,7 @@ const proxy = async () => {
     },
   ];
 };
+nextConfig.reactStrictMode = false;
 switch (process.env.NODE_ENV) {
   case 'production':
     nextConfig.output = 'export';
