@@ -36,7 +36,7 @@ export default function Page({ onVerify }: { onVerify: OnVerify }) {
   };
 
   return (
-    <>
+    <div className="relative">
       <div className={cn(isLoaded ? LOADED_CLASS : LOADING_CLASS)}>
         <Loader2 className="animate-spin mr-1" />
         <span>加载中...</span>
@@ -59,6 +59,6 @@ export default function Page({ onVerify }: { onVerify: OnVerify }) {
         onTimeout={handleOnTimeout}
         onExpire={handleOnExpire}
       />
-    </>
+    </div>
   );
 }

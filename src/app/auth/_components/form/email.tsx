@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import GoogleLogin from '../google-login';
+// import GoogleLogin from '../google-login';
 import { getCheckEmailExists } from '@/app/auth/_api';
 import { useAuthStore, AuthStep } from '@/app/auth/_store';
 
@@ -43,7 +43,6 @@ const useEmailForm = () => {
   const { mutate, isPending, error } = useMutation({
     mutationFn: (email: string) => getCheckEmailExists(email),
     onSuccess: (data, variables) => {
-      debugger;
       setParams({
         email: variables,
         isExists: data,
@@ -57,7 +56,6 @@ const useEmailForm = () => {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    debugger;
     mutate(values.email);
   };
 
@@ -99,7 +97,7 @@ const EmailForm: React.FC = React.memo(() => {
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? '提交中...' : FORM_TEXTS.SUBMIT_BUTTON}
           </Button>
-          <div className="relative">
+          {/* <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -108,8 +106,8 @@ const EmailForm: React.FC = React.memo(() => {
                 {FORM_TEXTS.THIRD_PARTY_LOGIN}
               </span>
             </div>
-          </div>
-          <GoogleLogin />
+          </div> */}
+          {/* <GoogleLogin /> */}
           <div className="select-none text-left text-sm text-muted-foreground">
             {FORM_TEXTS.TERMS_AGREEMENT}
             <Link

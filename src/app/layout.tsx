@@ -54,6 +54,9 @@ export const metadata: Metadata = {
   },
   manifest: `/site.webmanifest`,
 };
+export const viewport: Viewport = {
+  themeColor: '#ffffff',
+};
 interface RootLayoutProps {
   children: React.ReactNode;
 }

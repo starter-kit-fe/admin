@@ -58,7 +58,7 @@ export function TestimonialsSection() {
                 {testimonial.name}
               </h3>
               <p className=" text-center mb-4">{testimonial.role}</p>
-              <p className="text-center italic">"{testimonial.content}"</p>
+              <p className="text-center italic">{testimonial.content}</p>
             </motion.div>
           ))}
         </div>

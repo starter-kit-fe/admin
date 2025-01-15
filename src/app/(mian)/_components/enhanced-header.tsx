@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { formatISOTime } from '@/lib/format-ios-time';
 import Loading from '@/components/loading';
 import Show from '@/components/show';
+import { IApp } from '../_type';
 
 interface EnhancedHeaderProps {
   isLoading: boolean;
-  data: any;
+  data: IApp.Version | undefined;
 }
 
 export function EnhancedHeader({ isLoading, data }: EnhancedHeaderProps) {
