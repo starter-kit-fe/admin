@@ -20,7 +20,7 @@ jobs:
           cache: 'npm'
 
       - name: 安装依赖
-        run: npm ci --force
+        run: npm i --force
 
       - name: 构建 Next.js 应用
         run: |
