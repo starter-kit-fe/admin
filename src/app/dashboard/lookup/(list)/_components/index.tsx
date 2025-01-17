@@ -10,9 +10,9 @@ import { getList, getGroups } from '../_api';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import FilterBar from './filter-bar';
 import Group from './group';
-import { useReactTable, getCoreRowModel } from '@tanstack/react-table';
-import { columns } from './table/columns';
-import Table from './table/table';
+import Table from './table';
+import LoadingShow from '@/components/loading-show';
+
 export default function Page() {
   const { params, groupParams, currentGroup, setCurrentGroup } = useStore();
   const { data: groupData, isLoading: groupLoading } = useQuery({
@@ -24,27 +24,27 @@ export default function Page() {
     queryFn: () => getList(currentGroup?.value || '', params),
     enabled: !!currentGroup?.value,
   });
-  const table = useReactTable({
-    data: data?.list?.sort((a, b) => a.sort - b.sort) || [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
   useEffect(() => {
     if (!currentGroup && groupData?.list) setCurrentGroup(groupData.list[0]);
   }, [groupData]);
   let GroupUI = null;
   if (groupData?.list) GroupUI = <Group data={groupData} />;
-
+  const tableData = data?.list?.sort((a, b) => a.sort - b.sort) ?? [];
   return (
     <Card>
       <CardHeader>
         <FilterBar />
       </CardHeader>
       <CardContent>
-        <div className="flex">
-          <div className=" max-w-[220px] border-r pr-2">{GroupUI}</div>
+        {/* <LoadingShow when={!groupLoading || !isLoading} > */}
+        <div className="flex gap-2">
+          <div className=" max-w-[220px] border-r pr-2 hidden xl:block">
+            <LoadingShow when={!groupLoading}>{GroupUI}</LoadingShow>
+          </div>
           <div className="flex-1 w-full">
-            <Table table={table} />
+            <LoadingShow when={!groupLoading && !isLoading}>
+              <Table data={tableData} />
+            </LoadingShow>
           </div>
         </div>
       </CardContent>

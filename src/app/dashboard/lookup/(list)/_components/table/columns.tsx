@@ -3,11 +3,15 @@
 import { createColumnHelper } from '@tanstack/react-table';
 import { ILookUP } from '../../../_type';
 import { DataTableColumnHeader } from './column-header';
+
 import Action from './column-actions';
 import Show from '@/components/show';
 import StatusSwitch from './status-switch';
 import { StatusMode } from './status-switch';
-import CopyName from './copy-name';
+import CopyName from './columns-copy-name';
+
+import { formatISOTime } from '@/lib/format-ios-time';
+
 const columnHelper = createColumnHelper<ILookUP.asObject>();
 
 export const columns = [
@@ -49,7 +53,7 @@ export const columns = [
   }),
   columnHelper.accessor('updatedAt', {
     header: '更新时间',
-    cell: (it) => it.getValue() || '-',
+    cell: (it) => formatISOTime(it.getValue()) || '-',
   }),
   columnHelper.display({
     id: 'action',

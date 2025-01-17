@@ -1,7 +1,12 @@
 'use client';
 
 import React from 'react';
-import { flexRender, Table as RTable } from '@tanstack/react-table';
+import {
+  flexRender,
+  Table as RTable,
+  useReactTable,
+  getCoreRowModel,
+} from '@tanstack/react-table';
 import {
   Table,
   TableBody,
@@ -11,10 +16,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ILookUP } from '../../../_type';
-interface TableDataProp<TData> {
-  table: RTable<TData>;
+import { columns } from './columns';
+interface TableDataProps {
+  data: ILookUP.asObject[];
 }
-export default function TableData({ table }: TableDataProp<ILookUP.asObject>) {
+export default function TableData({ data }: TableDataProps) {
+  const table = useReactTable({
+    data: data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
   return (
     <Table className="overflow-auto w-full">
       <TableHeader>
