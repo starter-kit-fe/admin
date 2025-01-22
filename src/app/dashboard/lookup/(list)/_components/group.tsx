@@ -26,8 +26,10 @@ export default function Page({ data }: GroupProps) {
   ));
 
   return (
-    <Show when={Boolean(data?.list?.length)} fallback={<Empty />}>
-      {groupButtons}
-    </Show>
+    <div>
+      <Show when={Boolean(data?.list?.length)} fallback={<Empty />}>
+        {groupButtons}
+      </Show>
+    </div>
   );
 }

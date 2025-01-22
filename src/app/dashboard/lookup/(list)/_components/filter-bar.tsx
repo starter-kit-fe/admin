@@ -23,7 +23,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function Page() {
-  const { currentGroup } = useStore();
+  const { currentGroup, params, groupParams, setParams, setGroupParams } =
+    useStore();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -43,7 +44,13 @@ export default function Page() {
               <FormControl>
                 <Tabs
                   defaultValue={field.value || ''}
-                  onValueChange={field.onChange}
+                  onValueChange={(val) => {
+                    field.onChange(val);
+                    setGroupParams({ status: val });
+                    setParams({
+                      status: val,
+                    });
+                  }}
                   className="mr-2"
                 >
                   <TabsList>

@@ -7,6 +7,7 @@ import { formatISOTime } from '@/lib/format-ios-time';
 import Loading from '@/components/loading';
 import Show from '@/components/show';
 import { IApp } from '../_type';
+import Link from 'next/link';
 
 interface EnhancedHeaderProps {
   isLoading: boolean;
@@ -58,9 +59,11 @@ export function EnhancedHeader({ isLoading, data }: EnhancedHeaderProps) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
-          <Button size="lg" className="">
-            现在开始 <ArrowRight className="ml-2" />
-          </Button>
+          <Link href="/dashboard">
+            <Button size="lg" className="">
+              现在开始 <ArrowRight className="ml-2" />
+            </Button>
+          </Link>
           <Button size="lg" variant="outline" className="">
             了解更多
           </Button>

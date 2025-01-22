@@ -15,21 +15,30 @@ import LoadingShow from '@/components/loading-show';
 
 export default function Page() {
   const { params, groupParams, currentGroup, setCurrentGroup } = useStore();
+  // 分组
   const { data: groupData, isLoading: groupLoading } = useQuery({
     queryKey: [ID_LOOKUP_GROUP, groupParams],
     queryFn: () => getGroups(groupParams),
   });
-  const { data, isLoading } = useQuery({
+  // 数据
+  const { data, isLoading: listLoading } = useQuery({
     queryKey: [ID_LOOKUP_LIST, params, currentGroup?.value],
     queryFn: () => getList(currentGroup?.value || '', params),
-    enabled: !!currentGroup?.value,
+    enabled: Boolean(currentGroup?.value),
   });
+
   useEffect(() => {
-    if (!currentGroup && groupData?.list) setCurrentGroup(groupData.list[0]);
-  }, [groupData]);
-  let GroupUI = null;
-  if (groupData?.list) GroupUI = <Group data={groupData} />;
+    if (!currentGroup && groupData?.list?.length) {
+      setCurrentGroup(groupData.list[0]);
+    }
+  }, [currentGroup, groupData?.list, setCurrentGroup]);
+
+  // let GroupUI = null;
+  // if (groupData?.list) GroupUI = <Group data={groupData} />;
+  const groupUI = groupData?.list ? <Group data={groupData} /> : null;
   const tableData = data?.list?.sort((a, b) => a.sort - b.sort) ?? [];
+  const isLoading = groupLoading || listLoading;
+
   return (
     <Card>
       <CardHeader>
@@ -38,11 +47,11 @@ export default function Page() {
       <CardContent>
         {/* <LoadingShow when={!groupLoading || !isLoading} > */}
         <div className="flex gap-2">
-          <div className=" max-w-[220px] border-r pr-2 hidden xl:block">
-            <LoadingShow when={!groupLoading}>{GroupUI}</LoadingShow>
+          <div className="w-[220px] border-r pr-2 hidden xl:block">
+            <LoadingShow when={!groupLoading}>{groupUI}</LoadingShow>
           </div>
           <div className="flex-1 w-full">
-            <LoadingShow when={!groupLoading && !isLoading}>
+            <LoadingShow when={!isLoading}>
               <Table data={tableData} />
             </LoadingShow>
           </div>
