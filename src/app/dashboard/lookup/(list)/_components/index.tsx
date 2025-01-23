@@ -18,12 +18,20 @@ export default function Page() {
   // 分组
   const { data: groupData, isLoading: groupLoading } = useQuery({
     queryKey: [ID_LOOKUP_GROUP, groupParams],
-    queryFn: () => getGroups(groupParams),
+    queryFn: () =>
+      getGroups({
+        ...groupParams,
+        status: groupParams.status === 'all' ? '' : groupParams.status,
+      }),
   });
   // 数据
   const { data, isLoading: listLoading } = useQuery({
     queryKey: [ID_LOOKUP_LIST, params, currentGroup?.value],
-    queryFn: () => getList(currentGroup?.value || '', params),
+    queryFn: () =>
+      getList(currentGroup?.value || '', {
+        ...params,
+        status: params.status === 'all' ? '' : params.status,
+      }),
     enabled: Boolean(currentGroup?.value),
   });
 

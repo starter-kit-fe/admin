@@ -154,3 +154,17 @@
     @apply px-4 xl:px-6 2xl:px-4 mx-auto max-w-[1536px];
   }
 }
+
+.dragging-row {
+  background-color: rgba(0, 0, 0, 0.05);
+  cursor: grabbing;
+}
+
+.grip-handle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  cursor: grab;
+}
+
+.grip-handle:active {
+  cursor: grabbing;
+}

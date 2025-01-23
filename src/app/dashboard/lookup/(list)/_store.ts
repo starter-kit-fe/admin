@@ -22,14 +22,14 @@ export const initialGroupParams: ILookUP.listGroupParam = {
   page: '1',
   size: '10',
   name: '',
-  status: '',
+  status: 'all',
 };
 
 export const initialParams: ILookUP.listParam = {
   page: '1',
   size: '10',
   name: '',
-  status: '',
+  status: 'all',
   order: '',
   sort: '',
 };
