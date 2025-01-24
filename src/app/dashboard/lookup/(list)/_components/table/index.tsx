@@ -19,13 +19,16 @@ import { ILookUP } from '../../../_type';
 import { columns } from './columns';
 import {
   DndContext,
-  closestCenter,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
+  closestCenter,
+  type DragEndEvent,
+  type UniqueIdentifier,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
   arrayMove,
   SortableContext,
@@ -46,26 +49,28 @@ export default function TableData({ data }: TableDataProps) {
   const { currentGroup } = useStore();
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(MouseSensor, {}),
+    useSensor(TouchSensor, {}),
+    useSensor(KeyboardSensor, {})
   );
 
   const table = useReactTable({
     data: items,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => `${row.id}`, //required because row indexes will change
+    debugTable: true,
+    debugHeaders: true,
+    debugColumns: true,
   });
-
+  const dataIds = items.map((it) => it.id);
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
       const { active, over } = event;
 
-      if (!over || active.id === over.id) {
+      if (!active || !over || active.id === over.id) {
         return;
       }
-
       const oldIndex = items.findIndex((item) => item.id === active.id);
       const newIndex = items.findIndex((item) => item.id === over.id);
 
@@ -92,9 +97,10 @@ export default function TableData({ data }: TableDataProps) {
 
   return (
     <DndContext
-      sensors={sensors}
       collisionDetection={closestCenter}
+      modifiers={[restrictToVerticalAxis]}
       onDragEnd={handleDragEnd}
+      sensors={sensors}
     >
       <Table className="overflow-auto w-full">
         <TableHeader>
@@ -116,20 +122,11 @@ export default function TableData({ data }: TableDataProps) {
         </TableHeader>
         <TableBody>
           <SortableContext
-            items={items.map((item) => item.id)}
+            items={dataIds}
             strategy={verticalListSortingStrategy}
           >
             {table.getRowModel().rows.map((row) => (
-              <DraggableTableRow
-                key={row.original.id}
-                id={`${row.original.id}`}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </DraggableTableRow>
+              <DraggableTableRow key={row.id} row={row} />
             ))}
           </SortableContext>
         </TableBody>

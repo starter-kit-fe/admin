@@ -3,7 +3,7 @@
 import { createColumnHelper } from '@tanstack/react-table';
 import { ILookUP } from '../../../_type';
 import { DataTableColumnHeader } from './column-header';
-
+import DrapHnadler from './column-drap-handle';
 import Action from './column-actions';
 import Show from '@/components/show';
 import StatusSwitch from './status-switch';
@@ -15,6 +15,10 @@ import { formatISOTime } from '@/lib/format-ios-time';
 const columnHelper = createColumnHelper<ILookUP.asObject>();
 
 export const columns = [
+  columnHelper.display({
+    id: 'drap',
+    cell: (it) => <DrapHnadler rowId={it.row.id} />,
+  }),
   columnHelper.accessor('label', {
     header: '名称',
     cell: (it) => <CopyName value={it.getValue()} />,
