@@ -1,56 +1,33 @@
-import { ILookUP } from '../_type';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-
+import type { groupRequest, List, listRequest } from './_type';
 export interface State {
-  currentItem: ILookUP.asObject | null;
-  setCurrentItem: (val: ILookUP.asObject | null) => void;
-
-  currentGroup: ILookUP.listGroupItem | null;
-  setCurrentGroup: (val: ILookUP.listGroupItem | null) => void;
-
-  groupParams: ILookUP.listGroupParam;
-  setGroupParams: (data: Partial<ILookUP.listGroupParam>) => void;
-  resetGroupParams: () => void;
-
-  params: ILookUP.listParam;
-  setParams: (data: Partial<ILookUP.listParam>) => void;
-  resetParams: () => void;
+  currentGroup: List | null;
+  groupParams: groupRequest;
+  listParams: listRequest;
+  setState: <K extends keyof State>(key: K, value: State[K]) => void;
+  reset: () => void;
 }
-
-export const initialGroupParams: ILookUP.listGroupParam = {
-  page: '1',
-  size: '10',
-  name: '',
-  status: 'all',
-};
-
-export const initialParams: ILookUP.listParam = {
-  page: '1',
-  size: '10',
-  name: '',
-  status: 'all',
-  order: '',
-  sort: '',
+export const initialState = {
+  currentGroup: null,
+  groupParams: {
+    page: '1',
+    size: '10',
+    name: '',
+    status: 'all',
+  },
+  listParams: {
+    status: 'all',
+    name: '',
+  },
 };
 
 export const useStore = create<State>()(
   persist(
     (set) => ({
-      currentItem: null,
-      currentGroup: null,
-      params: initialParams,
-      groupParams: initialGroupParams,
-      setCurrentItem: (currentItem) => set({ currentItem }),
-      setCurrentGroup: (currentGroup) => set({ currentGroup }),
-      setParams: (filterParams) =>
-        set((state) => ({ params: { ...state.params, ...filterParams } })),
-      setGroupParams: (filterParams) =>
-        set((state) => ({
-          groupParams: { ...state.groupParams, ...filterParams },
-        })),
-      resetGroupParams: () => set({ groupParams: initialGroupParams }),
-      resetParams: () => set({ params: initialParams }),
+      ...initialState,
+      setState: (key, value) => set((state) => ({ ...state, [key]: value })),
+      reset: () => set(initialState),
     }),
     {
       name: 'lookup', // unique name

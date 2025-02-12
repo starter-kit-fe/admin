@@ -78,26 +78,7 @@ export default function FilterBar() {
             name="status"
             render={({ field }) => (
               <FormItem className="flex">
-                <FormControl>
-                  <Tabs
-                    defaultValue={field.value || ''}
-                    onValueChange={(val) => {
-                      field.onChange(val);
-                      setGroupParams({ status: val, page: '1' });
-                      setParams({
-                        status: val,
-                        page: '1',
-                      });
-                    }}
-                    className="mr-2"
-                  >
-                    <TabsList>
-                      <TabsTrigger value="all">全部</TabsTrigger>
-                      <TabsTrigger value="1">正常</TabsTrigger>
-                      <TabsTrigger value="2">禁用</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </FormControl>
+                <FormControl></FormControl>
               </FormItem>
             )}
           />

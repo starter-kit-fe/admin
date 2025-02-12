@@ -28,16 +28,12 @@ export declare namespace ILookUP {
     page: number;
     total: number;
   };
-  type listParam = listParams & {
+  type listParam = listGroupParam & {
     value: string;
   };
   type listGroupParam = {
-    endTime?: string;
-    order?: string;
     page: string;
     size: string;
-    sort?: string;
-    startTime?: string;
     status?: string;
     name: string;
   };

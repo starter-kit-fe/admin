@@ -20,7 +20,7 @@ export function EnhancedHeader({ isLoading, data }: EnhancedHeaderProps) {
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
-      className="  py-20"
+      className="h-[calc(100vh-64px)] grid place-items-center"
     >
       <div className="container mx-auto text-center">
         <motion.h1

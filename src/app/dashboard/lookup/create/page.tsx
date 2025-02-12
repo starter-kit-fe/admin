@@ -56,7 +56,7 @@ export default function Page() {
       form.reset();
       queryClient.invalidateQueries({ queryKey: [ID_LOOKUP_GROUP] });
       queryClient.invalidateQueries({ queryKey: [ID_LOOKUP_LIST] });
-      router.push('/dashboard/lookup/list');
+      router.push('/dashboard/lookup');
     },
     onError(err) {
       toast.error(err.message);

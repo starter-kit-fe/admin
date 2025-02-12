@@ -155,16 +155,6 @@
   }
 }
 
-.dragging-row {
-  background-color: rgba(0, 0, 0, 0.05);
-  cursor: grabbing;
-}
-
-.grip-handle:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  cursor: grab;
-}
-
-.grip-handle:active {
-  cursor: grabbing;
+[aria-selected='true'] {
+  background: hsl(var(--accent));
 }

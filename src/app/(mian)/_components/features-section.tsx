@@ -39,7 +39,7 @@ const features = [
 export function FeaturesSection() {
   return (
     <motion.section
-      className="py-20 bg-slate-100 dark:bg-background"
+      className="h-screen grid place-items-center bg-slate-100 dark:bg-background"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, delay: 0.5 }}
