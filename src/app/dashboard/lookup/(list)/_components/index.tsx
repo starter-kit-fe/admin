@@ -13,11 +13,11 @@ export default function Page() {
       </CardHeader>
       <CardContent>
         <div>搜索和新增</div>
-        <div className="flex">
-          <div>
+        <div className="flex w-full gap-1">
+          <div className="min-w-[150px]">
             <LookupGroups />
           </div>
-          <div>
+          <div className="flex-1">
             <LookupList />
           </div>
         </div>

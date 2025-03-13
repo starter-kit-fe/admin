@@ -20,7 +20,7 @@ export default function Page() {
   return (
     <ShowWithLoading when={!isLoading}>
       <ShowWithEmpty when={!!data?.list}>
-        <Table data={data?.list} />
+        <Table data={data?.list!} />
       </ShowWithEmpty>
     </ShowWithLoading>
   );

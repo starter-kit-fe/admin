@@ -4,7 +4,6 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  Cell,
 } from '@tanstack/react-table';
 import {
   DndContext,
@@ -30,6 +29,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
+import { GripVertical } from 'lucide-react'; // 添加拖拽图标
 import { listItem } from '../_type';
 
 interface DraggableTableProps {
@@ -49,13 +49,14 @@ const SortableRow = ({
   row: any;
   onSwitchChange: DraggableTableProps['onSwitchChange'];
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
   const {
-    attributes,
-    listeners,
     setNodeRef,
     transform,
     transition,
     isDragging,
+    attributes,
+    listeners,
   } = useSortable({
     id: row.original.id,
   });
@@ -65,13 +66,32 @@ const SortableRow = ({
     transition,
     opacity: isDragging ? 0.8 : 1,
     zIndex: isDragging ? 1 : 0,
-    cursor: isDragging ? 'grabbing' : 'grab',
-    boxShadow: isDragging ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
+    backgroundColor: isDragging ? 'rgb(243 244 246)' : undefined,
   };
 
   return (
-    <TableRow ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      {row.getVisibleCells().map((cell) => {
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group relative"
+    >
+      {/* 排序图标列 */}
+      <TableCell className="w-10 relative">
+        <div
+          {...attributes}
+          {...listeners}
+          className={`absolute inset-y-0 left-0 flex items-center justify-center w-10 transition-opacity duration-200 ${
+            isHovered ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        >
+          <GripVertical className="h-4 w-4 text-gray-400" />
+        </div>
+      </TableCell>
+
+      {row.getVisibleCells().map((cell: any) => {
         if (cell.column.id === 'isActive' || cell.column.id === 'isDefault') {
           return (
             <TableCell key={cell.id}>
@@ -102,6 +122,12 @@ const SortableRow = ({
 };
 
 const columns: ColumnDef<listItem>[] = [
+  {
+    id: 'sort',
+    size: 40,
+    header: () => null,
+    cell: () => null,
+  },
   {
     accessorKey: 'label',
     header: '名称',
@@ -142,7 +168,9 @@ export default function DraggableTable({
   });
 
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 5 },
+    }),
     useSensor(TouchSensor, {
       activationConstraint: { delay: 50, tolerance: 5 },
     })
@@ -162,12 +190,16 @@ export default function DraggableTable({
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <Table className="border rounded-lg">
+      <Table className="rounded-lg w-full overflow-hidden box-border border">
         <TableHeader className="bg-gray-100/50">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} className="font-semibold">
+                <TableHead
+                  key={header.id}
+                  className="font-semibold"
+                  style={{ width: header.column.getSize() }}
+                >
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext()
