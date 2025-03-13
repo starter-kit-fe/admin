@@ -19,6 +19,9 @@ switch (process.env.NODE_ENV) {
     break;
   case 'development':
     nextConfig.rewrites = proxy;
+    nextConfig.images = {
+      domains: ['picsum.photos']
+    }
     break;
 }
 process.env.NEXT_PUBLIC_BUILD_TIME = dayjs().format('YYYY-MM-DD HH:mm');
