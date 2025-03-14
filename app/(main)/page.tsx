@@ -7,13 +7,17 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { useInView } from 'react-intersection-observer';
 import { getVersion, type versionResponse } from './api';
-import { ArrowRight, Download, Shield, Zap, Layers, Globe } from 'lucide-react';
+import { ArrowRight, Download, Shield, Zap, Layers, Globe, ChevronRight } from 'lucide-react';
 
 export default function HomePage() {
   const [version, setVersion] = useState<versionResponse | null>(null);
+  const [activeTab, setActiveTab] = useState('feature1');
   const { scrollY } = useScroll();
+  const { scrollYProgress } = useScroll();
   const opacity = useTransform(scrollY, [0, 200], [1, 0]);
   const scale = useTransform(scrollY, [0, 200], [1, 0.95]);
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
+  const foregroundY = useTransform(scrollYProgress, [0, 1], ['0%', '5%']);
   
   // 使用ref和inView来控制各部分的动画
   const [featureRef, featureInView] = useInView({

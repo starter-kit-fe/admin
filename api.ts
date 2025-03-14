@@ -1,2 +1,2 @@
 export * from '@/app/auth/api'
-export * from '@/app/(public)/api'
+export * from '@/app/(main)/api'
