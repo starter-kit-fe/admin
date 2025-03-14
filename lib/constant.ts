@@ -27,3 +27,5 @@ export const ID_signin = 0x013;
 export const ID_SINUP = 0x014;
 export const ID_EMAIL = 0x015;
 export const ID_PERMISSION_LIST = 0x016;
+export const ID_APP_VERSION = 0x017;
+export const ID_USER_ROUTES = 0x018;

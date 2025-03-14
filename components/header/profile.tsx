@@ -109,8 +109,8 @@ export default function Profile({ user }: ProfileProps) {
               <div className="size-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
                 <Show when={Boolean(user.avatar)} fallback={<User className="size-4 text-primary" />}>
                   <Image
-                    src={user.avatar || 'https://picsum.photos/200/200'}
-                    alt={user.nickName || 'User'}
+                    src={user.avatar ?? 'https://picsum.photos/200/200'}
+                    alt={user.nickName ?? 'User'}
                     width={32}
                     height={32}
                   />

@@ -20,7 +20,7 @@ switch (process.env.NODE_ENV) {
   case 'development':
     nextConfig.rewrites = proxy;
     nextConfig.images = {
-      domains: ['picsum.photos']
+      domains: ['picsum.photos', 'randomuser.me']
     }
     break;
 }
