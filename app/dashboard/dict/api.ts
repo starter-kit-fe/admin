@@ -14,9 +14,8 @@ export interface group {
 }
 export interface lookupGroupRequest {
     name?: string;
-    order?: string;
-    page?: string;
-    size?: string;
+    page?: string,
+    size?: string,
     status?: string;
 }
 

@@ -17,8 +17,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Edit, MoreVertical, Trash2, GripVertical } from "lucide-react";
+import { formatDateTime } from "@/lib/format-date";
+import { type lookup } from "../api";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  Row,
+  createColumnHelper
+} from "@tanstack/react-table";
 import {
   DndContext,
   closestCenter,
@@ -36,15 +46,11 @@ import {
   useSortable
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { type lookup } from "../api";
-import { Edit, MoreVertical, Trash2, GripVertical } from "lucide-react";
-import { formatDateTime } from "@/lib/format-date";
-import { Skeleton } from "@/components/ui/skeleton";
 
 // 状态徽章组件
 function StatusBadge({ status }: { status: number | undefined }) {
   if (status === undefined) return null;
-  
+
   return status === 1 ? (
     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
       正常
@@ -59,7 +65,7 @@ function StatusBadge({ status }: { status: number | undefined }) {
 // 默认值徽章组件
 function DefaultBadge({ isDefault }: { isDefault: boolean | undefined }) {
   if (!isDefault) return null;
-  
+
   return (
     <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
       默认
@@ -67,119 +73,62 @@ function DefaultBadge({ isDefault }: { isDefault: boolean | undefined }) {
   );
 }
 
-// 单个行项目组件（支持拖拽排序）
-function SortableRow({
-  item,
-  columns,
-  onEdit,
-  onDelete,
-  onToggleStatus,
+// 拖拽行组件
+function DraggableTableRow({
+  row,
+  reorderRow,
 }: {
-  item: lookup;
-  columns: Record<string, boolean>;
-  onEdit: (item: lookup) => void;
-  onDelete: (item: lookup) => void;
-  onToggleStatus: (item: lookup) => void;
+  row: Row<lookup>;
+  reorderRow: (draggedRowIndex: number, targetRowIndex: number) => void;
 }) {
+  const [isHovering, setIsHovering] = useState(false);
+  const item = row.original;
   const id = item.id?.toString() || Math.random().toString();
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
-  
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    // 添加拖拽时的视觉反馈
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 999 : 1,
   };
 
   return (
-    <TableRow ref={setNodeRef} style={style}>
-      {columns.id && (
-        <TableCell className="font-mono text-xs text-muted-foreground w-14">
-          {item.id}
-        </TableCell>
-      )}
-      
-      {columns.label && (
-        <TableCell>
-          <div className="flex items-center gap-2">
-            <button className="touch-none" {...attributes} {...listeners}>
-              <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-            </button>
-            <span>{item.label}</span>
-          </div>
-        </TableCell>
-      )}
-      
-      {columns.value && (
-        <TableCell className="font-mono">{item.value}</TableCell>
-      )}
-      
-      {columns.sort && (
-        <TableCell className="text-center">{item.sort}</TableCell>
-      )}
-      
-      {columns.status && (
-        <TableCell>
-          <Switch 
-            checked={item.status === 1} 
-            onCheckedChange={() => onToggleStatus(item)}
-            aria-label="Toggle status"
-          />
-        </TableCell>
-      )}
-      
-      {columns.isDefault && (
-        <TableCell>
-          <DefaultBadge isDefault={item.isDefault} />
-        </TableCell>
-      )}
-      
-      {columns.remark && (
-        <TableCell className="max-w-[200px] truncate">
-          {item.remark}
-        </TableCell>
-      )}
-      
-      {columns.createdAt && (
-        <TableCell className="text-xs text-muted-foreground">
-          {item.createdAt ? formatDateTime(item.createdAt) : '-'}
-        </TableCell>
-      )}
-      
-      {columns.updatedAt && (
-        <TableCell className="text-xs text-muted-foreground">
-          {item.updatedAt ? formatDateTime(item.updatedAt) : '-'}
-        </TableCell>
-      )}
-      
-      {columns.actions && (
-        <TableCell>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(item)}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => onDelete(item)}
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      data-state={row.getIsSelected() && "selected"}
+      className="group"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      {row.getVisibleCells().map(cell => {
+        // 特殊处理拖拽手柄列
+        if (cell.column.id === 'drag-handle') {
+          return (
+            <TableCell key={cell.id}>
+              <div className="px-1 flex justify-center">
+                <button
+                  className="touch-none opacity-0 group-hover:opacity-100 transition-opacity"
+                  {...attributes}
+                  {...listeners}
+                  aria-label="拖拽排序"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  删除
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </TableCell>
-      )}
+                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+                </button>
+              </div>
+            </TableCell>
+          );
+        }
+
+        // 其他普通列
+        return (
+          <TableCell key={cell.id}>
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        );
+      })}
     </TableRow>
   );
 }
@@ -188,6 +137,9 @@ function SortableRow({
 function LoadingRow({ columns }: { columns: Record<string, boolean> }) {
   return (
     <TableRow>
+      {/* 拖拽列 */}
+      <TableCell className="w-8 p-0"></TableCell>
+
       {columns.id && (
         <TableCell><Skeleton className="h-4 w-10" /></TableCell>
       )}
@@ -232,11 +184,11 @@ interface LookupTableProps {
 
 export function LookupTable({
   data,
-  columns,
+  columns: visibleColumns,
   isLoading,
   onReorder,
 }: LookupTableProps) {
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>({});
 
   // 拖拽排序相关设置
   const sensors = useSensors(
@@ -247,17 +199,183 @@ export function LookupTable({
   // 处理拖拽结束事件
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    
+
     if (over && active.id !== over.id) {
       const oldIndex = data.findIndex(item => (item.id?.toString() || '') === active.id);
       const newIndex = data.findIndex(item => (item.id?.toString() || '') === over.id);
-      
+
       if (oldIndex !== -1 && newIndex !== -1) {
         const newItems = arrayMove(data, oldIndex, newIndex);
         onReorder(newItems);
       }
     }
   }
+
+  // 处理行重新排序
+  function handleReorderRow(draggedRowIndex: number, targetRowIndex: number) {
+    const newData = arrayMove(data, draggedRowIndex, targetRowIndex);
+    onReorder(newData);
+  }
+
+
+  // 修改为正确使用 createColumnHelper 的代码
+  const columnHelper = createColumnHelper<lookup>();
+
+  // 定义表格列 - 移除 useMemo（React 19 不再需要）
+  const tableColumns = [
+    // 添加拖拽控件列作为第一列
+    columnHelper.display({
+      id: 'drag-handle',
+      header: '',
+      cell: () => null,
+      size: 40,
+    }),
+
+    // 根据可见列配置添加其他列
+    ...(visibleColumns.id ? [
+      columnHelper.accessor('id', {
+        header: 'ID',
+        cell: info => (
+          <span className="font-mono text-xs text-muted-foreground">{info.getValue()}</span>
+        ),
+        size: 60,
+      })
+    ] : []),
+
+    ...(visibleColumns.label ? [
+      columnHelper.accessor('label', {
+        header: '标签名',
+        cell: info => info.getValue(),
+      })
+    ] : []),
+
+    ...(visibleColumns.value ? [
+      columnHelper.accessor('value', {
+        header: '字典值',
+        cell: info => (
+          <span className="font-mono">{info.getValue()}</span>
+        ),
+      })
+    ] : []),
+
+    ...(visibleColumns.sort ? [
+      columnHelper.accessor('sort', {
+        header: '排序',
+        cell: info => (
+          <div className="text-center">{info.getValue()}</div>
+        ),
+      })
+    ] : []),
+
+    ...(visibleColumns.status ? [
+      columnHelper.accessor('status', {
+        header: '状态',
+        cell: info => {
+          const item = info.row.original;
+          return (
+            <Switch
+              checked={item.status === 1}
+              onCheckedChange={() => handleToggleStatus(item)}
+              aria-label="Toggle status"
+            />
+          );
+        },
+      })
+    ] : []),
+
+    ...(visibleColumns.isDefault ? [
+      columnHelper.accessor('isDefault', {
+        header: '默认',
+        cell: info => <DefaultBadge isDefault={info.getValue()} />,
+      })
+    ] : []),
+
+    ...(visibleColumns.remark ? [
+      columnHelper.accessor('remark', {
+        header: '备注',
+        cell: info => (
+          <div className="max-w-[200px] truncate">{info.getValue()}</div>
+        ),
+      })
+    ] : []),
+
+    ...(visibleColumns.createdAt ? [
+      columnHelper.accessor('createdAt', {
+        header: '创建时间',
+        cell: info => {
+          const value = info.getValue();
+          return (
+            <span className="text-xs text-muted-foreground">
+              {value ? formatDateTime(value) : '-'}
+            </span>
+          );
+        },
+      })
+    ] : []),
+
+    ...(visibleColumns.updatedAt ? [
+      columnHelper.accessor('updatedAt', {
+        header: '更新时间',
+        cell: info => {
+          const value = info.getValue();
+          return (
+            <span className="text-xs text-muted-foreground">
+              {value ? formatDateTime(value) : '-'}
+            </span>
+          );
+        },
+      })
+    ] : []),
+
+    ...(visibleColumns.actions ? [
+      columnHelper.display({
+        id: 'actions',
+        header: '操作',
+        cell: info => {
+          const item = info.row.original;
+          return (
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    className=""
+                    onClick={() => handleEdit(item)}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    编辑
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => handleDelete(item)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    删除
+                  </DropdownMenuItem>
+
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+        size: 100,
+      })
+    ] : []),
+  ];
+  // 初始化表格实例
+  const table = useReactTable({
+    data,
+    columns: tableColumns,
+    getCoreRowModel: getCoreRowModel(),
+    state: {
+      rowSelection: selectedRowIds,
+    },
+    onRowSelectionChange: setSelectedRowIds,
+  });
 
   // 处理编辑
   const handleEdit = (item: lookup) => {
@@ -277,108 +395,69 @@ export function LookupTable({
     // 这里应该调用API更新状态
   };
 
-  // 处理全选/取消全选
-  const handleSelectAll = (checked: boolean | "indeterminate") => {
-    if (checked === true) {
-      setSelectedItems(data.map(item => item.id?.toString() || '').filter(Boolean));
-    } else {
-      setSelectedItems([]);
-    }
-  };
-
-  // 处理单个选择
-  const handleSelectItem = (id: string, checked: boolean) => {
-    if (checked) {
-      setSelectedItems(prev => [...prev, id]);
-    } else {
-      setSelectedItems(prev => prev.filter(itemId => itemId !== id));
-    }
-  };
-
-  // 计算全选状态
-  const allSelected = data.length > 0 && selectedItems.length === data.length;
-  const someSelected = selectedItems.length > 0 && !allSelected;
-
-  // 生成表格列表头
-  const visibleColumnCount = Object.values(columns).filter(Boolean).length;
+  // 计算可见列数（增加了拖拽控件列，所以+1）
+  const visibleColumnCount = Object.values(visibleColumns).filter(Boolean).length + 1;
 
   return (
     <div className="relative">
       <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.id && (
-                <TableHead className="w-14">ID</TableHead>
-              )}
-              {columns.label && (
-                <TableHead>标签名</TableHead>
-              )}
-              {columns.value && (
-                <TableHead>字典值</TableHead>
-              )}
-              {columns.sort && (
-                <TableHead className="text-center">排序</TableHead>
-              )}
-              {columns.status && (
-                <TableHead>状态</TableHead>
-              )}
-              {columns.isDefault && (
-                <TableHead>默认</TableHead>
-              )}
-              {columns.remark && (
-                <TableHead>备注</TableHead>
-              )}
-              {columns.createdAt && (
-                <TableHead>创建时间</TableHead>
-              )}
-              {columns.updatedAt && (
-                <TableHead>更新时间</TableHead>
-              )}
-              {columns.actions && (
-                <TableHead className="w-[100px]">操作</TableHead>
-              )}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              // 加载状态
-              Array.from({ length: 5 }).map((_, index) => (
-                <LoadingRow key={index} columns={columns} />
-              ))
-            ) : data.length === 0 ? (
-              // 空状态
-              <TableRow>
-                <TableCell colSpan={visibleColumnCount} className="h-32 text-center">
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            ) : (
-              // 正常数据展示
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map(headerGroup => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <TableHead
+                      key={header.id}
+                      style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )
+                      }
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                // 加载状态
+                Array.from({ length: 5 }).map((_, index) => (
+                  <LoadingRow key={index} columns={visibleColumns} />
+                ))
+              ) : data.length === 0 ? (
+                // 空状态
+                <TableRow>
+                  <TableCell colSpan={visibleColumnCount} className="h-32 text-center">
+                    暂无数据
+                  </TableCell>
+                </TableRow>
+              ) : (
+                // 正常数据展示 - 将 SortableContext 包裹在表格行外部
                 <SortableContext
                   items={data.map(item => item.id?.toString() || Math.random().toString())}
                   strategy={verticalListSortingStrategy}
                 >
-                  {data.map((item) => (
-                    <SortableRow
-                      key={item.id}
-                      item={item}
-                      columns={columns}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onToggleStatus={handleToggleStatus}
+                  {table.getRowModel().rows.map(row => (
+                    <DraggableTableRow
+                      key={row.id}
+                      row={row}
+                      reorderRow={handleReorderRow}
                     />
                   ))}
                 </SortableContext>
-              </DndContext>
-            )}
-          </TableBody>
-        </Table>
+              )}
+            </TableBody>
+          </Table>
+        </DndContext>
       </div>
     </div>
   );

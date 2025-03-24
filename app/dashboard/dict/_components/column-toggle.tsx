@@ -12,19 +12,8 @@ import {
 import { Settings2 } from "lucide-react";
 
 interface ColumnToggleProps {
-    columns: {
-        id: boolean;
-        label: boolean;
-        value: boolean;
-        sort: boolean;
-        status: boolean;
-        isDefault: boolean;
-        remark: boolean;
-        createdAt: boolean;
-        updatedAt: boolean;
-        actions: boolean;
-    };
-    onToggle: (columns: any) => void;
+    columns: Record<string, boolean>;
+    onToggle: (column: string, visible: boolean) => void;
 }
 
 export function ColumnToggle({ columns, onToggle }: ColumnToggleProps) {
@@ -42,13 +31,6 @@ export function ColumnToggle({ columns, onToggle }: ColumnToggleProps) {
         actions: "操作",
     };
 
-    const handleToggle = (key: string) => {
-        onToggle({
-            ...columns,
-            [key]: !columns[key as keyof typeof columns],
-        });
-    };
-
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -63,8 +45,8 @@ export function ColumnToggle({ columns, onToggle }: ColumnToggleProps) {
                 {Object.keys(columns).map((key) => (
                     <DropdownMenuCheckboxItem
                         key={key}
-                        checked={columns[key as keyof typeof columns]}
-                        onCheckedChange={() => handleToggle(key)}
+                        checked={columns[key]}
+                        onCheckedChange={(checked) => onToggle(key, !!checked)}
                     >
                         {columnLabels[key] || key}
                     </DropdownMenuCheckboxItem>
