@@ -11,13 +11,16 @@ import { LookupTable } from './_components/lookup-table';
 import { getLookupGroups, getLookupList, type lookup } from '@/api';
 import { useStore } from './store';
 import { useQuery } from '@tanstack/react-query';
+import { ID_LOOKUP_GROUP, ID_LOOKUP_LIST } from '@/lib/constant';
 
 export default function DictionaryPage() {
     // 使用字典 store
     const {
         selectedGroup,
         lookupParams,
+        groupParams,
         visibleColumns,
+        setGroupParams,
         setSelectedGroup,
         setLookupParams,
         setVisibleColumn,
@@ -28,8 +31,8 @@ export default function DictionaryPage() {
         data: groupsData,
         isLoading: isGroupsLoading
     } = useQuery({
-        queryKey: ['dict-groups'],
-        queryFn: () => getLookupGroups({}),
+        queryKey: [ID_LOOKUP_GROUP, groupParams],
+        queryFn: () => getLookupGroups(groupParams),
     });
 
     // 字典项查询
@@ -38,7 +41,7 @@ export default function DictionaryPage() {
         isLoading: isLookupsLoading,
         refetch: refetchLookups
     } = useQuery({
-        queryKey: ['dict-lookups', selectedGroup, lookupParams],
+        queryKey: [ID_LOOKUP_LIST, selectedGroup, lookupParams],
         queryFn: () => selectedGroup
             ? getLookupList(selectedGroup, lookupParams)
             : Promise.resolve({ list: [], page: 1, total: 0 }),
@@ -54,7 +57,10 @@ export default function DictionaryPage() {
 
     // 处理状态切换
     const handleStatusChange = (status: string) => {
-        setLookupParams({ status: status === 'all' ? '' : status });
+        const statusVal = status === 'all' ? '' : status;
+        setGroupParams({ status: statusVal });
+        setLookupParams({ status: statusVal });
+
     };
 
     // 处理搜索

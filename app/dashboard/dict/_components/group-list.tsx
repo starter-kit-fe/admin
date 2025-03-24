@@ -53,16 +53,17 @@ export function GroupList({
                         groups.map((group) => (
                             <div
                                 key={group.value}
-                                className={`flex justify-between items-center p-2 rounded-md cursor-pointer transition-colors ${selectedGroup === group.value
+                                className={`flex justify-between items-center p-2 rounded-md cursor-pointer transition-colors 
+                                    ${selectedGroup === group.value
                                         ? "bg-primary/10 text-primary"
                                         : "hover:bg-muted"
                                     }`}
                                 onClick={() => onSelect(group.value)}
                             >
-                                <span className="font-medium truncate">
+                                <span className="text-sm truncate">
                                     {group.value}
                                 </span>
-                                <Badge variant="outline">
+                                <Badge variant={selectedGroup === group.value ? "default" : "outline"}>
                                     {group.total}
                                 </Badge>
                             </div>

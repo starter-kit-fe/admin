@@ -7,7 +7,7 @@
     "email": "i@tigerzh.com"
   },
   "license": "./license",
-  "version": "25.0324.1938",
+  "version": "25.0324.2058",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

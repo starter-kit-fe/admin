@@ -64,3 +64,13 @@ export function getLookupList(group_value: string, params: lookupRequest) {
         method: 'GET',
     })
 }
+// 排序
+//   PUT /lookup/sort
+//   接口ID：275605664
+//   接口地址：https://app.apifox.com/link/project/3200371/apis/api-275605664
+export function putLookupSort(params: lookupRequest) {
+    return request<lookupResponse>(`/lookup/sort`, {
+        method: 'PUT',
+        body: JSON.stringify(params),
+    })
+}
