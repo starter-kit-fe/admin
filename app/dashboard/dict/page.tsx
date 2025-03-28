@@ -8,9 +8,9 @@ import { ActionButtons } from './_components/action-buttons';
 import { ColumnToggle } from './_components/column-toggle';
 import { GroupList } from './_components/group-list';
 import { LookupTable } from './_components/lookup-table';
-import { getLookupGroups, getLookupList, type lookup } from '@/api';
+import { getLookupGroups, getLookupList, putLookupSort, type lookupSortRequest } from '@/api';
 import { useStore } from './store';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { ID_LOOKUP_GROUP, ID_LOOKUP_LIST } from '@/lib/constant';
 
 export default function DictionaryPage() {
@@ -47,6 +47,10 @@ export default function DictionaryPage() {
             : Promise.resolve({ list: [], page: 1, total: 0 }),
         enabled: !!selectedGroup,
     });
+    // 排序
+    const { mutate } = useMutation({
+        mutationFn: putLookupSort
+    })
 
     // 首次加载或没有选中分组时，自动选择第一个分组
     useEffect(() => {
@@ -74,9 +78,10 @@ export default function DictionaryPage() {
     };
 
     // 处理表格数据重新排序
-    const handleReorder = (reorderedItems: lookup[]) => {
+    const handleReorder = (reorderedItems: lookupSortRequest) => {
         // 这里应该有一个API调用来保存新的顺序
         console.log('重新排序:', reorderedItems);
+        mutate(reorderedItems)
     };
 
     return (

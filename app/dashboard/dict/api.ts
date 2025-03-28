@@ -1,7 +1,5 @@
 import { request } from '@/lib/request'
 import { searchParamsString } from '@/lib/search-params-to-string';
-
-
 export interface lookupGroupResponse {
     list: group[];
     page: number;
@@ -64,11 +62,18 @@ export function getLookupList(group_value: string, params: lookupRequest) {
         method: 'GET',
     })
 }
+
+export interface lookupSortRequest {
+    from: string;
+    to: string;
+    list: lookup[]
+}
+
 // 排序
 //   PUT /lookup/sort
 //   接口ID：275605664
 //   接口地址：https://app.apifox.com/link/project/3200371/apis/api-275605664
-export function putLookupSort(params: lookupRequest) {
+export function putLookupSort(params: lookupSortRequest) {
     return request<lookupResponse>(`/lookup/sort`, {
         method: 'PUT',
         body: JSON.stringify(params),
