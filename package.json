@@ -7,7 +7,7 @@
     "email": "i@tigerzh.com"
   },
   "license": "./license",
-  "version": "25.0401.2304",
+  "version": "25.0401.2337",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -25,6 +25,7 @@
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
     "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-popover": "^1.1.6",
     "@radix-ui/react-progress": "^1.1.2",
     "@radix-ui/react-select": "^2.1.6",
     "@radix-ui/react-separator": "^1.1.2",
