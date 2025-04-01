@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, ChevronDown, type LucideIcon } from "lucide-react"
+import { ChevronRight, ChevronDown } from "lucide-react"
 import * as Icons from "lucide-react" // 导入所有图标
 import { useState } from "react"
 import { usePathname } from "next/navigation"
