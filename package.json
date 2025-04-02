@@ -7,7 +7,7 @@
     "email": "i@tigerzh.com"
   },
   "license": "./license",
-  "version": "25.0401.2337",
+  "version": "25.0402.1036",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -44,7 +44,7 @@
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.479.0",
     "motion": "^12.5.0",
-    "next": "^15.3.0-canary.20",
+    "next": "^15.2.4",
     "next-themes": "^0.4.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

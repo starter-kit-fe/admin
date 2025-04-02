@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -73,25 +73,33 @@ function DefaultBadge({ isDefault }: { isDefault: boolean | undefined }) {
   );
 }
 
-// 拖拽行组件
+// 优化拖拽行组件 - 添加更好的视觉反馈
 function DraggableTableRow({
   row,
-  reorderRow,
 }: {
   row: Row<lookup>;
-  reorderRow: (draggedRowIndex: number, targetRowIndex: number) => void;
 }) {
   const [isHovering, setIsHovering] = useState(false);
   const item = row.original;
-  const id = item.id?.toString() || Math.random().toString();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const id = item.id?.toString() || `item-${row.index}`; // More stable ID
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    // 添加自定义属性以改善拖拽体验
+    transition: {
+      duration: 150, // 更快的过渡时间，提高响应速度
+      easing: 'cubic-bezier(0.2, 0, 0.2, 1)' // More natural easing
+    }
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    // 添加拖拽时的视觉反馈
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 999 : 1,
+    // 优化拖拽时的视觉反馈
+    opacity: isDragging ? 0.6 : 1,
+    backgroundColor: isDragging ? 'var(--background-muted)' : undefined,
+    zIndex: isDragging ? 9999 : 1,
+    // 添加微小的缩放效果
+    scale: isDragging ? '1.01' : '1',
   };
 
   return (
@@ -99,7 +107,7 @@ function DraggableTableRow({
       ref={setNodeRef}
       style={style}
       data-state={row.getIsSelected() && "selected"}
-      className="group"
+      className={`group transition-colors ${isDragging ? 'shadow-md rounded' : ''}`}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
@@ -110,12 +118,16 @@ function DraggableTableRow({
             <TableCell key={cell.id}>
               <div className="px-1 flex justify-center">
                 <button
-                  className="touch-none opacity-0 group-hover:opacity-100 transition-opacity"
+                  className={`touch-none transition-opacity ${isHovering || isDragging ? 'opacity-100' : 'opacity-0'
+                    }`}
                   {...attributes}
                   {...listeners}
                   aria-label="拖拽排序"
                 >
-                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+                  <GripVertical
+                    className={`h-4 w-4 text-muted-foreground ${isDragging ? 'text-primary' : 'cursor-grab'
+                      }`}
+                  />
                 </button>
               </div>
             </TableCell>
@@ -132,6 +144,7 @@ function DraggableTableRow({
     </TableRow>
   );
 }
+
 
 // 加载状态行
 function LoadingRow({ columns }: { columns: Record<string, boolean> }) {
@@ -179,7 +192,7 @@ interface LookupTableProps {
   data: lookup[];
   columns: Record<string, boolean>;
   isLoading: boolean;
-  onReorder: (items: lookup[]) => void;
+  onReorder: (items: { from: string, to: string, list: lookup[] }) => void;
 }
 
 export function LookupTable({
@@ -189,33 +202,45 @@ export function LookupTable({
   onReorder,
 }: LookupTableProps) {
   const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>({});
-
+  const [localData, setLocalData] = useState<lookup[]>(data);
+  // 当外部数据变化时更新本地数据
+  useEffect(() => {
+    setLocalData(data);
+  }, [data]);
   // 拖拽排序相关设置
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
-
-  // 处理拖拽结束事件
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = data.findIndex(item => (item.id?.toString() || '') === active.id);
-      const newIndex = data.findIndex(item => (item.id?.toString() || '') === over.id);
+      const oldIndex = localData.findIndex(item => (item.id?.toString() || '') === active.id);
+      const newIndex = localData.findIndex(item => (item.id?.toString() || '') === over.id);
 
       if (oldIndex !== -1 && newIndex !== -1) {
-        const newItems = arrayMove(data, oldIndex, newIndex);
-        onReorder(newItems);
+        // 创建新的排序数组
+        // 更新本地状态实现乐观UI更新
+        setLocalData(data => {
+          const newItems = arrayMove([...localData], oldIndex, newIndex);
+          // 计算排序值更新
+          const updatedItems = newItems.map((item, index) => ({
+            ...item,
+            sort: index + 1
+          }));
+          onReorder({
+            from: active.id.toString(),
+            to: over.id.toString(),
+            list: updatedItems,
+          });
+          return newItems
+        });
+        // 通知父组件
       }
     }
   }
 
-  // 处理行重新排序
-  function handleReorderRow(draggedRowIndex: number, targetRowIndex: number) {
-    const newData = arrayMove(data, draggedRowIndex, targetRowIndex);
-    onReorder(newData);
-  }
 
 
   // 修改为正确使用 createColumnHelper 的代码
@@ -368,7 +393,7 @@ export function LookupTable({
   ];
   // 初始化表格实例
   const table = useReactTable({
-    data,
+    data: localData,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
     state: {
@@ -443,14 +468,13 @@ export function LookupTable({
               ) : (
                 // 正常数据展示 - 将 SortableContext 包裹在表格行外部
                 <SortableContext
-                  items={data.map(item => item.id?.toString() || Math.random().toString())}
+                  items={localData.map(item => item.id?.toString() || Math.random().toString())}
                   strategy={verticalListSortingStrategy}
                 >
                   {table.getRowModel().rows.map(row => (
                     <DraggableTableRow
                       key={row.id}
                       row={row}
-                      reorderRow={handleReorderRow}
                     />
                   ))}
                 </SortableContext>
