@@ -46,6 +46,10 @@ import {
   useSortable
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { DraggableRow } from "./draggable-row";
+import { LoadingRow } from "./loading-row";
+// import { StatusBadge } from "./status-badge";
+// import { DefaultBadge } from "./default-badge";
 
 // 状态徽章组件
 function StatusBadge({ status }: { status: number | undefined }) {
@@ -81,25 +85,23 @@ function DraggableTableRow({
 }) {
   const [isHovering, setIsHovering] = useState(false);
   const item = row.original;
-  const id = item.id?.toString() || `item-${row.index}`; // More stable ID
+  const id = item.id?.toString() || `item-${row.index}`;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
-    // 添加自定义属性以改善拖拽体验
     transition: {
-      duration: 150, // 更快的过渡时间，提高响应速度
-      easing: 'cubic-bezier(0.2, 0, 0.2, 1)' // More natural easing
+      duration: 150,
+      easing: 'cubic-bezier(0.2, 0, 0.2, 1)'
     }
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    // 优化拖拽时的视觉反馈
-    opacity: isDragging ? 0.6 : 1,
+    opacity: isDragging ? 0.8 : 1,
     backgroundColor: isDragging ? 'var(--background-muted)' : undefined,
     zIndex: isDragging ? 9999 : 1,
-    // 添加微小的缩放效果
-    scale: isDragging ? '1.01' : '1',
+    scale: isDragging ? '1.02' : '1',
+    transformOrigin: 'center center',
   };
 
   return (
@@ -145,48 +147,6 @@ function DraggableTableRow({
   );
 }
 
-
-// 加载状态行
-function LoadingRow({ columns }: { columns: Record<string, boolean> }) {
-  return (
-    <TableRow>
-      {/* 拖拽列 */}
-      <TableCell className="w-8 p-0"></TableCell>
-
-      {columns.id && (
-        <TableCell><Skeleton className="h-4 w-10" /></TableCell>
-      )}
-      {columns.label && (
-        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-      )}
-      {columns.value && (
-        <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-      )}
-      {columns.sort && (
-        <TableCell><Skeleton className="h-4 w-8" /></TableCell>
-      )}
-      {columns.status && (
-        <TableCell><Skeleton className="h-5 w-10 rounded-full" /></TableCell>
-      )}
-      {columns.isDefault && (
-        <TableCell><Skeleton className="h-5 w-12" /></TableCell>
-      )}
-      {columns.remark && (
-        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-      )}
-      {columns.createdAt && (
-        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-      )}
-      {columns.updatedAt && (
-        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-      )}
-      {columns.actions && (
-        <TableCell><Skeleton className="h-8 w-16" /></TableCell>
-      )}
-    </TableRow>
-  );
-}
-
 // 主表格组件
 interface LookupTableProps {
   data: lookup[];
@@ -203,15 +163,22 @@ export function LookupTable({
 }: LookupTableProps) {
   const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>({});
   const [localData, setLocalData] = useState<lookup[]>(data);
+  
   // 当外部数据变化时更新本地数据
   useEffect(() => {
     setLocalData(data);
   }, [data]);
+
   // 拖拽排序相关设置
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(PointerSensor, { 
+      activationConstraint: { 
+        distance: 5
+      } 
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
@@ -220,28 +187,26 @@ export function LookupTable({
       const newIndex = localData.findIndex(item => (item.id?.toString() || '') === over.id);
 
       if (oldIndex !== -1 && newIndex !== -1) {
-        // 创建新的排序数组
-        // 更新本地状态实现乐观UI更新
-        setLocalData(data => {
-          const newItems = arrayMove([...localData], oldIndex, newIndex);
-          // 计算排序值更新
-          const updatedItems = newItems.map((item, index) => ({
-            ...item,
-            sort: index + 1
-          }));
+        // 乐观更新：立即更新UI
+        const newItems = arrayMove([...localData], oldIndex, newIndex);
+        const updatedItems = newItems.map((item, index) => ({
+          ...item,
+          sort: index + 1
+        }));
+        
+        setLocalData(updatedItems);
+        
+        // 异步通知父组件
+        setTimeout(() => {
           onReorder({
             from: active.id.toString(),
             to: over.id.toString(),
             list: updatedItems,
           });
-          return newItems
-        });
-        // 通知父组件
+        }, 0);
       }
     }
   }
-
-
 
   // 修改为正确使用 createColumnHelper 的代码
   const columnHelper = createColumnHelper<lookup>();
@@ -472,7 +437,7 @@ export function LookupTable({
                   strategy={verticalListSortingStrategy}
                 >
                   {table.getRowModel().rows.map(row => (
-                    <DraggableTableRow
+                    <DraggableRow
                       key={row.id}
                       row={row}
                     />
