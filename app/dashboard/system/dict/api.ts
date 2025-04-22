@@ -1,15 +1,17 @@
 import { request } from '@/lib/request'
 import { searchParamsString } from '@/lib/search-params-to-string';
+
+export interface group {
+    total: number;
+    value: string;
+}
+
 export interface lookupGroupResponse {
     list: group[];
     page: number;
     total: number;
 }
 
-export interface group {
-    total: number;
-    value: string;
-}
 export interface lookupGroupRequest {
     name?: string;
     page?: string,
@@ -18,7 +20,7 @@ export interface lookupGroupRequest {
 }
 
 
-// 分组列表
+//   分组列表
 //   GET /lookup/groups
 //   接口ID：226466166
 //   接口地址：https://app.apifox.com/link/project/3200371/apis/api-226466166
@@ -28,11 +30,6 @@ export function getLookupGroups(params: lookupGroupRequest) {
     })
 }
 
-export interface lookupResponse {
-    list: lookup[];
-    page: number;
-    total: number;
-}
 
 export interface lookup {
     createdAt?: string;
@@ -47,6 +44,12 @@ export interface lookup {
     updatedAt?: string;
     updator?: null;
     value?: string;
+}
+
+export interface lookupResponse {
+    list: lookup[];
+    page: number;
+    total: number;
 }
 
 export interface lookupRequest {
@@ -68,7 +71,6 @@ export interface lookupSortRequest {
     to: string;
     list: lookup[]
 }
-
 // 排序
 //   PUT /lookup/sort
 //   接口ID：275605664

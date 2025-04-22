@@ -1,7 +1,5 @@
 "use client";
-
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
 
 interface StatusFilterProps {
     status: string;

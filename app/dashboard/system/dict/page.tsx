@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect } from 'react';
+
 import { Card } from "@/components/ui/card";
-import { StatusFilter } from './_components/status-filter';
+import { StatusFilter } from '@/app/dashboard/_components/filters/status';
+
 import { SearchBar } from './_components/search-bar';
 import { ActionButtons } from './_components/action-buttons';
 import { ColumnToggle } from './_components/column-toggle';
 import { GroupList } from './_components/group-list';
 import { LookupTable } from './_components/lookup-table';
+
 import { getLookupGroups, getLookupList, putLookupSort, type lookupSortRequest } from '@/api';
 import { useStore } from './store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -15,6 +18,7 @@ import { ID_LOOKUP_GROUP, ID_LOOKUP_LIST } from '@/lib/constant';
 
 export default function DictionaryPage() {
     const queryClient = useQueryClient();
+
     // 使用字典 store
     const {
         selectedGroup,
@@ -121,25 +125,25 @@ export default function DictionaryPage() {
     };
 
     return (
-        <div className="container py-6 space-y-6">
+        <div className="container space-y-4">
             {/* 状态筛选Tab */}
-            <StatusFilter
-                status={lookupParams.status || 'all'}
-                onStatusChange={handleStatusChange}
-            />
-
-            {/* 搜索栏 */}
-            <SearchBar
-                value={lookupParams.name || ''}
-                onChange={handleSearch}
-                placeholder="搜索字典项..."
-            />
-
-            {/* 操作按钮和列设置 */}
-            <div className="flex justify-between items-center">
+            <div className='flex justify-between items-center'>
                 <ActionButtons
                     selectedGroup={selectedGroup}
                     onSuccess={() => refetchLookups()}
+                />
+                <StatusFilter
+                    status={lookupParams.status || 'all'}
+                    onStatusChange={handleStatusChange}
+                />
+
+            </div>
+            {/* 操作按钮和列设置 */}
+            <div className="flex justify-between items-center">
+                <SearchBar
+                    value={lookupParams.name || ''}
+                    onChange={handleSearch}
+                    placeholder="搜索字典项..."
                 />
                 <ColumnToggle
                     columns={visibleColumns}
