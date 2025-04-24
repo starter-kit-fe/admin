@@ -6,10 +6,11 @@ import { Card } from "@/components/ui/card";
 import { StatusFilter } from '@/app/dashboard/_components/filters/status';
 
 import { SearchBar } from './_components/search-bar';
-import { ActionButtons } from './_components/action-buttons';
 import { ColumnToggle } from './_components/column-toggle';
 import { GroupList } from './_components/group-list';
 import { LookupTable } from './_components/lookup-table';
+import Header from './_components/header';
+import Filter from './_components/filter';
 
 import { getLookupGroups, getLookupList, putLookupSort, type lookupSortRequest } from '@/api';
 import { useStore } from './store';
@@ -126,55 +127,8 @@ export default function DictionaryPage() {
 
     return (
         <div className="container space-y-4">
-            {/* 状态筛选Tab */}
-            <div className='flex justify-between items-center'>
-                <ActionButtons
-                    selectedGroup={selectedGroup}
-                    onSuccess={() => refetchLookups()}
-                />
-                <StatusFilter
-                    status={lookupParams.status || 'all'}
-                    onStatusChange={handleStatusChange}
-                />
-
-            </div>
-            {/* 操作按钮和列设置 */}
-            <div className="flex justify-between items-center">
-                <SearchBar
-                    value={lookupParams.name || ''}
-                    onChange={handleSearch}
-                    placeholder="搜索字典项..."
-                />
-                <ColumnToggle
-                    columns={visibleColumns}
-                    onToggle={(column, visible) => setVisibleColumn(column, visible)}
-                />
-            </div>
-
-            {/* 主体内容区域 */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                {/* 左侧分组列表 */}
-                <div className="md:col-span-1">
-                    <GroupList
-                        groups={groupsData?.list || []}
-                        selectedGroup={selectedGroup}
-                        onSelect={handleGroupSelect}
-                        isLoading={isGroupsLoading}
-                    />
-                </div>
-
-                {/* 右侧字典表格 */}
-                <div className="md:col-span-4">
-                    <Card>
-                        <LookupTable
-                            data={lookupsData?.list || []}
-                            columns={visibleColumns}
-                            isLoading={isLookupsLoading}
-                            onReorder={handleReorder}
-                        />
-                    </Card>
-                </div>
-            </div>
+            <Header />
+            <Filter />
         </div>
     );
 }

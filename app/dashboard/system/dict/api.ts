@@ -54,7 +54,7 @@ export interface lookupResponse {
 
 export interface lookupRequest {
     name?: string;
-    status?: string;
+    status: string;
 }
 // 字典列表
 //   GET /lookup/group/{group_value}
