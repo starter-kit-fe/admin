@@ -46,11 +46,6 @@ export interface lookup {
     value?: string;
 }
 
-export interface lookupResponse {
-    list: lookup[];
-    page: number;
-    total: number;
-}
 
 export interface lookupRequest {
     name?: string;
@@ -61,7 +56,7 @@ export interface lookupRequest {
 //   接口ID：234597593
 //   接口地址：https://app.apifox.com/link/project/3200371/apis/api-234597593
 export function getLookupList(group_value: string, params: lookupRequest) {
-    return request<lookupResponse>(`/lookup/group/${group_value}?${searchParamsString(params)}`, {
+    return request<lookup[]>(`/lookup/group/${group_value}?${searchParamsString(params)}`, {
         method: 'GET',
     })
 }
@@ -76,7 +71,7 @@ export interface lookupSortRequest {
 //   接口ID：275605664
 //   接口地址：https://app.apifox.com/link/project/3200371/apis/api-275605664
 export function putLookupSort(params: lookupSortRequest) {
-    return request<lookupResponse>(`/lookup/sort`, {
+    return request<lookupGroupResponse>(`/lookup/sort`, {
         method: 'PUT',
         body: JSON.stringify(params),
     })

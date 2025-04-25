@@ -2,13 +2,6 @@
 
 import { useEffect } from 'react';
 
-import { Card } from "@/components/ui/card";
-import { StatusFilter } from '@/app/dashboard/_components/filters/status';
-
-import { SearchBar } from './_components/search-bar';
-import { ColumnToggle } from './_components/column-toggle';
-import { GroupList } from './_components/group-list';
-import { LookupTable } from './_components/lookup-table';
 import Header from './_components/header';
 import Filter from './_components/filter';
 
@@ -16,7 +9,7 @@ import { getLookupGroups, getLookupList, putLookupSort, type lookupSortRequest }
 import { useStore } from './store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ID_LOOKUP_GROUP, ID_LOOKUP_LIST } from '@/lib/constant';
-
+import Table from './_components/table';
 export default function DictionaryPage() {
     const queryClient = useQueryClient();
 
@@ -43,14 +36,14 @@ export default function DictionaryPage() {
 
     // 字典项查询
     const {
-        data: lookupsData,
+        data: lookupsData = [],
         isLoading: isLookupsLoading,
         refetch: refetchLookups
     } = useQuery({
         queryKey: [ID_LOOKUP_LIST, selectedGroup, lookupParams],
         queryFn: () => selectedGroup
             ? getLookupList(selectedGroup, lookupParams)
-            : Promise.resolve({ list: [], page: 1, total: 0 }),
+            : Promise.resolve([]),
         enabled: !!selectedGroup,
     });
     // 优化后的 useMutation 配置
@@ -124,11 +117,11 @@ export default function DictionaryPage() {
         console.log('重新排序:', reorderedItems);
         mutate(reorderedItems)
     };
-
     return (
         <div className="container space-y-4">
             <Header />
             <Filter />
+            <Table data={lookupsData} loading={isLookupsLoading} />
         </div>
     );
 }
