@@ -1,6 +1,7 @@
 {
+  "name": "@repo/server",
   "version": "25.1014.1542",
   "scripts": {
-    "dev": ""
+    "dev": "VERSION=$(node -p \"require('../../package.json').version\") COMMIT=$(git rev-parse --short HEAD) air --build.cmd \"go build -v -trimpath -ldflags=\\\"-X github.com/starter-kit-fe/admin/constant.VERSION=${VERSION} -X github.com/starter-kit-fe/admin/constant.COMMIT=${COMMIT} -X github.com/starter-kit-fe/admin/constant.MODE=debug -s -w -buildid=\\\" -o ./tmp/admin ./cmd\""
   }
 }

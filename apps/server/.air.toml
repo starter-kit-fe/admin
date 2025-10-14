@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 
 [build]
 # 执行的命令，支持 Docker 环境
-cmd = "go build -v -trimpath -ldflags='-X admin/constant.VERSION=dev -X admin/constant.MODE=debug -s -w -buildid=' -o ./tmp/admin ./cmd"
+cmd = "go build -v -trimpath -ldflags=\\\"-X github.com/starter-kit-fe/admin/constant.VERSION=${VERSION:-dev} -X github.com/starter-kit-fe/admin/constant.COMMIT=${COMMIT:-local} -X github.com/starter-kit-fe/admin/constant.MODE=debug -s -w -buildid=\\\" -o ./tmp/admin ./cmd"
 # 二进制文件路径
 bin = "tmp/admin"
 # 监听哪些文件类型的变化
@@ -16,7 +16,7 @@ exclude_file = []
 # 过滤正则表达式
 include_dir = []
 # 自定义参数，传递给编译后的二进制文件
-args_bin = ["run"]
+args_bin = ["start"]
 # 日志文件
 log = "tmp/build-errors.log"
 # 启动延迟
