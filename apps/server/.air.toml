@@ -1,0 +1,44 @@
+# .air.toml 配置文件
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# 执行的命令，支持 Docker 环境
+cmd = "go build -v -trimpath -ldflags='-X admin/constant.VERSION=dev -X admin/constant.MODE=debug -s -w -buildid=' -o ./tmp/admin ./cmd"
+# 二进制文件路径
+bin = "tmp/admin"
+# 监听哪些文件类型的变化
+include_ext = ["go", "tpl", "tmpl", "html", "yaml", "yml", "toml", "json"]
+# 忽略这些文件夹
+exclude_dir = ["assets", "tmp", "vendor", ".git", "node_modules"]
+# 忽略这些文件
+exclude_file = []
+# 过滤正则表达式
+include_dir = []
+# 自定义参数，传递给编译后的二进制文件
+args_bin = ["run"]
+# 日志文件
+log = "tmp/build-errors.log"
+# 启动延迟
+delay = 1000
+# 发生错误时停止运行
+stop_on_error = true
+# 发送中断信号前等待时间
+send_interrupt = false
+# 杀死进程前等待时间
+kill_delay = 500
+
+[log]
+# 显示日志
+time = true
+
+[color]
+# 自定义颜色
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
+
+[misc]
+# 退出时删除tmp目录
+clean_on_exit = true

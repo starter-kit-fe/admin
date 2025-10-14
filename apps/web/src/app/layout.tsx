@@ -1,33 +1,56 @@
-import { Providers } from "@/components/providers";
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
-import Script from "next/script";
+import { Providers } from '@/components/providers';
+import type { Metadata } from 'next';
+import { Geist } from 'next/font/google';
+import Script from 'next/script';
 
-import pkg from "../../package.json";
-import "./globals.css";
+import pkg from '../../package.json';
+import './globals.css';
+
 const font = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
+
+const metadataBase = (() => {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? pkg.seo.og.url;
+  try {
+    return baseUrl ? new URL(baseUrl) : undefined;
+  } catch {
+    return undefined;
+  }
+})();
+
 export const metadata: Metadata = {
   title: pkg.seo.title,
   description: pkg.seo.description,
   keywords: pkg.seo.keywords,
+  ...(metadataBase ? { metadataBase } : {}),
   openGraph: {
     title: pkg.seo.og.title,
     description: pkg.seo.og.description,
     url: pkg.seo.og.url,
-    type: pkg.seo.og.type as "website",
+    type: pkg.seo.og.type as 'website',
     images: pkg.seo.og.image,
   },
   twitter: {
-    card: pkg.seo.twitter.card as "summary_large_image",
+    card: pkg.seo.twitter.card as 'summary_large_image',
     title: pkg.seo.twitter.title,
     description: pkg.seo.twitter.description,
     images: pkg.seo.twitter.image,
   },
-  // 建议与 og.url 同步，利于生成绝对 URL
-  metadataBase: new URL(pkg.seo.og.url),
+  icons: {
+    icon: [
+      { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+    shortcut: ['/favicon-32x32.png'],
+  },
+  manifest: '/site.webmanifest',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
 };
 
 export default function RootLayout({
@@ -43,30 +66,6 @@ export default function RootLayout({
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
-        />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link
-          rel="icon"
-          href="/favicon-32x32.png"
-          type="image/png"
-          sizes="32x32"
-        />
-        <link
-          rel="icon"
-          href="/favicon-16x16.png"
-          type="image/png"
-          sizes="16x16"
-        />
-        <link rel="manifest" href="/site.webmanifest" />
-        <meta
-          name="theme-color"
-          content="#FFFFFF"
-          media="(prefers-color-scheme: light)"
-        />
-        <meta
-          name="theme-color"
-          content="#000000"
-          media="(prefers-color-scheme: dark)"
         />
         {pkg.seo.jsonLd && (
           <Script

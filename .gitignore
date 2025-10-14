@@ -31,6 +31,7 @@ coverage/
 **/coverage/
 *.tsbuildinfo
 next-env.d.ts
+**/tmp/
 
 # Local environment files
 .env

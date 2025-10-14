@@ -1,6 +1,5 @@
 {
   "name": "web",
-  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -88,37 +87,37 @@
     ]
   },
   "seo": {
-    "title": "nextjs-csr",
-    "description": "nextjs-csr description",
+    "title": "admin",
+    "description": "admin description",
     "keywords": [
       "keywords",
       "keywords2"
     ],
     "og": {
-      "title": "nextjs-csr",
-      "description": "nextjs-csr",
-      "image": "https://nextjs-csr.com/pwa-512x512.png",
-      "url": "https://nextjs-csr.com",
+      "title": "we b",
+      "description": "admin",
+      "image": "https://admin.com/pwa-512x512.png",
+      "url": "https://admin.com",
       "type": "website"
     },
     "twitter": {
       "card": "summary_large_image",
-      "title": "nextjs-csr",
-      "description": "nextjs-csr",
-      "image": "https://nextjs-csr.com/pwa-512x512.png"
+      "title": "admin",
+      "description": "admin",
+      "image": "https://admin.com/pwa-512x512.png"
     },
     "jsonLd": {
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "OneFile",
-      "url": "https://nextjs-csr.com",
-      "description": "nextjs-csr。",
+      "url": "https://admin.com",
+      "description": "admin。",
       "publisher": {
         "@type": "Organization",
         "name": "OneFile",
         "logo": {
           "@type": "ImageObject",
-          "image": "https://nextjs-csr.com/pwa-512x512.png"
+          "image": "https://admin.com/pwa-512x512.png"
         }
       }
     }

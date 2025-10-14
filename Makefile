@@ -10,7 +10,6 @@ ifeq ($(strip $(NPM)),)
 $(error npm is not installed. Please install Node.js and npm)
 endif
 
-
 # 更新版本号，增加错误处理
 update-version:
 	@if [ -f "package.json" ]; then \
@@ -40,3 +39,7 @@ push-tag: push-version
 	@git tag v$(VERSION) && \
 		git push origin v$(VERSION) || \
 		(echo "Failed to create and push tag"; exit 1)
+
+# 开发环境
+dev:
+	@$(NPM) run dev
