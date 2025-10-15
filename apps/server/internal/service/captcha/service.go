@@ -8,6 +8,7 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
+	"math"
 	"math/rand"
 	"strings"
 	"sync"
@@ -15,6 +16,8 @@ import (
 
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
+	"golang.org/x/image/font/gofont/gobold"
+	"golang.org/x/image/font/opentype"
 	"golang.org/x/image/math/fixed"
 )
 
@@ -25,6 +28,7 @@ type Options struct {
 	CharCount    int
 	NoiseLines   int
 	NoiseDots    int
+	FontSize     float64
 	AllowedRunes []rune
 }
 
@@ -33,6 +37,7 @@ type Service struct {
 	mu    sync.RWMutex
 	store map[string]entry
 	rand  *rand.Rand
+	face  font.Face
 }
 
 type entry struct {
@@ -51,29 +56,40 @@ func New(opts Options) *Service {
 		opts.TTL = time.Minute * 2
 	}
 	if opts.Width <= 0 {
-		opts.Width = 160
+		opts.Width = 180
 	}
 	if opts.Height <= 0 {
-		opts.Height = 60
+		opts.Height = 80
 	}
 	if opts.CharCount <= 0 {
 		opts.CharCount = 4
 	}
 	if opts.NoiseLines < 0 {
-		opts.NoiseLines = 4
+		opts.NoiseLines = 5
 	}
 	if opts.NoiseDots < 0 {
-		opts.NoiseDots = 30
+		opts.NoiseDots = 40
+	}
+	if opts.FontSize <= 0 {
+		opts.FontSize = 32
 	}
 	if len(opts.AllowedRunes) == 0 {
 		opts.AllowedRunes = []rune("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
 	}
 
-	return &Service{
+	svc := &Service{
 		opts:  opts,
 		store: make(map[string]entry),
 		rand:  rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
+
+	if face := loadFontFace(opts.FontSize); face != nil {
+		svc.face = face
+	} else {
+		svc.face = basicfont.Face7x13
+	}
+
+	return svc
 }
 
 func (s *Service) Generate(_ context.Context) (*Captcha, error) {
@@ -163,22 +179,51 @@ func (s *Service) drawCaptcha(answer string) image.Image {
 		img.Set(x, y, randomColor(s.rand))
 	}
 
-	face := basicfont.Face7x13
+	face := s.face
 	drawer := &font.Drawer{
 		Dst:  img,
-		Src:  image.NewUniform(color.Black),
+		Src:  image.NewUniform(color.RGBA{R: 32, G: 48, B: 72, A: 255}),
 		Face: face,
 	}
 
-	x := (s.opts.Width - drawer.MeasureString(answer).Round()) / 2
-	y := (s.opts.Height + face.Ascent) / 2
-	drawer.Dot = fixed.Point26_6{
-		X: fixed.I(x),
-		Y: fixed.I(y),
+	metrics := face.Metrics()
+	ascent := metrics.Ascent.Round()
+	descent := metrics.Descent.Round()
+	textHeight := ascent + descent
+	y := (s.opts.Height-textHeight)/2 + ascent
+
+	totalWidth := drawer.MeasureString(answer).Round()
+	x := (s.opts.Width - totalWidth) / 2
+
+	for _, r := range answer {
+		char := string(r)
+		drawer.Src = image.NewUniform(randomDarkColor(s.rand))
+		drawer.Dot = fixed.Point26_6{
+			X: fixed.I(x + s.rand.Intn(5) - 2),
+			Y: fixed.I(y + s.rand.Intn(5) - 2),
+		}
+		drawer.DrawString(char)
+		charWidth := drawer.MeasureString(char).Round()
+		x += charWidth + int(math.Max(2, float64(s.opts.Width)/float64(s.opts.CharCount*12)))
 	}
-	drawer.DrawString(answer)
 
 	return img
+}
+
+func loadFontFace(size float64) font.Face {
+	fontData, err := opentype.Parse(gobold.TTF)
+	if err != nil {
+		return nil
+	}
+	face, err := opentype.NewFace(fontData, &opentype.FaceOptions{
+		Size:    size,
+		DPI:     96,
+		Hinting: font.HintingNone,
+	})
+	if err != nil {
+		return nil
+	}
+	return face
 }
 
 func randomColor(r *rand.Rand) color.RGBA {
@@ -186,6 +231,16 @@ func randomColor(r *rand.Rand) color.RGBA {
 		R: uint8(r.Intn(200)),
 		G: uint8(r.Intn(200)),
 		B: uint8(r.Intn(200)),
+		A: 255,
+	}
+}
+
+func randomDarkColor(r *rand.Rand) color.RGBA {
+	base := randomColor(r)
+	return color.RGBA{
+		R: uint8(float64(base.R) * 0.6),
+		G: uint8(float64(base.G) * 0.6),
+		B: uint8(float64(base.B) * 0.6),
 		A: 255,
 	}
 }

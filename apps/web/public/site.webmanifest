@@ -1,6 +1,6 @@
 {
-  "name": "admin",
-  "short_name": "App",
+  "name": "Admin",
+  "short_name": "Admin",
   "icons": [
     {
       "src": "/pwa-192x192.png",

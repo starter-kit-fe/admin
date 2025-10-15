@@ -26,6 +26,18 @@
         "^check-types"
       ]
     },
+    "docs": {
+      "dependsOn": [
+        "^docs"
+      ],
+      "outputs": [
+        "apps/server/internal/docs/swagger.json"
+      ],
+      "inputs": [
+        "apps/server/internal/**/*.go",
+        "apps/server/cmd/**/*.go"
+      ]
+    },
     "dev": {
       "cache": false,
       "persistent": true

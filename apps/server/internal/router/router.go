@@ -1,3 +1,14 @@
+// Package router wires HTTP routes for the admin service.
+//
+// @title Admin Service API
+// @version 0.1.0
+// @description Internal admin platform API documentation.
+// @BasePath /
+// @schemes http https
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description 输入 Bearer Token，格式：Bearer {token}
 package router
 
 import (
@@ -120,6 +131,7 @@ func registerProtectedAuthRoutes(group *gin.RouterGroup, opts Options) {
 	}
 	group.GET("/getInfo", opts.AuthHandler.GetInfo)
 	group.GET("/auth/me", opts.AuthHandler.GetInfo)
+	group.GET("/auth/menus", opts.AuthHandler.GetMenus)
 }
 
 func registerSystemRoutes(group *gin.RouterGroup) {

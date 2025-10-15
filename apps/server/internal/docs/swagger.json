@@ -1,146 +1,460 @@
 {
-  "openapi": "3.0.3",
-  "info": {
-    "title": "Admin Service API",
-    "description": "Internal admin platform API documentation.",
-    "version": "0.1.0"
-  },
-  "servers": [
-    {
-      "url": "http://localhost:8000",
-      "description": "Local development"
-    }
-  ],
-  "components": {
-    "securitySchemes": {
-      "BearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
-      }
-    }
-  },
-  "security": [
-    {
-      "BearerAuth": []
-    }
-  ],
-  "paths": {
-    "/healthz": {
-      "get": {
-        "summary": "Service health probe",
-        "responses": {
-          "200": {
-            "description": "service is healthy"
-          }
-        }
-      }
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "Internal admin platform API documentation.",
+        "title": "Admin Service API",
+        "contact": {},
+        "version": "0.1.0"
     },
-    "/api/v1/auth/login": {
-      "post": {
-        "summary": "Obtain JWT token",
-        "description": "Authenticates a user and returns a JWT token.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "username": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password"
-                  }
-                },
-                "required": [
-                  "username",
-                  "password"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "token issued"
-          },
-          "400": {
-            "description": "invalid request body"
-          },
-          "401": {
-            "description": "invalid credentials"
-          }
-        }
-      }
-    },
-    "/api/v1/auth/captcha": {
-      "get": {
-        "summary": "Generate captcha challenge",
-        "description": "Returns a captcha identifier and an image encoded as base64 data URI.",
-        "responses": {
-          "200": {
-            "description": "captcha created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "example": 200
-                    },
-                    "msg": {
-                      "type": "string",
-                      "example": "OK"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "captcha_id": {
-                          "type": "string"
-                        },
-                        "image": {
-                          "type": "string",
-                          "format": "byte"
-                        },
-                        "expires_in": {
-                          "type": "integer",
-                          "format": "int64",
-                          "description": "seconds until expiration"
+    "basePath": "/",
+    "paths": {
+        "/healthz": {
+            "get": {
+                "description": "返回数据库、缓存等依赖的状态",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "健康检查",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
-                      }
                     }
-                  }
                 }
-              }
             }
-          }
+        },
+        "/v1/auth/captcha": {
+            "get": {
+                "description": "生成一次性验证码图片",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Captcha"
+                ],
+                "summary": "获取验证码",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.CaptchaResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/captcha/verify": {
+            "post": {
+                "description": "验证一次性验证码是否正确",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Captcha"
+                ],
+                "summary": "校验验证码",
+                "parameters": [
+                    {
+                        "description": "验证码校验请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CaptchaVerifyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/login": {
+            "post": {
+                "description": "校验用户名、密码、验证码并生成 JWT",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "用户登录",
+                "parameters": [
+                    {
+                        "description": "登录请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "通过 JWT Token 获取当前用户详情、角色、权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "获取当前用户信息",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.GetInfoResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/getInfo": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "通过 JWT Token 获取当前用户详情、角色、权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "获取当前用户信息",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.GetInfoResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    }
+                }
+            }
         }
-      }
     },
-    "/api/v1/system/users": {
-      "get": {
-        "summary": "List system users",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "list response"
-          },
-          "401": {
-            "description": "missing or invalid credentials"
-          },
-          "403": {
-            "description": "insufficient permissions"
-          }
+    "definitions": {
+        "handler.CaptchaResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "data": {
+                    "$ref": "#/definitions/handler.CaptchaResponseData"
+                },
+                "msg": {
+                    "type": "string",
+                    "example": "OK"
+                }
+            }
+        },
+        "handler.CaptchaResponseData": {
+            "type": "object",
+            "properties": {
+                "captcha_id": {
+                    "type": "string",
+                    "example": "edbf2c533e8e44e4986b98f785bd40a4"
+                },
+                "expires_in": {
+                    "type": "integer",
+                    "example": 120
+                },
+                "image": {
+                    "type": "string",
+                    "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg..."
+                }
+            }
+        },
+        "handler.CaptchaVerifyRequest": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string",
+                    "example": "8"
+                },
+                "captcha_id": {
+                    "type": "string",
+                    "example": "edbf2c533e8e44e4986b98f785bd40a4"
+                }
+            }
+        },
+        "handler.GetInfoResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "msg": {
+                    "type": "string",
+                    "example": "操作成功"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "system:user:list"
+                    ]
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "admin"
+                    ]
+                },
+                "user": {
+                    "$ref": "#/definitions/handler.UserInfo"
+                }
+            }
+        },
+        "handler.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "captcha": {
+                    "type": "string",
+                    "example": "8"
+                },
+                "captcha_id": {
+                    "type": "string",
+                    "example": "edbf2c533e8e44e4986b98f785bd40a4"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "8"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "admin123"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "admin"
+                },
+                "uuid": {
+                    "type": "string",
+                    "example": "edbf2c533e8e44e4986b98f785bd40a4"
+                }
+            }
+        },
+        "handler.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "msg": {
+                    "type": "string",
+                    "example": "操作成功"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "\u003cjwt-token\u003e"
+                }
+            }
+        },
+        "handler.UserInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": ""
+                },
+                "deptId": {
+                    "type": "integer",
+                    "example": 103
+                },
+                "email": {
+                    "type": "string",
+                    "example": "ry@163.com"
+                },
+                "nickName": {
+                    "type": "string",
+                    "example": "若依"
+                },
+                "phonenumber": {
+                    "type": "string",
+                    "example": "15888888888"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "sex": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "userId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "userName": {
+                    "type": "string",
+                    "example": "admin"
+                }
+            }
+        },
+        "resp.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "error": {},
+                "msg": {
+                    "type": "string"
+                }
+            }
         }
-      }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "输入 Bearer Token，格式：Bearer {token}",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
-  }
 }

@@ -20,6 +20,15 @@ func NewCaptchaHandler(service *captcha.Service) *CaptchaHandler {
 	return &CaptchaHandler{service: service}
 }
 
+// Generate godoc
+// @Summary 获取验证码
+// @Description 生成一次性验证码图片
+// @Tags Captcha
+// @Produce json
+// @Success 200 {object} CaptchaResponse
+// @Failure 503 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Router /v1/auth/captcha [get]
 func (h *CaptchaHandler) Generate(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("captcha service disabled"))
@@ -39,23 +48,32 @@ func (h *CaptchaHandler) Generate(ctx *gin.Context) {
 	}))
 }
 
+// Verify godoc
+// @Summary 校验验证码
+// @Description 验证一次性验证码是否正确
+// @Tags Captcha
+// @Accept json
+// @Produce json
+// @Param request body CaptchaVerifyRequest true "验证码校验请求"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 403 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/auth/captcha/verify [post]
 func (h *CaptchaHandler) Verify(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("captcha service disabled"))
 		return
 	}
 
-	var payload struct {
-		ID     string `json:"captcha_id" binding:"required"`
-		Answer string `json:"answer" binding:"required"`
-	}
+	var payload CaptchaVerifyRequest
 
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
 		resp.BadRequest(ctx, resp.WithMessage("invalid request payload"))
 		return
 	}
 
-	if h.service.Verify(ctx.Request.Context(), payload.ID, payload.Answer, true) {
+	if h.service.Verify(ctx.Request.Context(), payload.CaptchaID, payload.Answer, true) {
 		resp.OK(ctx, resp.WithMessage("captcha verified"))
 		return
 	}

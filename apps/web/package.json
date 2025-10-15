@@ -44,6 +44,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
+    "gsap": "^3.13.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.545.0",
     "motion": "^12.23.24",
@@ -87,37 +88,40 @@
     ]
   },
   "seo": {
-    "title": "admin",
-    "description": "admin description",
+    "title": "Admin Template — Modern Dashboard UI for Developers",
+    "description": "A clean and responsive admin dashboard template built for modern web apps. Includes reusable UI components, charts, tables, and authentication pages.",
     "keywords": [
-      "keywords",
-      "keywords2"
+      "admin template",
+      "dashboard UI",
+      "React admin",
+      "Next.js admin panel",
+      "web app template"
     ],
     "og": {
-      "title": "we b",
-      "description": "admin",
+      "title": "Admin Template | Modern Dashboard for Web Apps",
+      "description": "An elegant and developer-friendly admin template featuring modular UI, charts, tables, and dark mode.",
       "image": "https://admin.com/pwa-512x512.png",
       "url": "https://admin.com",
       "type": "website"
     },
     "twitter": {
       "card": "summary_large_image",
-      "title": "admin",
-      "description": "admin",
+      "title": "Admin Template",
+      "description": "Responsive and modern admin dashboard built with best UI/UX practices.",
       "image": "https://admin.com/pwa-512x512.png"
     },
     "jsonLd": {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "name": "OneFile",
+      "name": "Admin Template",
       "url": "https://admin.com",
-      "description": "admin。",
+      "description": "A responsive and elegant admin dashboard template for web developers.",
       "publisher": {
         "@type": "Organization",
-        "name": "OneFile",
+        "name": "Admin Template",
         "logo": {
           "@type": "ImageObject",
-          "image": "https://admin.com/pwa-512x512.png"
+          "url": "https://admin.com/pwa-512x512.png"
         }
       }
     }

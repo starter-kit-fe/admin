@@ -141,3 +141,37 @@ func (s *Service) loadRoles(ctx context.Context, userID uint) ([]string, error) 
 
 	return roles, nil
 }
+
+func (s *Service) Menus(ctx context.Context, userID uint) ([]model.SysMenu, error) {
+	if s == nil || s.db == nil {
+		return nil, ErrServiceUnavailable
+	}
+
+	menuTable := model.SysMenu{}.TableName()
+	roleMenuTable := model.SysRoleMenu{}.TableName()
+	userRoleTable := model.SysUserRole{}.TableName()
+
+	baseQuery := s.db.WithContext(ctx).
+		Table(menuTable).
+		Distinct(fmt.Sprintf("%s.*", menuTable)).
+		Order(fmt.Sprintf("%s.parent_id ASC, %s.order_num ASC, %s.menu_id ASC", menuTable, menuTable, menuTable))
+
+	if userID != 0 {
+		baseQuery = baseQuery.
+			Joins(fmt.Sprintf("JOIN %s ON %s.menu_id = %s.menu_id", roleMenuTable, menuTable, roleMenuTable)).
+			Joins(fmt.Sprintf("JOIN %s ON %s.role_id = %s.role_id", userRoleTable, roleMenuTable, userRoleTable)).
+			Where(fmt.Sprintf("%s.user_id = ?", userRoleTable), userID)
+	}
+
+	baseQuery = baseQuery.
+		Where(fmt.Sprintf("%s.status = ?", menuTable), "0").
+		Where(fmt.Sprintf("%s.menu_type IN ?", menuTable), []string{"M", "C"}).
+		Where(fmt.Sprintf("%s.visible = ?", menuTable), "0")
+
+	var menus []model.SysMenu
+	if err := baseQuery.Find(&menus).Error; err != nil {
+		return nil, err
+	}
+
+	return menus, nil
+}

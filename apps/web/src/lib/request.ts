@@ -2,7 +2,7 @@
  * HTTP 请求类封装（强类型，无 any）
  * 配合 React Query 使用，简化超时和重试逻辑
  */
-import { toast } from "sonner";
+import { toast } from 'sonner';
 
 interface RequestConfig {
   baseURL?: string;
@@ -34,19 +34,23 @@ export class HttpClient {
   private defaultHeaders: Record<string, string>;
 
   constructor(config: RequestConfig = {}) {
-    this.baseURL = config.baseURL || "";
+    this.baseURL = config.baseURL || '';
     this.defaultHeaders = {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...config.headers,
     };
   }
-  updateToken(token: string) {
-    // this.defaultHeaders['Authorization'] = `Bearer ${token}`;
-    this.defaultHeaders["token"] = `${token}`;
+  updateToken(token?: string | null) {
+    if (!token) {
+      Reflect.deleteProperty(this.defaultHeaders, 'token');
+      Reflect.deleteProperty(this.defaultHeaders, 'Authorization');
+      return;
+    }
+    this.defaultHeaders['Authorization'] = `Bearer ${token}`;
   }
 
   private buildURL(url: string, params?: Record<string, unknown>): string {
-    let fullURL = url.startsWith("http") ? url : `${this.baseURL}${url}`;
+    let fullURL = url.startsWith('http') ? url : `${this.baseURL}${url}`;
 
     if (params) {
       const searchParams = new URLSearchParams();
@@ -57,7 +61,7 @@ export class HttpClient {
       });
       const paramString = searchParams.toString();
       if (paramString) {
-        fullURL += `${fullURL.includes("?") ? "&" : "?"}${paramString}`;
+        fullURL += `${fullURL.includes('?') ? '&' : '?'}${paramString}`;
       }
     }
 
@@ -66,7 +70,7 @@ export class HttpClient {
 
   async request<T>(
     url: string,
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<ApiResponse<T>> {
     const { params, data, ...fetchOptions } = options;
 
@@ -83,7 +87,7 @@ export class HttpClient {
     if (data !== undefined) {
       if (data instanceof FormData) {
         body = data;
-        Reflect.deleteProperty(headers, "Content-Type"); // FormData 不需要手动设置 Content-Type
+        Reflect.deleteProperty(headers, 'Content-Type'); // FormData 不需要手动设置 Content-Type
       } else {
         body = JSON.stringify(data);
       }
@@ -94,17 +98,17 @@ export class HttpClient {
         headers,
         body,
       });
-      const contentType = response.headers.get("content-type");
+      const contentType = response.headers.get('content-type');
       let responseData: T;
-      if (contentType?.includes("application/json")) {
+      if (contentType?.includes('application/json')) {
         const jsonResponse: BackendResponse<T> = await response.json();
         if (jsonResponse.code == 401) {
           // 清除本地存储
           localStorage.clear();
-          toast.error("登录信息已过期，请重新登录");
+          toast.error('登录信息已过期，请重新登录');
         }
         return jsonResponse;
-      } else if (contentType?.startsWith("text/")) {
+      } else if (contentType?.startsWith('text/')) {
         responseData = (await response.text()) as T;
       } else {
         responseData = (await response.blob()) as T;
@@ -119,7 +123,7 @@ export class HttpClient {
       if (error instanceof Error) {
         throw new Error(error.message);
       }
-      throw new Error("网络请求失败");
+      throw new Error('网络请求失败');
     }
   }
 
@@ -127,56 +131,56 @@ export class HttpClient {
   get<T>(
     url: string,
     params?: Record<string, string | number | boolean>,
-    options?: Omit<RequestOptions, "params">
+    options?: Omit<RequestOptions, 'params'>,
   ) {
-    return this.request<T>(url, { ...options, method: "GET", params });
+    return this.request<T>(url, { ...options, method: 'GET', params });
   }
 
   // POST 请求
   post<T = unknown, B = unknown>(
     url: string,
     data?: B,
-    options?: Omit<RequestOptions, "data">
+    options?: Omit<RequestOptions, 'data'>,
   ) {
-    return this.request<T>(url, { ...options, method: "POST", data });
+    return this.request<T>(url, { ...options, method: 'POST', data });
   }
 
   // PUT 请求
   put<T = unknown, B = unknown>(
     url: string,
     data?: B,
-    options?: Omit<RequestOptions, "data">
+    options?: Omit<RequestOptions, 'data'>,
   ) {
-    return this.request<T>(url, { ...options, method: "PUT", data });
+    return this.request<T>(url, { ...options, method: 'PUT', data });
   }
 
   // PATCH 请求
   patch<T = unknown, B = unknown>(
     url: string,
     data?: B,
-    options?: Omit<RequestOptions, "data">
+    options?: Omit<RequestOptions, 'data'>,
   ) {
-    return this.request<T>(url, { ...options, method: "PATCH", data });
+    return this.request<T>(url, { ...options, method: 'PATCH', data });
   }
 
   // DELETE 请求
   delete<T = unknown>(url: string, options?: RequestOptions) {
-    return this.request<T>(url, { ...options, method: "DELETE" });
+    return this.request<T>(url, { ...options, method: 'DELETE' });
   }
 
   // 上传文件
   upload<T = unknown>(
     url: string,
     formData: FormData,
-    options?: Omit<RequestOptions, "data" | "body">
+    options?: Omit<RequestOptions, 'data' | 'body'>,
   ) {
-    return this.request<T>(url, { ...options, method: "POST", data: formData });
+    return this.request<T>(url, { ...options, method: 'POST', data: formData });
   }
 }
 
 // 创建默认实例
 export const http = new HttpClient({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL || "/api"}`,
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL || '/api'}`,
 });
 
 // 快捷导出函数
