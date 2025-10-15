@@ -1,5 +1,6 @@
 'use client';
 
+import ThemeToggle from '@/components/theme-toggle';
 import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,6 +38,8 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import pkg from '../../../package.json';
+import { fetchCaptcha, login } from './api';
+import type { LoginRequestPayload } from './type';
 
 const loginSchema = z.object({
   username: z.string().min(1, '请输入用户名'),
@@ -45,28 +48,6 @@ const loginSchema = z.object({
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
-
-interface LoginResponseShape {
-  code: number;
-  msg: string | null;
-  token: string;
-}
-
-interface CaptchaResponseShape {
-  code: number;
-  msg: string | null;
-  data?: {
-    captcha_id: string;
-    image: string;
-    expires_in: number;
-  };
-}
-
-interface CaptchaData {
-  id: string;
-  image: string;
-  expiresIn: number;
-}
 
 const featureHighlights = [
   '支持账号密码快速登录，登录后自动缓存权限配置。',
@@ -106,24 +87,7 @@ export default function Page() {
     refetch: refetchCaptcha,
   } = useQuery({
     queryKey: ['auth', 'captcha'],
-    queryFn: async (): Promise<CaptchaData> => {
-      const response =
-        await http.get<CaptchaResponseShape['data']>('/v1/auth/captcha');
-      if (response.code && response.code !== 200) {
-        throw new Error(response.msg ?? '获取验证码失败');
-      }
-      const payload = response.data ??
-        (response as unknown as CaptchaResponseShape).data ?? {
-          captcha_id: '',
-          image: '',
-          expires_in: 120,
-        };
-      return {
-        id: payload.captcha_id,
-        image: payload.image,
-        expiresIn: payload.expires_in,
-      };
-    },
+    queryFn: fetchCaptcha,
     staleTime: 0,
     refetchOnReconnect: true,
     refetchOnWindowFocus: false,
@@ -131,23 +95,15 @@ export default function Page() {
 
   const loginMutation = useMutation({
     mutationFn: async (values: LoginValues) => {
-      const payload = {
+      const payload: LoginRequestPayload = {
         username: values.username,
         password: values.password,
         captcha: values.captcha,
         captcha_id: captchaData?.id,
       };
-      const response = await http.post<LoginResponseShape>(
-        '/v1/auth/login',
-        payload,
-      );
-      const raw = response as unknown as LoginResponseShape;
-      const token = raw?.token ?? response.data?.token;
-      if (!token) {
-        throw new Error(response.msg ?? '登录失败，请稍后重试');
-      }
+      const result = await login(payload);
       handleRefreshCaptcha();
-      return { token, message: response.msg ?? raw?.msg ?? '登录成功' };
+      return result;
     },
     onSuccess: ({ token, message }) => {
       window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
@@ -225,7 +181,10 @@ export default function Page() {
       : null;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 md:flex-row">
+    <div className="relative flex min-h-dvh flex-col bg-background transition-colors md:flex-row">
+      <div className="absolute right-4 top-4 z-30 md:right-6 md:top-6">
+        <ThemeToggle />
+      </div>
       <aside className="relative hidden min-h-dvh flex-1 overflow-hidden md:flex">
         <img
           src={loginImage}
@@ -263,10 +222,10 @@ export default function Page() {
         </div>
       </aside>
 
-      <main className="flex flex-1 items-center justify-center px-6 py-12 md:px-12">
+      <main className="flex flex-1 items-center justify-center px-6 py-12 transition-colors md:px-12">
         <div className="w-full max-w-md space-y-8">
           <div className="space-y-4 text-center md:hidden">
-            <div className="mx-auto h-36 w-full overflow-hidden rounded-3xl bg-slate-200">
+            <div className="mx-auto h-36 w-full overflow-hidden rounded-3xl bg-muted">
               <img
                 src={loginImage}
                 alt="登录背景"
@@ -291,7 +250,7 @@ export default function Page() {
             </ul>
           </div>
 
-          <Card className="border-border/60 bg-white shadow-xl">
+          <Card className="border-border/60 bg-card text-card-foreground shadow-xl transition-colors">
             <CardHeader className="space-y-2 text-center">
               <CardTitle className="text-2xl font-semibold">账号登录</CardTitle>
               <CardDescription className="text-sm text-muted-foreground">

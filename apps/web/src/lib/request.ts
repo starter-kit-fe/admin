@@ -22,12 +22,8 @@ interface ApiResponse<T> {
   msg?: string | null; // 后端消息
 }
 
-// 后端 API 响应结构
-interface BackendResponse<T> {
-  code: number;
-  msg: string | null;
-  data: T;
-}
+const DEFAULT_SUCCESS_CODE = 200;
+const DEFAULT_ERROR_MESSAGE = '请求失败，请稍后重试';
 
 export class HttpClient {
   private baseURL: string;
@@ -42,11 +38,20 @@ export class HttpClient {
   }
   updateToken(token?: string | null) {
     if (!token) {
-      Reflect.deleteProperty(this.defaultHeaders, 'token');
       Reflect.deleteProperty(this.defaultHeaders, 'Authorization');
       return;
     }
     this.defaultHeaders['Authorization'] = `Bearer ${token}`;
+  }
+
+  private unwrapResponse<T>(response: ApiResponse<T>): T {
+    if (
+      typeof response.code === 'number' &&
+      response.code !== DEFAULT_SUCCESS_CODE
+    ) {
+      throw new Error(response.msg ?? DEFAULT_ERROR_MESSAGE);
+    }
+    return response.data;
   }
 
   private buildURL(url: string, params?: Record<string, unknown>): string {
@@ -99,23 +104,20 @@ export class HttpClient {
         body,
       });
       const contentType = response.headers.get('content-type');
-      let responseData: T;
       if (contentType?.includes('application/json')) {
-        const jsonResponse: BackendResponse<T> = await response.json();
-        if (jsonResponse.code == 401) {
-          // 清除本地存储
-          localStorage.clear();
-          toast.error('登录信息已过期，请重新登录');
-        }
-        return jsonResponse;
+        const jsonPayload = await response.json();
+        return this.resolveJsonResponse<T>(jsonPayload, response);
       } else if (contentType?.startsWith('text/')) {
-        responseData = (await response.text()) as T;
-      } else {
-        responseData = (await response.blob()) as T;
+        const responseData = (await response.text()) as T;
+        return {
+          data: responseData,
+          status: response.status,
+          ok: response.ok,
+        };
       }
 
       return {
-        data: responseData,
+        data: (await response.blob()) as T,
         status: response.status,
         ok: response.ok,
       };
@@ -128,12 +130,17 @@ export class HttpClient {
   }
 
   // GET 请求
-  get<T>(
+  async get<T>(
     url: string,
     params?: Record<string, string | number | boolean>,
     options?: Omit<RequestOptions, 'params'>,
   ) {
-    return this.request<T>(url, { ...options, method: 'GET', params });
+    const response = await this.request<T>(url, {
+      ...options,
+      method: 'GET',
+      params,
+    });
+    return this.unwrapResponse(response);
   }
 
   // POST 请求
@@ -142,7 +149,7 @@ export class HttpClient {
     data?: B,
     options?: Omit<RequestOptions, 'data'>,
   ) {
-    return this.request<T>(url, { ...options, method: 'POST', data });
+    return this.sendWithBody<T, B>(url, 'POST', data, options);
   }
 
   // PUT 请求
@@ -151,7 +158,7 @@ export class HttpClient {
     data?: B,
     options?: Omit<RequestOptions, 'data'>,
   ) {
-    return this.request<T>(url, { ...options, method: 'PUT', data });
+    return this.sendWithBody<T, B>(url, 'PUT', data, options);
   }
 
   // PATCH 请求
@@ -160,21 +167,88 @@ export class HttpClient {
     data?: B,
     options?: Omit<RequestOptions, 'data'>,
   ) {
-    return this.request<T>(url, { ...options, method: 'PATCH', data });
+    return this.sendWithBody<T, B>(url, 'PATCH', data, options);
   }
 
   // DELETE 请求
-  delete<T = unknown>(url: string, options?: RequestOptions) {
-    return this.request<T>(url, { ...options, method: 'DELETE' });
+  async delete<T = unknown>(url: string, options?: RequestOptions) {
+    const response = await this.request<T>(url, {
+      ...options,
+      method: 'DELETE',
+    });
+    return this.unwrapResponse(response);
   }
 
   // 上传文件
-  upload<T = unknown>(
+  async upload<T = unknown>(
     url: string,
     formData: FormData,
     options?: Omit<RequestOptions, 'data' | 'body'>,
   ) {
-    return this.request<T>(url, { ...options, method: 'POST', data: formData });
+    const response = await this.request<T>(url, {
+      ...options,
+      method: 'POST',
+      data: formData,
+    });
+    return this.unwrapResponse(response);
+  }
+
+  private async sendWithBody<T, B>(
+    url: string,
+    method: 'POST' | 'PUT' | 'PATCH',
+    data?: B,
+    options?: Omit<RequestOptions, 'data'>,
+  ) {
+    const response = await this.request<T>(url, {
+      ...options,
+      method,
+      data,
+    });
+    return this.unwrapResponse(response);
+  }
+
+  private resolveJsonResponse<T>(
+    payload: unknown,
+    response: Response,
+  ): ApiResponse<T> {
+    const record =
+      typeof payload === 'object' && payload !== null
+        ? (payload as Record<string, unknown>)
+        : undefined;
+
+    const businessCode =
+      typeof record?.code === 'number'
+        ? (record.code as number)
+        : undefined;
+    const message =
+      record && (typeof record.msg === 'string' || record.msg === null)
+        ? ((record.msg ?? null) as string | null)
+        : null;
+
+    if (businessCode === 401) {
+      localStorage.clear();
+      toast.error('登录信息已过期，请重新登录');
+    }
+
+    if (
+      typeof businessCode === 'number' &&
+      businessCode !== DEFAULT_SUCCESS_CODE
+    ) {
+      throw new Error(message ?? DEFAULT_ERROR_MESSAGE);
+    }
+
+    const resolvedData =
+      record && Object.prototype.hasOwnProperty.call(record, 'data')
+        ? (record.data as T)
+        : (payload as T);
+
+    return {
+      data: resolvedData,
+      status: response.status,
+      ok: response.ok,
+      code: businessCode,
+      msg: message,
+    };
   }
 }
 

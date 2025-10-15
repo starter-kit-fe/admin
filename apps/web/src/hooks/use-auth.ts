@@ -22,8 +22,8 @@ export interface AuthUser {
 }
 
 export interface AuthResponse {
-  code: number;
-  msg: string | null;
+  code?: number;
+  msg?: string | null;
   permissions: string[];
   roles: string[];
   user: AuthUser;
@@ -98,11 +98,11 @@ export function useAuthStatus() {
   const authQuery = useQuery<AuthResponse | null>({
     queryKey: AUTH_QUERY_KEY,
     queryFn: async () => {
-      const response = await http.get<AuthResponse>('/v1/auth/me');
-      if (response.code !== 200 || !response.user) {
+      const profile = await http.get<AuthResponse | null>('/v1/auth/me');
+      if (!profile?.user) {
         return null;
       }
-      return response;
+      return profile;
     },
     enabled: isTokenLoaded && Boolean(token),
     staleTime: 5 * 60 * 1000,

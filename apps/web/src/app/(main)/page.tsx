@@ -1,4 +1,6 @@
-import HealthStatusPanel from '@/components/health-status';
+'use client';
+
+import HealthStatusPanel from '@/app/(main)/health-status';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,6 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   Activity,
   Layers,
@@ -17,6 +21,7 @@ import {
   Zap,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 
 import pkg from '../../../package.json';
 
@@ -86,20 +91,149 @@ const resourceCards = [
 ] as const;
 
 export default function Page() {
+  const containerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const root = containerRef.current;
+    if (!root || typeof window === 'undefined') {
+      return;
+    }
+
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+    if (reduceMotion) {
+      return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const ctx = gsap.context(() => {
+      const sections = gsap.utils.toArray<HTMLElement>(
+        root.querySelectorAll('[data-animate-section]'),
+      );
+
+      sections.forEach((section) => {
+        const introTargets = gsap.utils.toArray<HTMLElement>(
+          section.querySelectorAll('[data-animate="intro"]'),
+        );
+        const cardTargets = gsap.utils.toArray<HTMLElement>(
+          section.querySelectorAll('[data-animate="card"]'),
+        );
+        const highlightTargets = gsap.utils.toArray<HTMLElement>(
+          section.querySelectorAll('[data-animate="highlight"]'),
+        );
+
+        if (
+          introTargets.length === 0 &&
+          cardTargets.length === 0 &&
+          highlightTargets.length === 0
+        ) {
+          return;
+        }
+
+        const timeline = gsap.timeline({
+          defaults: { ease: 'power2.out' },
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 78%',
+            end: 'bottom 60%',
+            scrub: 0.6,
+          },
+        });
+
+        if (introTargets.length) {
+          timeline.fromTo(
+            introTargets,
+            { y: 36, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              stagger: { each: 0.08, from: 'start' },
+            },
+          );
+        }
+
+        if (cardTargets.length) {
+          timeline.fromTo(
+            cardTargets,
+            { y: 48, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              stagger: { each: 0.14, from: 'start' },
+            },
+            introTargets.length ? '-=0.25' : 0,
+          );
+        }
+
+        if (highlightTargets.length) {
+          timeline.fromTo(
+            highlightTargets,
+            { y: 18, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              stagger: { each: 0.06, from: 'center' },
+            },
+            '-=0.3',
+          );
+        }
+      });
+
+      gsap.utils
+        .toArray<HTMLElement>(root.querySelectorAll('[data-parallax]'))
+        .forEach((element) => {
+          gsap.fromTo(
+            element,
+            { yPercent: -6 },
+            {
+              yPercent: 6,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: element,
+                scrub: true,
+              },
+            },
+          );
+        });
+    }, root);
+
+    return () => {
+      ctx.revert();
+      ScrollTrigger.getAll().forEach((trigger) => {
+        if (trigger.vars.trigger?.closest('[data-animate-section]')) {
+          trigger.kill();
+        }
+      });
+    };
+  }, []);
+
   return (
-    <main className="space-y-20 pb-20">
+    <main ref={containerRef} className="space-y-20 pb-20">
       <section
         id="features"
         className="mx-auto max-w-6xl px-6 pt-16 md:px-10 lg:px-12"
+        data-animate-section
       >
         <div className="flex flex-col gap-4">
-          <Badge variant="outline" className="w-fit border-dashed">
+          <Badge
+            variant="outline"
+            className="w-fit border-dashed"
+            data-animate="intro"
+          >
             核心特性
           </Badge>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          <h2
+            className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
+            data-animate="intro"
+          >
             从界面到数据，一条龙打造现代化管理后台
           </h2>
-          <p className="max-w-3xl text-sm text-muted-foreground sm:text-base">
+          <p
+            className="max-w-3xl text-sm text-muted-foreground sm:text-base"
+            data-animate="intro"
+          >
             {pkg.seo.description}
           </p>
         </div>
@@ -110,6 +244,7 @@ export default function Page() {
               <Card
                 key={feature.title}
                 className="border-border/60 bg-background/70 backdrop-blur transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg"
+                data-animate="card"
               >
                 <CardHeader className="gap-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -123,7 +258,11 @@ export default function Page() {
                 <CardContent>
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     {feature.highlights.map((item) => (
-                      <li key={item} className="flex items-center gap-2">
+                      <li
+                        key={item}
+                        className="flex items-center gap-2"
+                        data-animate="highlight"
+                      >
                         <span className="h-1.5 w-1.5 rounded-full bg-primary/80" />
                         <span>{item}</span>
                       </li>
@@ -136,16 +275,30 @@ export default function Page() {
         </div>
       </section>
 
-      <section id="themes" className="mx-auto max-w-6xl px-6 md:px-10 lg:px-12">
+      <section
+        id="themes"
+        className="mx-auto max-w-6xl px-6 md:px-10 lg:px-12"
+        data-animate-section
+      >
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-center">
           <div className="space-y-4">
-            <Badge variant="secondary" className="bg-primary/10 text-primary">
+            <Badge
+              variant="secondary"
+              className="bg-primary/10 text-primary"
+              data-animate="intro"
+            >
               多主题模式
             </Badge>
-            <h2 className="text-2xl font-semibold sm:text-3xl">
+            <h2
+              className="text-2xl font-semibold sm:text-3xl"
+              data-animate="intro"
+            >
               一套设计语言，三种主题体验
             </h2>
-            <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
+            <p
+              className="max-w-2xl text-sm text-muted-foreground sm:text-base"
+              data-animate="intro"
+            >
               默认跟随系统偏好，同时支持手动切换亮色与暗色主题。ThemeToggle
               组件与 next-themes 深度集成，带来顺滑的切换动效。
             </p>
@@ -155,9 +308,11 @@ export default function Page() {
               <Card
                 key={theme.name}
                 className="overflow-hidden border-border/60 bg-background/70 backdrop-blur"
+                data-animate="card"
               >
                 <div
                   className={`h-24 w-full bg-gradient-to-br ${theme.accent}`}
+                  data-parallax
                 />
                 <CardHeader className="gap-2">
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -182,15 +337,26 @@ export default function Page() {
       <section
         id="resources"
         className="mx-auto max-w-6xl px-6 md:px-10 lg:px-12"
+        data-animate-section
       >
         <div className="flex flex-col gap-4">
-          <Badge variant="outline" className="w-fit border-dotted">
+          <Badge
+            variant="outline"
+            className="w-fit border-dotted"
+            data-animate="intro"
+          >
             资源 & 工具
           </Badge>
-          <h2 className="text-2xl font-semibold sm:text-3xl">
+          <h2
+            className="text-2xl font-semibold sm:text-3xl"
+            data-animate="intro"
+          >
             配套资源加速你的交付
           </h2>
-          <p className="max-w-3xl text-sm text-muted-foreground sm:text-base">
+          <p
+            className="max-w-3xl text-sm text-muted-foreground sm:text-base"
+            data-animate="intro"
+          >
             完整的后端 API、系统日志、Swagger 文档与 Turborepo
             架构支撑，让团队协作更顺畅。
           </p>
@@ -202,6 +368,7 @@ export default function Page() {
               <Card
                 key={resource.title}
                 className="border-border/60 bg-background/70 backdrop-blur transition hover:border-primary/60 hover:shadow-md"
+                data-animate="card"
               >
                 <CardHeader className="gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -239,8 +406,13 @@ export default function Page() {
         </div>
 
         <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-stretch">
-          <HealthStatusPanel />
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-8 text-center backdrop-blur">
+          <div data-animate="card">
+            <HealthStatusPanel />
+          </div>
+          <div
+            className="rounded-2xl border border-primary/20 bg-primary/5 p-8 text-center backdrop-blur"
+            data-animate="card"
+          >
             <h3 className="text-xl font-semibold text-foreground sm:text-2xl">
               已搭建完备的前后端体系，下一步就是交付你的业务
             </h3>

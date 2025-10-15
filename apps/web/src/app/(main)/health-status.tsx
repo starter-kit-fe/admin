@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
-import http from "@/lib/request";
-import { useQuery } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
-import { useMemo } from "react";
+} from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
+import http from '@/lib/request';
+import { useQuery } from '@tanstack/react-query';
+import { RefreshCw } from 'lucide-react';
+import { useMemo } from 'react';
 
 type HealthRecord = {
   database?: string;
@@ -22,59 +22,48 @@ type HealthRecord = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  database: "数据库",
-  cache: "缓存",
-  uptime: "最近探活",
+  database: '数据库',
+  cache: '缓存',
+  uptime: '最近探活',
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  ok: "bg-emerald-500",
-  healthy: "bg-emerald-500",
-  disabled: "bg-amber-500",
-  offline: "bg-destructive",
-  error: "bg-destructive",
+  ok: 'bg-emerald-500',
+  healthy: 'bg-emerald-500',
+  disabled: 'bg-amber-500',
+  offline: 'bg-destructive',
+  error: 'bg-destructive',
 };
 
 async function fetchHealthStatus() {
-  const response = await http.get<HealthRecord>("/healthz");
-  if (response.code && response.code !== 200) {
-    throw new Error(response.msg ?? "服务异常");
-  }
-  return response.data ?? null;
+  return http.get<HealthRecord | null>('/healthz');
 }
 
 function resolveBadgeColor(raw: string | undefined) {
   if (!raw) {
-    return "bg-border text-muted-foreground";
+    return 'bg-border text-muted-foreground';
   }
   const lower = raw.toLowerCase();
-  if (lower === "ok") {
-    return "bg-emerald-500/15 text-emerald-500";
+  if (lower === 'ok') {
+    return 'bg-emerald-500/15 text-emerald-500';
   }
-  if (lower === "disabled") {
-    return "bg-amber-500/15 text-amber-500";
+  if (lower === 'disabled') {
+    return 'bg-amber-500/15 text-amber-500';
   }
-  return "bg-destructive/10 text-destructive";
+  return 'bg-destructive/10 text-destructive';
 }
 
 function resolveSignalColor(raw: string | undefined) {
-  const lower = raw?.toLowerCase() ?? "";
+  const lower = raw?.toLowerCase() ?? '';
   if (STATUS_COLORS[lower]) {
     return STATUS_COLORS[lower];
   }
-  return "bg-destructive";
+  return 'bg-destructive';
 }
 
 export default function HealthStatusPanel() {
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-    isFetching,
-  } = useQuery({
-    queryKey: ["system", "health"],
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
+    queryKey: ['system', 'health'],
     queryFn: fetchHealthStatus,
     refetchOnWindowFocus: false,
     retry: 1,
@@ -142,7 +131,7 @@ export default function HealthStatusPanel() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {Object.entries(data)
-              .filter(([key]) => key !== "uptime")
+              .filter(([key]) => key !== 'uptime')
               .map(([key, value]) => (
                 <div
                   key={key}
@@ -151,23 +140,26 @@ export default function HealthStatusPanel() {
                   <div className="flex items-center gap-3">
                     <span
                       className={`h-2.5 w-2.5 rounded-full ${resolveSignalColor(
-                        value
+                        value,
                       )}`}
                     />
                     <span className="text-sm font-medium text-foreground/90">
                       {STATUS_LABELS[key] ?? key}
                     </span>
                   </div>
-                  <Badge variant="secondary" className={resolveBadgeColor(value)}>
-                    {value ?? "未知"}
+                  <Badge
+                    variant="secondary"
+                    className={resolveBadgeColor(value)}
+                  >
+                    {value ?? '未知'}
                   </Badge>
                 </div>
               ))}
             <div className="sm:col-span-2 rounded-lg border border-border/60 px-4 py-4 text-sm text-muted-foreground">
               <span className="font-medium text-foreground/80">
                 {STATUS_LABELS.uptime}：
-              </span>{" "}
-              {uptime ?? "未提供"}
+              </span>{' '}
+              {uptime ?? '未提供'}
             </div>
           </div>
         )}
