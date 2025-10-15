@@ -47,10 +47,6 @@ export const metadata: Metadata = {
     shortcut: ['/favicon-32x32.png'],
   },
   manifest: '/site.webmanifest',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
-  ],
 };
 
 export default function RootLayout({

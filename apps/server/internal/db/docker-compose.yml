@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:14
+    container_name: local-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-Fm4Q8rLBoJf09A}" # ✅ 引号 + 转义$ -> $$
+      POSTGRES_DB: "${POSTGRES_DB:-postgres}"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.4.1
+    container_name: local-redis
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-Fm4Q8rLBoJf09A}" # ✅ 引号 + $$ 转义
+    command:
+      - redis-server
+      - "--appendonly"
+      - "yes"
+      - "--requirepass"
+      - "${REDIS_PASSWORD:-Fm4Q8rLBoJf09A}" # ✅ 与上保持一致
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test:
+        ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-Fm4Q8rLBoJf09A}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

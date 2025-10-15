@@ -1,13 +1,18 @@
 package main
 
-import "github.com/spf13/cobra"
+import (
+	"context"
+	"fmt"
+	"os"
 
-var rootCmd = &cobra.Command{
-	Use: "admin",
-}
+	"github.com/starter-kit-fe/admin/internal/cli"
+)
 
 func main() {
-	if err := rootCmd.Execute(); err != nil {
-		panic(err)
+	if err := cli.
+		NewRootCommand().
+		ExecuteContext(context.Background()); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
 	}
 }

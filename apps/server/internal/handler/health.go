@@ -18,11 +18,7 @@ func NewHealthHandler(service *health.Service) *HealthHandler {
 	return &HealthHandler{service: service}
 }
 
-func (h *HealthHandler) Register(r gin.IRoutes) {
-	r.GET("/healthz", h.getStatus)
-}
-
-func (h *HealthHandler) getStatus(ctx *gin.Context) {
+func (h *HealthHandler) Status(ctx *gin.Context) {
 	timeoutCtx, cancel := context.WithTimeout(ctx.Request.Context(), 2*time.Second)
 	defer cancel()
 

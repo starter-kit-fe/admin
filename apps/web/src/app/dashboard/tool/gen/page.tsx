@@ -1,3 +1,3 @@
 export default function Page() {
-  return <div>system log</div>;
+  return <div>tool gen</div>;
 }

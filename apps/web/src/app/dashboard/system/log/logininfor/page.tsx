@@ -1,3 +1,1 @@
-export default function Page() {
-  return <div>登录日志</div>;
-}
+export { default } from "../../../monitor/logininfor/page";

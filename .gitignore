@@ -15,6 +15,7 @@ node_modules/
 !.yarn/sdks
 !.yarn/versions
 .pnpm-store/
+.gocache/
 
 # Build outputs & caches
 .turbo/
