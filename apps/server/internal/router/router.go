@@ -30,6 +30,7 @@ type Options struct {
 	AuthHandler        *handler.AuthHandler
 	Middlewares        []gin.HandlerFunc
 	AuthSecret         string
+	AuthCookieName     string
 	PermissionProvider middleware.PermissionProvider
 	PublicMWs          []gin.HandlerFunc
 	ProtectedMWs       []gin.HandlerFunc
@@ -112,7 +113,12 @@ func registerCaptchaRoutes(group *gin.RouterGroup, opts Options) {
 
 func registerProtectedRoutes(api *gin.RouterGroup, opts Options) {
 	protected := api.Group("")
-	protected.Use(middleware.NewJWTAuthMiddleware(opts.AuthSecret, opts.PermissionProvider, opts.Logger))
+	protected.Use(middleware.NewJWTAuthMiddleware(middleware.JWTAuthOptions{
+		Secret:     opts.AuthSecret,
+		CookieName: opts.AuthCookieName,
+		Provider:   opts.PermissionProvider,
+		Logger:     opts.Logger,
+	}))
 	for _, mw := range opts.ProtectedMWs {
 		if mw != nil {
 			protected.Use(mw)
@@ -132,6 +138,7 @@ func registerProtectedAuthRoutes(group *gin.RouterGroup, opts Options) {
 	group.GET("/getInfo", opts.AuthHandler.GetInfo)
 	group.GET("/auth/me", opts.AuthHandler.GetInfo)
 	group.GET("/auth/menus", opts.AuthHandler.GetMenus)
+	group.POST("/auth/logout", opts.AuthHandler.Logout)
 }
 
 func registerSystemRoutes(group *gin.RouterGroup) {

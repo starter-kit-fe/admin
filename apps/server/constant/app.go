@@ -20,4 +20,11 @@ var (
 	COMMIT           = "N/A"
 	JWT_EXP          = time.Hour * 24 * 30 // 30天
 	SHUTDOWN_TIMEOUT = time.Second * 10
+
+	JWT_COOKIE_NAME      = "token"
+	JWT_COOKIE_DOMAIN    = ""
+	JWT_COOKIE_PATH      = "/"
+	JWT_COOKIE_SECURE    = false
+	JWT_COOKIE_HTTP_ONLY = true
+	JWT_COOKIE_SAME_SITE = "lax"
 )

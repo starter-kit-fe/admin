@@ -46,7 +46,14 @@ type RedisConfig struct {
 }
 
 type AuthConfig struct {
-	Secret string
+	Secret         string
+	TokenDuration  time.Duration
+	CookieName     string
+	CookieDomain   string
+	CookiePath     string
+	CookieSecure   bool
+	CookieHTTPOnly bool
+	CookieSameSite string
 }
 
 type SecurityConfig struct {
@@ -90,7 +97,14 @@ func Load(envFiles ...string) (*Config, error) {
 			URL: strings.TrimSpace(v.GetString("redis.url")),
 		},
 		Auth: AuthConfig{
-			Secret: strings.TrimSpace(v.GetString("auth.secret")),
+			Secret:         strings.TrimSpace(v.GetString("auth.secret")),
+			TokenDuration:  parseDurationOrDefault(strings.TrimSpace(v.GetString("auth.token_duration")), constant.JWT_EXP),
+			CookieName:     strings.TrimSpace(v.GetString("auth.cookie.name")),
+			CookieDomain:   strings.TrimSpace(v.GetString("auth.cookie.domain")),
+			CookiePath:     strings.TrimSpace(v.GetString("auth.cookie.path")),
+			CookieSecure:   v.GetBool("auth.cookie.secure"),
+			CookieHTTPOnly: v.GetBool("auth.cookie.http_only"),
+			CookieSameSite: strings.TrimSpace(v.GetString("auth.cookie.same_site")),
 		},
 		Security: SecurityConfig{
 			RateLimit: RateLimitConfig{
@@ -168,6 +182,23 @@ func (c *Config) Normalize() {
 	if c.Security.RateLimit.Period <= 0 {
 		c.Security.RateLimit.Period = time.Minute
 	}
+
+	if c.Auth.TokenDuration <= 0 {
+		c.Auth.TokenDuration = constant.JWT_EXP
+	}
+	c.Auth.CookieName = strings.TrimSpace(c.Auth.CookieName)
+	if c.Auth.CookieName == "" {
+		c.Auth.CookieName = constant.JWT_COOKIE_NAME
+	}
+	c.Auth.CookiePath = strings.TrimSpace(c.Auth.CookiePath)
+	if c.Auth.CookiePath == "" {
+		c.Auth.CookiePath = constant.JWT_COOKIE_PATH
+	}
+	c.Auth.CookieDomain = strings.TrimSpace(c.Auth.CookieDomain)
+	c.Auth.CookieSameSite = strings.ToLower(strings.TrimSpace(c.Auth.CookieSameSite))
+	if c.Auth.CookieSameSite == "" {
+		c.Auth.CookieSameSite = constant.JWT_COOKIE_SAME_SITE
+	}
 }
 
 func normalizeAddr(addr string) string {
@@ -182,6 +213,17 @@ func normalizeAddr(addr string) string {
 		return ":" + addr
 	}
 	return addr
+}
+
+func parseDurationOrDefault(value string, fallback time.Duration) time.Duration {
+	if strings.TrimSpace(value) == "" {
+		return fallback
+	}
+	duration, err := time.ParseDuration(value)
+	if err != nil || duration <= 0 {
+		return fallback
+	}
+	return duration
 }
 
 func loadEnvFiles(files []string) error {
@@ -221,6 +263,13 @@ func newViper() *viper.Viper {
 	v.SetDefault("database.dsn", "")
 	v.SetDefault("redis.url", "")
 	v.SetDefault("auth.secret", "")
+	v.SetDefault("auth.token_duration", constant.JWT_EXP.String())
+	v.SetDefault("auth.cookie.name", constant.JWT_COOKIE_NAME)
+	v.SetDefault("auth.cookie.domain", constant.JWT_COOKIE_DOMAIN)
+	v.SetDefault("auth.cookie.path", constant.JWT_COOKIE_PATH)
+	v.SetDefault("auth.cookie.secure", constant.JWT_COOKIE_SECURE)
+	v.SetDefault("auth.cookie.http_only", constant.JWT_COOKIE_HTTP_ONLY)
+	v.SetDefault("auth.cookie.same_site", constant.JWT_COOKIE_SAME_SITE)
 	v.SetDefault("security.rate_limit.requests", 60)
 	v.SetDefault("security.rate_limit.burst", 60)
 	v.SetDefault("security.rate_limit.period", "1m")
@@ -233,6 +282,13 @@ func newViper() *viper.Viper {
 	_ = v.BindEnv("database.dsn", "DB_URL", "DATABASE_URL")
 	_ = v.BindEnv("redis.url", "REDIS_URL")
 	_ = v.BindEnv("auth.secret", "AUTH_SECRET")
+	_ = v.BindEnv("auth.token_duration", "AUTH_TOKEN_DURATION")
+	_ = v.BindEnv("auth.cookie.name", "AUTH_COOKIE_NAME")
+	_ = v.BindEnv("auth.cookie.domain", "AUTH_COOKIE_DOMAIN")
+	_ = v.BindEnv("auth.cookie.path", "AUTH_COOKIE_PATH")
+	_ = v.BindEnv("auth.cookie.secure", "AUTH_COOKIE_SECURE")
+	_ = v.BindEnv("auth.cookie.http_only", "AUTH_COOKIE_HTTP_ONLY")
+	_ = v.BindEnv("auth.cookie.same_site", "AUTH_COOKIE_SAME_SITE")
 	_ = v.BindEnv("security.rate_limit.requests", "SECURITY_RATE_LIMIT_REQUESTS")
 	_ = v.BindEnv("security.rate_limit.burst", "SECURITY_RATE_LIMIT_BURST")
 	_ = v.BindEnv("security.rate_limit.period", "SECURITY_RATE_LIMIT_PERIOD")

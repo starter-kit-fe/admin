@@ -1,41 +1,42 @@
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import { Github, Mail, Twitter } from "lucide-react";
-import pkg from "../../package.json";
+import { Badge } from '@/components/ui/badge';
+import { Github, Mail, Twitter } from 'lucide-react';
+import Link from 'next/link';
+
+import pkg from '../../package.json';
 
 const FOOTER_LINK_GROUPS = [
   {
-    heading: "产品",
+    heading: '产品',
     links: [
-      { label: "特性概览", href: { pathname: "/", hash: "features" } },
-      { label: "主题系统", href: { pathname: "/", hash: "themes" } },
-      { label: "资源中心", href: { pathname: "/", hash: "resources" } },
+      { label: '特性概览', href: { pathname: '/', hash: 'features' } },
+      { label: '主题系统', href: { pathname: '/', hash: 'themes' } },
+      { label: '资源中心', href: { pathname: '/', hash: 'resources' } },
     ],
   },
   {
-    heading: "账号",
+    heading: '账号',
     links: [
-      { label: "登录管理端", href: "/login" },
-      { label: "进入 Dashboard", href: "/dashboard" },
-      { label: "系统日志", href: "/dashboard/system/log" },
+      { label: '登录管理端', href: '/login' },
+      { label: '进入 Dashboard', href: '/dashboard' },
+      { label: '系统日志', href: '/dashboard/system/log' },
     ],
   },
 ] as const;
 
 const SOCIAL_LINKS = [
   {
-    label: "GitHub",
-    href: "https://github.com/starter-kit-fe/admin",
+    label: 'GitHub',
+    href: 'https://github.com/starter-kit-fe/admin',
     icon: Github,
   },
   {
-    label: "Twitter",
-    href: "https://twitter.com",
+    label: 'Twitter',
+    href: 'https://twitter.com',
     icon: Twitter,
   },
   {
-    label: "邮箱",
-    href: "mailto:hello@admin.com",
+    label: '邮箱',
+    href: 'mailto:hello@admin.com',
     icon: Mail,
   },
 ] as const;
@@ -75,8 +76,8 @@ export default function Footer() {
                   key={label}
                   href={href}
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground"
-                  target={href.startsWith("http") ? "_blank" : undefined}
-                  rel={href.startsWith("http") ? "noreferrer" : undefined}
+                  target={href.startsWith('http') ? '_blank' : undefined}
+                  rel={href.startsWith('http') ? 'noreferrer' : undefined}
                 >
                   <Icon className="h-4 w-4" />
                   <span className="sr-only">{label}</span>
@@ -115,7 +116,7 @@ export default function Footer() {
                 href="mailto:hello@admin.com"
                 className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
               >
-                hello@admin.com
+                service@admin.com
               </Link>
             </div>
           </div>

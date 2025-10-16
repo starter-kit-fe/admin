@@ -95,7 +95,16 @@ func New(ctx context.Context, opts Options) (*App, error) {
 	docsHandler := handler.NewDocsHandler()
 	captchaSvc := captchaservice.New(captchaservice.Options{})
 	captchaHandler := handler.NewCaptchaHandler(captchaSvc)
-	authHandler := handler.NewAuthHandler(authSvc, captchaSvc, cfg.Auth.Secret, constant.JWT_EXP)
+	authHandler := handler.NewAuthHandler(authSvc, captchaSvc, handler.AuthOptions{
+		Secret:         cfg.Auth.Secret,
+		TokenDuration:  cfg.Auth.TokenDuration,
+		CookieName:     cfg.Auth.CookieName,
+		CookieDomain:   cfg.Auth.CookieDomain,
+		CookiePath:     cfg.Auth.CookiePath,
+		CookieSecure:   cfg.Auth.CookieSecure,
+		CookieHTTPOnly: cfg.Auth.CookieHTTPOnly,
+		CookieSameSite: cfg.Auth.CookieSameSite,
+	})
 
 	var limit rate.Limit
 	if cfg.Security.RateLimit.Requests > 0 && cfg.Security.RateLimit.Period > 0 {
@@ -112,6 +121,7 @@ func New(ctx context.Context, opts Options) (*App, error) {
 		AuthHandler:        authHandler,
 		AuthSecret:         cfg.Auth.Secret,
 		PermissionProvider: authSvc,
+		AuthCookieName:     cfg.Auth.CookieName,
 		PublicMWs:          []gin.HandlerFunc{throttleMW},
 		ProtectedMWs:       []gin.HandlerFunc{throttleMW},
 	})

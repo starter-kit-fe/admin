@@ -1,9 +1,8 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-
 import http from '@/lib/request';
 import { MenuNode } from '@/types/menu';
+import { useQuery } from '@tanstack/react-query';
 
 export function useMenuTree() {
   return useQuery({
@@ -15,3 +14,4 @@ export function useMenuTree() {
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+}

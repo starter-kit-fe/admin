@@ -1,12 +1,17 @@
-export interface MenuNode {
-  id: number;
-  parent_id: number;
+export interface MenuMeta {
   title: string;
-  route_name: string;
-  path: string;
-  menu_type: string;
   icon?: string | null;
-  external: boolean;
-  visible: string;
+  noCache?: boolean;
+  link?: string | null;
+}
+
+export interface MenuNode {
+  name: string;
+  path: string;
+  hidden?: boolean;
+  redirect?: string | null;
+  component?: string | null;
+  alwaysShow?: boolean;
+  meta?: MenuMeta | null;
   children?: MenuNode[];
 }

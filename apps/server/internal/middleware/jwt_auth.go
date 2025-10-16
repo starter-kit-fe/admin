@@ -15,8 +15,19 @@ type PermissionProvider interface {
 	LoadPermissions(ctx context.Context, userID uint) ([]string, error)
 }
 
-func NewJWTAuthMiddleware(secret string, provider PermissionProvider, logger *slog.Logger) gin.HandlerFunc {
-	secret = strings.TrimSpace(secret)
+type JWTAuthOptions struct {
+	Secret     string
+	CookieName string
+	Provider   PermissionProvider
+	Logger     *slog.Logger
+}
+
+func NewJWTAuthMiddleware(options JWTAuthOptions) gin.HandlerFunc {
+	secret := strings.TrimSpace(options.Secret)
+	cookieName := strings.TrimSpace(options.CookieName)
+	logger := options.Logger
+	provider := options.Provider
+
 	jwtMaker := jwtpkg.NewJWTMaker()
 
 	return func(ctx *gin.Context) {
@@ -29,9 +40,9 @@ func NewJWTAuthMiddleware(secret string, provider PermissionProvider, logger *sl
 			return
 		}
 
-		token := extractToken(ctx)
+		token := extractToken(ctx, cookieName)
 		if token == "" {
-			resp.Unauthorized(ctx, resp.WithMessage("missing or invalid authorization header"))
+			resp.Unauthorized(ctx, resp.WithMessage("missing authentication token"))
 			ctx.Abort()
 			return
 		}
@@ -68,7 +79,7 @@ func NewJWTAuthMiddleware(secret string, provider PermissionProvider, logger *sl
 	}
 }
 
-func extractToken(ctx *gin.Context) string {
+func extractToken(ctx *gin.Context, cookieName string) string {
 	header := strings.TrimSpace(ctx.GetHeader("Authorization"))
 	if header != "" {
 		if token := parseBearerToken(header); token != "" {
@@ -78,6 +89,14 @@ func extractToken(ctx *gin.Context) string {
 
 	if token := strings.TrimSpace(ctx.Query("token")); token != "" {
 		return token
+	}
+
+	if cookieName != "" {
+		if token, err := ctx.Cookie(cookieName); err == nil {
+			if trimmed := strings.TrimSpace(token); trimmed != "" {
+				return trimmed
+			}
+		}
 	}
 
 	return ""

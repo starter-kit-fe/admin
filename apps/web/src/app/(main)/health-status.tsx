@@ -1,5 +1,6 @@
 'use client';
 
+import { gethealthz } from '@/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,12 +16,6 @@ import { useQuery } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
 import { useMemo } from 'react';
 
-type HealthRecord = {
-  database?: string;
-  cache?: string;
-  uptime?: string;
-};
-
 const STATUS_LABELS: Record<string, string> = {
   database: '数据库',
   cache: '缓存',
@@ -34,10 +29,6 @@ const STATUS_COLORS: Record<string, string> = {
   offline: 'bg-destructive',
   error: 'bg-destructive',
 };
-
-async function fetchHealthStatus() {
-  return http.get<HealthRecord | null>('/healthz');
-}
 
 function resolveBadgeColor(raw: string | undefined) {
   if (!raw) {
@@ -64,7 +55,7 @@ function resolveSignalColor(raw: string | undefined) {
 export default function HealthStatusPanel() {
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ['system', 'health'],
-    queryFn: fetchHealthStatus,
+    queryFn: gethealthz,
     refetchOnWindowFocus: false,
     retry: 1,
   });

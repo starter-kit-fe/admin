@@ -1,7 +1,7 @@
 'use client';
 
-import ThemeToggle from '@/components/theme-toggle';
 import { InlineLoading } from '@/components/loading';
+import ThemeToggle from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,12 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import {
-  TOKEN_STORAGE_KEY,
-  emitAuthTokenChange,
-  useAuthStatus,
-} from '@/hooks/use-auth';
-import http from '@/lib/request';
+import { useAuthStatus } from '@/hooks/use-auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
@@ -38,7 +33,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import pkg from '../../../package.json';
-import { fetchCaptcha, login } from './api';
+import { getCaptcha, login } from './api';
 import type { LoginRequestPayload } from './type';
 
 const loginSchema = z.object({
@@ -87,7 +82,7 @@ export default function Page() {
     refetch: refetchCaptcha,
   } = useQuery({
     queryKey: ['auth', 'captcha'],
-    queryFn: fetchCaptcha,
+    queryFn: getCaptcha,
     staleTime: 0,
     refetchOnReconnect: true,
     refetchOnWindowFocus: false,
@@ -99,17 +94,14 @@ export default function Page() {
         username: values.username,
         password: values.password,
         captcha: values.captcha,
-        captcha_id: captchaData?.id,
+        captcha_id: captchaData?.captcha_id,
       };
       const result = await login(payload);
       handleRefreshCaptcha();
       return result;
     },
-    onSuccess: ({ token, message }) => {
-      window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
-      http.updateToken(token);
-      emitAuthTokenChange();
-      toast.success(message);
+    onSuccess: () => {
+      toast.success('登录成功，欢迎回来！');
       router.replace('/dashboard');
     },
     onError: (error: unknown) => {
@@ -127,10 +119,10 @@ export default function Page() {
   }, [authLoading, isAuthenticated, router]);
 
   useEffect(() => {
-    if (!captchaData?.id || !captchaData?.expiresIn) {
+    if (!captchaData?.captcha_id || !captchaData?.expires_in) {
       return;
     }
-    const duration = Math.max(5, Math.floor(captchaData.expiresIn));
+    const duration = Math.max(5, Math.floor(captchaData.expires_in));
     setCaptchaExpired(false);
     setCaptchaCountdown(duration);
 
@@ -151,7 +143,7 @@ export default function Page() {
     return () => {
       window.clearInterval(interval);
     };
-  }, [captchaData?.id, captchaData?.expiresIn]);
+  }, [captchaData?.captcha_id, captchaData?.expires_in]);
 
   useEffect(() => {
     if (loginImages.length <= 1) {
@@ -181,7 +173,7 @@ export default function Page() {
       : null;
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-background transition-colors md:flex-row">
+    <div className="relative flex min-h-dvh flex-col bg-border/40 transition-colors md:flex-row">
       <div className="absolute right-4 top-4 z-30 md:right-6 md:top-6">
         <ThemeToggle />
       </div>
@@ -250,7 +242,7 @@ export default function Page() {
             </ul>
           </div>
 
-          <Card className="border-border/60 bg-card text-card-foreground shadow-xl transition-colors">
+          <Card className="border-border/60 text-card-foreground shadow-xl transition-colors">
             <CardHeader className="space-y-2 text-center">
               <CardTitle className="text-2xl font-semibold">账号登录</CardTitle>
               <CardDescription className="text-sm text-muted-foreground">
@@ -403,14 +395,16 @@ export default function Page() {
                   disabled={
                     loginMutation.isPending ||
                     captchaFetching ||
-                    !captchaData?.id ||
+                    !captchaData?.captcha_id ||
                     isCaptchaExpired
                   }
                 >
                   {loginMutation.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      登录中...
+                      <InlineLoading
+                        label="正在验证账号信息 ..."
+                        className="mt-4"
+                      />
                     </>
                   ) : (
                     <>
@@ -420,10 +414,6 @@ export default function Page() {
                   )}
                 </Button>
               </form>
-
-              {loginMutation.isPending ? (
-                <InlineLoading label="正在验证账号信息 ..." className="mt-4" />
-              ) : null}
             </CardContent>
           </Card>
         </div>

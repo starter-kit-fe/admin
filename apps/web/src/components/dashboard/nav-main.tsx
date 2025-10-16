@@ -1,9 +1,5 @@
 'use client';
 
-import { type ReactNode } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-
 import {
   Collapsible,
   CollapsibleContent,
@@ -20,6 +16,9 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { type ReactNode } from 'react';
 
 type NavItem = {
   title: string;
@@ -43,7 +42,6 @@ export function NavMain({ items }: { items: NavItem[] }) {
     }
     return pathname.startsWith(url);
   };
-
   return (
     <SidebarGroup>
       <SidebarGroupLabel>菜单导航</SidebarGroupLabel>
@@ -53,13 +51,19 @@ export function NavMain({ items }: { items: NavItem[] }) {
           const active =
             item.isActive ||
             (hasChildren
-              ? item.items!.some((child) => isActiveLink(child.url, child.external))
+              ? item.items!.some((child) =>
+                  isActiveLink(child.url, child.external),
+                )
               : isActiveLink(item.url, item.external));
 
           if (!hasChildren) {
             return (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton tooltip={item.title} isActive={active} asChild>
+                <SidebarMenuButton
+                  tooltip={item.title}
+                  isActive={active}
+                  asChild
+                >
                   {item.external ? (
                     <a
                       href={item.url}
@@ -72,7 +76,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                     </a>
                   ) : (
                     <Link
-                      href={item.url || '#'}
+                      href={`${item.url}`}
                       className="flex items-center gap-2"
                     >
                       {item.icon}
@@ -108,6 +112,13 @@ export function NavMain({ items }: { items: NavItem[] }) {
                           isActive={isActiveLink(subItem.url, subItem.external)}
                         >
                           {subItem.external ? (
+                            <Link
+                              href={subItem.url || '#'}
+                              className="flex items-center gap-2"
+                            >
+                              <span>{subItem.title}</span>
+                            </Link>
+                          ) : (
                             <a
                               href={subItem.url}
                               target="_blank"
@@ -116,13 +127,6 @@ export function NavMain({ items }: { items: NavItem[] }) {
                             >
                               <span>{subItem.title}</span>
                             </a>
-                          ) : (
-                            <Link
-                              href={subItem.url || '#'}
-                              className="flex items-center gap-2"
-                            >
-                              <span>{subItem.title}</span>
-                            </Link>
                           )}
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>

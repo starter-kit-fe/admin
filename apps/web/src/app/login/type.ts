@@ -1,13 +1,7 @@
-export type CaptchaDto = {
+export type CaptchaData = {
   captcha_id: string;
   image: string;
   expires_in: number;
-};
-
-export type CaptchaData = {
-  id: string;
-  image: string;
-  expiresIn: number;
 };
 
 export type LoginRequestPayload = {
@@ -18,10 +12,9 @@ export type LoginRequestPayload = {
 };
 
 export type LoginResponseData = {
-  token: string;
+  data: boolean;
 };
 
-export type LoginResult = {
-  token: string;
-  message: string;
+export type User = {
+  name: string;
 };

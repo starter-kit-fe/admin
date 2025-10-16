@@ -202,7 +202,14 @@ export default function Page() {
     return () => {
       ctx.revert();
       ScrollTrigger.getAll().forEach((trigger) => {
-        if (trigger.vars.trigger?.closest('[data-animate-section]')) {
+        const triggerTarget = trigger.vars.trigger;
+        if (
+          triggerTarget &&
+          typeof triggerTarget !== 'string' &&
+          'closest' in triggerTarget &&
+          typeof triggerTarget.closest === 'function' &&
+          triggerTarget.closest('[data-animate-section]')
+        ) {
           trigger.kill();
         }
       });

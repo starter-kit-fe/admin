@@ -45,66 +45,121 @@ function resolveIcon(name?: string | null) {
   return <Icon className="h-4 w-4" />;
 }
 
-function normalizePath(path?: string | null): string {
+function parsePathSegments(path?: string | null): string[] {
   if (!path) {
-    return '';
+    return [];
   }
-  return path.replace(/^\/+/, '').replace(/\/+$/, '');
+  return path
+    .split('/')
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+    .filter((segment, index, segments) => {
+      if (index !== segments.length - 1) {
+        return true;
+      }
+      return segment.toLowerCase() !== 'index';
+    });
 }
 
-function composePath(parentPath: string, currentPath?: string | null) {
-  const parent = normalizePath(parentPath);
-  const current = normalizePath(currentPath);
-  const combined = [parent, current].filter(Boolean).join('/');
-  return combined.replace(/\/?index$/, '');
+function composeSegments(parentSegments: string[], currentPath?: string | null) {
+  const parent = parentSegments;
+  const current = parsePathSegments(currentPath);
+  if (current.length === 0) {
+    return parent;
+  }
+
+  const isExplicitAbsolute = Boolean(currentPath && currentPath.startsWith('/'));
+  const isCurrentAbsolute =
+    !isExplicitAbsolute &&
+    parent.length > 0 &&
+    current.length >= parent.length &&
+    parent.every((segment, index) => current[index] === segment);
+
+  if (isExplicitAbsolute || isCurrentAbsolute) {
+    return current;
+  }
+
+  return [...parent, ...current];
+}
+
+function buildDashboardUrl(segments: string[]): string {
+  if (segments.length === 0) {
+    return '/dashboard';
+  }
+
+  if (segments[0] === 'dashboard') {
+    return `/${segments.join('/')}`;
+  }
+
+  return `/dashboard/${segments.join('/')}`;
 }
 
 function isExternalMenu(menu: MenuNode): boolean {
   const path = menu.path ?? '';
-  return Boolean(menu.external) || /^https?:\/\//.test(path);
+  const link = menu.meta?.link ?? '';
+  return /^https?:\/\//.test(path) || /^https?:\/\//.test(link ?? '');
 }
 
-function resolveMenuUrl(menu: MenuNode, parentPath = ''): string {
+function resolveMenuLink(menu: MenuNode, parentSegments: string[]) {
   if (isExternalMenu(menu)) {
-    return menu.path ?? '#';
+    const link = menu.meta?.link?.trim();
+    const path = (menu.path ?? '').trim();
+    return {
+      url: link || path || '#',
+      segments: parentSegments,
+      external: true,
+    };
   }
 
-  const fullPath = composePath(parentPath, menu.path);
-  if (!fullPath) {
-    return '#';
-  }
-  if (fullPath.startsWith('dashboard/')) {
-    return `/${fullPath}`;
-  }
-  if (fullPath === 'dashboard') {
-    return '/dashboard';
-  }
-  return `/dashboard/${fullPath}`;
+  const segments = composeSegments(parentSegments, menu.path);
+  return {
+    url: buildDashboardUrl(segments),
+    segments,
+    external: false,
+  };
 }
+
+type MenuLink = {
+  node: MenuNode;
+  url: string;
+  external: boolean;
+  segments: string[];
+};
 
 function collectVisibleLeaves(
   nodes?: MenuNode[],
-  parentPath = '',
-): Array<{ node: MenuNode; parentPath: string }> {
+  parentSegments: string[] = [],
+): MenuLink[] {
   if (!nodes) {
     return [];
   }
   return nodes
-    .filter((node) => node.visible != '1')
+    .filter((node) => !node.hidden)
     .flatMap((node) => {
+      const { url, segments, external } = resolveMenuLink(node, parentSegments);
+
       if (node.children && node.children.length > 0) {
-        const nextParentPath = isExternalMenu(node)
-          ? parentPath
-          : composePath(parentPath, node.path);
-        return collectVisibleLeaves(node.children, nextParentPath);
+        const nextSegments = external ? parentSegments : segments;
+        const leaves = collectVisibleLeaves(node.children, nextSegments);
+        if (leaves.length > 0) {
+          return leaves;
+        }
       }
-      return [{ node, parentPath }];
+
+      return [
+        {
+          node,
+          url,
+          external,
+          segments,
+        },
+      ];
     });
 }
 
 function buildNavItems(
   nodes: MenuNode[],
-  parentPath = '',
+  parentSegments: string[] = [],
 ): Array<{
   title: string;
   url: string;
@@ -121,34 +176,33 @@ function buildNavItems(
   }> = [];
 
   nodes
-    .filter((node) => node.visible != '1')
+    .filter((node) => !node.hidden)
     .forEach((node) => {
-      const icon = resolveIcon(node.icon);
-      const external = isExternalMenu(node);
-      const url = resolveMenuUrl(node, parentPath);
+      const icon = resolveIcon(node.meta?.icon);
+      const title = node.meta?.title ?? node.name;
+      const { url, external, segments } = resolveMenuLink(node, parentSegments);
+      const children = node.children?.filter((child) => !child.hidden) ?? [];
 
-      if (node.menu_type == 'M') {
-        const childParentPath = external
-          ? parentPath
-          : composePath(parentPath, node.path);
-        const leaves = collectVisibleLeaves(node.children, childParentPath);
+      if (children.length > 0) {
+        const childParentSegments = external ? parentSegments : segments;
+        const leaves = collectVisibleLeaves(children, childParentSegments);
         if (leaves.length === 0) {
-          items.push({ title: node.title, url, icon, external });
+          items.push({ title, url, icon, external });
         } else {
           items.push({
-            title: node.title,
+            title,
             url,
             icon,
             external,
-            items: leaves.map(({ node: leaf, parentPath: leafParentPath }) => ({
-              title: leaf.title,
-              url: resolveMenuUrl(leaf, leafParentPath),
-              external: isExternalMenu(leaf),
+            items: leaves.map((leaf) => ({
+              title: leaf.node.meta?.title ?? leaf.node.name,
+              url: leaf.url,
+              external: leaf.external,
             })),
           });
         }
       } else {
-        items.push({ title: node.title, url, icon, external });
+        items.push({ title, url, icon, external });
       }
     });
 

@@ -2,6 +2,8 @@ package handler
 
 import (
 	"errors"
+	"net"
+	"net/http"
 	"strings"
 	"time"
 
@@ -22,6 +24,23 @@ type AuthHandler struct {
 	jwtMaker       *jwtpkg.JWTMaker
 	secret         string
 	tokenDuration  time.Duration
+	cookieName     string
+	cookieDomain   string
+	cookiePath     string
+	cookieSecure   bool
+	cookieHTTPOnly bool
+	cookieSameSite http.SameSite
+}
+
+type AuthOptions struct {
+	Secret         string
+	TokenDuration  time.Duration
+	CookieName     string
+	CookieDomain   string
+	CookiePath     string
+	CookieSecure   bool
+	CookieHTTPOnly bool
+	CookieSameSite string
 }
 
 // LoginRequest 描述登录接口请求体
@@ -84,32 +103,64 @@ type GetInfoResponse struct {
 	User        UserInfo `json:"user"`
 }
 
-type MenuNode struct {
-	ID        int64       `json:"id"`
-	ParentID  int64       `json:"parent_id"`
-	Title     string      `json:"title"`
-	RouteName string      `json:"route_name"`
-	Path      string      `json:"path"`
-	MenuType  string      `json:"menu_type"`
-	Icon      string      `json:"icon,omitempty"`
-	External  bool        `json:"external"`
-	Visible   string      `json:"visible"`
-	Children  []*MenuNode `json:"children,omitempty"`
+type MenuMeta struct {
+	Title   string  `json:"title"`
+	Icon    string  `json:"icon,omitempty"`
+	NoCache bool    `json:"noCache"`
+	Link    *string `json:"link"`
 }
 
-func NewAuthHandler(service *authservice.Service, captcha *captchaservice.Service, secret string, duration time.Duration) *AuthHandler {
-	if service == nil || secret == "" {
+type MenuNode struct {
+	Name       string      `json:"name"`
+	Path       string      `json:"path"`
+	Hidden     bool        `json:"hidden"`
+	Redirect   string      `json:"redirect,omitempty"`
+	Component  string      `json:"component"`
+	AlwaysShow bool        `json:"alwaysShow"`
+	Meta       MenuMeta    `json:"meta"`
+	Children   []*MenuNode `json:"children,omitempty"`
+}
+
+func NewAuthHandler(service *authservice.Service, captcha *captchaservice.Service, opts AuthOptions) *AuthHandler {
+	opts.Secret = strings.TrimSpace(opts.Secret)
+	if service == nil || opts.Secret == "" {
 		return nil
 	}
+
+	duration := opts.TokenDuration
 	if duration <= 0 {
 		duration = constant.JWT_EXP
 	}
+
+	cookieName := strings.TrimSpace(opts.CookieName)
+	if cookieName == "" {
+		cookieName = "token"
+	}
+
+	cookiePath := strings.TrimSpace(opts.CookiePath)
+	if cookiePath == "" {
+		cookiePath = "/"
+	}
+
+	cookieDomain := sanitizeCookieDomain(opts.CookieDomain)
+	cookieSameSite := parseSameSiteOption(opts.CookieSameSite)
+	cookieHTTPOnly := opts.CookieHTTPOnly
+	if !cookieHTTPOnly {
+		cookieHTTPOnly = true
+	}
+
 	return &AuthHandler{
 		service:        service,
 		captchaService: captcha,
 		jwtMaker:       jwtpkg.NewJWTMaker(),
-		secret:         secret,
+		secret:         opts.Secret,
 		tokenDuration:  duration,
+		cookieName:     cookieName,
+		cookieDomain:   cookieDomain,
+		cookiePath:     cookiePath,
+		cookieSecure:   opts.CookieSecure,
+		cookieHTTPOnly: cookieHTTPOnly,
+		cookieSameSite: cookieSameSite,
 	}
 }
 
@@ -160,7 +211,7 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, authservice.ErrInvalidCredentials):
-			resp.Unauthorized(ctx, resp.WithMessage("invalid username or password"))
+			resp.Forbidden(ctx, resp.WithMessage("invalid username or password"))
 		case errors.Is(err, authservice.ErrAccountDisabled):
 			resp.Forbidden(ctx, resp.WithMessage("account disabled"))
 		default:
@@ -174,12 +225,53 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		resp.InternalServerError(ctx, resp.WithMessage("failed to issue token"))
 		return
 	}
+	maxAge := 0
+	if h.tokenDuration > 0 {
+		maxAge = int(h.tokenDuration / time.Second)
+	}
+	h.setTokenCookie(ctx, token, maxAge)
+	resp.Success(ctx, true)
+}
 
-	ctx.JSON(200, gin.H{
-		"code":  200,
-		"msg":   "操作成功",
-		"token": token,
-	})
+// Logout godoc
+// @Summary 注销当前用户
+// @Description 清除用户的认证 Cookie
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} resp.Response
+// @Router /v1/auth/logout [post]
+func (h *AuthHandler) Logout(ctx *gin.Context) {
+	if h == nil {
+		resp.Success(ctx, true)
+		return
+	}
+	h.setTokenCookie(ctx, "", -1)
+	resp.Success(ctx, true)
+}
+
+func (h *AuthHandler) setTokenCookie(ctx *gin.Context, value string, maxAge int) {
+	if h == nil || ctx == nil || h.cookieName == "" {
+		return
+	}
+
+	secure := h.cookieSecure
+	if h.cookieSameSite == http.SameSiteNoneMode {
+		secure = true
+	}
+	if !secure && requestUsesHTTPS(ctx.Request) {
+		secure = true
+	}
+
+	ctx.SetSameSite(h.cookieSameSite)
+	ctx.SetCookie(
+		h.cookieName,
+		value,
+		maxAge,
+		h.cookiePath,
+		h.cookieDomain,
+		secure,
+		h.cookieHTTPOnly,
+	)
 }
 
 // GetInfo godoc
@@ -222,21 +314,23 @@ func (h *AuthHandler) GetInfo(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, gin.H{
-		"code":        200,
-		"msg":         "操作成功",
-		"permissions": permissions,
-		"roles":       roles,
-		"user": gin.H{
-			"userId":      user.UserID,
-			"deptId":      user.DeptID,
-			"userName":    user.UserName,
-			"nickName":    user.NickName,
-			"email":       user.Email,
-			"phonenumber": user.Phonenumber,
-			"sex":         user.Sex,
-			"avatar":      user.Avatar,
-			"status":      user.Status,
-			"remark":      user.Remark,
+		"code": 200,
+		"msg":  "操作成功",
+		"data": gin.H{
+			"permissions": permissions,
+			"roles":       roles,
+			"user": gin.H{
+				"userId":      user.UserID,
+				"deptId":      user.DeptID,
+				"userName":    user.UserName,
+				"nickName":    user.NickName,
+				"email":       user.Email,
+				"phonenumber": user.Phonenumber,
+				"sex":         user.Sex,
+				"avatar":      user.Avatar,
+				"status":      user.Status,
+				"remark":      user.Remark,
+			},
 		},
 	})
 }
@@ -283,44 +377,207 @@ func buildMenuTree(menus []model.SysMenu) []*MenuNode {
 		return []*MenuNode{}
 	}
 
-	cache := make(map[int64]*MenuNode, len(menus))
-	ordered := make([]*MenuNode, 0, len(menus))
+	type menuWrapper struct {
+		menu model.SysMenu
+		node *MenuNode
+	}
+
+	cache := make(map[int64]*menuWrapper, len(menus))
+	ordered := make([]*menuWrapper, 0, len(menus))
 
 	for _, menu := range menus {
-		node := &MenuNode{
-			ID:        menu.MenuID,
-			ParentID:  menu.ParentID,
-			Title:     menu.MenuName,
-			RouteName: menu.RouteName,
-			Path:      strings.TrimSpace(menu.Path),
-			MenuType:  menu.MenuType,
-			Icon:      strings.TrimSpace(menu.Icon),
-			External:  menu.IsFrame,
-			Visible:   menu.Visible,
+		node := transformMenu(menu)
+		wrapper := &menuWrapper{
+			menu: menu,
+			node: node,
 		}
-		cache[menu.MenuID] = node
-		ordered = append(ordered, node)
+		cache[menu.MenuID] = wrapper
+		ordered = append(ordered, wrapper)
 	}
 
 	roots := make([]*MenuNode, 0)
-	for _, menu := range menus {
-		node := cache[menu.MenuID]
-		if node == nil {
+	for _, wrapper := range ordered {
+		if wrapper == nil {
 			continue
 		}
 
-		if menu.ParentID == 0 {
-			roots = append(roots, node)
+		if wrapper.menu.ParentID == 0 {
+			roots = append(roots, wrapper.node)
 			continue
 		}
 
-		parent := cache[menu.ParentID]
+		parent := cache[wrapper.menu.ParentID]
 		if parent == nil {
-			roots = append(roots, node)
+			roots = append(roots, wrapper.node)
 			continue
 		}
-		parent.Children = append(parent.Children, node)
+		parent.node.Children = append(parent.node.Children, wrapper.node)
+	}
+
+	for _, wrapper := range ordered {
+		if wrapper == nil {
+			continue
+		}
+		if len(wrapper.node.Children) > 0 && strings.EqualFold(wrapper.menu.MenuType, "M") {
+			wrapper.node.AlwaysShow = true
+			if wrapper.node.Redirect == "" {
+				wrapper.node.Redirect = "noRedirect"
+			}
+		}
 	}
 
 	return roots
+}
+
+func transformMenu(menu model.SysMenu) *MenuNode {
+	path := formatMenuPath(menu)
+	component := resolveMenuComponent(menu)
+	hidden := strings.TrimSpace(menu.Visible) == "1"
+	name := resolveRouteName(menu)
+
+	meta := MenuMeta{
+		Title:   menu.MenuName,
+		Icon:    strings.TrimSpace(menu.Icon),
+		NoCache: menu.IsCache,
+	}
+
+	if menu.IsFrame {
+		link := strings.TrimSpace(menu.Path)
+		if link != "" {
+			meta.Link = stringPtr(link)
+		}
+	}
+
+	node := &MenuNode{
+		Name:      name,
+		Path:      path,
+		Hidden:    hidden,
+		Component: component,
+		Meta:      meta,
+	}
+
+	return node
+}
+
+func resolveRouteName(menu model.SysMenu) string {
+	name := strings.TrimSpace(menu.RouteName)
+	if name != "" {
+		return name
+	}
+	return strings.TrimSpace(menu.MenuName)
+}
+
+func formatMenuPath(menu model.SysMenu) string {
+	raw := strings.TrimSpace(menu.Path)
+	if menu.IsFrame {
+		return raw
+	}
+
+	if menu.ParentID == 0 {
+		if raw == "" {
+			return "/"
+		}
+		if !strings.HasPrefix(raw, "/") {
+			raw = "/" + raw
+		}
+		return cleanPath(raw)
+	}
+
+	return cleanPath(strings.TrimPrefix(raw, "/"))
+}
+
+func resolveMenuComponent(menu model.SysMenu) string {
+	if menu.IsFrame {
+		if menu.ParentID == 0 {
+			return "Layout"
+		}
+		return "InnerLink"
+	}
+
+	if menu.Component != nil {
+		if component := strings.TrimSpace(*menu.Component); component != "" {
+			return component
+		}
+	}
+
+	if strings.EqualFold(menu.MenuType, "M") {
+		if menu.ParentID == 0 {
+			return "Layout"
+		}
+		return "ParentView"
+	}
+
+	return "ParentView"
+}
+
+func cleanPath(path string) string {
+	path = strings.TrimSpace(path)
+	path = strings.ReplaceAll(path, "//", "/")
+	path = strings.TrimSuffix(path, "/")
+	if path == "" {
+		return ""
+	}
+	if !strings.HasPrefix(path, "/") {
+		return strings.TrimPrefix(path, "/")
+	}
+	return path
+}
+
+func stringPtr(value string) *string {
+	if value == "" {
+		return nil
+	}
+	cp := value
+	return &cp
+}
+
+func requestUsesHTTPS(req *http.Request) bool {
+	if req == nil {
+		return false
+	}
+	if req.TLS != nil {
+		return true
+	}
+	if req.URL != nil && strings.EqualFold(req.URL.Scheme, "https") {
+		return true
+	}
+	proto := strings.TrimSpace(req.Header.Get("X-Forwarded-Proto"))
+	return strings.EqualFold(proto, "https")
+}
+
+func sanitizeCookieDomain(domain string) string {
+	domain = strings.TrimSpace(domain)
+	if domain == "" {
+		return ""
+	}
+	domain = strings.TrimPrefix(domain, "http://")
+	domain = strings.TrimPrefix(domain, "https://")
+	domain = strings.TrimPrefix(domain, "//")
+
+	if strings.HasPrefix(domain, "[") {
+		return ""
+	}
+
+	if strings.Contains(domain, ":") {
+		if host, _, err := net.SplitHostPort(domain); err == nil {
+			domain = host
+		}
+	}
+
+	if strings.EqualFold(domain, "localhost") {
+		return ""
+	}
+
+	return domain
+}
+
+func parseSameSiteOption(value string) http.SameSite {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "strict":
+		return http.SameSiteStrictMode
+	case "none":
+		return http.SameSiteNoneMode
+	default:
+		return http.SameSiteLaxMode
+	}
 }
