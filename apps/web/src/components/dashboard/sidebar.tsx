@@ -1,5 +1,6 @@
 'use client';
 
+import { getMenuTree } from '@/api';
 import {
   Sidebar,
   SidebarContent,
@@ -7,9 +8,9 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { useAuthStatus } from '@/hooks/use-auth';
-import { useMenuTree } from '@/hooks/use-menu-tree';
-import { MenuNode } from '@/types/menu';
+import { useAuthStore } from '@/stores';
+import { MenuNode } from '@/types';
+import { useQuery } from '@tanstack/react-query';
 import {
   BookOpen,
   Boxes,
@@ -61,14 +62,19 @@ function parsePathSegments(path?: string | null): string[] {
     });
 }
 
-function composeSegments(parentSegments: string[], currentPath?: string | null) {
+function composeSegments(
+  parentSegments: string[],
+  currentPath?: string | null,
+) {
   const parent = parentSegments;
   const current = parsePathSegments(currentPath);
   if (current.length === 0) {
     return parent;
   }
 
-  const isExplicitAbsolute = Boolean(currentPath && currentPath.startsWith('/'));
+  const isExplicitAbsolute = Boolean(
+    currentPath && currentPath.startsWith('/'),
+  );
   const isCurrentAbsolute =
     !isExplicitAbsolute &&
     parent.length > 0 &&
@@ -210,8 +216,12 @@ function buildNavItems(
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: menuTree = [], isLoading } = useMenuTree();
-  const { user } = useAuthStatus();
+  const { data: menuTree = [], isLoading } = useQuery({
+    queryKey: ['auth', 'menus'],
+    queryFn: getMenuTree,
+  });
+
+  const { user } = useAuthStore();
 
   const navItems = useMemo(() => buildNavItems(menuTree), [menuTree]);
 
@@ -242,9 +252,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {user ? (
           <NavUser
             user={{
-              name: user.nickName || user.userName || '用户',
-              email: user.email || '未设置邮箱',
-              avatar: user.avatar || '',
+              name: user.user.nickName || user.user.userName || '用户',
+              email: user.user.email || '未设置邮箱',
+              avatar: user.user.avatar || '',
             }}
           />
         ) : null}

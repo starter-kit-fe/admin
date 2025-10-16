@@ -13,13 +13,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { useAuthStatus } from '@/hooks/use-auth';
+import { useAuthStore } from '@/stores';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Eye,
   EyeOff,
-  Loader2,
   Lock,
   LogIn,
   RefreshCw,
@@ -33,7 +32,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import pkg from '../../../package.json';
-import { getCaptcha, login } from './api';
+import { getCaptcha, getUserInfo, login } from './api';
 import type { LoginRequestPayload } from './type';
 
 const loginSchema = z.object({
@@ -59,11 +58,11 @@ const loginImages = [
 
 export default function Page() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuthStatus();
   const [showPassword, setShowPassword] = useState(false);
   const [isCaptchaExpired, setCaptchaExpired] = useState(false);
   const [captchaCountdown, setCaptchaCountdown] = useState<number | null>(null);
   const [loginImage, setLoginImage] = useState<string>(loginImages[0]);
+  const { setUser, user } = useAuthStore();
 
   const {
     register,
@@ -87,6 +86,14 @@ export default function Page() {
     refetchOnReconnect: true,
     refetchOnWindowFocus: false,
   });
+  const userInfo = useMutation({
+    mutationFn: getUserInfo,
+    onSuccess: (data) => {
+      setUser(data);
+      toast.success('登录成功，欢迎回来！');
+      router.replace('/dashboard');
+    },
+  });
 
   const loginMutation = useMutation({
     mutationFn: async (values: LoginValues) => {
@@ -101,8 +108,7 @@ export default function Page() {
       return result;
     },
     onSuccess: () => {
-      toast.success('登录成功，欢迎回来！');
-      router.replace('/dashboard');
+      userInfo.mutate();
     },
     onError: (error: unknown) => {
       const message =
@@ -113,10 +119,10 @@ export default function Page() {
   });
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+    if (user) {
       router.replace('/dashboard');
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [user, router]);
 
   useEffect(() => {
     if (!captchaData?.captcha_id || !captchaData?.expires_in) {
@@ -173,8 +179,8 @@ export default function Page() {
       : null;
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-border/40 transition-colors md:flex-row">
-      <div className="absolute right-4 top-4 z-30 md:right-6 md:top-6">
+    <div className="relative flex min-h-dvh flex-col overflow-y-auto bg-border/40 transition-colors md:flex-row md:overflow-hidden">
+      <div className="absolute right-4 top-[calc(env(safe-area-inset-top,0)+1rem)] z-30 md:right-6 md:top-6">
         <ThemeToggle />
       </div>
       <aside className="relative hidden min-h-dvh flex-1 overflow-hidden md:flex">
@@ -214,8 +220,8 @@ export default function Page() {
         </div>
       </aside>
 
-      <main className="flex flex-1 items-center justify-center px-6 py-12 transition-colors md:px-12">
-        <div className="w-full max-w-md space-y-8">
+      <main className="flex min-h-dvh flex-1 items-center justify-center px-5 py-12 transition-colors sm:px-8 md:min-h-full md:px-12">
+        <div className="w-full max-w-md space-y-8 rounded-3xl border border-border/40 bg-background/80 p-6 shadow-2xl backdrop-blur md:border-0 md:bg-transparent md:p-0 md:shadow-none">
           <div className="space-y-4 text-center md:hidden">
             <div className="mx-auto h-36 w-full overflow-hidden rounded-3xl bg-muted">
               <img
@@ -242,7 +248,7 @@ export default function Page() {
             </ul>
           </div>
 
-          <Card className="border-border/60 text-card-foreground shadow-xl transition-colors">
+          <Card className="border-none text-card-foreground shadow-xl transition-colors md:border md:border-border/60">
             <CardHeader className="space-y-2 text-center">
               <CardTitle className="text-2xl font-semibold">账号登录</CardTitle>
               <CardDescription className="text-sm text-muted-foreground">

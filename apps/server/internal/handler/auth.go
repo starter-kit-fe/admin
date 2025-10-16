@@ -434,6 +434,7 @@ func transformMenu(menu model.SysMenu) *MenuNode {
 	component := resolveMenuComponent(menu)
 	hidden := strings.TrimSpace(menu.Visible) == "1"
 	name := resolveRouteName(menu)
+	isExternal := isExternalLink(menu)
 
 	meta := MenuMeta{
 		Title:   menu.MenuName,
@@ -441,7 +442,7 @@ func transformMenu(menu model.SysMenu) *MenuNode {
 		NoCache: menu.IsCache,
 	}
 
-	if menu.IsFrame {
+	if isExternal {
 		link := strings.TrimSpace(menu.Path)
 		if link != "" {
 			meta.Link = stringPtr(link)
@@ -469,7 +470,7 @@ func resolveRouteName(menu model.SysMenu) string {
 
 func formatMenuPath(menu model.SysMenu) string {
 	raw := strings.TrimSpace(menu.Path)
-	if menu.IsFrame {
+	if isExternalLink(menu) {
 		return raw
 	}
 
@@ -487,7 +488,7 @@ func formatMenuPath(menu model.SysMenu) string {
 }
 
 func resolveMenuComponent(menu model.SysMenu) string {
-	if menu.IsFrame {
+	if isExternalLink(menu) {
 		if menu.ParentID == 0 {
 			return "Layout"
 		}
@@ -521,6 +522,18 @@ func cleanPath(path string) string {
 		return strings.TrimPrefix(path, "/")
 	}
 	return path
+}
+
+func isExternalLink(menu model.SysMenu) bool {
+	if menu.IsFrame {
+		return true
+	}
+	path := strings.TrimSpace(menu.Path)
+	if path == "" {
+		return false
+	}
+	lower := strings.ToLower(path)
+	return strings.HasPrefix(lower, "http://") || strings.HasPrefix(lower, "https://")
 }
 
 func stringPtr(value string) *string {

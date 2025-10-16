@@ -20,8 +20,8 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { Spinner } from '@/components/ui/spinner';
-import { useAuthStatus } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores';
 import gsap from 'gsap';
 import { ArrowRight, LayoutDashboard, LogIn, Menu } from 'lucide-react';
 import Link from 'next/link';
@@ -59,7 +59,7 @@ export default function Header() {
   const pathname = usePathname();
   const heroRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated, isLoading, user } = useAuthStatus();
+  const { user } = useAuthStore();
 
   const heroTitle = useMemo(() => {
     const [main, ...rest] = pkg.seo.title.split('—').map((item) => item.trim());
@@ -77,11 +77,11 @@ export default function Header() {
   const navLinks = useMemo<NavLink[]>(() => {
     const base: NavLink[] = [...NAV_LINKS];
     base.push({
-      label: isAuthenticated ? 'Dashboard' : '登录',
-      href: isAuthenticated ? '/dashboard' : '/login',
+      label: user ? 'Dashboard' : '登录',
+      href: user ? '/dashboard' : '/login',
     });
     return base;
-  }, [isAuthenticated]);
+  }, [user]);
 
   useEffect(() => {
     if (!heroRef.current) {
@@ -126,7 +126,7 @@ export default function Header() {
     setHeroImage(chosen);
   }, []);
 
-  const ctaHref = isAuthenticated ? '/dashboard' : '/login';
+  const ctaHref = user ? '/dashboard' : '/login';
 
   return (
     <header
@@ -224,16 +224,22 @@ export default function Header() {
               </DrawerContent>
             </Drawer>
             <ThemeToggle />
-            {isAuthenticated && user ? (
+            {user ? (
               <div className="hero-animate hidden items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-1 text-xs text-muted-foreground backdrop-blur sm:flex">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.avatar} alt={user.nickName} />
+                  <AvatarImage
+                    src={user.user.avatar}
+                    alt={user.user.nickName}
+                  />
                   <AvatarFallback>
-                    {(user.nickName || user.userName || 'U').slice(0, 1)}
+                    {(user.user.nickName || user.user.userName || 'U').slice(
+                      0,
+                      1,
+                    )}
                   </AvatarFallback>
                 </Avatar>
                 <span className="font-medium text-foreground">
-                  {user.nickName || user.userName}
+                  {user.user.nickName || user.user.userName}
                 </span>
               </div>
             ) : null}
@@ -262,11 +268,9 @@ export default function Header() {
                 className={cn(
                   buttonVariants({ size: 'lg' }),
                   'group w-full justify-center sm:w-auto',
-                  isLoading ? 'pointer-events-none opacity-70' : '',
                 )}
-                aria-disabled={isLoading}
               >
-                {isAuthenticated ? '立即体验' : '开始使用'}
+                {user ? '立即体验' : '开始使用'}
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link

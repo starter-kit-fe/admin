@@ -20,12 +20,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { type ReactNode } from 'react';
 
+// NavItem mirrors the menu payload returned by the backend for sidebar rendering.
 type NavItem = {
   title: string;
   url: string;
   icon?: ReactNode;
   isActive?: boolean;
-  external?: boolean;
+  external?: boolean; // open with <a target="_blank" when true
   items?: Array<{
     title: string;
     url: string;
@@ -35,7 +36,6 @@ type NavItem = {
 
 export function NavMain({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
-
   const isActiveLink = (url: string, external?: boolean) => {
     if (external || !url || url === '#') {
       return false;
@@ -112,13 +112,6 @@ export function NavMain({ items }: { items: NavItem[] }) {
                           isActive={isActiveLink(subItem.url, subItem.external)}
                         >
                           {subItem.external ? (
-                            <Link
-                              href={subItem.url || '#'}
-                              className="flex items-center gap-2"
-                            >
-                              <span>{subItem.title}</span>
-                            </Link>
-                          ) : (
                             <a
                               href={subItem.url}
                               target="_blank"
@@ -127,6 +120,13 @@ export function NavMain({ items }: { items: NavItem[] }) {
                             >
                               <span>{subItem.title}</span>
                             </a>
+                          ) : (
+                            <Link
+                              href={subItem.url || '#'}
+                              className="flex items-center gap-2"
+                            >
+                              <span>{subItem.title}</span>
+                            </Link>
                           )}
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>

@@ -1,6 +1,7 @@
 import { get, post } from '@/lib/request';
 
 import type {
+  AuthPayloadLoose,
   CaptchaData,
   LoginRequestPayload,
   LoginResponseData,
@@ -15,5 +16,5 @@ export function getCaptcha() {
 }
 
 export function getUserInfo() {
-  return get<CaptchaData>('/v1/auth/me');
+  return get<AuthPayloadLoose>('/v1/auth/me');
 }

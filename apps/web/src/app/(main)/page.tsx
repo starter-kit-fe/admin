@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { useAuthStore } from '@/stores';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
@@ -21,7 +22,7 @@ import {
   Zap,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { use, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import pkg from '../../../package.json';
 
@@ -90,8 +91,85 @@ const resourceCards = [
   },
 ] as const;
 
+type ActionLink = {
+  label: string;
+  href: string;
+  variant: 'default' | 'outline';
+  target?: '_blank';
+  rel?: 'noreferrer';
+};
+
+type ResolvedLink = {
+  href: string;
+  target?: '_blank';
+  rel?: 'noreferrer';
+};
+
 export default function Page() {
   const containerRef = useRef<HTMLElement | null>(null);
+  const { user: isAuthenticated } = useAuthStore();
+  const primaryCta = useMemo<ActionLink>(
+    () =>
+      isAuthenticated
+        ? {
+            label: '进入 Dashboard',
+            href: '/dashboard',
+            variant: 'default',
+          }
+        : {
+            label: '登录账户',
+            href: '/login',
+            variant: 'default',
+          },
+    [isAuthenticated],
+  );
+
+  const secondaryCta = useMemo<ActionLink>(
+    () =>
+      isAuthenticated
+        ? {
+            label: '查看系统日志',
+            href: '/dashboard/system/log',
+            variant: 'outline',
+          }
+        : {
+            label: '了解项目',
+            href: 'https://github.com/starter-kit-fe/admin',
+            variant: 'outline',
+            target: '_blank',
+            rel: 'noreferrer',
+          },
+    [isAuthenticated],
+  );
+
+  const resolveLinkProps = useCallback(
+    (href: string): ResolvedLink => {
+      if (href.startsWith('http')) {
+        return { href, target: '_blank', rel: 'noreferrer' };
+      }
+      if (!isAuthenticated) {
+        return { href: '/login' };
+      }
+      return { href };
+    },
+    [isAuthenticated],
+  );
+
+  const {
+    label: primaryLabel,
+    href: primaryHref,
+    variant: primaryVariant,
+    target: primaryTarget,
+    rel: primaryRel,
+  } = primaryCta;
+
+  const {
+    label: secondaryLabel,
+    href: secondaryHref,
+    variant: secondaryVariant,
+    target: secondaryTarget,
+    rel: secondaryRel,
+  } = secondaryCta;
 
   useEffect(() => {
     const root = containerRef.current;
@@ -371,6 +449,7 @@ export default function Page() {
         <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {resourceCards.map((resource) => {
             const Icon = resource.icon;
+            const linkProps = resolveLinkProps(resource.href);
             return (
               <Card
                 key={resource.title}
@@ -393,15 +472,9 @@ export default function Page() {
                     className="w-fit px-0 text-sm text-primary hover:text-primary/80"
                   >
                     <Link
-                      href={resource.href}
-                      target={
-                        resource.href.startsWith('http') ? '_blank' : undefined
-                      }
-                      rel={
-                        resource.href.startsWith('http')
-                          ? 'noreferrer'
-                          : undefined
-                      }
+                      href={linkProps.href}
+                      target={linkProps.target}
+                      rel={linkProps.rel}
                     >
                       查看详情 →
                     </Link>
@@ -428,11 +501,23 @@ export default function Page() {
               的组合，打造动态、顺滑并可扩展的管理后台。
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Button size="lg" asChild>
-                <Link href="/dashboard">进入 Dashboard</Link>
+              <Button size="lg" asChild variant={primaryVariant}>
+                <Link
+                  href={primaryHref}
+                  target={primaryTarget}
+                  rel={primaryRel}
+                >
+                  {primaryLabel}
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/login">登录账户</Link>
+              <Button size="lg" asChild variant={secondaryVariant}>
+                <Link
+                  href={secondaryHref}
+                  target={secondaryTarget}
+                  rel={secondaryRel}
+                >
+                  {secondaryLabel}
+                </Link>
               </Button>
             </div>
           </div>
