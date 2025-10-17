@@ -1,0 +1,13 @@
+[Unit]
+Description=A clean and responsive admin dashboard template built for modern web apps. Includes reusable UI components, charts, tables, and authentication pages.
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/admin
+ExecStart=/opt/admin/admin start
+EnvironmentFile=-/opt/admin/.env
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

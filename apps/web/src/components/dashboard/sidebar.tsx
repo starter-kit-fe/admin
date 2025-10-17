@@ -252,9 +252,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {user ? (
           <NavUser
             user={{
-              name: user.user.nickName || user.user.userName || '用户',
-              email: user.user.email || '未设置邮箱',
-              avatar: user.user.avatar || '',
+              name: user.nickName || user.userName || '用户',
+              email: user.email || '未设置邮箱',
+              avatar: user.avatar || '',
             }}
           />
         ) : null}

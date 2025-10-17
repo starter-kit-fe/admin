@@ -1,6 +1,7 @@
 'use client';
 
 import HealthStatusPanel from '@/app/(main)/health-status';
+import HeroSection from '@/app/(main)/sections/hero';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +23,7 @@ import {
   Zap,
 } from 'lucide-react';
 import Link from 'next/link';
-import { use, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import pkg from '../../../package.json';
 
@@ -295,7 +296,9 @@ export default function Page() {
   }, []);
 
   return (
-    <main ref={containerRef} className="space-y-20 pb-20">
+    <>
+      <HeroSection />
+      <main ref={containerRef} className="space-y-20 pb-20">
       <section
         id="features"
         className="mx-auto max-w-6xl px-6 pt-16 md:px-10 lg:px-12"
@@ -524,5 +527,6 @@ export default function Page() {
         </div>
       </section>
     </main>
+    </>
   );
 }

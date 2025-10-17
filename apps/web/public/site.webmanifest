@@ -30,5 +30,6 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
-  "theme_color": "#FFFFFF"
+  "theme_color": "#0b74e4",
+  "description": "A clean and responsive admin dashboard template built for modern web apps. Includes reusable UI components, charts, tables, and authentication pages."
 }

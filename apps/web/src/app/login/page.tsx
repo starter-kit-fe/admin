@@ -62,7 +62,7 @@ export default function Page() {
   const [isCaptchaExpired, setCaptchaExpired] = useState(false);
   const [captchaCountdown, setCaptchaCountdown] = useState<number | null>(null);
   const [loginImage, setLoginImage] = useState<string>(loginImages[0]);
-  const { setUser, user } = useAuthStore();
+  const { setUser, user, setPermissions, setRoles } = useAuthStore();
 
   const {
     register,
@@ -89,7 +89,9 @@ export default function Page() {
   const userInfo = useMutation({
     mutationFn: getUserInfo,
     onSuccess: (data) => {
-      setUser(data);
+      setUser(data.user);
+      setPermissions(data.permissions);
+      setRoles(data.roles);
       toast.success('登录成功，欢迎回来！');
       router.replace('/dashboard');
     },

@@ -2,22 +2,22 @@ import { format } from 'date-fns';
 import { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {};
-
 const proxy = async () => {
   return [
     {
       source: '/api/:path*',
-      destination: 'http://localhost:8000/:path*',
+      destination: process.env.NEXT_PUBLIC_BASE_URL as string,
     },
   ];
 };
 
 switch (process.env.NODE_ENV) {
   case 'production':
-    nextConfig.output = 'export';
+    // nextConfig.output = 'export';
     nextConfig.images = {};
     nextConfig.images.unoptimized = true;
-    nextConfig.distDir = 'dist';
+    nextConfig.rewrites = proxy;
+
     break;
   case 'development':
     nextConfig.rewrites = proxy;

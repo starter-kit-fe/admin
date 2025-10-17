@@ -43,3 +43,6 @@ push-tag: push-version
 # 开发环境
 dev:
 	@$(NPM) run dev
+
+deploy:
+	@$(NPM) run deploy

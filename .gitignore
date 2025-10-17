@@ -16,7 +16,7 @@ node_modules/
 !.yarn/versions
 .pnpm-store/
 .gocache/
-
+.open-next/
 # Build outputs & caches
 .turbo/
 **/.turbo/
