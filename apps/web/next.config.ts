@@ -16,8 +16,6 @@ switch (process.env.NODE_ENV) {
     // nextConfig.output = 'export';
     nextConfig.images = {};
     nextConfig.images.unoptimized = true;
-    nextConfig.rewrites = proxy;
-
     break;
   case 'development':
     nextConfig.rewrites = proxy;

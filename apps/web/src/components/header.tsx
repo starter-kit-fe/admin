@@ -15,11 +15,36 @@ import { useAuthStore } from '@/stores';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, LayoutDashboard, LogIn, Menu } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import pkg from '../../package.json';
+
+function resolveCssVarColor(variable: string, alpha = 1): string | undefined {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+  const root = document.documentElement;
+  const raw = getComputedStyle(root).getPropertyValue(variable)?.trim();
+  if (!raw) {
+    return undefined;
+  }
+
+  const probe = document.createElement('div');
+  probe.style.color = raw;
+  document.body.appendChild(probe);
+  const computed = getComputedStyle(probe).color;
+  probe.remove();
+
+  const matches = computed.match(/[\d.]+/g)?.map(Number);
+  if (!matches || matches.length < 3) {
+    return undefined;
+  }
+  const [r, g, b] = matches;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 type StaticNavLink = {
   label: string;
@@ -50,6 +75,7 @@ export default function Header() {
   const navRef = useRef<HTMLElement>(null);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAuthenticated } = useAuthStore();
+  const { resolvedTheme } = useTheme();
 
   const brandName = useMemo(resolveBrand, []);
 
@@ -62,14 +88,11 @@ export default function Header() {
     }
 
     gsap.registerPlugin(ScrollTrigger);
+    gsap.killTweensOf(element);
 
     const show = () => {
       gsap.to(element, {
-        backgroundColor: 'hsl(var(--background) / 0.82)',
-        backdropFilter: 'blur(18px)',
-        borderColor: 'hsl(var(--border) / 0.35)',
-        boxShadow: '0 26px 48px -28px hsla(var(--foreground) / 0.18)',
-        color: 'hsl(var(--foreground))',
+        backgroundColor: `rgba(255, 255, 255, 0.9)`,
         duration: 0.35,
         ease: 'power2.out',
       });
@@ -77,10 +100,7 @@ export default function Header() {
 
     const hide = () => {
       gsap.to(element, {
-        backgroundColor: 'hsl(var(--background) / 0)',
-        backdropFilter: 'blur(0px)',
-        borderColor: 'hsl(var(--border) / 0)',
-        boxShadow: '0 0 0 0 hsla(var(--foreground) / 0)',
+        backgroundColor: 'transparent',
         duration: 0.35,
         ease: 'power2.out',
       });
@@ -93,8 +113,11 @@ export default function Header() {
       onLeaveBack: hide,
     });
 
-    return () => trigger.kill();
-  }, []);
+    return () => {
+      trigger.kill();
+      gsap.killTweensOf(element);
+    };
+  }, [resolvedTheme]);
 
   const handleStaticNav = useCallback(
     (hash: string) => {
@@ -130,7 +153,7 @@ export default function Header() {
               className="flex items-center justify-between rounded-lg border border-border/60 bg-background/95 px-4 py-3 text-base transition-colors hover:border-primary/40 hover:bg-primary/5"
             >
               <span>{link.label}</span>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground dark:text-white/70" />
             </button>
           </DrawerClose>
         );
@@ -141,7 +164,7 @@ export default function Header() {
           key={`${variant}-${link.label}-${key}`}
           type="button"
           onClick={() => handleStaticNav(link.hash)}
-          className="rounded-full px-3 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          className="rounded-full px-3 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground dark:text-white/85 dark:hover:text-white"
         >
           {link.label}
         </button>
@@ -156,7 +179,7 @@ export default function Header() {
             className="flex items-center justify-between rounded-lg border border-border/60 bg-background/95 px-4 py-3 text-base transition-colors hover:border-primary/40 hover:bg-primary/5"
           >
             <span>{link.label}</span>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            <ArrowRight className="h-4 w-4 text-muted-foreground dark:text-white/70" />
           </Link>
         </DrawerClose>
       );
@@ -166,7 +189,7 @@ export default function Header() {
       <Link
         key={`${variant}-${link.label}-${key}`}
         href={link.href}
-        className="rounded-full px-3 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+        className="rounded-full px-3 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground dark:text-white/85 dark:hover:text-white"
       >
         {link.label}
       </Link>
@@ -182,18 +205,18 @@ export default function Header() {
       ref={navRef}
       className="fixed inset-x-0 top-0 z-50 border-b border-transparent bg-transparent transition-[background-color,backdrop-filter,border-color,box-shadow]"
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 text-foreground dark:text-white sm:px-6 lg:px-10">
         <Link
           href="/"
-          className="group flex items-center gap-3 text-base font-semibold text-foreground"
+          className="group flex items-center gap-3 text-base font-semibold text-inherit"
         >
           <img src="/pwa-512x512.png" alt="" className="size-[28px]" />
-          <span className="hidden text-sm text-muted-foreground transition-colors group-hover:text-foreground sm:inline">
+          <span className="hidden text-xl text-muted-foreground transition-colors group-hover:text-foreground dark:text-white/85 dark:group-hover:text-white sm:inline font-bold">
             {brandName}
           </span>
         </Link>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 md:flex flex-1">
           {navLinks.map((link) => renderNavLink(link, 'desktop'))}
         </div>
 
@@ -202,7 +225,7 @@ export default function Header() {
             href={ctaHref}
             className={cn(
               buttonVariants({ size: 'sm' }),
-              'inline-flex items-center gap-2 px-4'
+              'inline-flex items-center gap-2 px-4',
             )}
           >
             <CtaIcon className="h-4 w-4" />
@@ -241,7 +264,7 @@ export default function Header() {
                   href={ctaHref}
                   className={cn(
                     buttonVariants({ size: 'lg' }),
-                    'inline-flex items-center justify-center gap-2'
+                    'inline-flex items-center justify-center gap-2',
                   )}
                 >
                   <CtaIcon className="h-4 w-4" />

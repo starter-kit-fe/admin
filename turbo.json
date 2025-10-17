@@ -41,6 +41,12 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "deploy": {
+      "dependsOn": [
+        "^deploy"
+      ],
+      "cache": false
     }
   }
 }

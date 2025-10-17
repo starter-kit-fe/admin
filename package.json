@@ -1,11 +1,12 @@
 {
   "name": "admin",
-  "version": "25.1017.1433",
+  "version": "25.1017.1552",
   "private": true,
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "deploy": "turbo run deploy",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "docs": "turbo run docs"

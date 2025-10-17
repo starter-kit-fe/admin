@@ -53,10 +53,8 @@ all: deploy
 # Runs the application in development mode with live reloading using 'air'.
 dev:
 	@echo "🚀 Starting development server with live reload..."
-	# We pass the constructed ldflags directly to air's recommended flag.
-	# This is cleaner than embedding it in the --build.cmd.
-	air --build.cmd "go build -v -o $(TMP_DIR)/$(BINARY_NAME) $(PKG_PATH)" \
-		--build.ldflags="$(LDFLAGS_DEV)"
+	# Pass the ldflags directly to go build so air does not need custom flags.
+	air --build.cmd "go build -v -ldflags=\"$(LDFLAGS_DEV)\" -o $(TMP_DIR)/$(BINARY_NAME) $(PKG_PATH)"
 
 # Target: deploy
 # Builds the application for production (Linux AMD64) and places it in the ./build directory.
