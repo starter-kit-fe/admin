@@ -243,6 +243,19 @@ paths:
       summary: 用户登录
       tags:
       - Auth
+  /v1/auth/logout:
+    post:
+      description: 清除用户的认证 Cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+      summary: 注销当前用户
+      tags:
+      - Auth
   /v1/auth/me:
     get:
       description: 通过 JWT Token 获取当前用户详情、角色、权限
@@ -268,6 +281,29 @@ paths:
       security:
       - BearerAuth: []
       summary: 获取当前用户信息
+      tags:
+      - Auth
+  /v1/auth/menus:
+    get:
+      description: 根据当前登录用户角色返回可访问的菜单树
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取当前用户可访问的菜单树
       tags:
       - Auth
   /v1/getInfo:

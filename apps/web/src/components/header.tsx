@@ -22,30 +22,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import pkg from '../../package.json';
 
-function resolveCssVarColor(variable: string, alpha = 1): string | undefined {
-  if (typeof window === 'undefined') {
-    return undefined;
-  }
-  const root = document.documentElement;
-  const raw = getComputedStyle(root).getPropertyValue(variable)?.trim();
-  if (!raw) {
-    return undefined;
-  }
-
-  const probe = document.createElement('div');
-  probe.style.color = raw;
-  document.body.appendChild(probe);
-  const computed = getComputedStyle(probe).color;
-  probe.remove();
-
-  const matches = computed.match(/[\d.]+/g)?.map(Number);
-  if (!matches || matches.length < 3) {
-    return undefined;
-  }
-  const [r, g, b] = matches;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 type StaticNavLink = {
   label: string;
   hash: string;
