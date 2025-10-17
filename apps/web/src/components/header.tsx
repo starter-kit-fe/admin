@@ -46,11 +46,12 @@ function resolveBrand() {
 }
 
 export default function Header() {
+  const { isAuthenticated } = useAuthStore();
+
   const pathname = usePathname();
   const router = useRouter();
   const navRef = useRef<HTMLElement>(null);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated } = useAuthStore();
   const { resolvedTheme } = useTheme();
 
   const brandName = useMemo(resolveBrand, []);

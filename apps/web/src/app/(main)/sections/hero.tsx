@@ -9,13 +9,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import useStore from '@/hooks/use-store';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { use, useEffect, useMemo, useRef, useState } from 'react';
 
 import pkg from '../../../../package.json';
 
@@ -28,9 +29,11 @@ const HERO_IMAGES = [
 
 export default function HeroSection() {
   const { user, isAuthenticated } = useAuthStore();
+  const local = useStore(useAuthStore, (state) => state);
+  console.log('====', local);
   const heroRef = useRef<HTMLElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
-
+  console.log(user, isAuthenticated);
   const heroTitle = useMemo(() => {
     const [main, ...rest] = (pkg.seo?.title ?? 'Admin Template')
       .split('—')
