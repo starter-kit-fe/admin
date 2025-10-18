@@ -1,1 +1,1 @@
-export { useStore as useAuthStore } from '@/app/login/store';
+export { useAuthStore } from '@/app/login/store';

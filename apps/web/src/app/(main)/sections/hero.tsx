@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import useStore from '@/hooks/use-store';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
 import gsap from 'gsap';
@@ -29,8 +28,6 @@ const HERO_IMAGES = [
 
 export default function HeroSection() {
   const { user, isAuthenticated } = useAuthStore();
-  const local = useStore(useAuthStore, (state) => state);
-  console.log('====', local);
   const heroRef = useRef<HTMLElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   console.log(user, isAuthenticated);

@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 
 const backendOrigin =
   process.env.BACKEND_API_ORIGIN ?? process.env.NEXT_PUBLIC_BASE_URL ?? '';
-
 async function proxy(request: NextRequest) {
   if (!backendOrigin) {
     return new Response(
