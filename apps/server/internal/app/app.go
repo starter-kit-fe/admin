@@ -19,8 +19,8 @@ import (
 	"github.com/starter-kit-fe/admin/internal/handler"
 	"github.com/starter-kit-fe/admin/internal/logger"
 	"github.com/starter-kit-fe/admin/internal/middleware"
+	authrepo "github.com/starter-kit-fe/admin/internal/repo/auth"
 	"github.com/starter-kit-fe/admin/internal/router"
-	authservice "github.com/starter-kit-fe/admin/internal/service/auth"
 	captchaservice "github.com/starter-kit-fe/admin/internal/service/captcha"
 	healthservice "github.com/starter-kit-fe/admin/internal/service/health"
 )
@@ -91,11 +91,11 @@ func New(ctx context.Context, opts Options) (*App, error) {
 
 	healthSvc := healthservice.New(sqlDB, redisCache)
 	healthHandler := handler.NewHealthHandler(healthSvc)
-	authSvc := authservice.New(sqlDB)
+	authRepo := authrepo.New(sqlDB)
 	docsHandler := handler.NewDocsHandler()
 	captchaSvc := captchaservice.New(captchaservice.Options{})
 	captchaHandler := handler.NewCaptchaHandler(captchaSvc)
-	authHandler := handler.NewAuthHandler(authSvc, captchaSvc, handler.AuthOptions{
+	authHandler := handler.NewAuthHandler(authRepo, captchaSvc, handler.AuthOptions{
 		Secret:         cfg.Auth.Secret,
 		TokenDuration:  cfg.Auth.TokenDuration,
 		CookieName:     cfg.Auth.CookieName,
@@ -120,7 +120,7 @@ func New(ctx context.Context, opts Options) (*App, error) {
 		CaptchaHandler:     captchaHandler,
 		AuthHandler:        authHandler,
 		AuthSecret:         cfg.Auth.Secret,
-		PermissionProvider: authSvc,
+		PermissionProvider: authRepo,
 		AuthCookieName:     cfg.Auth.CookieName,
 		PublicMWs:          []gin.HandlerFunc{throttleMW},
 		ProtectedMWs:       []gin.HandlerFunc{throttleMW},

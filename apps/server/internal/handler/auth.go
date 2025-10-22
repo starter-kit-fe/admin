@@ -8,18 +8,20 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 
 	"github.com/starter-kit-fe/admin/constant"
 	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/model"
-	authservice "github.com/starter-kit-fe/admin/internal/service/auth"
+	authrepo "github.com/starter-kit-fe/admin/internal/repo/auth"
 	captchaservice "github.com/starter-kit-fe/admin/internal/service/captcha"
 	jwtpkg "github.com/starter-kit-fe/admin/pkg/jwt"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
 type AuthHandler struct {
-	service        *authservice.Service
+	repo           *authrepo.Repository
 	captchaService *captchaservice.Service
 	jwtMaker       *jwtpkg.JWTMaker
 	secret         string
@@ -121,9 +123,9 @@ type MenuNode struct {
 	Children   []*MenuNode `json:"children,omitempty"`
 }
 
-func NewAuthHandler(service *authservice.Service, captcha *captchaservice.Service, opts AuthOptions) *AuthHandler {
+func NewAuthHandler(repo *authrepo.Repository, captcha *captchaservice.Service, opts AuthOptions) *AuthHandler {
 	opts.Secret = strings.TrimSpace(opts.Secret)
-	if service == nil || opts.Secret == "" {
+	if repo == nil || opts.Secret == "" {
 		return nil
 	}
 
@@ -150,7 +152,7 @@ func NewAuthHandler(service *authservice.Service, captcha *captchaservice.Servic
 	}
 
 	return &AuthHandler{
-		service:        service,
+		repo:           repo,
 		captchaService: captcha,
 		jwtMaker:       jwtpkg.NewJWTMaker(),
 		secret:         opts.Secret,
@@ -178,7 +180,7 @@ func NewAuthHandler(service *authservice.Service, captcha *captchaservice.Servic
 // @Failure 500 {object} resp.Response
 // @Router /v1/auth/login [post]
 func (h *AuthHandler) Login(ctx *gin.Context) {
-	if h == nil || h.service == nil {
+	if h == nil || h.repo == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("authentication service unavailable"))
 		return
 	}
@@ -187,6 +189,13 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
 		resp.BadRequest(ctx, resp.WithMessage("invalid credentials payload"))
+		return
+	}
+
+	username := strings.TrimSpace(payload.Username)
+	password := payload.Password
+	if username == "" || password == "" {
+		resp.Forbidden(ctx, resp.WithMessage("invalid username or password"))
 		return
 	}
 
@@ -207,16 +216,26 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		}
 	}
 
-	user, err := h.service.Authenticate(ctx.Request.Context(), payload.Username, payload.Password)
+	user, err := h.repo.GetUserByUsername(ctx.Request.Context(), username)
 	if err != nil {
 		switch {
-		case errors.Is(err, authservice.ErrInvalidCredentials):
+		case errors.Is(err, authrepo.ErrRepositoryUnavailable):
+			resp.ServiceUnavailable(ctx, resp.WithMessage("authentication service unavailable"))
+		case errors.Is(err, gorm.ErrRecordNotFound):
 			resp.Forbidden(ctx, resp.WithMessage("invalid username or password"))
-		case errors.Is(err, authservice.ErrAccountDisabled):
-			resp.Forbidden(ctx, resp.WithMessage("account disabled"))
 		default:
 			resp.InternalServerError(ctx, resp.WithMessage("failed to authenticate"))
 		}
+		return
+	}
+
+	if user.Status != "0" {
+		resp.Forbidden(ctx, resp.WithMessage("account disabled"))
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		resp.Forbidden(ctx, resp.WithMessage("invalid username or password"))
 		return
 	}
 
@@ -287,7 +306,7 @@ func (h *AuthHandler) setTokenCookie(ctx *gin.Context, value string, maxAge int)
 // @Router /v1/getInfo [get]
 // @Router /v1/auth/me [get]
 func (h *AuthHandler) GetInfo(ctx *gin.Context) {
-	if h == nil || h.service == nil {
+	if h == nil || h.repo == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("authentication service unavailable"))
 		return
 	}
@@ -298,13 +317,35 @@ func (h *AuthHandler) GetInfo(ctx *gin.Context) {
 		return
 	}
 
-	user, roles, permissions, err := h.service.Profile(ctx.Request.Context(), userID)
+	user, err := h.repo.GetUserByID(ctx.Request.Context(), userID)
 	if err != nil {
 		switch {
-		case errors.Is(err, authservice.ErrInvalidCredentials):
+		case errors.Is(err, authrepo.ErrRepositoryUnavailable):
+			resp.ServiceUnavailable(ctx, resp.WithMessage("authentication service unavailable"))
+		case errors.Is(err, gorm.ErrRecordNotFound):
 			resp.Unauthorized(ctx, resp.WithMessage("user not found"))
 		default:
 			resp.InternalServerError(ctx, resp.WithMessage("failed to load user profile"))
+		}
+		return
+	}
+
+	roles, err := h.repo.GetRoles(ctx.Request.Context(), userID)
+	if err != nil {
+		if errors.Is(err, authrepo.ErrRepositoryUnavailable) {
+			resp.ServiceUnavailable(ctx, resp.WithMessage("authentication service unavailable"))
+		} else {
+			resp.InternalServerError(ctx, resp.WithMessage("failed to load user roles"))
+		}
+		return
+	}
+
+	permissions, err := h.repo.LoadPermissions(ctx.Request.Context(), userID)
+	if err != nil {
+		if errors.Is(err, authrepo.ErrRepositoryUnavailable) {
+			resp.ServiceUnavailable(ctx, resp.WithMessage("authentication service unavailable"))
+		} else {
+			resp.InternalServerError(ctx, resp.WithMessage("failed to load permissions"))
 		}
 		return
 	}
@@ -346,7 +387,7 @@ func (h *AuthHandler) GetInfo(ctx *gin.Context) {
 // @Failure 500 {object} resp.Response
 // @Router /v1/auth/menus [get]
 func (h *AuthHandler) GetMenus(ctx *gin.Context) {
-	if h == nil || h.service == nil {
+	if h == nil || h.repo == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("authentication service unavailable"))
 		return
 	}
@@ -357,9 +398,13 @@ func (h *AuthHandler) GetMenus(ctx *gin.Context) {
 		return
 	}
 
-	menus, err := h.service.Menus(ctx.Request.Context(), userID)
+	menus, err := h.repo.GetMenus(ctx.Request.Context(), userID)
 	if err != nil {
-		resp.InternalServerError(ctx, resp.WithMessage("failed to load menus"))
+		if errors.Is(err, authrepo.ErrRepositoryUnavailable) {
+			resp.ServiceUnavailable(ctx, resp.WithMessage("authentication service unavailable"))
+		} else {
+			resp.InternalServerError(ctx, resp.WithMessage("failed to load menus"))
+		}
 		return
 	}
 

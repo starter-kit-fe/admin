@@ -4,11 +4,11 @@ import { getMenuTree } from '@/api';
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  useSidebar,
 } from '@/components/ui/sidebar';
-import { useAuthStore } from '@/stores';
+import { cn } from '@/lib/utils';
 import { MenuNode } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -21,10 +21,11 @@ import {
   SquareTerminal,
   Users,
 } from 'lucide-react';
+import Image from 'next/image';
 import { type ComponentType, type ReactNode, useMemo } from 'react';
 
 import { NavMain } from './nav-main';
-import { NavUser } from './nav-user';
+import pkg from '../../../package.json';
 
 const iconRegistry: Record<string, ComponentType<{ className?: string }>> = {
   system: Cog,
@@ -163,7 +164,7 @@ function collectVisibleLeaves(
     });
 }
 
-function buildNavItems(
+export function buildNavItems(
   nodes: MenuNode[],
   parentSegments: string[] = [],
 ): Array<{
@@ -221,18 +222,43 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     queryFn: getMenuTree,
   });
 
-  const { user } = useAuthStore();
-
   const navItems = useMemo(() => buildNavItems(menuTree), [menuTree]);
+
+  const brandName = useMemo(() => {
+    const title = pkg.seo?.title ?? 'Admin Template';
+    return title.split('—')[0]?.trim() ?? title;
+  }, []);
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <div className="px-4 py-3 text-left">
-          <p className="text-sm font-semibold text-sidebar-foreground">
-            控制台导航
-          </p>
-          <p className="text-xs text-muted-foreground">根据权限展示模块</p>
+        <div
+          className={cn(
+            'flex items-center px-4 py-3 transition-all duration-200',
+            isCollapsed ? 'justify-center gap-0 px-0 py-4' : 'gap-3',
+          )}
+        >
+          <Image
+            src="/pwa-512x512.png"
+            alt={brandName}
+            width={isCollapsed ? 28 : 32}
+            height={isCollapsed ? 28 : 32}
+            className={cn(
+              'shrink-0 rounded-lg object-cover',
+              isCollapsed ? 'h-7 w-7' : 'h-8 w-8',
+            )}
+            priority
+          />
+          {!isCollapsed ? (
+            <div className="text-left">
+              <p className="text-sm font-semibold text-sidebar-foreground">
+                {brandName}
+              </p>
+              <p className="text-xs text-muted-foreground">根据权限展示模块</p>
+            </div>
+          ) : null}
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -248,17 +274,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </div>
         )}
       </SidebarContent>
-      <SidebarFooter>
-        {user ? (
-          <NavUser
-            user={{
-              name: user.nickName || user.userName || '用户',
-              email: user.email || '未设置邮箱',
-              avatar: user.avatar || '',
-            }}
-          />
-        ) : null}
-      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

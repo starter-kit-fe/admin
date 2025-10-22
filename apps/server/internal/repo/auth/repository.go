@@ -6,32 +6,29 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"github.com/starter-kit-fe/admin/internal/model"
 )
 
 var (
-	ErrServiceUnavailable = errors.New("auth service is not initialized")
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrAccountDisabled    = errors.New("account disabled")
+	ErrRepositoryUnavailable = errors.New("auth repository is not initialized")
 )
 
-type Service struct {
+type Repository struct {
 	db *gorm.DB
 }
 
-func New(db *gorm.DB) *Service {
+func New(db *gorm.DB) *Repository {
 	if db == nil {
 		return nil
 	}
-	return &Service{db: db}
+	return &Repository{db: db}
 }
 
-func (s *Service) LoadPermissions(ctx context.Context, userID uint) ([]string, error) {
-	if s == nil || s.db == nil {
-		return nil, ErrServiceUnavailable
+func (r *Repository) LoadPermissions(ctx context.Context, userID uint) ([]string, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
 	}
 
 	var permissions []string
@@ -39,7 +36,7 @@ func (s *Service) LoadPermissions(ctx context.Context, userID uint) ([]string, e
 	roleMenuTable := model.SysRoleMenu{}.TableName()
 	userRoleTable := model.SysUserRole{}.TableName()
 
-	query := s.db.WithContext(ctx).
+	query := r.db.WithContext(ctx).
 		Table(menuTable).
 		Select(fmt.Sprintf("DISTINCT %s.perms", menuTable)).
 		Joins(fmt.Sprintf("JOIN %s ON %s.menu_id = %s.menu_id", roleMenuTable, menuTable, roleMenuTable)).
@@ -57,78 +54,54 @@ func (s *Service) LoadPermissions(ctx context.Context, userID uint) ([]string, e
 	return permissions, nil
 }
 
-func (s *Service) Authenticate(ctx context.Context, username, password string) (*model.SysUser, error) {
-	if s == nil || s.db == nil {
-		return nil, ErrServiceUnavailable
+func (r *Repository) GetUserByUsername(ctx context.Context, username string) (*model.SysUser, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
 	}
 
 	username = strings.TrimSpace(username)
-	if username == "" || password == "" {
-		return nil, ErrInvalidCredentials
+	if username == "" {
+		return nil, gorm.ErrRecordNotFound
 	}
 
 	var user model.SysUser
-	err := s.db.WithContext(ctx).
+	err := r.db.WithContext(ctx).
 		Where("user_name = ?", username).
 		First(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, ErrInvalidCredentials
-	}
 	if err != nil {
 		return nil, err
-	}
-
-	if user.Status != "0" {
-		return nil, ErrAccountDisabled
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return nil, ErrInvalidCredentials
 	}
 
 	return &user, nil
 }
 
-func (s *Service) Profile(ctx context.Context, userID uint) (*model.SysUser, []string, []string, error) {
-	if s == nil || s.db == nil {
-		return nil, nil, nil, ErrServiceUnavailable
+func (r *Repository) GetUserByID(ctx context.Context, userID uint) (*model.SysUser, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
 	}
 
 	var user model.SysUser
-	err := s.db.WithContext(ctx).
+	err := r.db.WithContext(ctx).
 		Where("user_id = ?", userID).
 		First(&user).
 		Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil, nil, ErrInvalidCredentials
-	}
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
 
-	roles, err := s.loadRoles(ctx, userID)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	perms, err := s.LoadPermissions(ctx, userID)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	return &user, roles, perms, nil
+	return &user, nil
 }
 
-func (s *Service) loadRoles(ctx context.Context, userID uint) ([]string, error) {
-	if s == nil || s.db == nil {
-		return nil, ErrServiceUnavailable
+func (r *Repository) GetRoles(ctx context.Context, userID uint) ([]string, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
 	}
 
 	roleTable := model.SysRole{}.TableName()
 	userRoleTable := model.SysUserRole{}.TableName()
 
 	var roles []string
-	err := s.db.WithContext(ctx).
+	err := r.db.WithContext(ctx).
 		Table(roleTable).
 		Select(fmt.Sprintf("%s.role_key", roleTable)).
 		Joins(fmt.Sprintf("JOIN %s ON %s.role_id = %s.role_id", userRoleTable, roleTable, userRoleTable)).
@@ -142,16 +115,16 @@ func (s *Service) loadRoles(ctx context.Context, userID uint) ([]string, error) 
 	return roles, nil
 }
 
-func (s *Service) Menus(ctx context.Context, userID uint) ([]model.SysMenu, error) {
-	if s == nil || s.db == nil {
-		return nil, ErrServiceUnavailable
+func (r *Repository) GetMenus(ctx context.Context, userID uint) ([]model.SysMenu, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
 	}
 
 	menuTable := model.SysMenu{}.TableName()
 	roleMenuTable := model.SysRoleMenu{}.TableName()
 	userRoleTable := model.SysUserRole{}.TableName()
 
-	baseQuery := s.db.WithContext(ctx).
+	baseQuery := r.db.WithContext(ctx).
 		Table(menuTable).
 		Distinct(fmt.Sprintf("%s.*", menuTable)).
 		Order(fmt.Sprintf("%s.parent_id ASC, %s.order_num ASC, %s.menu_id ASC", menuTable, menuTable, menuTable))
