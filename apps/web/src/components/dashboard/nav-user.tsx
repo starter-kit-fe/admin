@@ -1,5 +1,6 @@
 'use client';
 
+import { logout } from '@/api';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -16,6 +17,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores';
+import { useMutation } from '@tanstack/react-query';
 import {
   BadgeCheck,
   Bell,
@@ -24,8 +28,9 @@ import {
   LogOut,
   Sparkles,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { type ComponentProps } from 'react';
+import { useRouter } from 'next/navigation';
+import { type ComponentProps, useCallback } from 'react';
+import { toast } from 'sonner';
 
 type UserInfo = {
   name: string;
@@ -40,13 +45,19 @@ type NavUserProps = {
 
 type DropdownContentProps = ComponentProps<typeof DropdownMenuContent>;
 
+type UserDropdownContentProps = {
+  user: UserInfo;
+  contentProps?: DropdownContentProps;
+  onLogout: () => void;
+  isLoggingOut: boolean;
+};
+
 function UserDropdownContent({
   user,
   contentProps,
-}: {
-  user: UserInfo;
-  contentProps?: DropdownContentProps;
-}) {
+  onLogout,
+  isLoggingOut,
+}: UserDropdownContentProps) {
   const { className, ...restContentProps } = contentProps ?? {};
 
   return (
@@ -61,7 +72,7 @@ function UserDropdownContent({
         <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
           <Avatar className="h-8 w-8 rounded-lg">
             <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+            <AvatarFallback className="rounded-lg">U</AvatarFallback>
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-medium">{user.name}</span>
@@ -73,34 +84,72 @@ function UserDropdownContent({
       <DropdownMenuGroup>
         <DropdownMenuItem>
           <Sparkles />
-          Upgrade to Pro
+          升级专业版
         </DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
       <DropdownMenuGroup>
         <DropdownMenuItem>
           <BadgeCheck />
-          Account
+          账号设置
         </DropdownMenuItem>
         <DropdownMenuItem>
           <CreditCard />
-          Billing
+          账单管理
         </DropdownMenuItem>
         <DropdownMenuItem>
           <Bell />
-          Notifications
+          通知设置
         </DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
-      <DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() => {
+          if (!isLoggingOut) {
+            onLogout();
+          }
+        }}
+        disabled={isLoggingOut}
+      >
         <LogOut />
-        Log out
+        {isLoggingOut ? '退出中...' : '退出登录'}
       </DropdownMenuItem>
     </DropdownMenuContent>
   );
 }
 
 export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
+  const router = useRouter();
+  const { setUser, setRoles, setPermissions } = useAuthStore();
+  const resetAuthState = useCallback(() => {
+    setUser(null);
+    setRoles(null);
+    setPermissions(null);
+    localStorage.removeItem('auth-storage');
+  }, [setPermissions, setRoles, setUser]);
+  const { mutate: triggerLogout, isPending: isLoggingOut } = useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      toast.success('已退出登录');
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : '退出登录失败，请稍后重试';
+      toast.error(message);
+    },
+    onSettled: () => {
+      resetAuthState();
+      router.replace('/login');
+    },
+  });
+
+  const handleLogout = useCallback(() => {
+    if (isLoggingOut) {
+      return;
+    }
+    triggerLogout();
+  }, [isLoggingOut, triggerLogout]);
+
   const { isMobile } = useSidebar();
   const sidebarContentProps: DropdownContentProps = {
     side: isMobile ? 'bottom' : 'right',
@@ -124,7 +173,7 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
           >
             <Avatar className="h-7 w-7">
               <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>CN</AvatarFallback>
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <span className="hidden max-w-[120px] truncate md:block">
               {user.name}
@@ -132,7 +181,12 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
             <ChevronsUpDown className="size-4 text-muted-foreground" />
           </button>
         </DropdownMenuTrigger>
-        <UserDropdownContent user={user} contentProps={topbarContentProps} />
+        <UserDropdownContent
+          user={user}
+          contentProps={topbarContentProps}
+          onLogout={handleLogout}
+          isLoggingOut={isLoggingOut}
+        />
       </DropdownMenu>
     );
   }
@@ -148,7 +202,7 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg">用户</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
@@ -157,7 +211,12 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <UserDropdownContent user={user} contentProps={sidebarContentProps} />
+          <UserDropdownContent
+            user={user}
+            contentProps={sidebarContentProps}
+            onLogout={handleLogout}
+            isLoggingOut={isLoggingOut}
+          />
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>

@@ -18,3 +18,7 @@ export function getCaptcha() {
 export function getUserInfo() {
   return get<AuthPayloadLoose>('/v1/auth/me');
 }
+
+export function logout() {
+  return post<boolean>('/v1/auth/logout');
+}
