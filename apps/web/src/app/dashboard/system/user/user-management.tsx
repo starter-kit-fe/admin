@@ -9,7 +9,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { Plus, RefreshCcw } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { createUser, listUsers, removeUser, updateUser } from './api';
@@ -59,6 +59,9 @@ export function UserManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [singleDelete, setSingleDelete] = useState<User | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const keywordDebounceRef = useRef<ReturnType<typeof window.setTimeout> | null>(
+    null,
+  );
 
   const queryKey = [
     'system',
@@ -253,17 +256,64 @@ export function UserManagement() {
       item !== null,
   );
 
-  const handleApplyFilters = () => {
-    setAppliedFilters(filterForm);
-    setPagination(DEFAULT_PAGE);
-    setSelectedIds(new Set());
+  const clearKeywordDebounce = useCallback(() => {
+    if (keywordDebounceRef.current) {
+      window.clearTimeout(keywordDebounceRef.current);
+      keywordDebounceRef.current = null;
+    }
+  }, []);
+
+  const applyFilters = useCallback(
+    (nextFilters: FiltersFormState, options?: { force?: boolean }) => {
+      const forceUpdate = options?.force ?? false;
+      setAppliedFilters((prev) => {
+        const hasChanged =
+          forceUpdate ||
+          prev.role !== nextFilters.role ||
+          prev.keyword !== nextFilters.keyword;
+
+        if (!hasChanged) {
+          return prev;
+        }
+
+        setPagination(DEFAULT_PAGE);
+        setSelectedIds(new Set());
+        return nextFilters;
+      });
+    },
+    [setPagination, setSelectedIds],
+  );
+
+  const handleRoleFilterChange = (role: string) => {
+    clearKeywordDebounce();
+    setFilterForm((prev) => {
+      const next = { ...prev, role };
+      applyFilters(next);
+      return next;
+    });
   };
 
+  const handleKeywordChange = (keyword: string) => {
+    setFilterForm((prev) => {
+      const next = { ...prev, keyword };
+      clearKeywordDebounce();
+      keywordDebounceRef.current = window.setTimeout(() => {
+        applyFilters(next);
+      }, 400);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      clearKeywordDebounce();
+    };
+  }, [clearKeywordDebounce]);
+
   const handleResetFilters = () => {
+    clearKeywordDebounce();
     setFilterForm(DEFAULT_FILTER_FORM);
-    setAppliedFilters(DEFAULT_FILTER_FORM);
-    setPagination(DEFAULT_PAGE);
-    setSelectedIds(new Set());
+    applyFilters(DEFAULT_FILTER_FORM, { force: true });
   };
 
   const handleStatusChange = (nextStatus: string) => {
@@ -286,6 +336,14 @@ export function UserManagement() {
     setEditorMode('edit');
     setEditingUser(user);
     setEditorOpen(true);
+  };
+
+  const handleChangeRole = (user: User) => {
+    openEditDialog(user);
+  };
+
+  const handleResetPassword = (user: User) => {
+    toast.info('重置密码功能暂未开放，敬请期待。');
   };
 
   const triggerDelete = (user: User) => {
@@ -331,17 +389,16 @@ export function UserManagement() {
   };
 
   const handleRemoveFilter = (key: string) => {
+    clearKeywordDebounce();
     if (key === 'role') {
       const next = { ...appliedFilters, role: DEFAULT_ROLE_VALUE };
       setFilterForm(next);
-      setAppliedFilters(next);
+      applyFilters(next, { force: true });
     } else if (key === 'keyword') {
       const next = { ...appliedFilters, keyword: '' };
       setFilterForm(next);
-      setAppliedFilters(next);
+      applyFilters(next, { force: true });
     }
-    setPagination(DEFAULT_PAGE);
-    setSelectedIds(new Set());
   };
 
   const handlePagination = (pageNum: number) => {
@@ -388,26 +445,28 @@ export function UserManagement() {
         </div>
       </div>
 
-      <StatusTabs
-        value={status}
-        onValueChange={handleStatusChange}
-        tabs={statusTabsWithCount}
-      />
+      <div className="rounded-xl border border-border/60 bg-background/80 p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4">
+          <StatusTabs
+            value={status}
+            onValueChange={handleStatusChange}
+            tabs={statusTabsWithCount}
+          />
 
-      <FiltersBar
-        value={filterForm}
-        onChange={setFilterForm}
-        onSubmit={handleApplyFilters}
-        onReset={handleResetFilters}
-        roleOptions={roleOptions}
-        loading={userListQuery.isFetching}
-      />
+          <FiltersBar
+            value={filterForm}
+            onRoleChange={handleRoleFilterChange}
+            onKeywordChange={handleKeywordChange}
+            roleOptions={roleOptions}
+          />
 
-      <AppliedFilters
-        items={appliedFilterChips}
-        onRemove={handleRemoveFilter}
-        onClear={handleResetFilters}
-      />
+          <AppliedFilters
+            items={appliedFilterChips}
+            onRemove={handleRemoveFilter}
+            onClear={handleResetFilters}
+          />
+        </div>
+      </div>
 
       <SelectionBanner
         count={selectedCount}
@@ -422,6 +481,8 @@ export function UserManagement() {
         selectedIds={selectedIds}
         onToggleSelect={handleToggleSelectRow}
         onEdit={openEditDialog}
+        onResetPassword={handleResetPassword}
+        onChangeRole={handleChangeRole}
         onDelete={triggerDelete}
         isLoading={userListQuery.isLoading}
         isError={userListQuery.isError}

@@ -1,6 +1,5 @@
 import { Search } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -23,58 +22,49 @@ export type RoleOption = {
 
 interface FiltersBarProps {
   value: FiltersFormState;
-  onChange: (value: FiltersFormState) => void;
-  onSubmit: () => void;
-  onReset: () => void;
+  onRoleChange: (role: string) => void;
+  onKeywordChange: (keyword: string) => void;
   roleOptions: RoleOption[];
-  loading?: boolean;
 }
 
-export function FiltersBar({ value, onChange, onSubmit, onReset, roleOptions, loading }: FiltersBarProps) {
+export function FiltersBar({
+  value,
+  onRoleChange,
+  onKeywordChange,
+  roleOptions,
+}: FiltersBarProps) {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid gap-4 md:grid-cols-[260px,1fr] lg:grid-cols-[280px,1fr,auto]">
-        <div className="space-y-2">
-          <Label className="text-xs font-medium text-muted-foreground">角色</Label>
-          <Select
-            value={value.role}
-            onValueChange={(role) => onChange({ ...value, role })}
-          >
-            <SelectTrigger className="h-11 rounded-lg border-muted">
-              <SelectValue placeholder="选择角色" />
-            </SelectTrigger>
-            <SelectContent>
-              {roleOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
+        <Label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+          角色
+        </Label>
+        <Select value={value.role} onValueChange={onRoleChange}>
+          <SelectTrigger className="h-10 w-full flex-1 rounded-lg border-muted sm:w-48">
+            <SelectValue placeholder="选择角色" />
+          </SelectTrigger>
+          <SelectContent>
+            {roleOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-medium text-muted-foreground">关键字</Label>
-          <div className="relative">
-            <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
-            <Input
-              placeholder="请输入用户名或昵称"
-              value={value.keyword}
-              onChange={(event) =>
-                onChange({ ...value, keyword: event.target.value })
-              }
-              className="h-11 rounded-lg border-muted pl-9"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-end justify-start gap-2 lg:justify-end">
-          <Button type="button" onClick={onSubmit} disabled={loading}>
-            查询
-          </Button>
-          <Button type="button" variant="outline" onClick={onReset} disabled={loading}>
-            重置
-          </Button>
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
+        <Label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+          关键字
+        </Label>
+        <div className="relative w-full min-w-0 flex-1 sm:w-64">
+          <Search className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+          <Input
+            placeholder="请输入用户名或昵称"
+            value={value.keyword}
+            onChange={(event) => onKeywordChange(event.target.value)}
+            className="h-10 w-full rounded-lg border-muted pl-9"
+          />
         </div>
       </div>
     </div>

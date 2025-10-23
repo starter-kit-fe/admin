@@ -18,18 +18,11 @@ interface StatusTabsProps {
 export function StatusTabs({ value, onValueChange, tabs }: StatusTabsProps) {
   return (
     <Tabs value={value} onValueChange={onValueChange}>
-      <TabsList className="bg-transparent h-auto gap-1 px-0 py-0 overflow-x-auto border-b border-border/60">
+      <TabsList>
         {tabs.map((tab) => {
           const isActive = tab.value === value;
           return (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className={cn(
-                'rounded-none border-b-2 border-transparent px-0 pb-3 pt-2 font-medium text-muted-foreground transition-colors data-[state=active]:text-foreground',
-                isActive && 'border-foreground text-foreground',
-              )}
-            >
+            <TabsTrigger key={tab.value} value={tab.value}>
               <span className="flex items-center gap-2 text-sm">
                 {tab.label}
                 {typeof tab.count === 'number' ? (
