@@ -20,9 +20,11 @@ import (
 	"github.com/starter-kit-fe/admin/internal/logger"
 	"github.com/starter-kit-fe/admin/internal/middleware"
 	authrepo "github.com/starter-kit-fe/admin/internal/repo/auth"
+	userrepo "github.com/starter-kit-fe/admin/internal/repo/user"
 	"github.com/starter-kit-fe/admin/internal/router"
 	captchaservice "github.com/starter-kit-fe/admin/internal/service/captcha"
 	healthservice "github.com/starter-kit-fe/admin/internal/service/health"
+	userservice "github.com/starter-kit-fe/admin/internal/service/user"
 )
 
 type Options struct {
@@ -105,6 +107,9 @@ func New(ctx context.Context, opts Options) (*App, error) {
 		CookieHTTPOnly: cfg.Auth.CookieHTTPOnly,
 		CookieSameSite: cfg.Auth.CookieSameSite,
 	})
+	userRepo := userrepo.New(sqlDB)
+	userSvc := userservice.New(userRepo)
+	userHandler := handler.NewUserHandler(userSvc)
 
 	var limit rate.Limit
 	if cfg.Security.RateLimit.Requests > 0 && cfg.Security.RateLimit.Period > 0 {
@@ -119,6 +124,7 @@ func New(ctx context.Context, opts Options) (*App, error) {
 		DocsHandler:        docsHandler,
 		CaptchaHandler:     captchaHandler,
 		AuthHandler:        authHandler,
+		UserHandler:        userHandler,
 		AuthSecret:         cfg.Auth.Secret,
 		PermissionProvider: authRepo,
 		AuthCookieName:     cfg.Auth.CookieName,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -12,6 +13,7 @@ import (
 
 var (
 	ErrRepositoryUnavailable = errors.New("user repository is not initialized")
+	ErrInvalidUserPayload    = errors.New("user payload is invalid")
 )
 
 type Repository struct {
@@ -119,4 +121,114 @@ func (r *Repository) GetDepartments(ctx context.Context, ids []int64) (map[int64
 		result[dept.DeptID] = dept
 	}
 	return result, nil
+}
+
+func (r *Repository) GetUser(ctx context.Context, id int64) (*model.SysUser, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
+	}
+	if id <= 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var user model.SysUser
+	err := r.db.WithContext(ctx).
+		Where("user_id = ? AND del_flag <> ?", id, "2").
+		First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *Repository) CreateUser(ctx context.Context, user *model.SysUser) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if user == nil {
+		return ErrInvalidUserPayload
+	}
+
+	return r.db.WithContext(ctx).Create(user).Error
+}
+
+func (r *Repository) UpdateUser(ctx context.Context, userID int64, updates map[string]interface{}) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if userID <= 0 {
+		return gorm.ErrRecordNotFound
+	}
+	if len(updates) == 0 {
+		return nil
+	}
+
+	result := r.db.WithContext(ctx).
+		Model(&model.SysUser{}).
+		Where("user_id = ? AND del_flag <> ?", userID, "2").
+		Updates(updates)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *Repository) SoftDeleteUser(ctx context.Context, userID int64, operator string, at time.Time) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if userID <= 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	updates := map[string]interface{}{
+		"del_flag":    "2",
+		"update_time": at,
+	}
+	if strings.TrimSpace(operator) != "" {
+		updates["update_by"] = strings.TrimSpace(operator)
+	}
+
+	result := r.db.WithContext(ctx).
+		Model(&model.SysUser{}).
+		Where("user_id = ? AND del_flag <> ?", userID, "2").
+		Updates(updates)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *Repository) ExistsByUsername(ctx context.Context, username string, excludeID int64) (bool, error) {
+	if r == nil || r.db == nil {
+		return false, ErrRepositoryUnavailable
+	}
+
+	username = strings.TrimSpace(username)
+	if username == "" {
+		return false, nil
+	}
+
+	query := r.db.WithContext(ctx).
+		Model(&model.SysUser{}).
+		Where("user_name = ?", username).
+		Where("del_flag <> ?", "2")
+
+	if excludeID > 0 {
+		query = query.Where("user_id <> ?", excludeID)
+	}
+
+	var count int64
+	if err := query.Count(&count).Error; err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

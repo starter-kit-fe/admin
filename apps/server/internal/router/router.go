@@ -28,6 +28,7 @@ type Options struct {
 	CaptchaHandler     *handler.CaptchaHandler
 	DocsHandler        *handler.DocsHandler
 	AuthHandler        *handler.AuthHandler
+	UserHandler        *handler.UserHandler
 	Middlewares        []gin.HandlerFunc
 	AuthSecret         string
 	AuthCookieName     string
@@ -126,7 +127,7 @@ func registerProtectedRoutes(api *gin.RouterGroup, opts Options) {
 	}
 
 	registerProtectedAuthRoutes(protected, opts)
-	registerSystemRoutes(protected)
+	registerSystemRoutes(protected, opts)
 	registerMonitorRoutes(protected)
 	registerToolRoutes(protected)
 }
@@ -141,20 +142,10 @@ func registerProtectedAuthRoutes(group *gin.RouterGroup, opts Options) {
 	group.POST("/auth/logout", opts.AuthHandler.Logout)
 }
 
-func registerSystemRoutes(group *gin.RouterGroup) {
+func registerSystemRoutes(group *gin.RouterGroup, opts Options) {
 	system := group.Group("/system")
 
-	users := system.Group("/users")
-	{
-		users.GET("", middleware.RequirePermissions("system:user:list"), handler.NotImplemented("list users"))
-		users.GET("/export", middleware.RequirePermissions("system:user:export"), handler.NotImplemented("export users"))
-		users.POST("/import", middleware.RequirePermissions("system:user:import"), handler.NotImplemented("import users"))
-		users.POST("", middleware.RequirePermissions("system:user:add"), handler.NotImplemented("create user"))
-		users.GET("/:id", middleware.RequirePermissions("system:user:query"), handler.NotImplemented("get user"))
-		users.PUT("/:id", middleware.RequirePermissions("system:user:edit"), handler.NotImplemented("update user"))
-		users.DELETE("/:id", middleware.RequirePermissions("system:user:remove"), handler.NotImplemented("delete user"))
-		users.POST("/:id/reset-password", middleware.RequirePermissions("system:user:resetPwd"), handler.NotImplemented("reset user password"))
-	}
+	registerSystemUserRoutes(system, opts)
 
 	roles := system.Group("/roles")
 	{
@@ -222,6 +213,29 @@ func registerSystemRoutes(group *gin.RouterGroup) {
 		notices.PUT("/:id", middleware.RequirePermissions("system:notice:edit"), handler.NotImplemented("update notice"))
 		notices.DELETE("/:id", middleware.RequirePermissions("system:notice:remove"), handler.NotImplemented("delete notice"))
 	}
+}
+
+func registerSystemUserRoutes(system *gin.RouterGroup, opts Options) {
+	users := system.Group("/users")
+
+	users.GET("/export", middleware.RequirePermissions("system:user:export"), handler.NotImplemented("export users"))
+	users.POST("/import", middleware.RequirePermissions("system:user:import"), handler.NotImplemented("import users"))
+
+	if opts.UserHandler == nil {
+		users.GET("", middleware.RequirePermissions("system:user:list"), handler.NotImplemented("list users"))
+		users.POST("", middleware.RequirePermissions("system:user:add"), handler.NotImplemented("create user"))
+		users.GET("/:id", middleware.RequirePermissions("system:user:query"), handler.NotImplemented("get user"))
+		users.PUT("/:id", middleware.RequirePermissions("system:user:edit"), handler.NotImplemented("update user"))
+		users.DELETE("/:id", middleware.RequirePermissions("system:user:remove"), handler.NotImplemented("delete user"))
+	} else {
+		users.GET("", middleware.RequirePermissions("system:user:list"), opts.UserHandler.List)
+		users.POST("", middleware.RequirePermissions("system:user:add"), opts.UserHandler.Create)
+		users.GET("/:id", middleware.RequirePermissions("system:user:query"), opts.UserHandler.Get)
+		users.PUT("/:id", middleware.RequirePermissions("system:user:edit"), opts.UserHandler.Update)
+		users.DELETE("/:id", middleware.RequirePermissions("system:user:remove"), opts.UserHandler.Delete)
+	}
+
+	users.POST("/:id/reset-password", middleware.RequirePermissions("system:user:resetPwd"), handler.NotImplemented("reset user password"))
 }
 
 func registerMonitorRoutes(group *gin.RouterGroup) {
