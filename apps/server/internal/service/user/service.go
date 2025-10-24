@@ -14,10 +14,11 @@ import (
 )
 
 var (
-	ErrServiceUnavailable = errors.New("user service is not initialized")
-	ErrDuplicateUsername  = errors.New("username already exists")
-	ErrPasswordRequired   = errors.New("password is required")
-	ErrInvalidStatus      = errors.New("invalid user status")
+	ErrServiceUnavailable   = errors.New("user service is not initialized")
+	ErrDuplicateUsername    = errors.New("username already exists")
+	ErrPasswordRequired     = errors.New("password is required")
+	ErrInvalidStatus        = errors.New("invalid user status")
+	ErrInvalidRoleSelection = errors.New("invalid role selection")
 )
 
 type Service struct {
@@ -45,26 +46,38 @@ type ListResult struct {
 	PageSize int    `json:"pageSize"`
 }
 
+type DeptOption struct {
+	DeptID   int64  `json:"deptId"`
+	DeptName string `json:"deptName"`
+}
+
+type RoleOption struct {
+	RoleID   int64  `json:"roleId"`
+	RoleName string `json:"roleName"`
+	RoleKey  string `json:"roleKey"`
+}
+
 type User struct {
-	UserID        int64      `json:"userId"`
-	DeptID        *int64     `json:"deptId,omitempty"`
-	DeptName      *string    `json:"deptName,omitempty"`
-	UserName      string     `json:"userName"`
-	NickName      string     `json:"nickName"`
-	UserType      string     `json:"userType"`
-	Email         string     `json:"email"`
-	Phonenumber   string     `json:"phonenumber"`
-	Sex           string     `json:"sex"`
-	Avatar        string     `json:"avatar"`
-	Status        string     `json:"status"`
-	Remark        *string    `json:"remark,omitempty"`
-	LoginIP       string     `json:"loginIp"`
-	LoginDate     *time.Time `json:"loginDate,omitempty"`
-	PwdUpdateDate *time.Time `json:"pwdUpdateDate,omitempty"`
-	CreateBy      string     `json:"createBy"`
-	CreateTime    *time.Time `json:"createTime,omitempty"`
-	UpdateBy      string     `json:"updateBy"`
-	UpdateTime    *time.Time `json:"updateTime,omitempty"`
+	UserID        int64        `json:"userId"`
+	DeptID        *int64       `json:"deptId,omitempty"`
+	DeptName      *string      `json:"deptName,omitempty"`
+	UserName      string       `json:"userName"`
+	NickName      string       `json:"nickName"`
+	UserType      string       `json:"userType"`
+	Email         string       `json:"email"`
+	Phonenumber   string       `json:"phonenumber"`
+	Sex           string       `json:"sex"`
+	Avatar        string       `json:"avatar"`
+	Status        string       `json:"status"`
+	Remark        *string      `json:"remark,omitempty"`
+	LoginIP       string       `json:"loginIp"`
+	LoginDate     *time.Time   `json:"loginDate,omitempty"`
+	PwdUpdateDate *time.Time   `json:"pwdUpdateDate,omitempty"`
+	CreateBy      string       `json:"createBy"`
+	CreateTime    *time.Time   `json:"createTime,omitempty"`
+	UpdateBy      string       `json:"updateBy"`
+	UpdateTime    *time.Time   `json:"updateTime,omitempty"`
+	Roles         []RoleOption `json:"roles"`
 }
 
 type CreateUserInput struct {
@@ -78,6 +91,7 @@ type CreateUserInput struct {
 	Password    string
 	Remark      *string
 	Operator    string
+	RoleIDs     []int64
 }
 
 type UpdateUserInput struct {
@@ -91,6 +105,7 @@ type UpdateUserInput struct {
 	Status      *string
 	Remark      *string
 	Operator    string
+	RoleIDs     *[]int64
 }
 
 type DeleteUserInput struct {
@@ -206,12 +221,30 @@ func (s *Service) CreateUser(ctx context.Context, input CreateUserInput) (*User,
 	email := strings.TrimSpace(input.Email)
 	phone := strings.TrimSpace(input.Phonenumber)
 	remark := normalizeRemark(input.Remark)
+	roleIDs := normalizeIDs(input.RoleIDs)
+
+	primaryRoleKey := "00"
+	if len(roleIDs) > 0 {
+		roleMap, err := s.repo.GetRolesByIDs(ctx, roleIDs)
+		if err != nil {
+			return nil, err
+		}
+		if len(roleMap) != len(roleIDs) {
+			return nil, ErrInvalidRoleSelection
+		}
+		if role := roleMap[roleIDs[0]]; role.RoleKey != "" {
+			primaryRoleKey = strings.TrimSpace(role.RoleKey)
+			if primaryRoleKey == "" {
+				primaryRoleKey = "00"
+			}
+		}
+	}
 
 	user := &model.SysUser{
 		DeptID:        input.DeptID,
 		UserName:      username,
 		NickName:      nickname,
-		UserType:      "00",
+		UserType:      primaryRoleKey,
 		Email:         email,
 		Phonenumber:   phone,
 		Sex:           sex,
@@ -235,6 +268,10 @@ func (s *Service) CreateUser(ctx context.Context, input CreateUserInput) (*User,
 		return nil, err
 	}
 
+	if err := s.repo.ReplaceUserRoles(ctx, user.UserID, roleIDs); err != nil {
+		return nil, err
+	}
+
 	return s.GetUser(ctx, user.UserID)
 }
 
@@ -253,6 +290,28 @@ func (s *Service) UpdateUser(ctx context.Context, input UpdateUserInput) (*User,
 	}
 
 	updates := make(map[string]interface{})
+	roleUpdateRequested := false
+	var roleIDs []int64
+	if input.RoleIDs != nil {
+		roleUpdateRequested = true
+		roleIDs = normalizeIDs(*input.RoleIDs)
+		if len(roleIDs) > 0 {
+			roleMap, err := s.repo.GetRolesByIDs(ctx, roleIDs)
+			if err != nil {
+				return nil, err
+			}
+			if len(roleMap) != len(roleIDs) {
+				return nil, ErrInvalidRoleSelection
+			}
+			primaryRoleKey := strings.TrimSpace(roleMap[roleIDs[0]].RoleKey)
+			if primaryRoleKey == "" {
+				primaryRoleKey = "00"
+			}
+			updates["user_type"] = primaryRoleKey
+		} else {
+			updates["user_type"] = "00"
+		}
+	}
 
 	if input.UserName != nil {
 		newUsername := strings.TrimSpace(*input.UserName)
@@ -311,7 +370,7 @@ func (s *Service) UpdateUser(ctx context.Context, input UpdateUserInput) (*User,
 		}
 	}
 
-	if len(updates) == 0 {
+	if len(updates) == 0 && !roleUpdateRequested {
 		return s.GetUser(ctx, input.ID)
 	}
 
@@ -320,11 +379,19 @@ func (s *Service) UpdateUser(ctx context.Context, input UpdateUserInput) (*User,
 	updates["update_by"] = operator
 	updates["update_time"] = now
 
-	if err := s.repo.UpdateUser(ctx, input.ID, updates); err != nil {
-		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return nil, ErrDuplicateUsername
+	if len(updates) > 0 {
+		if err := s.repo.UpdateUser(ctx, input.ID, updates); err != nil {
+			if errors.Is(err, gorm.ErrDuplicatedKey) {
+				return nil, ErrDuplicateUsername
+			}
+			return nil, err
 		}
-		return nil, err
+	}
+
+	if roleUpdateRequested {
+		if err := s.repo.ReplaceUserRoles(ctx, input.ID, roleIDs); err != nil {
+			return nil, err
+		}
 	}
 
 	return s.GetUser(ctx, input.ID)
@@ -357,9 +424,24 @@ func (s *Service) composeUsers(ctx context.Context, records []model.SysUser) ([]
 		}
 	}
 
+	userIDs := collectUserIDs(records)
+	roleIDMap, err := s.repo.GetUserRoleIDs(ctx, userIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	roleIDs := collectRoleIDs(roleIDMap)
+	roleMap := map[int64]model.SysRole{}
+	if len(roleIDs) > 0 {
+		roleMap, err = s.repo.GetRolesByIDs(ctx, roleIDs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	users := make([]User, len(records))
 	for i, record := range records {
-		users[i] = toUserDTO(record, deptMap)
+		users[i] = toUserDTO(record, deptMap, roleIDMap, roleMap)
 	}
 	return users, nil
 }
@@ -386,12 +468,79 @@ func collectDeptIDs(users []model.SysUser) []int64 {
 	return result
 }
 
-func toUserDTO(user model.SysUser, deptMap map[int64]model.SysDept) User {
+func collectUserIDs(users []model.SysUser) []int64 {
+	seen := make(map[int64]struct{}, len(users))
+	result := make([]int64, 0, len(users))
+
+	for _, user := range users {
+		if user.UserID <= 0 {
+			continue
+		}
+		if _, ok := seen[user.UserID]; ok {
+			continue
+		}
+		seen[user.UserID] = struct{}{}
+		result = append(result, user.UserID)
+	}
+
+	return result
+}
+
+func collectRoleIDs(roleIDMap map[int64][]int64) []int64 {
+	seen := make(map[int64]struct{})
+	result := make([]int64, 0)
+
+	for _, ids := range roleIDMap {
+		for _, id := range ids {
+			if _, ok := seen[id]; ok {
+				continue
+			}
+			seen[id] = struct{}{}
+			result = append(result, id)
+		}
+	}
+
+	return result
+}
+
+func buildUserRoles(userRoleIDs []int64, roleMap map[int64]model.SysRole) []RoleOption {
+	if len(userRoleIDs) == 0 {
+		return []RoleOption{}
+	}
+
+	roles := make([]RoleOption, 0, len(userRoleIDs))
+	for _, roleID := range userRoleIDs {
+		role, ok := roleMap[roleID]
+		if !ok {
+			continue
+		}
+		if role.Status != "0" || role.DelFlag != "0" {
+			continue
+		}
+		roles = append(roles, RoleOption{
+			RoleID:   role.RoleID,
+			RoleName: role.RoleName,
+			RoleKey:  role.RoleKey,
+		})
+	}
+	return roles
+}
+
+func toUserDTO(user model.SysUser, deptMap map[int64]model.SysDept, roleIDMap map[int64][]int64, roleMap map[int64]model.SysRole) User {
 	var deptName *string
 	if user.DeptID != nil {
 		if dept, ok := deptMap[*user.DeptID]; ok {
 			name := dept.DeptName
 			deptName = &name
+		}
+	}
+
+	roles := buildUserRoles(roleIDMap[user.UserID], roleMap)
+	userType := user.UserType
+	if len(roles) > 0 {
+		primaryKey := strings.TrimSpace(roles[0].RoleKey)
+		if primaryKey != "" {
+			userType = primaryKey
 		}
 	}
 
@@ -401,7 +550,7 @@ func toUserDTO(user model.SysUser, deptMap map[int64]model.SysDept) User {
 		DeptName:      deptName,
 		UserName:      user.UserName,
 		NickName:      user.NickName,
-		UserType:      user.UserType,
+		UserType:      userType,
 		Email:         user.Email,
 		Phonenumber:   user.Phonenumber,
 		Sex:           user.Sex,
@@ -415,6 +564,7 @@ func toUserDTO(user model.SysUser, deptMap map[int64]model.SysDept) User {
 		CreateTime:    user.CreateTime,
 		UpdateBy:      user.UpdateBy,
 		UpdateTime:    user.UpdateTime,
+		Roles:         roles,
 	}
 }
 
@@ -424,6 +574,22 @@ func copyStringPtr(src *string) *string {
 	}
 	val := *src
 	return &val
+}
+
+func normalizeIDs(ids []int64) []int64 {
+	seen := make(map[int64]struct{}, len(ids))
+	result := make([]int64, 0, len(ids))
+	for _, id := range ids {
+		if id <= 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		result = append(result, id)
+	}
+	return result
 }
 
 func normalizeStatus(status string) (string, error) {
@@ -438,6 +604,55 @@ func normalizeStatus(status string) (string, error) {
 	default:
 		return "", ErrInvalidStatus
 	}
+}
+
+func (s *Service) ListDepartmentOptions(ctx context.Context, keyword string, limit int) ([]DeptOption, error) {
+	if s == nil || s.repo == nil {
+		return nil, ErrServiceUnavailable
+	}
+
+	if limit <= 0 {
+		limit = 15
+	}
+
+	depts, err := s.repo.ListDepartments(ctx, keyword, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	options := make([]DeptOption, len(depts))
+	for i, dept := range depts {
+		options[i] = DeptOption{DeptID: dept.DeptID, DeptName: dept.DeptName}
+	}
+	return options, nil
+}
+
+func (s *Service) ListRoleOptions(ctx context.Context, keyword string, limit int) ([]RoleOption, error) {
+	if s == nil || s.repo == nil {
+		return nil, ErrServiceUnavailable
+	}
+
+	if limit <= 0 {
+		limit = 15
+	}
+
+	roles, err := s.repo.ListRoles(ctx, keyword, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	options := make([]RoleOption, 0, len(roles))
+	for _, role := range roles {
+		if role.Status != "0" || role.DelFlag != "0" {
+			continue
+		}
+		options = append(options, RoleOption{
+			RoleID:   role.RoleID,
+			RoleName: role.RoleName,
+			RoleKey:  role.RoleKey,
+		})
+	}
+	return options, nil
 }
 
 func normalizeSex(sex string) string {

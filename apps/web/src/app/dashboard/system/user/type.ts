@@ -25,6 +25,7 @@ export interface User {
   createTime?: string | null;
   updateBy: string;
   updateTime?: string | null;
+  roles: UserRole[];
 }
 
 export interface UserListResponse {
@@ -44,6 +45,7 @@ export interface CreateUserPayload {
   status?: string;
   password: string;
   remark?: string | null;
+  roleIds?: number[];
 }
 
 export interface UpdateUserPayload {
@@ -55,6 +57,7 @@ export interface UpdateUserPayload {
   sex?: string;
   status?: string;
   remark?: string | null;
+  roleIds?: number[];
 }
 
 export interface UserFormValues {
@@ -67,4 +70,22 @@ export interface UserFormValues {
   deptId: string;
   remark: string;
   password?: string;
+  roleId: string;
+}
+
+export interface DeptOption {
+  deptId: number;
+  deptName: string;
+}
+
+export interface UserRole {
+  roleId: number;
+  roleName: string;
+  roleKey: string;
+}
+
+export interface RoleOption {
+  roleId: number;
+  roleName: string;
+  roleKey: string;
 }

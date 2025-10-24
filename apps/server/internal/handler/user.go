@@ -41,17 +41,24 @@ type createUserRequest struct {
 	Status      string  `json:"status"`
 	Password    string  `json:"password" binding:"required"`
 	Remark      *string `json:"remark"`
+	RoleIDs     []int64 `json:"roleIds"`
 }
 
 type updateUserRequest struct {
-	UserName    *string `json:"userName"`
-	NickName    *string `json:"nickName"`
-	DeptID      *int64  `json:"deptId"`
-	Email       *string `json:"email"`
-	Phonenumber *string `json:"phonenumber"`
-	Sex         *string `json:"sex"`
-	Status      *string `json:"status"`
-	Remark      *string `json:"remark"`
+	UserName    *string  `json:"userName"`
+	NickName    *string  `json:"nickName"`
+	DeptID      *int64   `json:"deptId"`
+	Email       *string  `json:"email"`
+	Phonenumber *string  `json:"phonenumber"`
+	Sex         *string  `json:"sex"`
+	Status      *string  `json:"status"`
+	Remark      *string  `json:"remark"`
+	RoleIDs     *[]int64 `json:"roleIds"`
+}
+
+type listOptionsQuery struct {
+	Keyword string `form:"keyword"`
+	Limit   int    `form:"limit"`
 }
 
 func (h *UserHandler) List(ctx *gin.Context) {
@@ -78,6 +85,48 @@ func (h *UserHandler) List(ctx *gin.Context) {
 	}
 
 	resp.OK(ctx, resp.WithData(result))
+}
+
+func (h *UserHandler) ListDepartmentOptions(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
+		return
+	}
+
+	var query listOptionsQuery
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid query parameters"))
+		return
+	}
+
+	options, err := h.service.ListDepartmentOptions(ctx.Request.Context(), query.Keyword, query.Limit)
+	if err != nil {
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load departments"))
+		return
+	}
+
+	resp.OK(ctx, resp.WithData(options))
+}
+
+func (h *UserHandler) ListRoleOptions(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
+		return
+	}
+
+	var query listOptionsQuery
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid query parameters"))
+		return
+	}
+
+	options, err := h.service.ListRoleOptions(ctx.Request.Context(), query.Keyword, query.Limit)
+	if err != nil {
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load roles"))
+		return
+	}
+
+	resp.OK(ctx, resp.WithData(options))
 }
 
 func (h *UserHandler) Get(ctx *gin.Context) {
@@ -129,6 +178,7 @@ func (h *UserHandler) Create(ctx *gin.Context) {
 		Password:    payload.Password,
 		Remark:      payload.Remark,
 		Operator:    operator,
+		RoleIDs:     payload.RoleIDs,
 	})
 	if err != nil {
 		switch {
@@ -138,6 +188,8 @@ func (h *UserHandler) Create(ctx *gin.Context) {
 			resp.BadRequest(ctx, resp.WithMessage("password is required"))
 		case errors.Is(err, userservice.ErrInvalidStatus):
 			resp.BadRequest(ctx, resp.WithMessage("invalid user status"))
+		case errors.Is(err, userservice.ErrInvalidRoleSelection):
+			resp.BadRequest(ctx, resp.WithMessage("invalid role selection"))
 		default:
 			resp.InternalServerError(ctx, resp.WithMessage("failed to create user"))
 		}
@@ -177,6 +229,7 @@ func (h *UserHandler) Update(ctx *gin.Context) {
 		Status:      payload.Status,
 		Remark:      payload.Remark,
 		Operator:    operator,
+		RoleIDs:     payload.RoleIDs,
 	})
 	if err != nil {
 		switch {
@@ -186,6 +239,8 @@ func (h *UserHandler) Update(ctx *gin.Context) {
 			resp.Conflict(ctx, resp.WithMessage("username already exists"))
 		case errors.Is(err, userservice.ErrInvalidStatus):
 			resp.BadRequest(ctx, resp.WithMessage("invalid user status"))
+		case errors.Is(err, userservice.ErrInvalidRoleSelection):
+			resp.BadRequest(ctx, resp.WithMessage("invalid role selection"))
 		default:
 			resp.InternalServerError(ctx, resp.WithMessage("failed to update user"))
 		}

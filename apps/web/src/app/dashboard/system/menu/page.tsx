@@ -1,3 +1,5 @@
+import { MenuManagement } from './menu-management';
+
 export default function Page() {
-  return <div>menu</div>;
+  return <MenuManagement />;
 }

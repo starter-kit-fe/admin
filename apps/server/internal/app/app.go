@@ -19,12 +19,22 @@ import (
 	"github.com/starter-kit-fe/admin/internal/handler"
 	"github.com/starter-kit-fe/admin/internal/logger"
 	"github.com/starter-kit-fe/admin/internal/middleware"
-	authrepo "github.com/starter-kit-fe/admin/internal/repo/auth"
-	userrepo "github.com/starter-kit-fe/admin/internal/repo/user"
+    authrepo "github.com/starter-kit-fe/admin/internal/repo/auth"
+    deptrepo "github.com/starter-kit-fe/admin/internal/repo/dept"
+    dictrepo "github.com/starter-kit-fe/admin/internal/repo/dict"
+    menurepo "github.com/starter-kit-fe/admin/internal/repo/menu"
+    postrepo "github.com/starter-kit-fe/admin/internal/repo/post"
+    rolerepo "github.com/starter-kit-fe/admin/internal/repo/role"
+    userrepo "github.com/starter-kit-fe/admin/internal/repo/user"
 	"github.com/starter-kit-fe/admin/internal/router"
-	captchaservice "github.com/starter-kit-fe/admin/internal/service/captcha"
-	healthservice "github.com/starter-kit-fe/admin/internal/service/health"
-	userservice "github.com/starter-kit-fe/admin/internal/service/user"
+    captchaservice "github.com/starter-kit-fe/admin/internal/service/captcha"
+    deptservice "github.com/starter-kit-fe/admin/internal/service/dept"
+    dictservice "github.com/starter-kit-fe/admin/internal/service/dict"
+    healthservice "github.com/starter-kit-fe/admin/internal/service/health"
+    menuservice "github.com/starter-kit-fe/admin/internal/service/menu"
+    postservice "github.com/starter-kit-fe/admin/internal/service/post"
+    roleservice "github.com/starter-kit-fe/admin/internal/service/role"
+    userservice "github.com/starter-kit-fe/admin/internal/service/user"
 )
 
 type Options struct {
@@ -107,9 +117,24 @@ func New(ctx context.Context, opts Options) (*App, error) {
 		CookieHTTPOnly: cfg.Auth.CookieHTTPOnly,
 		CookieSameSite: cfg.Auth.CookieSameSite,
 	})
-	userRepo := userrepo.New(sqlDB)
-	userSvc := userservice.New(userRepo)
-	userHandler := handler.NewUserHandler(userSvc)
+userRepo := userrepo.New(sqlDB)
+userSvc := userservice.New(userRepo)
+userHandler := handler.NewUserHandler(userSvc)
+menuRepo := menurepo.New(sqlDB)
+menuSvc := menuservice.New(menuRepo)
+menuHandler := handler.NewMenuHandler(menuSvc)
+deptRepo := deptrepo.New(sqlDB)
+deptSvc := deptservice.New(deptRepo)
+deptHandler := handler.NewDeptHandler(deptSvc)
+postRepo := postrepo.New(sqlDB)
+postSvc := postservice.New(postRepo)
+postHandler := handler.NewPostHandler(postSvc)
+dictRepo := dictrepo.New(sqlDB)
+dictSvc := dictservice.New(dictRepo)
+dictHandler := handler.NewDictHandler(dictSvc)
+roleRepo := rolerepo.New(sqlDB)
+roleSvc := roleservice.New(roleRepo, menuRepo)
+roleHandler := handler.NewRoleHandler(roleSvc)
 
 	var limit rate.Limit
 	if cfg.Security.RateLimit.Requests > 0 && cfg.Security.RateLimit.Period > 0 {
@@ -125,6 +150,11 @@ func New(ctx context.Context, opts Options) (*App, error) {
 		CaptchaHandler:     captchaHandler,
 		AuthHandler:        authHandler,
 		UserHandler:        userHandler,
+        RoleHandler:        roleHandler,
+        MenuHandler:        menuHandler,
+        DeptHandler:        deptHandler,
+        PostHandler:        postHandler,
+        DictHandler:        dictHandler,
 		AuthSecret:         cfg.Auth.Secret,
 		PermissionProvider: authRepo,
 		AuthCookieName:     cfg.Auth.CookieName,

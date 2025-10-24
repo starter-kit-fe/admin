@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useMemo } from 'react';
 import { KeyRound, MoreHorizontal, Pencil, Trash2, UserCog } from 'lucide-react';
+import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -59,59 +60,17 @@ function RowActions({
   onDelete,
   disableDelete,
 }: RowActionsProps) {
-  const [open, setOpen] = useState(false);
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const cancelScheduledClose = () => {
-    if (closeTimerRef.current) {
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
+  const handleSelect = (callback?: (user: User) => void) => () => {
+    if (callback) {
+      callback(user);
     }
   };
 
-  const scheduleClose = () => {
-    cancelScheduledClose();
-    closeTimerRef.current = setTimeout(() => {
-      setOpen(false);
-      closeTimerRef.current = null;
-    }, 120);
-  };
-
-  const handleSelect =
-    (callback?: (user: User) => void) =>
-    (event: Event) => {
-      event.preventDefault();
-      if (callback) {
-        callback(user);
-      }
-      cancelScheduledClose();
-      setOpen(false);
-    };
-
-  const handleDeleteSelect = (event: Event) => {
-    event.preventDefault();
+  const handleDeleteSelect = () => {
     if (!disableDelete) {
       onDelete(user);
     }
-    cancelScheduledClose();
-    setOpen(false);
   };
-
-  const handleMouseEnter = () => {
-    cancelScheduledClose();
-    setOpen(true);
-  };
-  const handleMouseLeave = () => {
-    scheduleClose();
-  };
-
-  useEffect(() => () => cancelScheduledClose(), []);
-
-  useEffect(() => {
-    if (!open) {
-      cancelScheduledClose();
-    }
-  }, [open]);
 
   return (
     <div className="flex justify-end gap-1">
@@ -124,33 +83,20 @@ function RowActions({
         <Pencil className="mr-1.5 size-3.5" />
         修改
       </Button>
-      <DropdownMenu
-        open={open}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) {
-            cancelScheduledClose();
-          }
-          setOpen(nextOpen);
-        }}
-      >
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
             className="size-8"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
             aria-label="更多操作"
           >
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-40"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
+        <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem
             disabled={!onResetPassword}
             onSelect={handleSelect(onResetPassword)}
@@ -193,107 +139,220 @@ export function UserTable({
   isLoading,
   isError,
 }: UserTableProps) {
+  const columnHelper = useMemo(() => createColumnHelper<User>(), []);
+
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: 'select',
+        header: () => (
+          <Checkbox
+            aria-label="选择全部"
+            checked={headerCheckboxState}
+            onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
+          />
+        ),
+        cell: ({ row }) => {
+          const user = row.original;
+          const displayName = getDisplayName(user);
+          const isSelected = selectedIds.has(user.userId);
+          return (
+            <Checkbox
+              aria-label={`选择 ${displayName}`}
+              checked={isSelected}
+              onCheckedChange={(checked) => onToggleSelect(user.userId, checked === true)}
+            />
+          );
+        },
+        enableSorting: false,
+        enableHiding: false,
+        meta: {
+          headerClassName: 'w-12',
+          cellClassName: 'w-12 align-middle',
+        },
+      }),
+      columnHelper.display({
+        id: 'name',
+        header: () => '姓名',
+        cell: ({ row }) => {
+          const user = row.original;
+          const displayName = getDisplayName(user);
+          const emailLabel = getEmailLabel(user);
+
+          return (
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10 border border-border/60 shadow-sm">
+                {user.avatar ? <AvatarImage src={user.avatar} alt={displayName} /> : null}
+                <AvatarFallback>{getAvatarFallback(user)}</AvatarFallback>
+              </Avatar>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">{displayName}</p>
+                <p className="text-xs text-muted-foreground">{emailLabel}</p>
+              </div>
+            </div>
+          );
+        },
+        meta: {
+          headerClassName: 'min-w-[220px]',
+        },
+      }),
+      columnHelper.display({
+        id: 'phone',
+        header: () => '手机号',
+        cell: ({ row }) => {
+          const user = row.original;
+          return <span className="text-sm text-muted-foreground">{formatPhoneNumber(user.phonenumber)}</span>;
+        },
+        meta: {
+          headerClassName: 'min-w-[160px]',
+        },
+      }),
+      columnHelper.display({
+        id: 'department',
+        header: () => '所属部门',
+        cell: ({ row }) => {
+          const user = row.original;
+          return <span className="text-sm text-muted-foreground">{getCompanyLabel(user)}</span>;
+        },
+        meta: {
+          headerClassName: 'min-w-[180px]',
+        },
+      }),
+      columnHelper.display({
+        id: 'role',
+        header: () => '角色',
+        cell: ({ row }) => {
+          const user = row.original;
+          return <span className="text-sm text-muted-foreground">{getRoleLabel(user)}</span>;
+        },
+        meta: {
+          headerClassName: 'min-w-[160px]',
+        },
+      }),
+      columnHelper.display({
+        id: 'status',
+        header: () => '状态',
+        cell: ({ row }) => {
+          const user = row.original;
+          const statusMeta = STATUS_META[user.status as keyof typeof STATUS_META] ?? STATUS_META['1'];
+          return (
+            <Badge
+              variant="outline"
+              className={cn(
+                'border-transparent px-2.5 py-1 text-xs font-medium capitalize',
+                statusMeta.badgeClass,
+              )}
+            >
+              {statusMeta.label}
+            </Badge>
+          );
+        },
+        enableSorting: false,
+        meta: {
+          headerClassName: 'w-[120px]',
+        },
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: () => <span className="block text-right">操作</span>,
+        cell: ({ row }) => {
+          const user = row.original;
+          const isSuperAdmin = user.userId === 1 || user.userName === 'admin';
+          return (
+            <RowActions
+              user={user}
+              onEdit={onEdit}
+              onResetPassword={onResetPassword}
+              onChangeRole={onChangeRole}
+              onDelete={onDelete}
+              disableDelete={isSuperAdmin}
+            />
+          );
+        },
+        enableSorting: false,
+        meta: {
+          headerClassName: 'w-[120px] text-right',
+          cellClassName: 'text-right',
+        },
+      }),
+    ],
+    [
+      columnHelper,
+      headerCheckboxState,
+      onToggleSelectAll,
+      selectedIds,
+      onToggleSelect,
+      onEdit,
+      onResetPassword,
+      onChangeRole,
+      onDelete,
+    ],
+  );
+
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const visibleColumnCount = table.getVisibleLeafColumns().length;
+
   return (
     <div className="overflow-x-auto rounded-xl border border-border/60 bg-white shadow-sm">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/40">
-            <TableHead className="w-12">
-              <Checkbox
-                aria-label="选择全部"
-                checked={headerCheckboxState}
-                onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
-              />
-            </TableHead>
-            <TableHead className="min-w-[220px]">姓名</TableHead>
-            <TableHead className="min-w-[160px]">手机号</TableHead>
-            <TableHead className="min-w-[180px]">所属部门</TableHead>
-            <TableHead className="min-w-[160px]">角色</TableHead>
-            <TableHead className="w-[120px]">状态</TableHead>
-            <TableHead className="w-[120px] text-right">操作</TableHead>
-          </TableRow>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id} className="bg-muted/40">
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  className={cn(header.column.columnDef.meta?.headerClassName as string | undefined)}
+                >
+                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
         </TableHeader>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-muted-foreground">
                 正在加载用户...
               </TableCell>
             </TableRow>
           ) : isError ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center text-sm text-destructive">
+              <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-destructive">
                 加载失败，请稍后再试。
               </TableCell>
             </TableRow>
-          ) : rows.length === 0 ? (
+          ) : table.getRowModel().rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-muted-foreground">
                 暂无数据
               </TableCell>
             </TableRow>
           ) : (
-            rows.map((user) => {
-              const displayName = getDisplayName(user);
-              const phoneLabel = formatPhoneNumber(user.phonenumber);
-              const companyLabel = getCompanyLabel(user);
-              const roleLabel = getRoleLabel(user);
-              const emailLabel = getEmailLabel(user);
-              const statusMeta = STATUS_META[user.status as keyof typeof STATUS_META] ?? STATUS_META['1'];
+            table.getRowModel().rows.map((row) => {
+              const user = row.original;
               const isSelected = selectedIds.has(user.userId);
-              const isSuperAdmin = user.userId === 1 || user.userName === 'admin';
-
               return (
                 <TableRow
-                  key={user.userId}
+                  key={row.id}
                   className={cn(
                     'transition-colors hover:bg-muted/60',
                     isSelected && 'bg-emerald-50/70',
                   )}
                 >
-                  <TableCell className="w-12 align-middle">
-                    <Checkbox
-                      aria-label={`选择 ${displayName}`}
-                      checked={isSelected}
-                      onCheckedChange={(checked) => onToggleSelect(user.userId, checked === true)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border border-border/60 shadow-sm">
-                        {user.avatar ? <AvatarImage src={user.avatar} alt={displayName} /> : null}
-                        <AvatarFallback>{getAvatarFallback(user)}</AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-foreground">{displayName}</p>
-                        <p className="text-xs text-muted-foreground">{emailLabel}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{phoneLabel}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{companyLabel}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{roleLabel}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        'border-transparent px-2.5 py-1 text-xs font-medium capitalize',
-                        statusMeta.badgeClass,
-                      )}
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className={cn(cell.column.columnDef.meta?.cellClassName as string | undefined)}
                     >
-                      {statusMeta.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <RowActions
-                      user={user}
-                      onEdit={onEdit}
-                      onResetPassword={onResetPassword}
-                      onChangeRole={onChangeRole}
-                      onDelete={onDelete}
-                      disableDelete={isSuperAdmin}
-                    />
-                  </TableCell>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
                 </TableRow>
               );
             })
@@ -302,4 +361,11 @@ export function UserTable({
       </Table>
     </div>
   );
+}
+
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData, TValue> {
+    headerClassName?: string;
+    cellClassName?: string;
+  }
 }

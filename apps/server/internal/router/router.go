@@ -29,6 +29,11 @@ type Options struct {
 	DocsHandler        *handler.DocsHandler
 	AuthHandler        *handler.AuthHandler
 	UserHandler        *handler.UserHandler
+	RoleHandler        *handler.RoleHandler
+	MenuHandler        *handler.MenuHandler
+	DeptHandler        *handler.DeptHandler
+	PostHandler        *handler.PostHandler
+	DictHandler        *handler.DictHandler
 	Middlewares        []gin.HandlerFunc
 	AuthSecret         string
 	AuthCookieName     string
@@ -148,35 +153,64 @@ func registerSystemRoutes(group *gin.RouterGroup, opts Options) {
 	registerSystemUserRoutes(system, opts)
 
 	roles := system.Group("/roles")
-	{
+	if opts.RoleHandler != nil {
+		roles.GET("", middleware.RequirePermissions("system:role:list"), opts.RoleHandler.List)
+		roles.POST("", middleware.RequirePermissions("system:role:add"), opts.RoleHandler.Create)
+		roles.GET("/:id", middleware.RequirePermissions("system:role:query"), opts.RoleHandler.Get)
+		roles.PUT("/:id", middleware.RequirePermissions("system:role:edit"), opts.RoleHandler.Update)
+		roles.DELETE("/:id", middleware.RequirePermissions("system:role:remove"), opts.RoleHandler.Delete)
+	} else {
 		roles.GET("", middleware.RequirePermissions("system:role:list"), handler.NotImplemented("list roles"))
-		roles.GET("/export", middleware.RequirePermissions("system:role:export"), handler.NotImplemented("export roles"))
 		roles.POST("", middleware.RequirePermissions("system:role:add"), handler.NotImplemented("create role"))
 		roles.GET("/:id", middleware.RequirePermissions("system:role:query"), handler.NotImplemented("get role"))
 		roles.PUT("/:id", middleware.RequirePermissions("system:role:edit"), handler.NotImplemented("update role"))
 		roles.DELETE("/:id", middleware.RequirePermissions("system:role:remove"), handler.NotImplemented("delete role"))
 	}
+	roles.GET("/export", middleware.RequirePermissions("system:role:export"), handler.NotImplemented("export roles"))
 
 	menus := system.Group("/menus")
-	{
+	if opts.MenuHandler != nil {
+		menus.GET("/tree", middleware.RequirePermissions("system:menu:list"), opts.MenuHandler.Tree)
 		menus.GET("", middleware.RequirePermissions("system:menu:list"), handler.NotImplemented("list menus"))
 		menus.POST("", middleware.RequirePermissions("system:menu:add"), handler.NotImplemented("create menu"))
 		menus.GET("/:id", middleware.RequirePermissions("system:menu:query"), handler.NotImplemented("get menu"))
 		menus.PUT("/:id", middleware.RequirePermissions("system:menu:edit"), handler.NotImplemented("update menu"))
 		menus.DELETE("/:id", middleware.RequirePermissions("system:menu:remove"), handler.NotImplemented("delete menu"))
+	} else {
+		menus.GET("", middleware.RequirePermissions("system:menu:list"), handler.NotImplemented("list menus"))
+		menus.POST("", middleware.RequirePermissions("system:menu:add"), handler.NotImplemented("create menu"))
+		menus.GET("/:id", middleware.RequirePermissions("system:menu:query"), handler.NotImplemented("get menu"))
+		menus.PUT("/:id", middleware.RequirePermissions("system:menu:edit"), handler.NotImplemented("update menu"))
+		menus.DELETE("/:id", middleware.RequirePermissions("system:menu:remove"), handler.NotImplemented("delete menu"))
+		menus.GET("/tree", middleware.RequirePermissions("system:menu:list"), handler.NotImplemented("list menu tree"))
 	}
 
 	departments := system.Group("/departments")
-	{
+	if opts.DeptHandler != nil {
+		departments.GET("/tree", middleware.RequirePermissions("system:dept:list"), opts.DeptHandler.Tree)
 		departments.GET("", middleware.RequirePermissions("system:dept:list"), handler.NotImplemented("list departments"))
 		departments.POST("", middleware.RequirePermissions("system:dept:add"), handler.NotImplemented("create department"))
 		departments.GET("/:id", middleware.RequirePermissions("system:dept:query"), handler.NotImplemented("get department"))
 		departments.PUT("/:id", middleware.RequirePermissions("system:dept:edit"), handler.NotImplemented("update department"))
 		departments.DELETE("/:id", middleware.RequirePermissions("system:dept:remove"), handler.NotImplemented("delete department"))
+	} else {
+		departments.GET("", middleware.RequirePermissions("system:dept:list"), handler.NotImplemented("list departments"))
+		departments.POST("", middleware.RequirePermissions("system:dept:add"), handler.NotImplemented("create department"))
+		departments.GET("/:id", middleware.RequirePermissions("system:dept:query"), handler.NotImplemented("get department"))
+		departments.PUT("/:id", middleware.RequirePermissions("system:dept:edit"), handler.NotImplemented("update department"))
+		departments.DELETE("/:id", middleware.RequirePermissions("system:dept:remove"), handler.NotImplemented("delete department"))
+		departments.GET("/tree", middleware.RequirePermissions("system:dept:list"), handler.NotImplemented("list department tree"))
 	}
 
 	posts := system.Group("/posts")
-	{
+	if opts.PostHandler != nil {
+		posts.GET("", middleware.RequirePermissions("system:post:list"), opts.PostHandler.List)
+		posts.GET("/export", middleware.RequirePermissions("system:post:export"), handler.NotImplemented("export posts"))
+		posts.POST("", middleware.RequirePermissions("system:post:add"), handler.NotImplemented("create post"))
+		posts.GET("/:id", middleware.RequirePermissions("system:post:query"), handler.NotImplemented("get post"))
+		posts.PUT("/:id", middleware.RequirePermissions("system:post:edit"), handler.NotImplemented("update post"))
+		posts.DELETE("/:id", middleware.RequirePermissions("system:post:remove"), handler.NotImplemented("delete post"))
+	} else {
 		posts.GET("", middleware.RequirePermissions("system:post:list"), handler.NotImplemented("list posts"))
 		posts.GET("/export", middleware.RequirePermissions("system:post:export"), handler.NotImplemented("export posts"))
 		posts.POST("", middleware.RequirePermissions("system:post:add"), handler.NotImplemented("create post"))
@@ -186,7 +220,14 @@ func registerSystemRoutes(group *gin.RouterGroup, opts Options) {
 	}
 
 	dicts := system.Group("/dicts")
-	{
+	if opts.DictHandler != nil {
+		dicts.GET("", middleware.RequirePermissions("system:dict:list"), opts.DictHandler.List)
+		dicts.GET("/export", middleware.RequirePermissions("system:dict:export"), handler.NotImplemented("export dictionaries"))
+		dicts.POST("", middleware.RequirePermissions("system:dict:add"), handler.NotImplemented("create dictionary"))
+		dicts.GET("/:id", middleware.RequirePermissions("system:dict:query"), handler.NotImplemented("get dictionary"))
+		dicts.PUT("/:id", middleware.RequirePermissions("system:dict:edit"), handler.NotImplemented("update dictionary"))
+		dicts.DELETE("/:id", middleware.RequirePermissions("system:dict:remove"), handler.NotImplemented("delete dictionary"))
+	} else {
 		dicts.GET("", middleware.RequirePermissions("system:dict:list"), handler.NotImplemented("list dictionaries"))
 		dicts.GET("/export", middleware.RequirePermissions("system:dict:export"), handler.NotImplemented("export dictionaries"))
 		dicts.POST("", middleware.RequirePermissions("system:dict:add"), handler.NotImplemented("create dictionary"))
@@ -220,19 +261,22 @@ func registerSystemUserRoutes(system *gin.RouterGroup, opts Options) {
 
 	users.GET("/export", middleware.RequirePermissions("system:user:export"), handler.NotImplemented("export users"))
 	users.POST("/import", middleware.RequirePermissions("system:user:import"), handler.NotImplemented("import users"))
-
 	if opts.UserHandler == nil {
 		users.GET("", middleware.RequirePermissions("system:user:list"), handler.NotImplemented("list users"))
 		users.POST("", middleware.RequirePermissions("system:user:add"), handler.NotImplemented("create user"))
 		users.GET("/:id", middleware.RequirePermissions("system:user:query"), handler.NotImplemented("get user"))
 		users.PUT("/:id", middleware.RequirePermissions("system:user:edit"), handler.NotImplemented("update user"))
 		users.DELETE("/:id", middleware.RequirePermissions("system:user:remove"), handler.NotImplemented("delete user"))
+		users.GET("/options/departments", middleware.RequirePermissions("system:user:list"), handler.NotImplemented("list department options"))
+		users.GET("/options/roles", middleware.RequirePermissions("system:user:list"), handler.NotImplemented("list role options"))
 	} else {
 		users.GET("", middleware.RequirePermissions("system:user:list"), opts.UserHandler.List)
 		users.POST("", middleware.RequirePermissions("system:user:add"), opts.UserHandler.Create)
 		users.GET("/:id", middleware.RequirePermissions("system:user:query"), opts.UserHandler.Get)
 		users.PUT("/:id", middleware.RequirePermissions("system:user:edit"), opts.UserHandler.Update)
 		users.DELETE("/:id", middleware.RequirePermissions("system:user:remove"), opts.UserHandler.Delete)
+		users.GET("/options/departments", middleware.RequirePermissions("system:user:list"), opts.UserHandler.ListDepartmentOptions)
+		users.GET("/options/roles", middleware.RequirePermissions("system:user:list"), opts.UserHandler.ListRoleOptions)
 	}
 
 	users.POST("/:id/reset-password", middleware.RequirePermissions("system:user:resetPwd"), handler.NotImplemented("reset user password"))

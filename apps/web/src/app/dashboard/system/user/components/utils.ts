@@ -36,9 +36,9 @@ export const getCompanyLabel = (user: User) => {
 };
 
 export const getRoleLabel = (user: User) => {
-  const remark = user.remark?.trim();
-  if (remark && remark.length > 0) {
-    return remark;
+  const primaryRole = user.roles?.[0];
+  if (primaryRole?.roleName?.trim()) {
+    return primaryRole.roleName.trim();
   }
   if (user.userType?.trim()) {
     return user.userType.trim();
@@ -60,9 +60,18 @@ export const toFormValues = (user: User): UserFormValues => ({
   deptId: user.deptId ? String(user.deptId) : '',
   remark: user.remark ?? '',
   password: '',
+  roleId: user.roles?.[0] ? String(user.roles[0].roleId) : '',
 });
 
 export const sanitizeDeptId = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = Number.parseInt(trimmed, 10);
+  if (Number.isNaN(parsed)) return undefined;
+  return parsed;
+};
+
+export const sanitizeRoleId = (value: string) => {
   const trimmed = value.trim();
   if (!trimmed) return undefined;
   const parsed = Number.parseInt(trimmed, 10);

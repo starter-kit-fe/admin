@@ -409,10 +409,7 @@ export default function Page() {
                 >
                   {loginMutation.isPending ? (
                     <>
-                      <InlineLoading
-                        label="正在验证账号信息 ..."
-                        className="mt-4"
-                      />
+                      <Spinner /> 登录中...
                     </>
                   ) : (
                     <>

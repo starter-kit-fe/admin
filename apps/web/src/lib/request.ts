@@ -22,33 +22,78 @@ interface ApiResponse<T> {
   msg?: string | null; // 后端消息
 }
 
-const DEFAULT_SUCCESS_CODE = 200;
+const SUCCESS_STATUS_MIN = 200;
+const SUCCESS_STATUS_MAX = 299;
 const DEFAULT_ERROR_MESSAGE = '请求失败，请稍后重试';
+const DEFAULT_UNAUTHORIZED_MESSAGE = '登录信息已过期，请重新登录';
+const LOGIN_ROUTE = '/login';
+
+let hasTriggeredUnauthorizedRedirect = false;
+
+function isSuccessfulStatus(code?: number) {
+  if (typeof code !== 'number') {
+    return true;
+  }
+  return code >= SUCCESS_STATUS_MIN && code <= SUCCESS_STATUS_MAX;
+}
 
 export class HttpClient {
   private baseURL: string;
   private defaultHeaders: Record<string, string>;
 
   constructor(config: RequestConfig = {}) {
-    this.baseURL = config.baseURL || '';
-    this.defaultHeaders = {
-      'Content-Type': 'application/json',
-      ...config.headers,
-    };
+   this.baseURL = config.baseURL || '';
+   this.defaultHeaders = {
+     'Content-Type': 'application/json',
+     ...config.headers,
+   };
   }
   updateToken(token?: string | null) {
-    if (!token) {
-      Reflect.deleteProperty(this.defaultHeaders, 'Authorization');
+   if (!token) {
+     Reflect.deleteProperty(this.defaultHeaders, 'Authorization');
+     return;
+   }
+   this.defaultHeaders['Authorization'] = `Bearer ${token}`;
+  }
+
+  private handleUnauthorized(message?: string) {
+    this.updateToken(null);
+
+    const fallbackMessage =
+      message && message.trim().length > 0 ? message : DEFAULT_UNAUTHORIZED_MESSAGE;
+
+    if (typeof window === 'undefined') {
+      throw new Error(fallbackMessage);
+    }
+
+    try {
+      localStorage.clear();
+    } catch {
+      // ignore storage clear failures (e.g. disabled storage)
+    }
+
+    const alreadyOnLogin = window.location.pathname.startsWith(LOGIN_ROUTE);
+    if (alreadyOnLogin) {
       return;
     }
-    this.defaultHeaders['Authorization'] = `Bearer ${token}`;
+
+    if (hasTriggeredUnauthorizedRedirect) {
+      return;
+    }
+
+    hasTriggeredUnauthorizedRedirect = true;
+    toast.error(fallbackMessage);
+
+    const currentUrl =
+      window.location.pathname + window.location.search + window.location.hash;
+    const redirectParam = encodeURIComponent(currentUrl || '/');
+    const target = `${LOGIN_ROUTE}?redirect=${redirectParam}`;
+
+    window.location.replace(target);
   }
 
   private unwrapResponse<T>(response: ApiResponse<T>): T {
-    if (
-      typeof response.code === 'number' &&
-      response.code !== DEFAULT_SUCCESS_CODE
-    ) {
+    if (!isSuccessfulStatus(response.code)) {
       throw new Error(response.msg ?? DEFAULT_ERROR_MESSAGE);
     }
     return response.data;
@@ -109,11 +154,24 @@ export class HttpClient {
         return this.resolveJsonResponse<T>(jsonPayload, response);
       } else if (contentType?.startsWith('text/')) {
         const responseData = (await response.text()) as T;
+        if (response.status === 401) {
+          const textMessage =
+            typeof responseData === 'string' && responseData.trim().length > 0
+              ? responseData
+              : undefined;
+          this.handleUnauthorized(textMessage);
+          throw new Error(textMessage ?? DEFAULT_UNAUTHORIZED_MESSAGE);
+        }
         return {
           data: responseData,
           status: response.status,
           ok: response.ok,
         };
+      }
+
+      if (response.status === 401) {
+        this.handleUnauthorized();
+        throw new Error(DEFAULT_UNAUTHORIZED_MESSAGE);
       }
 
       return {
@@ -225,15 +283,12 @@ export class HttpClient {
         ? ((record.msg ?? null) as string | null)
         : null;
 
-    if (businessCode === 401) {
-      localStorage.clear();
-      toast.error('登录信息已过期，请重新登录');
+    if (response.status === 401 || businessCode === 401) {
+      this.handleUnauthorized(message ?? undefined);
+      throw new Error(message ?? DEFAULT_UNAUTHORIZED_MESSAGE);
     }
 
-    if (
-      typeof businessCode === 'number' &&
-      businessCode !== DEFAULT_SUCCESS_CODE
-    ) {
+    if (!isSuccessfulStatus(businessCode)) {
       throw new Error(message ?? DEFAULT_ERROR_MESSAGE);
     }
 

@@ -1,14 +1,78 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
-import type { UserFormValues } from '../type';
+import { listDeptOptions, listRoleOptions } from '../api';
+import type { User, UserFormValues } from '../type';
+
+const userFormSchema = z.object({
+  userName: z
+    .string()
+    .trim()
+    .min(2, '至少 2 个字符')
+    .max(30, '不超过 30 个字符'),
+  nickName: z.string().trim().min(1, '请输入用户昵称'),
+  email: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+      '邮箱格式不正确',
+    ),
+  phonenumber: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === '' || /^1\d{10}$/.test(value),
+      '请输入 11 位手机号',
+    ),
+  sex: z.enum(['0', '1', '2']),
+  status: z.enum(['0', '1']),
+  deptId: z
+    .string()
+    .trim()
+    .refine((value) => value === '' || /^\d+$/.test(value), '部门需为数字'),
+  roleId: z.string().trim().min(1, '请选择角色'),
+  remark: z.string().trim(),
+  password: z.string().optional(),
+});
 
 const DEFAULT_VALUES: UserFormValues = {
   userName: '',
@@ -18,15 +82,28 @@ const DEFAULT_VALUES: UserFormValues = {
   sex: '2',
   status: '0',
   deptId: '',
+  roleId: '',
   remark: '',
   password: '',
 };
+
+type UserFormResolverContext = Record<string, never>;
+
+interface OptionItem {
+  value: string;
+  label: string;
+}
+
+function RequiredMark() {
+  return <span className="mr-1 text-destructive">*</span>;
+}
 
 interface UserEditorDialogProps {
   mode: 'create' | 'edit';
   open: boolean;
   defaultValues?: UserFormValues;
   submitting?: boolean;
+  editingUser?: User | null;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: UserFormValues) => void;
 }
@@ -36,12 +113,20 @@ export function UserEditorDialog({
   open,
   defaultValues,
   submitting,
+  editingUser,
   onOpenChange,
   onSubmit,
 }: UserEditorDialogProps) {
-  const form = useForm<UserFormValues>({
-    defaultValues: defaultValues ?? DEFAULT_VALUES,
-  });
+  const form = useForm<UserFormValues, UserFormResolverContext, UserFormValues>(
+    {
+      resolver: zodResolver<
+        UserFormValues,
+        UserFormResolverContext,
+        UserFormValues
+      >(userFormSchema),
+      defaultValues: defaultValues ?? DEFAULT_VALUES,
+    },
+  );
 
   useEffect(() => {
     if (open) {
@@ -49,17 +134,113 @@ export function UserEditorDialog({
     }
   }, [open, defaultValues, form]);
 
-  const handleSubmit = form.handleSubmit((values) => {
-    if (mode === 'create') {
-      if (!values.password || values.password.length < 6) {
-        form.setError('password', {
-          type: 'manual',
-          message: '密码至少 6 位',
-        });
-        return;
-      }
+  const [deptSearch, setDeptSearch] = useState('');
+  const [roleSearch, setRoleSearch] = useState('');
+  const debouncedDeptSearch = useDebouncedValue(deptSearch, 300);
+  const debouncedRoleSearch = useDebouncedValue(roleSearch, 300);
+
+  useEffect(() => {
+    if (!open) {
+      setDeptSearch('');
+      setRoleSearch('');
     }
-    onSubmit(values);
+  }, [open]);
+
+  const deptQuery = useQuery({
+    queryKey: ['system', 'users', 'dept-options', debouncedDeptSearch],
+    queryFn: () => listDeptOptions(debouncedDeptSearch || undefined),
+    enabled: open,
+    staleTime: 60 * 1000,
+  });
+
+  const roleQuery = useQuery({
+    queryKey: ['system', 'users', 'role-options', debouncedRoleSearch],
+    queryFn: () => listRoleOptions(debouncedRoleSearch || undefined),
+    enabled: open,
+    staleTime: 60 * 1000,
+  });
+
+  const fallbackDeptOption = useMemo<OptionItem | null>(() => {
+    if (!editingUser?.deptId || !editingUser?.deptName) {
+      return null;
+    }
+    return { value: String(editingUser.deptId), label: editingUser.deptName };
+  }, [editingUser?.deptId, editingUser?.deptName]);
+
+  const fallbackRoleOption = useMemo<OptionItem | null>(() => {
+    const primaryRole = editingUser?.roles?.[0];
+    if (!primaryRole) {
+      return null;
+    }
+    return {
+      value: String(primaryRole.roleId),
+      label:
+        primaryRole.roleName ||
+        primaryRole.roleKey ||
+        `角色 ${primaryRole.roleId}`,
+    };
+  }, [editingUser?.roles]);
+
+  const deptOptions = useMemo<OptionItem[]>(() => {
+    const fetched = (deptQuery.data ?? []).map<OptionItem>((dept) => ({
+      value: String(dept.deptId),
+      label: dept.deptName || `部门 ${dept.deptId}`,
+    }));
+    if (
+      fallbackDeptOption &&
+      fallbackDeptOption.value &&
+      !fetched.some((item) => item.value === fallbackDeptOption.value)
+    ) {
+      return [fallbackDeptOption, ...fetched];
+    }
+    return fetched;
+  }, [deptQuery.data, fallbackDeptOption]);
+
+  const roleOptions = useMemo<OptionItem[]>(() => {
+    const fetched = (roleQuery.data ?? []).map<OptionItem>((role) => ({
+      value: String(role.roleId),
+      label: role.roleName || role.roleKey || `角色 ${role.roleId}`,
+    }));
+    if (
+      fallbackRoleOption &&
+      fallbackRoleOption.value &&
+      !fetched.some((item) => item.value === fallbackRoleOption.value)
+    ) {
+      return [fallbackRoleOption, ...fetched];
+    }
+    return fetched;
+  }, [roleQuery.data, fallbackRoleOption]);
+
+  const handleSubmit = form.handleSubmit((values: UserFormValues) => {
+    const trimmedPassword = values.password?.trim() ?? '';
+
+    if (mode === 'create' && trimmedPassword.length === 0) {
+      form.setError('password', {
+        type: 'manual',
+        message: '请输入登录密码',
+      });
+      return;
+    }
+
+    if (trimmedPassword.length > 0 && trimmedPassword.length < 6) {
+      form.setError('password', {
+        type: 'manual',
+        message: '至少 6 位字符',
+      });
+      return;
+    }
+
+    onSubmit({
+      ...values,
+      userName: values.userName.trim(),
+      nickName: values.nickName.trim(),
+      email: values.email.trim(),
+      phonenumber: values.phonenumber.trim(),
+      deptId: values.deptId.trim(),
+      roleId: values.roleId.trim(),
+      remark: values.remark?.trim() ?? '',
+      password: trimmedPassword,
+    });
   });
 
   const title = mode === 'create' ? '新增用户' : '编辑用户';
@@ -67,14 +248,20 @@ export function UserEditorDialog({
     mode === 'create'
       ? '创建一个新的系统账号并设置默认密码。'
       : '更新用户的基本信息和状态。';
-  const submitText = submitting ? '提交中...' : mode === 'create' ? '创建' : '保存';
+  const submitText = submitting
+    ? '提交中...'
+    : mode === 'create'
+      ? '创建'
+      : '保存';
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialog.Content className="sm:max-w-xl">
         <ResponsiveDialog.Header>
           <ResponsiveDialog.Title>{title}</ResponsiveDialog.Title>
-          <ResponsiveDialog.Description>{description}</ResponsiveDialog.Description>
+          <ResponsiveDialog.Description>
+            {description}
+          </ResponsiveDialog.Description>
         </ResponsiveDialog.Header>
         <div className="max-h-[70vh] space-y-5 overflow-y-auto pr-1">
           <Form {...form}>
@@ -83,16 +270,17 @@ export function UserEditorDialog({
                 <FormField
                   control={form.control}
                   name="userName"
-                  rules={{
-                    required: '请输入登录账号',
-                    minLength: { value: 2, message: '至少 2 个字符' },
-                    maxLength: { value: 30, message: '不超过 30 个字符' },
-                  }}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>登录账号</FormLabel>
+                      <FormLabel className="flex items-center">
+                        <RequiredMark /> 登录账号
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="请输入登录账号" autoComplete="username" {...field} />
+                        <Input
+                          placeholder="请输入登录账号"
+                          autoComplete="username"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -101,10 +289,11 @@ export function UserEditorDialog({
                 <FormField
                   control={form.control}
                   name="nickName"
-                  rules={{ required: '请输入用户昵称' }}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>用户昵称</FormLabel>
+                      <FormLabel className="flex items-center">
+                        <RequiredMark /> 用户昵称
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="请输入用户昵称" {...field} />
                       </FormControl>
@@ -114,18 +303,16 @@ export function UserEditorDialog({
                 />
                 <FormField
                   control={form.control}
-                  name="email"
-                  rules={{
-                    validate: (value) => {
-                      if (!value) return true;
-                      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || '邮箱格式不正确';
-                    },
-                  }}
+                  name="phonenumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>邮箱</FormLabel>
+                      <FormLabel>手机号</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="可选" {...field} />
+                        <Input
+                          placeholder="可选"
+                          inputMode="numeric"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -133,18 +320,17 @@ export function UserEditorDialog({
                 />
                 <FormField
                   control={form.control}
-                  name="phonenumber"
-                  rules={{
-                    validate: (value) => {
-                      if (!value) return true;
-                      return /^1\d{10}$/.test(value) || '请输入 11 位手机号';
-                    },
-                  }}
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>手机号</FormLabel>
+                      <FormLabel>邮箱</FormLabel>
                       <FormControl>
-                        <Input placeholder="可选" {...field} />
+                        <Input
+                          type="email"
+                          placeholder="可选"
+                          autoComplete="email"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -153,17 +339,43 @@ export function UserEditorDialog({
                 <FormField
                   control={form.control}
                   name="deptId"
-                  rules={{
-                    validate: (value) => {
-                      if (!value) return true;
-                      return /^\d+$/.test(value) || '部门 ID 需为数字';
-                    },
-                  }}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>部门 ID</FormLabel>
+                      <FormLabel>归属部门</FormLabel>
                       <FormControl>
-                        <Input placeholder="可选，例如 103" {...field} />
+                        <SearchableCombobox
+                          placeholder="请选择归属部门"
+                          value={field.value}
+                          options={deptOptions}
+                          loading={deptQuery.isFetching}
+                          disabled={submitting}
+                          onSearch={setDeptSearch}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="roleId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center">
+                        <RequiredMark /> 角色
+                      </FormLabel>
+                      <FormControl>
+                        <SearchableCombobox
+                          placeholder="请选择角色"
+                          value={field.value}
+                          options={roleOptions}
+                          loading={roleQuery.isFetching}
+                          disabled={submitting}
+                          onSearch={setRoleSearch}
+                          onChange={field.onChange}
+                          allowClear={false}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -174,10 +386,13 @@ export function UserEditorDialog({
                   name="sex"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>性别</FormLabel>
+                      <FormLabel>用户性别</FormLabel>
                       <Select
                         value={field.value}
-                        onValueChange={(value: '0' | '1' | '2') => field.onChange(value)}
+                        onValueChange={(value: '0' | '1' | '2') =>
+                          field.onChange(value)
+                        }
+                        disabled={submitting}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -199,18 +414,30 @@ export function UserEditorDialog({
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>账号状态</FormLabel>
-                      <Select value={field.value} onValueChange={(value: '0' | '1') => field.onChange(value)}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="选择状态" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="0">启用</SelectItem>
-                          <SelectItem value="1">停用</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel className="flex items-center">
+                        <RequiredMark /> 账号状态
+                      </FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          className="flex flex-wrap gap-4"
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={submitting}
+                        >
+                          <FormItem className="flex items-center gap-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="0" />
+                            </FormControl>
+                            <FormLabel className="font-normal">正常</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center gap-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="1" />
+                            </FormControl>
+                            <FormLabel className="font-normal">停用</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -219,12 +446,18 @@ export function UserEditorDialog({
                   <FormField
                     control={form.control}
                     name="password"
-                    rules={{ required: '请输入登录密码', minLength: { value: 6, message: '至少 6 位字符' } }}
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>初始密码</FormLabel>
+                      <FormItem className="md:col-span-2">
+                        <FormLabel className="flex items-center">
+                          <RequiredMark /> 初始密码
+                        </FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="至少 6 位" autoComplete="new-password" {...field} />
+                          <Input
+                            type="password"
+                            placeholder="至少 6 位"
+                            autoComplete="new-password"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -240,7 +473,11 @@ export function UserEditorDialog({
                   <FormItem>
                     <FormLabel>备注</FormLabel>
                     <FormControl>
-                      <Textarea className="min-h-[96px] resize-none" placeholder="可选" {...field} />
+                      <Textarea
+                        className="min-h-[96px] resize-none"
+                        placeholder="可选"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -265,5 +502,133 @@ export function UserEditorDialog({
         </div>
       </ResponsiveDialog.Content>
     </ResponsiveDialog>
+  );
+}
+
+function useDebouncedValue<T>(value: T, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebounced(value);
+    }, delay);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debounced;
+}
+
+interface SearchableComboboxProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSearch: (value: string) => void;
+  placeholder: string;
+  options: OptionItem[];
+  loading?: boolean;
+  disabled?: boolean;
+  allowClear?: boolean;
+}
+
+function SearchableCombobox({
+  value,
+  onChange,
+  onSearch,
+  placeholder,
+  options,
+  loading,
+  disabled,
+  allowClear = true,
+}: SearchableComboboxProps) {
+  const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+
+  useEffect(() => {
+    if (!open) {
+      setInputValue('');
+      onSearch('');
+    }
+  }, [open, onSearch]);
+
+  const selected = options.find((option) => option.value === value);
+  const triggerLabel = selected?.label ?? placeholder;
+
+  return (
+    <Popover open={open} onOpenChange={(next) => !disabled && setOpen(next)}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn(
+            'w-full justify-between',
+            !selected && 'text-muted-foreground',
+          )}
+          disabled={disabled}
+        >
+          {triggerLabel}
+          <ChevronsUpDown className="ml-2 size-4 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+      >
+        <Command>
+          <CommandInput
+            value={inputValue}
+            onValueChange={(next) => {
+              setInputValue(next);
+              onSearch(next);
+            }}
+            placeholder="搜索选项"
+          />
+          <CommandList>
+            <CommandEmpty>{loading ? '加载中…' : '暂无匹配结果'}</CommandEmpty>
+            <CommandGroup>
+              {allowClear ? (
+                <CommandItem
+                  key="__clear__"
+                  value="__clear__"
+                  onSelect={() => {
+                    onChange('');
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      'mr-2 size-4',
+                      value === '' ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
+                  暂不选择
+                </CommandItem>
+              ) : null}
+              {options.map((option) => (
+                <CommandItem
+                  key={option.value}
+                  value={option.value}
+                  onSelect={(current) => {
+                    onChange(current);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      'mr-2 size-4',
+                      value === option.value ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
+                  {option.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

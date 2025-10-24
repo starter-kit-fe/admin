@@ -2,6 +2,8 @@ import { del, get, post, put } from '@/lib/request';
 
 import type {
   CreateUserPayload,
+  DeptOption,
+  RoleOption,
   UpdateUserPayload,
   User,
   UserListParams,
@@ -43,4 +45,18 @@ export function updateUser(userId: number, payload: UpdateUserPayload) {
 
 export function removeUser(userId: number) {
   return del<void>(`/v1/system/users/${userId}`);
+}
+
+export function listDeptOptions(keyword?: string) {
+  return get<DeptOption[]>(
+    '/v1/system/users/options/departments',
+    keyword ? { keyword, limit: 15 } : { limit: 15 },
+  );
+}
+
+export function listRoleOptions(keyword?: string) {
+  return get<RoleOption[]>(
+    '/v1/system/users/options/roles',
+    keyword ? { keyword, limit: 15 } : { limit: 15 },
+  );
 }

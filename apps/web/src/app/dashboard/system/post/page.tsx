@@ -1,3 +1,5 @@
+import { PostManagement } from './post-management';
+
 export default function Page() {
-  return <div>post</div>;
+  return <PostManagement />;
 }

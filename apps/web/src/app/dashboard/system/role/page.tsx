@@ -1,3 +1,5 @@
+import { RoleManagement } from './role-management';
+
 export default function Page() {
-  return <div>role</div>;
+  return <RoleManagement />;
 }

@@ -174,6 +174,10 @@ export function buildNavItems(
   external?: boolean;
   items?: { title: string; url: string; external?: boolean }[];
 }> {
+  if (!Array.isArray(nodes)) {
+    return [];
+  }
+
   const items: Array<{
     title: string;
     url: string;

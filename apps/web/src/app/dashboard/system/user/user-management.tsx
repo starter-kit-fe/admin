@@ -1,36 +1,33 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import {
   useMutation,
   useQueries,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { Plus, RefreshCcw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
+
 import { createUser, listUsers, removeUser, updateUser } from './api';
-import { AppliedFilters } from './components/applied-filters';
 import { DeleteConfirmDialog } from './components/delete-confirm-dialog';
-import {
-  FiltersBar,
-  type FiltersFormState,
-  type RoleOption,
-} from './components/filters-bar';
+import type { FiltersFormState, RoleOption } from './components/filters-bar';
 import { SelectionBanner } from './components/selection-banner';
-import { StatusTabs } from './components/status-tabs';
 import { UserEditorDialog } from './components/user-editor-dialog';
+import { UserManagementFilters } from './components/user-management-filters';
+import type { FilterChip } from './components/user-management-filters';
+import { UserManagementHeader } from './components/user-management-header';
 import { UserTable } from './components/user-table';
 import {
   DEFAULT_ROLE_VALUE,
   getRoleLabel,
   sanitizeDeptId,
+  sanitizeRoleId,
   toFormValues,
 } from './components/utils';
-import type { User, UserFormValues } from './type';
+import type { User, UserFormValues, UserListResponse } from './type';
 
 const STATUS_TABS = [
   { value: 'all', label: '全部', color: 'bg-slate-900 text-white' },
@@ -43,6 +40,7 @@ const DEFAULT_FILTER_FORM: FiltersFormState = {
   keyword: '',
 };
 const DEFAULT_PAGE = { pageNum: 1, pageSize: 10 };
+const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 
 export function UserManagement() {
   const queryClient = useQueryClient();
@@ -59,9 +57,8 @@ export function UserManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [singleDelete, setSingleDelete] = useState<User | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-  const keywordDebounceRef = useRef<ReturnType<typeof window.setTimeout> | null>(
-    null,
-  );
+  const keywordDebounceRef = useRef<number | null>(null);
+  const submitLockRef = useRef(false);
 
   const queryKey = [
     'system',
@@ -92,7 +89,7 @@ export function UserManagement() {
           status: tab.value === 'all' ? undefined : tab.value,
           userName: appliedFilters.keyword || undefined,
         }),
-      select: (data) => data.total,
+      select: (data: UserListResponse) => data.total,
     })),
   });
 
@@ -146,18 +143,23 @@ export function UserManagement() {
   }, [filteredRows]);
 
   const createMutation = useMutation({
-    mutationFn: (values: UserFormValues) =>
-      createUser({
+    mutationFn: (values: UserFormValues) => {
+      const deptId = sanitizeDeptId(values.deptId);
+      const roleId = sanitizeRoleId(values.roleId);
+      const remark = values.remark.trim();
+      return createUser({
         userName: values.userName.trim(),
         nickName: values.nickName.trim(),
-        deptId: sanitizeDeptId(values.deptId),
+        deptId,
         email: values.email.trim(),
         phonenumber: values.phonenumber.trim(),
         sex: values.sex,
         status: values.status,
         password: values.password?.trim() ?? '',
-        remark: values.remark.trim() || undefined,
-      }),
+        remark: remark === '' ? undefined : remark,
+        roleIds: roleId !== undefined ? [roleId] : undefined,
+      });
+    },
     onSuccess: () => {
       toast.success('用户创建成功');
       setEditorOpen(false);
@@ -172,17 +174,23 @@ export function UserManagement() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, values }: { id: number; values: UserFormValues }) =>
-      updateUser(id, {
+    mutationFn: ({ id, values }: { id: number; values: UserFormValues }) => {
+      const deptId = sanitizeDeptId(values.deptId);
+      const roleId = sanitizeRoleId(values.roleId);
+      const remark = values.remark.trim();
+
+      return updateUser(id, {
         userName: values.userName.trim(),
         nickName: values.nickName.trim(),
-        deptId: sanitizeDeptId(values.deptId),
+        deptId,
         email: values.email.trim(),
         phonenumber: values.phonenumber.trim(),
         sex: values.sex,
         status: values.status,
-        remark: values.remark.trim() || undefined,
-      }),
+        remark: remark === '' ? undefined : remark,
+        roleIds: roleId !== undefined ? [roleId] : undefined,
+      });
+    },
     onSuccess: () => {
       toast.success('用户信息已更新');
       setEditorOpen(false);
@@ -244,17 +252,21 @@ export function UserManagement() {
     activeColor: tab.color,
   }));
 
-  const appliedFilterChips = [
-    appliedFilters.role !== DEFAULT_ROLE_VALUE
-      ? { key: 'role', label: '角色', value: appliedFilters.role }
-      : null,
-    appliedFilters.keyword
-      ? { key: 'keyword', label: '关键字', value: appliedFilters.keyword }
-      : null,
-  ].filter(
-    (item): item is { key: string; label: string; value: string } =>
-      item !== null,
-  );
+  const appliedFilterChips: FilterChip[] = [];
+  if (appliedFilters.role !== DEFAULT_ROLE_VALUE) {
+    appliedFilterChips.push({
+      key: 'role',
+      label: '角色',
+      value: appliedFilters.role,
+    });
+  }
+  if (appliedFilters.keyword) {
+    appliedFilterChips.push({
+      key: 'keyword',
+      label: '关键字',
+      value: appliedFilters.keyword,
+    });
+  }
 
   const clearKeywordDebounce = useCallback(() => {
     if (keywordDebounceRef.current) {
@@ -343,6 +355,7 @@ export function UserManagement() {
   };
 
   const handleResetPassword = (user: User) => {
+    void user;
     toast.info('重置密码功能暂未开放，敬请期待。');
   };
 
@@ -361,10 +374,33 @@ export function UserManagement() {
       : undefined;
 
   const handleEditorSubmit = (values: UserFormValues) => {
+    if (
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      submitLockRef.current
+    ) {
+      return;
+    }
+
+    const releaseSubmitLock = () => {
+      submitLockRef.current = false;
+    };
+
     if (editorMode === 'create') {
-      createMutation.mutate(values);
+      submitLockRef.current = true;
+      createMutation.mutate(values, {
+        onSettled: releaseSubmitLock,
+      });
     } else if (editingUser) {
-      updateMutation.mutate({ id: editingUser.userId, values });
+      submitLockRef.current = true;
+      updateMutation.mutate(
+        { id: editingUser.userId, values },
+        {
+          onSettled: releaseSubmitLock,
+        },
+      );
+    } else {
+      releaseSubmitLock();
     }
   };
 
@@ -401,72 +437,42 @@ export function UserManagement() {
     }
   };
 
-  const handlePagination = (pageNum: number) => {
+  const handlePageChange = (pageNum: number) => {
     setPagination((prev) => ({ ...prev, pageNum }));
     setSelectedIds(new Set());
   };
 
+  const handlePageSizeChange = (pageSize: number) => {
+    setPagination({ pageNum: 1, pageSize });
+    setSelectedIds(new Set());
+  };
+
   const total = userListQuery.data?.total ?? 0;
-  const totalPages =
-    pagination.pageSize > 0
-      ? Math.max(1, Math.ceil(total / pagination.pageSize))
-      : 1;
+
+  const isMutating = createMutation.isPending || updateMutation.isPending;
+  const isRefreshing = userListQuery.isFetching;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">用户管理</h1>
-          <p className="text-sm text-muted-foreground">
-            通过状态筛选、批量操作和响应式弹窗管理系统用户。
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => refetchUsers()}
-            disabled={
-              userListQuery.isFetching ||
-              createMutation.isPending ||
-              updateMutation.isPending
-            }
-          >
-            {userListQuery.isFetching ? (
-              <Spinner className="mr-2 size-4" />
-            ) : (
-              <RefreshCcw className="mr-2 size-4" />
-            )}
-            刷新
-          </Button>
-          <Button onClick={openCreateDialog}>
-            <Plus className="mr-2 size-4" />
-            新增用户
-          </Button>
-        </div>
-      </div>
+      <UserManagementHeader
+        onRefresh={() => refetchUsers()}
+        onCreate={openCreateDialog}
+        disableActions={isMutating}
+        isRefreshing={isRefreshing}
+      />
 
-      <div className="rounded-xl border border-border/60 bg-background/80 p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-4">
-          <StatusTabs
-            value={status}
-            onValueChange={handleStatusChange}
-            tabs={statusTabsWithCount}
-          />
-
-          <FiltersBar
-            value={filterForm}
-            onRoleChange={handleRoleFilterChange}
-            onKeywordChange={handleKeywordChange}
-            roleOptions={roleOptions}
-          />
-
-          <AppliedFilters
-            items={appliedFilterChips}
-            onRemove={handleRemoveFilter}
-            onClear={handleResetFilters}
-          />
-        </div>
-      </div>
+      <UserManagementFilters
+        status={status}
+        statusTabs={statusTabsWithCount}
+        onStatusChange={handleStatusChange}
+        filterForm={filterForm}
+        onRoleChange={handleRoleFilterChange}
+        onKeywordChange={handleKeywordChange}
+        roleOptions={roleOptions}
+        appliedFilters={appliedFilterChips}
+        onRemoveFilter={handleRemoveFilter}
+        onResetFilters={handleResetFilters}
+      />
 
       <SelectionBanner
         count={selectedCount}
@@ -488,44 +494,22 @@ export function UserManagement() {
         isError={userListQuery.isError}
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-sm text-muted-foreground">
-          共 {total} 条记录，当前第 {pagination.pageNum} / {totalPages} 页
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              handlePagination(Math.max(1, pagination.pageNum - 1))
-            }
-            disabled={pagination.pageNum <= 1 || userListQuery.isFetching}
-          >
-            上一页
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              handlePagination(Math.min(totalPages, pagination.pageNum + 1))
-            }
-            disabled={
-              pagination.pageNum >= totalPages || userListQuery.isFetching
-            }
-          >
-            下一页
-          </Button>
-          <div className="text-xs text-muted-foreground">
-            每页 {pagination.pageSize} 条（暂不支持修改）
-          </div>
-        </div>
-      </div>
+      <PaginationToolbar
+        totalItems={total}
+        currentPage={pagination.pageNum}
+        pageSize={pagination.pageSize}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+        disabled={isRefreshing}
+      />
 
       <UserEditorDialog
         mode={editorMode}
         open={editorOpen}
         defaultValues={editorDefaultValues}
         submitting={createMutation.isPending || updateMutation.isPending}
+        editingUser={editingUser}
         onOpenChange={(open) => {
           setEditorOpen(open);
           if (!open) {
