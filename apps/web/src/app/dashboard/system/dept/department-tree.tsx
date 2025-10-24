@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -68,7 +68,7 @@ export function DepartmentTree({ nodes }: DepartmentTreeProps) {
   }, []);
 
   const renderNodes = useCallback(
-    (items: DepartmentNode[], depth = 0): JSX.Element[] => {
+    (items: DepartmentNode[], depth = 0): ReactElement[] => {
       return items.map((item) => {
         const hasChildren = Boolean(item.children && item.children.length > 0);
         const isExpanded = !hasChildren || expanded.has(item.deptId);

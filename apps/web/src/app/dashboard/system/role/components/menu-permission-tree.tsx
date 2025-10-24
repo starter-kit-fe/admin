@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -180,7 +180,7 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
   }, []);
 
   const renderNodes = useCallback(
-    (items: MenuTreeNode[], depth = 0): JSX.Element[] => {
+    (items: MenuTreeNode[], depth = 0): ReactElement[] => {
       return items.map((item) => {
         const hasChildren = Boolean(item.children && item.children.length > 0);
         const isExpanded = !hasChildren || expanded.has(item.menuId);

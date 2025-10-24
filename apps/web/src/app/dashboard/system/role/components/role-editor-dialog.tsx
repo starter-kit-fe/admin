@@ -1,36 +1,53 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-
+import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { InlineLoading } from '@/components/loading';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
-import type { RoleFormValues } from '../type';
 import type { MenuTreeNode } from '../../menu/type';
+import type { RoleFormValues } from '../type';
 import { MenuPermissionTree } from './menu-permission-tree';
 
-const roleFormSchema: z.ZodType<RoleFormValues> = z.object({
-  roleName: z.string().trim().min(1, '请输入角色名称').max(50, '角色名称不能超过 50 个字符'),
-  roleKey: z.string().trim().min(1, '请输入权限字符').max(100, '权限字符不能超过 100 个字符'),
+const roleFormSchema = z.object({
+  roleName: z
+    .string()
+    .trim()
+    .min(1, '请输入角色名称')
+    .max(50, '角色名称不能超过 50 个字符'),
+  roleKey: z
+    .string()
+    .trim()
+    .min(1, '请输入权限字符')
+    .max(100, '权限字符不能超过 100 个字符'),
   roleSort: z
     .string()
     .trim()
-    .refine(
-      (value) => {
-        if (value === '') return true;
-        const parsed = Number(value);
-        return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999;
-      },
-      '排序需为 0 到 9999 之间的整数',
-    ),
+    .refine((value) => {
+      if (value === '') return true;
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999;
+    }, '排序需为 0 到 9999 之间的整数'),
   dataScope: z.enum(['1', '2', '3', '4', '5']),
   menuCheckStrictly: z.boolean(),
   deptCheckStrictly: z.boolean(),
@@ -75,7 +92,7 @@ export function RoleEditorDialog({
   onSubmit,
 }: RoleEditorDialogProps) {
   const form = useForm<RoleFormValues, Record<string, never>, RoleFormValues>({
-    resolver: zodResolver<RoleFormValues, Record<string, never>, RoleFormValues>(roleFormSchema),
+    resolver: zodResolver(roleFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -99,7 +116,11 @@ export function RoleEditorDialog({
     mode === 'create'
       ? '创建一个新的系统角色并配置基础权限。'
       : '更新角色的基本信息和权限范围。';
-  const submitText = submitting ? '提交中...' : mode === 'create' ? '创建' : '保存';
+  const submitText = submitting
+    ? '提交中...'
+    : mode === 'create'
+      ? '创建'
+      : '保存';
 
   const disabled = submitting || loading;
 
@@ -108,7 +129,9 @@ export function RoleEditorDialog({
       <ResponsiveDialog.Content className="sm:max-w-xl">
         <ResponsiveDialog.Header>
           <ResponsiveDialog.Title>{title}</ResponsiveDialog.Title>
-          <ResponsiveDialog.Description>{description}</ResponsiveDialog.Description>
+          <ResponsiveDialog.Description>
+            {description}
+          </ResponsiveDialog.Description>
         </ResponsiveDialog.Header>
 
         {loading ? (
@@ -130,7 +153,11 @@ export function RoleEditorDialog({
                       角色名称
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入角色名称" disabled={disabled} {...field} />
+                      <Input
+                        placeholder="请输入角色名称"
+                        disabled={disabled}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -146,7 +173,11 @@ export function RoleEditorDialog({
                       权限字符
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入权限字符" disabled={disabled} {...field} />
+                      <Input
+                        placeholder="请输入权限字符"
+                        disabled={disabled}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -208,7 +239,11 @@ export function RoleEditorDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>数据权限</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange} disabled={disabled}>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={disabled}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="请选择数据范围" />
@@ -229,8 +264,12 @@ export function RoleEditorDialog({
               <div className="space-y-4 rounded-lg border border-dashed border-border/60 p-4 md:col-span-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-foreground">菜单树联动</p>
-                    <p className="text-xs text-muted-foreground">开启后分配菜单时父子节点数据将一起变更。</p>
+                    <p className="text-sm font-medium text-foreground">
+                      菜单树联动
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      开启后分配菜单时父子节点数据将一起变更。
+                    </p>
                   </div>
                   <FormField
                     control={form.control}
@@ -238,7 +277,11 @@ export function RoleEditorDialog({
                     render={({ field }) => (
                       <FormItem className="flex items-center space-y-0">
                         <FormControl>
-                          <Switch disabled={disabled} checked={field.value} onCheckedChange={field.onChange} />
+                          <Switch
+                            disabled={disabled}
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
                         </FormControl>
                       </FormItem>
                     )}
@@ -246,8 +289,12 @@ export function RoleEditorDialog({
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-foreground">部门树联动</p>
-                    <p className="text-xs text-muted-foreground">开启后分配部门权限时父子节点保持关联。</p>
+                    <p className="text-sm font-medium text-foreground">
+                      部门树联动
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      开启后分配部门权限时父子节点保持关联。
+                    </p>
                   </div>
                   <FormField
                     control={form.control}
@@ -255,7 +302,11 @@ export function RoleEditorDialog({
                     render={({ field }) => (
                       <FormItem className="flex items-center space-y-0">
                         <FormControl>
-                          <Switch disabled={disabled} checked={field.value} onCheckedChange={field.onChange} />
+                          <Switch
+                            disabled={disabled}
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
                         </FormControl>
                       </FormItem>
                     )}

@@ -117,16 +117,10 @@ export function UserEditorDialog({
   onOpenChange,
   onSubmit,
 }: UserEditorDialogProps) {
-  const form = useForm<UserFormValues, UserFormResolverContext, UserFormValues>(
-    {
-      resolver: zodResolver<
-        UserFormValues,
-        UserFormResolverContext,
-        UserFormValues
-      >(userFormSchema),
-      defaultValues: defaultValues ?? DEFAULT_VALUES,
-    },
-  );
+  const form = useForm<UserFormValues, UserFormResolverContext, UserFormValues>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: defaultValues ?? DEFAULT_VALUES,
+  });
 
   useEffect(() => {
     if (open) {
