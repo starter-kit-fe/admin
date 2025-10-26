@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -26,16 +26,82 @@ const STATUS_TABS = [
 
 const DEFAULT_PAGE = { pageNum: 1, pageSize: 10 };
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
+const BASE_QUERY_KEY = ['system', 'roles', 'list'] as const;
+
+type StatusValue = (typeof STATUS_TABS)[number]['value'];
+
+type ViewState = {
+  status: StatusValue;
+  keyword: string;
+  pageNum: number;
+  pageSize: number;
+};
+
+type ViewAction =
+  | { type: 'set-status'; status: StatusValue }
+  | { type: 'set-keyword'; keyword: string }
+  | { type: 'set-page'; pageNum: number }
+  | { type: 'set-page-size'; pageSize: number }
+  | { type: 'reset' };
+
+const INITIAL_VIEW_STATE: ViewState = {
+  status: 'all',
+  keyword: '',
+  ...DEFAULT_PAGE,
+};
+
+function viewStateReducer(state: ViewState, action: ViewAction): ViewState {
+  switch (action.type) {
+    case 'set-status': {
+      if (state.status === action.status) return state;
+      return { ...state, status: action.status, pageNum: 1 };
+    }
+    case 'set-keyword': {
+      if (state.keyword === action.keyword) return state;
+      return { ...state, keyword: action.keyword, pageNum: 1 };
+    }
+    case 'set-page': {
+      if (state.pageNum === action.pageNum) return state;
+      return { ...state, pageNum: action.pageNum };
+    }
+    case 'set-page-size': {
+      if (state.pageSize === action.pageSize) return state;
+      return { ...state, pageNum: 1, pageSize: action.pageSize };
+    }
+    case 'reset':
+      return INITIAL_VIEW_STATE;
+    default:
+      return state;
+  }
+}
+
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  const latest = useRef(value);
+
+  useEffect(() => {
+    latest.current = value;
+    const timer = window.setTimeout(() => {
+      setDebounced(latest.current);
+    }, delay);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debounced;
+}
 
 function toFormValues(role: Role): RoleFormValues {
   return {
-    roleName: role.roleName,
-    roleKey: role.roleKey,
-    roleSort: String(role.roleSort ?? ''),
+    roleName: role.roleName ?? '',
+    roleKey: role.roleKey ?? '',
+    roleSort: role.roleSort != null ? String(role.roleSort) : '',
     dataScope: (['1', '2', '3', '4', '5'].includes(role.dataScope) ? role.dataScope : '1') as RoleFormValues['dataScope'],
     menuCheckStrictly: role.menuCheckStrictly,
     deptCheckStrictly: role.deptCheckStrictly,
-    status: role.status,
+    status: role.status ?? '0',
     remark: role.remark ?? '',
     menuIds: role.menuIds ?? [],
   };
@@ -69,56 +135,54 @@ function toUpdatePayload(values: RoleFormValues) {
   };
 }
 
-function useDebouncedValue<T>(value: T, delay: number) {
-  const [debounced, setDebounced] = useState(value);
+type EditorState =
+  | { open: false; mode: 'create' | 'edit'; roleId: null }
+  | { open: true; mode: 'create'; roleId: null }
+  | { open: true; mode: 'edit'; roleId: number };
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebounced(value);
-    }, delay);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [value, delay]);
-
-  return debounced;
-}
+const INITIAL_EDITOR_STATE: EditorState = { open: false, mode: 'create', roleId: null };
 
 export function RoleManagement() {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<(typeof STATUS_TABS)[number]['value']>('all');
-  const [keyword, setKeyword] = useState('');
-  const [pagination, setPagination] = useState(DEFAULT_PAGE);
+  const [viewState, dispatchViewState] = useReducer(viewStateReducer, INITIAL_VIEW_STATE);
+  const [keywordInput, setKeywordInput] = useState('');
+  const debouncedKeyword = useDebouncedValue(keywordInput.trim(), 350);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editorMode, setEditorMode] = useState<'create' | 'edit'>('create');
-  const [editingRole, setEditingRole] = useState<Role | null>(null);
-  const [editingRoleDetail, setEditingRoleDetail] = useState<Role | null>(null);
-  const [editorLoading, setEditorLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [editorState, setEditorState] = useState<EditorState>(INITIAL_EDITOR_STATE);
 
-  const debouncedKeyword = useDebouncedValue(keyword.trim(), 400);
-
+  // sync debounced keyword into view state
   useEffect(() => {
-    setPagination(DEFAULT_PAGE);
-    setSelectedIds(new Set());
-  }, [status, debouncedKeyword]);
+    dispatchViewState({ type: 'set-keyword', keyword: debouncedKeyword });
+  }, [debouncedKeyword]);
+
+  // keep input aligned when keyword reset from actions
+  useEffect(() => {
+    if (viewState.keyword === '') {
+      setKeywordInput('');
+    }
+  }, [viewState.keyword]);
 
   const queryKey = useMemo(
-    () => ['system', 'roles', status, debouncedKeyword, pagination.pageNum, pagination.pageSize],
-    [status, debouncedKeyword, pagination.pageNum, pagination.pageSize],
+    () => [
+      ...BASE_QUERY_KEY,
+      viewState.status,
+      viewState.keyword,
+      viewState.pageNum,
+      viewState.pageSize,
+    ],
+    [viewState.status, viewState.keyword, viewState.pageNum, viewState.pageSize],
   );
 
   const roleListQuery = useQuery({
     queryKey,
     queryFn: () =>
       listRoles({
-        pageNum: pagination.pageNum,
-        pageSize: pagination.pageSize,
-        status: status === 'all' ? undefined : status,
-        roleName: debouncedKeyword || undefined,
+        pageNum: viewState.pageNum,
+        pageSize: viewState.pageSize,
+        status: viewState.status === 'all' ? undefined : viewState.status,
+        roleName: viewState.keyword || undefined,
       }),
     select: (data: RoleListResponse) => data,
   });
@@ -126,21 +190,51 @@ export function RoleManagement() {
   const rows = roleListQuery.data?.items ?? [];
   const total = roleListQuery.data?.total ?? 0;
 
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      if (rows.length === 0) {
+        return prev.size === 0 ? prev : new Set();
+      }
+      const next = new Set<number>();
+      rows.forEach((role) => {
+        if (prev.has(role.roleId)) {
+          next.add(role.roleId);
+        }
+      });
+
+      if (next.size === prev.size) {
+        let identical = true;
+        for (const id of next) {
+          if (!prev.has(id)) {
+            identical = false;
+            break;
+          }
+        }
+        if (identical) {
+          return prev;
+        }
+      }
+
+      return next;
+    });
+  }, [rows]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [viewState.status, viewState.keyword]);
+
   const menuTreeQuery = useQuery({
     queryKey: ['system', 'menus', 'tree'],
     queryFn: () => listMenuTree(),
   });
-
   const menuTree: MenuTreeNode[] = menuTreeQuery.data ?? [];
 
   const createMutation = useMutation({
     mutationFn: (values: RoleFormValues) => createRole(toCreatePayload(values)),
     onSuccess: () => {
       toast.success('角色创建成功');
-      setEditorOpen(false);
-      setEditingRole(null);
-      setEditingRoleDetail(null);
-      refetchRoles();
+      setEditorState(INITIAL_EDITOR_STATE);
+      void queryClient.invalidateQueries({ queryKey: BASE_QUERY_KEY });
     },
     onError: (error) => {
       const message = error instanceof Error ? error.message : '创建角色失败，请稍后重试';
@@ -149,13 +243,12 @@ export function RoleManagement() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, values }: { id: number; values: RoleFormValues }) => updateRole(id, toUpdatePayload(values)),
+    mutationFn: ({ id, values }: { id: number; values: RoleFormValues }) =>
+      updateRole(id, toUpdatePayload(values)),
     onSuccess: () => {
       toast.success('角色信息已更新');
-      setEditorOpen(false);
-      setEditingRole(null);
-      setEditingRoleDetail(null);
-      refetchRoles();
+      setEditorState(INITIAL_EDITOR_STATE);
+      void queryClient.invalidateQueries({ queryKey: BASE_QUERY_KEY });
     },
     onError: (error) => {
       const message = error instanceof Error ? error.message : '更新角色失败，请稍后再试';
@@ -168,7 +261,7 @@ export function RoleManagement() {
     onSuccess: () => {
       toast.success('角色已删除');
       setDeleteTarget(null);
-      refetchRoles();
+      void queryClient.invalidateQueries({ queryKey: BASE_QUERY_KEY });
     },
     onError: (error) => {
       const message = error instanceof Error ? error.message : '删除角色失败，请稍后再试';
@@ -184,28 +277,13 @@ export function RoleManagement() {
       toast.success('批量删除成功');
       setSelectedIds(new Set());
       setBulkDeleteOpen(false);
-      refetchRoles();
+      void queryClient.invalidateQueries({ queryKey: BASE_QUERY_KEY });
     },
     onError: (error) => {
       const message = error instanceof Error ? error.message : '批量删除失败，请稍后再试';
       toast.error(message);
     },
   });
-
-  useEffect(() => {
-    setSelectedIds((prev) => {
-      if (rows.length === 0) {
-        return new Set();
-      }
-      const next = new Set<number>();
-      rows.forEach((role) => {
-        if (prev.has(role.roleId)) {
-          next.add(role.roleId);
-        }
-      });
-      return next;
-    });
-  }, [rows]);
 
   const statusTabs = useMemo(
     () =>
@@ -221,24 +299,40 @@ export function RoleManagement() {
   const isAllSelected = rows.length > 0 && rows.every((row) => selectedIds.has(row.roleId));
   const headerCheckboxState = isAllSelected ? true : selectedCount > 0 ? ('indeterminate' as const) : false;
 
-  const editorDefaultValues = useMemo(() => {
-    if (editorMode === 'edit') {
-      if (editingRoleDetail) {
-        return toFormValues(editingRoleDetail);
+  const roleDetailQuery = useQuery({
+    queryKey: editorState.mode === 'edit' && editorState.roleId != null ? ['system', 'roles', 'detail', editorState.roleId] : ['system', 'roles', 'detail', 'skip'],
+    queryFn: async () => {
+      if (!editorState.open || editorState.mode !== 'edit' || editorState.roleId == null) {
+        return null;
       }
-      if (editingRole) {
-        return toFormValues({ ...editingRole, menuIds: editingRole.menuIds ?? [] });
+      return getRoleDetail(editorState.roleId);
+    },
+    enabled: editorState.open && editorState.mode === 'edit' && editorState.roleId != null,
+    staleTime: 30_000,
+  });
+
+  const editorDefaultValues = useMemo(() => {
+    if (!editorState.open || editorState.mode === 'create') {
+      return undefined;
+    }
+    if (roleDetailQuery.data) {
+      return toFormValues(roleDetailQuery.data);
+    }
+    if (editorState.roleId != null) {
+      const fallback = rows.find((role) => role.roleId === editorState.roleId);
+      if (fallback) {
+        return toFormValues({ ...fallback, menuIds: fallback.menuIds ?? [] });
       }
     }
     return undefined;
-  }, [editorMode, editingRole, editingRoleDetail]);
+  }, [editorState, roleDetailQuery.data, rows]);
 
-  const handleStatusChange = useCallback((value: string) => {
-    setStatus(value as (typeof STATUS_TABS)[number]['value']);
+  const handleStatusChange = useCallback((nextStatus: string) => {
+    dispatchViewState({ type: 'set-status', status: nextStatus as StatusValue });
   }, []);
 
-  const handleKeywordChange = useCallback((value: string) => {
-    setKeyword(value);
+  const handleKeywordInputChange = useCallback((value: string) => {
+    setKeywordInput(value);
   }, []);
 
   const handleToggleSelectAll = useCallback(
@@ -264,41 +358,37 @@ export function RoleManagement() {
     });
   }, []);
 
+  const handlePageChange = useCallback((pageNum: number) => {
+    dispatchViewState({ type: 'set-page', pageNum });
+    setSelectedIds(new Set());
+  }, []);
+
+  const handlePageSizeChange = useCallback((pageSize: number) => {
+    dispatchViewState({ type: 'set-page-size', pageSize });
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: BASE_QUERY_KEY });
+  }, [queryClient]);
+
   const openCreateDialog = useCallback(() => {
-    setEditorMode('create');
-    setEditingRole(null);
-    setEditingRoleDetail(null);
-    setEditorOpen(true);
+    setEditorState({ open: true, mode: 'create', roleId: null });
   }, []);
 
   const openEditDialog = useCallback((role: Role) => {
-    setEditorMode('edit');
-    setEditingRole(role);
-    setEditingRoleDetail(null);
-    setEditorOpen(true);
-    setEditorLoading(true);
-    getRoleDetail(role.roleId)
-      .then((detail) => {
-        setEditingRoleDetail(detail);
-      })
-      .catch((error) => {
-        const message = error instanceof Error ? error.message : '加载角色详情失败';
-        toast.error(message);
-      })
-      .finally(() => {
-        setEditorLoading(false);
-      });
+    setEditorState({ open: true, mode: 'edit', roleId: role.roleId });
   }, []);
 
   const handleEditorSubmit = useCallback(
     (values: RoleFormValues) => {
-      if (editorMode === 'create') {
+      if (editorState.mode === 'create') {
         createMutation.mutate(values);
-      } else if (editingRole) {
-        updateMutation.mutate({ id: editingRole.roleId, values });
+      } else if (editorState.mode === 'edit' && editorState.roleId != null) {
+        updateMutation.mutate({ id: editorState.roleId, values });
       }
     },
-    [createMutation, editorMode, editingRole, updateMutation],
+    [createMutation, updateMutation, editorState],
   );
 
   const handleDeleteRole = useCallback((role: Role) => {
@@ -313,19 +403,9 @@ export function RoleManagement() {
     setBulkDeleteOpen(true);
   }, [selectedCount]);
 
-  const handlePageChange = useCallback((pageNum: number) => {
-    setPagination((prev) => ({ ...prev, pageNum }));
-    setSelectedIds(new Set());
+  const closeEditor = useCallback(() => {
+    setEditorState(INITIAL_EDITOR_STATE);
   }, []);
-
-  const handlePageSizeChange = useCallback((pageSize: number) => {
-    setPagination({ pageNum: 1, pageSize });
-    setSelectedIds(new Set());
-  }, []);
-
-  const refetchRoles = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ['system', 'roles'] });
-  }, [queryClient]);
 
   const isMutating = createMutation.isPending || updateMutation.isPending;
   const isRefreshing = roleListQuery.isFetching;
@@ -333,17 +413,17 @@ export function RoleManagement() {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
       <RoleManagementHeader
-        onRefresh={refetchRoles}
+        onRefresh={handleRefresh}
         onCreate={openCreateDialog}
         disableActions={isMutating}
         isRefreshing={isRefreshing}
       />
 
       <RoleManagementFilters
-        status={status}
+        status={viewState.status}
         onStatusChange={handleStatusChange}
-        keyword={keyword}
-        onKeywordChange={handleKeywordChange}
+        keyword={keywordInput}
+        onKeywordChange={handleKeywordInputChange}
         statusTabs={statusTabs}
       />
 
@@ -367,8 +447,8 @@ export function RoleManagement() {
 
       <PaginationToolbar
         totalItems={total}
-        currentPage={pagination.pageNum}
-        pageSize={pagination.pageSize}
+        currentPage={viewState.pageNum}
+        pageSize={viewState.pageSize}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
@@ -376,19 +456,22 @@ export function RoleManagement() {
       />
 
       <RoleEditorDialog
-        mode={editorMode}
-        open={editorOpen}
+        mode={editorState.mode}
+        open={editorState.open}
         defaultValues={editorDefaultValues}
         submitting={createMutation.isPending || updateMutation.isPending}
-        loading={editorLoading}
+        loading={editorState.mode === 'edit' && roleDetailQuery.isLoading}
         menuTree={menuTree}
         menuTreeLoading={menuTreeQuery.isLoading}
         onOpenChange={(open) => {
-          setEditorOpen(open);
-          if (!open) {
-            setEditingRole(null);
-            setEditingRoleDetail(null);
-            setEditorLoading(false);
+          if (open) {
+            setEditorState((prev) =>
+              prev.mode === 'edit' && prev.roleId != null
+                ? { open: true, mode: 'edit', roleId: prev.roleId }
+                : { open: true, mode: 'create', roleId: null },
+            );
+          } else {
+            closeEditor();
           }
         }}
         onSubmit={handleEditorSubmit}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -73,4 +74,117 @@ func (r *Repository) GetMenusByIDs(ctx context.Context, ids []int64) (map[int64]
 		result[menu.MenuID] = menu
 	}
 	return result, nil
+}
+
+func (r *Repository) GetMenu(ctx context.Context, id int64) (*model.SysMenu, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
+	}
+	if id <= 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var menu model.SysMenu
+	if err := r.db.WithContext(ctx).
+		Where("menu_id = ?", id).
+		First(&menu).Error; err != nil {
+		return nil, err
+	}
+	return &menu, nil
+}
+
+func (r *Repository) CreateMenu(ctx context.Context, menu *model.SysMenu) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if menu == nil {
+		return errors.New("menu payload is invalid")
+	}
+
+	return r.db.WithContext(ctx).Create(menu).Error
+}
+
+func (r *Repository) UpdateMenu(ctx context.Context, id int64, updates map[string]interface{}) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if id <= 0 {
+		return gorm.ErrRecordNotFound
+	}
+	if len(updates) == 0 {
+		return nil
+	}
+
+	result := r.db.WithContext(ctx).
+		Model(&model.SysMenu{}).
+		Where("menu_id = ?", id).
+		Updates(updates)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *Repository) DeleteMenu(ctx context.Context, id int64) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if id <= 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	result := r.db.WithContext(ctx).
+		Where("menu_id = ?", id).
+		Delete(&model.SysMenu{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+type OrderUpdate struct {
+	MenuID   int64
+	ParentID int64
+	OrderNum int
+	Operator string
+	At       time.Time
+}
+
+func (r *Repository) UpdateMenuOrders(ctx context.Context, updates []OrderUpdate) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, update := range updates {
+			data := map[string]interface{}{
+				"order_num":   update.OrderNum,
+				"parent_id":   update.ParentID,
+				"update_time": update.At,
+			}
+			if trimmed := strings.TrimSpace(update.Operator); trimmed != "" {
+				data["update_by"] = trimmed
+			}
+
+			result := tx.Model(&model.SysMenu{}).
+				Where("menu_id = ?", update.MenuID).
+				Updates(data)
+			if result.Error != nil {
+				return result.Error
+			}
+			if result.RowsAffected == 0 {
+				return gorm.ErrRecordNotFound
+			}
+		}
+		return nil
+	})
 }

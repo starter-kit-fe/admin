@@ -171,16 +171,17 @@ func registerSystemRoutes(group *gin.RouterGroup, opts Options) {
 	menus := system.Group("/menus")
 	if opts.MenuHandler != nil {
 		menus.GET("/tree", middleware.RequirePermissions("system:menu:list"), opts.MenuHandler.Tree)
-		menus.GET("", middleware.RequirePermissions("system:menu:list"), handler.NotImplemented("list menus"))
-		menus.POST("", middleware.RequirePermissions("system:menu:add"), handler.NotImplemented("create menu"))
-		menus.GET("/:id", middleware.RequirePermissions("system:menu:query"), handler.NotImplemented("get menu"))
-		menus.PUT("/:id", middleware.RequirePermissions("system:menu:edit"), handler.NotImplemented("update menu"))
-		menus.DELETE("/:id", middleware.RequirePermissions("system:menu:remove"), handler.NotImplemented("delete menu"))
+		menus.POST("", middleware.RequirePermissions("system:menu:add"), opts.MenuHandler.Create)
+		menus.GET("/:id", middleware.RequirePermissions("system:menu:query"), opts.MenuHandler.Get)
+		menus.PUT("/:id", middleware.RequirePermissions("system:menu:edit"), opts.MenuHandler.Update)
+		menus.PUT("/reorder", middleware.RequirePermissions("system:menu:edit"), opts.MenuHandler.Reorder)
+		menus.DELETE("/:id", middleware.RequirePermissions("system:menu:remove"), opts.MenuHandler.Delete)
 	} else {
 		menus.GET("", middleware.RequirePermissions("system:menu:list"), handler.NotImplemented("list menus"))
 		menus.POST("", middleware.RequirePermissions("system:menu:add"), handler.NotImplemented("create menu"))
 		menus.GET("/:id", middleware.RequirePermissions("system:menu:query"), handler.NotImplemented("get menu"))
 		menus.PUT("/:id", middleware.RequirePermissions("system:menu:edit"), handler.NotImplemented("update menu"))
+		menus.PUT("/reorder", middleware.RequirePermissions("system:menu:edit"), handler.NotImplemented("reorder menus"))
 		menus.DELETE("/:id", middleware.RequirePermissions("system:menu:remove"), handler.NotImplemented("delete menu"))
 		menus.GET("/tree", middleware.RequirePermissions("system:menu:list"), handler.NotImplemented("list menu tree"))
 	}

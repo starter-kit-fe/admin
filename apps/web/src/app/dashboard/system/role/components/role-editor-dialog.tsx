@@ -126,245 +126,254 @@ export function RoleEditorDialog({
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialog.Content className="sm:max-w-xl">
-        <ResponsiveDialog.Header>
-          <ResponsiveDialog.Title>{title}</ResponsiveDialog.Title>
-          <ResponsiveDialog.Description>
-            {description}
-          </ResponsiveDialog.Description>
-        </ResponsiveDialog.Header>
+      <ResponsiveDialog.Content className="sm:max-w-2xl max-h-[90vh] overflow-hidden p-0">
+        <div className="flex h-full max-h-[90vh] flex-col min-h-0">
+          <ResponsiveDialog.Header className="flex-shrink-0 border-b border-border/60 px-6 py-5">
+            <ResponsiveDialog.Title>{title}</ResponsiveDialog.Title>
+            <ResponsiveDialog.Description>
+              {description}
+            </ResponsiveDialog.Description>
+          </ResponsiveDialog.Header>
 
-        {loading ? (
-          <div className="flex min-h-[240px] items-center justify-center">
-            <InlineLoading label="正在加载角色信息..." />
-          </div>
-        ) : null}
+          <Form {...form}>
+            <form
+              className="flex h-full flex-1 flex-col min-h-0"
+              onSubmit={handleSubmit}
+            >
+              <div className="flex-1 overflow-y-auto px-6 py-5">
+                <div className="space-y-5 pb-4">
+                  {loading ? (
+                    <div className="flex min-h-[160px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/40">
+                      <InlineLoading label="正在加载角色信息..." />
+                    </div>
+                  ) : null}
 
-        <Form {...form}>
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="roleName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      <span className="mr-1 text-destructive">*</span>
-                      角色名称
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="请输入角色名称"
-                        disabled={disabled}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="roleKey"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      <span className="mr-1 text-destructive">*</span>
-                      权限字符
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="请输入权限字符"
-                        disabled={disabled}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="roleSort"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>显示顺序</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="默认 0"
-                        disabled={disabled}
-                        value={field.value}
-                        onChange={(event) => field.onChange(event.target.value)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>角色状态</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        className="flex gap-4"
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        disabled={disabled}
-                      >
-                        <FormItem className="flex items-center gap-2 space-y-0">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="roleName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            <span className="mr-1 text-destructive">*</span>
+                            角色名称
+                          </FormLabel>
                           <FormControl>
-                            <RadioGroupItem value="0" />
+                            <Input
+                              placeholder="请输入角色名称"
+                              disabled={disabled}
+                              {...field}
+                            />
                           </FormControl>
-                          <FormLabel className="font-normal">正常</FormLabel>
+                          <FormMessage />
                         </FormItem>
-                        <FormItem className="flex items-center gap-2 space-y-0">
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="roleKey"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            <span className="mr-1 text-destructive">*</span>
+                            权限字符
+                          </FormLabel>
                           <FormControl>
-                            <RadioGroupItem value="1" />
+                            <Input
+                              placeholder="请输入权限字符"
+                              disabled={disabled}
+                              {...field}
+                            />
                           </FormControl>
-                          <FormLabel className="font-normal">停用</FormLabel>
+                          <FormMessage />
                         </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="dataScope"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>数据权限</FormLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      disabled={disabled}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="请选择数据范围" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1">全部数据权限</SelectItem>
-                        <SelectItem value="2">自定义数据权限</SelectItem>
-                        <SelectItem value="3">本部门数据权限</SelectItem>
-                        <SelectItem value="4">本部门及以下数据权限</SelectItem>
-                        <SelectItem value="5">仅本人数据权限</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="space-y-4 rounded-lg border border-dashed border-border/60 p-4 md:col-span-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      菜单树联动
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      开启后分配菜单时父子节点数据将一起变更。
-                    </p>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="roleSort"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>显示顺序</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="默认 0"
+                              disabled={disabled}
+                              value={field.value}
+                              onChange={(event) => field.onChange(event.target.value)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>角色状态</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              className="flex gap-4"
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              disabled={disabled}
+                            >
+                              <FormItem className="flex items-center gap-2 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="0" />
+                                </FormControl>
+                                <FormLabel className="font-normal">正常</FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center gap-2 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="1" />
+                                </FormControl>
+                                <FormLabel className="font-normal">停用</FormLabel>
+                              </FormItem>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="dataScope"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>数据权限</FormLabel>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            disabled={disabled}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="请选择数据范围" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="1">全部数据权限</SelectItem>
+                              <SelectItem value="2">自定义数据权限</SelectItem>
+                              <SelectItem value="3">本部门数据权限</SelectItem>
+                              <SelectItem value="4">本部门及以下数据权限</SelectItem>
+                              <SelectItem value="5">仅本人数据权限</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="space-y-4 rounded-lg border border-dashed border-border/60 p-4 md:col-span-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            菜单树联动
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            开启后分配菜单时父子节点数据将一起变更。
+                          </p>
+                        </div>
+                        <FormField
+                          control={form.control}
+                          name="menuCheckStrictly"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-y-0">
+                              <FormControl>
+                                <Switch
+                                  disabled={disabled}
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            部门树联动
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            开启后分配部门权限时父子节点保持关联。
+                          </p>
+                        </div>
+                        <FormField
+                          control={form.control}
+                          name="deptCheckStrictly"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-y-0">
+                              <FormControl>
+                                <Switch
+                                  disabled={disabled}
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
                   </div>
+
                   <FormField
                     control={form.control}
-                    name="menuCheckStrictly"
+                    name="remark"
                     render={({ field }) => (
-                      <FormItem className="flex items-center space-y-0">
+                      <FormItem>
+                        <FormLabel>备注</FormLabel>
                         <FormControl>
-                          <Switch
+                          <Textarea
+                            className="min-h-[96px] resize-none"
+                            placeholder="请输入备注（可选）"
                             disabled={disabled}
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
+                            {...field}
                           />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      部门树联动
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      开启后分配部门权限时父子节点保持关联。
-                    </p>
-                  </div>
+
                   <FormField
                     control={form.control}
-                    name="deptCheckStrictly"
+                    name="menuIds"
                     render={({ field }) => (
-                      <FormItem className="flex items-center space-y-0">
-                        <FormControl>
-                          <Switch
-                            disabled={disabled}
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
+                      <FormItem>
+                        <MenuPermissionTree
+                          nodes={menuTree ?? []}
+                          value={field.value}
+                          onChange={field.onChange}
+                          disabled={disabled || menuTreeLoading}
+                        />
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
               </div>
-            </div>
 
-            <FormField
-              control={form.control}
-              name="remark"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>备注</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      className="min-h-[96px] resize-none"
-                      placeholder="请输入备注（可选）"
-                      disabled={disabled}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="menuIds"
-              render={({ field }) => (
-                <FormItem>
-                  <MenuPermissionTree
-                    nodes={menuTree ?? []}
-                    value={field.value}
-                    onChange={field.onChange}
-                    disabled={disabled || menuTreeLoading}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <ResponsiveDialog.Footer className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={disabled}
-              >
-                取消
-              </Button>
-              <Button type="submit" disabled={disabled}>
-                {submitText}
-              </Button>
-            </ResponsiveDialog.Footer>
-          </form>
-        </Form>
+              <ResponsiveDialog.Footer className="flex-shrink-0 gap-2 border-t border-border/60 bg-background px-6 py-4 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={disabled}
+                >
+                  取消
+                </Button>
+                <Button type="submit" disabled={disabled}>
+                  {submitText}
+                </Button>
+              </ResponsiveDialog.Footer>
+            </form>
+          </Form>
+        </div>
       </ResponsiveDialog.Content>
     </ResponsiveDialog>
   );
