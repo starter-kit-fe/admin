@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 const backendOrigin =
-  process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:27391';
+  process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:27401';
 console.log(backendOrigin);
 async function proxy(request: NextRequest) {
   if (!backendOrigin) {

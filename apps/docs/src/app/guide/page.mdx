@@ -1,0 +1,28 @@
+---
+title: Project Guide
+description: Understand how the documentation content is organised.
+---
+
+# Project Guide
+
+MDX files inside the `src/app` directory automatically become part of the navigation tree. Nextra infers the sidebar structure from the filesystem hierarchy.
+
+## Create a New Section
+
+1. Create a folder like `src/app/getting-started`.
+2. Add a `page.mdx` file that contains the content for that section.
+3. Optionally add more nested files for deeper navigation.
+
+## Front Matter
+
+Use the front matter block at the top of each file to control the page title, description, or custom options such as:
+
+```mdx
+---
+title: API Reference
+description: Learn how to consume the HTTP endpoints.
+toc: true
+---
+```
+
+The `toc` flag enables a table of contents sidebar for long documents.
