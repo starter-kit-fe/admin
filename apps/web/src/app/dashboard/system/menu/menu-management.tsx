@@ -97,22 +97,33 @@ function toCreatePayload(values: MenuFormValues): CreateMenuPayload {
 }
 
 function buildParentOptions(nodes: MenuTreeNode[], excludeIds: Set<number>): MenuParentOption[] {
-  const options: MenuParentOption[] = [{ value: '0', label: '顶级菜单' }];
-  const walk = (items: MenuTreeNode[], depth: number) => {
+  const options: MenuParentOption[] = [
+    {
+      value: '0',
+      label: '顶级菜单',
+      level: 0,
+      path: ['顶级菜单'],
+    },
+  ];
+  const walk = (items: MenuTreeNode[], depth: number, ancestors: string[], parentId: number) => {
     items.forEach((item) => {
       if (excludeIds.has(item.menuId)) {
         return;
       }
+      const currentPath = [...ancestors, item.menuName];
       options.push({
         value: String(item.menuId),
-        label: `${'—'.repeat(depth)} ${item.menuName}`,
+        label: item.menuName,
+        level: depth,
+        path: currentPath,
+        parentId: String(parentId),
       });
       if (item.children && item.children.length > 0) {
-        walk(item.children, depth + 1);
+        walk(item.children, depth + 1, currentPath, item.menuId);
       }
     });
   };
-  walk(nodes, 1);
+  walk(nodes, 1, [], 0);
   return options;
 }
 

@@ -24,14 +24,11 @@ interface MenuParentTreeSelectProps {
   disabled?: boolean;
 }
 
-function formatOptionLabel(option: MenuParentOption) {
-  const parts = option.label.split(/^(?<indent>[—\s]*)\s*/);
-  if (parts.length >= 3) {
-    const indent = parts[1] ?? '';
-    const text = option.label.slice(indent.length).trim();
-    return { indent, text };
-  }
-  return { indent: '', text: option.label };
+const INDENT_TOKEN = '—';
+
+function buildIndent(level: number) {
+  if (level <= 0) return '';
+  return `${INDENT_TOKEN} `.repeat(level);
 }
 
 export function MenuParentTreeSelect({
@@ -43,17 +40,27 @@ export function MenuParentTreeSelect({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
+  const trimmedSearch = search.trim();
+  const normalizedSearch = trimmedSearch.toLowerCase();
+
+  const selectedOption = useMemo(
+    () => options.find((option) => option.value === value),
+    [options, value],
+  );
+
   const selectedLabel = useMemo(() => {
-    const current = options.find((option) => option.value === value);
-    return current ? current.label.replace(/^[—\s]+/, '') : '';
-  }, [options, value]);
+    if (!selectedOption) return '';
+    if (selectedOption.value === '0') {
+      return selectedOption.label;
+    }
+    return selectedOption.path.join(' / ');
+  }, [selectedOption]);
 
   const groupedOptions = useMemo(() => {
-    const searchTerm = search.trim().toLowerCase();
     const filterOption = (option: MenuParentOption) => {
-      if (!searchTerm) return true;
-      const normalized = option.label.replace(/^[—\s]+/, '').toLowerCase();
-      return normalized.includes(searchTerm);
+      if (!normalizedSearch) return true;
+      const normalizedTarget = `${option.label} ${option.path.join(' ')}`.toLowerCase();
+      return normalizedTarget.includes(normalizedSearch);
     };
     return options.reduce(
       (acc, option) => {
@@ -67,9 +74,12 @@ export function MenuParentTreeSelect({
         }
         return acc;
       },
-      { topLevel: [] as MenuParentOption[], nodes: [] as MenuParentOption[] },
+      {
+        topLevel: [] as MenuParentOption[],
+        nodes: [] as MenuParentOption[],
+      },
     );
-  }, [options, search]);
+  }, [normalizedSearch, options]);
 
   const hasResults = groupedOptions.topLevel.length + groupedOptions.nodes.length > 0;
 
@@ -78,6 +88,12 @@ export function MenuParentTreeSelect({
       setSearch('');
     }
   }, [open]);
+
+  const handleSelect = (option: MenuParentOption) => {
+    if (option.disabled) return;
+    onChange(option.value);
+    setOpen(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -114,17 +130,16 @@ export function MenuParentTreeSelect({
                 {groupedOptions.topLevel.length > 0 ? (
                   <CommandGroup heading="顶级">
                     {groupedOptions.topLevel.map((option) => {
-                      const { text } = formatOptionLabel(option);
                       const selected = option.value === value;
                       return (
                         <CommandItem
                           key={option.value}
-                          value={option.label}
-                          className="flex items-center gap-2"
-                          onSelect={() => {
-                            onChange(option.value);
-                            setOpen(false);
-                          }}
+                          value={option.value}
+                          className={cn(
+                            'flex items-center gap-2',
+                            option.disabled && 'pointer-events-none opacity-50',
+                          )}
+                          onSelect={() => handleSelect(option)}
                         >
                           <Check
                             className={cn(
@@ -132,7 +147,7 @@ export function MenuParentTreeSelect({
                               selected ? 'opacity-100' : 'opacity-0',
                             )}
                           />
-                          <span className="truncate">{text}</span>
+                          <span className="truncate">{option.label}</span>
                         </CommandItem>
                       );
                     })}
@@ -141,17 +156,17 @@ export function MenuParentTreeSelect({
                 {groupedOptions.nodes.length > 0 ? (
                   <CommandGroup heading="菜单树">
                     {groupedOptions.nodes.map((option) => {
-                      const { indent, text } = formatOptionLabel(option);
                       const selected = option.value === value;
+                      const indent = buildIndent(option.level);
                       return (
                         <CommandItem
                           key={option.value}
-                          value={option.label}
-                          className="flex items-center gap-2"
-                          onSelect={() => {
-                            onChange(option.value);
-                            setOpen(false);
-                          }}
+                          value={option.value}
+                          className={cn(
+                            'flex items-center gap-2',
+                            option.disabled && 'pointer-events-none opacity-50',
+                          )}
+                          onSelect={() => handleSelect(option)}
                         >
                           <Check
                             className={cn(
@@ -159,8 +174,8 @@ export function MenuParentTreeSelect({
                               selected ? 'opacity-100' : 'opacity-0',
                             )}
                           />
-                          <span className="whitespace-pre text-muted-foreground/80">{indent}</span>
-                          <span className="truncate">{text}</span>
+                          <span className="whitespace-pre text-muted-foreground/70">{indent}</span>
+                          <span className="truncate">{option.label}</span>
                         </CommandItem>
                       );
                     })}
