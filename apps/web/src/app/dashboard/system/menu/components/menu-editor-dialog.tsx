@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import type { MenuFormValues, MenuType } from '../type';
 import { BasicInfoSection } from './menu-editor/basic-info-section';
@@ -14,8 +13,8 @@ import { DirectorySection } from './menu-editor/directory-section';
 import { PageSection } from './menu-editor/page-section';
 import { ButtonSection } from './menu-editor/button-section';
 import { RemarkSection } from './menu-editor/remark-section';
+import { MenuTypeTabs } from './menu-editor/menu-type-tabs';
 import type { MenuParentOption } from './menu-editor/types';
-import { MENU_TYPE_OPTIONS } from './menu-editor/constants';
 export type { MenuParentOption } from './menu-editor/types';
 
 const menuFormSchema = z
@@ -146,8 +145,11 @@ export function MenuEditorDialog({
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
-  const menuType = form.watch('menuType');
+  useEffect(() => {
+    form.register('menuType');
+  }, [form]);
 
+  const menuType = (form.watch('menuType') as MenuType) ?? 'C';
   useEffect(() => {
     if (open) {
       form.reset(defaultValues ?? DEFAULT_VALUES);
@@ -201,37 +203,11 @@ export function MenuEditorDialog({
             <form className="flex h-full flex-1 flex-col min-h-0" onSubmit={handleSubmit}>
               <div className="flex-1 overflow-y-auto px-6 py-5">
                 <div className="space-y-8 pb-4">
+                  <MenuTypeTabs value={menuType} onChange={(next) => form.setValue('menuType', next)} />
                   <BasicInfoSection form={form} parentOptions={parentOptions} />
-                  <Tabs
-                    value={menuType}
-                    onValueChange={(value) => form.setValue('menuType', value as MenuType)}
-                  >
-                    <TabsList className="flex flex-wrap gap-2 rounded-lg border border-border/60 bg-muted/40 p-1">
-                      {MENU_TYPE_OPTIONS.map((option) => (
-                        <TabsTrigger
-                          key={option.value}
-                          value={option.value}
-                          className="flex-1 rounded-md px-3 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow"
-                        >
-                          <div className="flex flex-col items-start text-left">
-                            <span className="font-medium text-foreground">{option.label}</span>
-                            <span className="text-xs text-muted-foreground">{option.description}</span>
-                          </div>
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                    <div className="mt-4 space-y-6">
-                      <TabsContent value="M" className="mt-0">
-                        <DirectorySection form={form} />
-                      </TabsContent>
-                      <TabsContent value="C" className="mt-0">
-                        <PageSection form={form} />
-                      </TabsContent>
-                      <TabsContent value="F" className="mt-0">
-                        <ButtonSection form={form} />
-                      </TabsContent>
-                    </div>
-                  </Tabs>
+                  {menuType === 'M' ? <DirectorySection form={form} /> : null}
+                  {menuType === 'C' ? <PageSection form={form} /> : null}
+                  {menuType === 'F' ? <ButtonSection form={form} /> : null}
                   <RemarkSection form={form} />
                 </div>
               </div>

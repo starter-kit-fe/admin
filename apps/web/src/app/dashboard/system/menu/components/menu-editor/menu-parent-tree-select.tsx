@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronDown, Search } from 'lucide-react';
 
