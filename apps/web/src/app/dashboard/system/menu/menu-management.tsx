@@ -341,7 +341,7 @@ export function MenuManagement() {
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <CardTitle className="text-xl font-semibold">菜单管理</CardTitle>
-            <CardDescription>维护系统菜单结构，支持新增、编辑和拖拽排序。</CardDescription>
+            <CardDescription>维护系统菜单树结构，支持新增、编辑与顺序调整。</CardDescription>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
@@ -381,7 +381,7 @@ export function MenuManagement() {
       <Card className="border-border/70 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg font-semibold">菜单列表</CardTitle>
-          <CardDescription>支持拖拽调整同级菜单顺序，操作项可快速新增、编辑或删除。</CardDescription>
+          <CardDescription>支持上下移动调整同级菜单顺序，操作项可快速新增、编辑或删除。</CardDescription>
         </CardHeader>
         <CardContent>
           {menuQuery.isError ? (

@@ -4,79 +4,105 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import type { MenuFormValues, MenuType } from '../type';
+import { BasicInfoSection } from './menu-editor/basic-info-section';
+import { DirectorySection } from './menu-editor/directory-section';
+import { PageSection } from './menu-editor/page-section';
+import { ButtonSection } from './menu-editor/button-section';
+import { RemarkSection } from './menu-editor/remark-section';
+import type { MenuParentOption } from './menu-editor/types';
+import { MENU_TYPE_OPTIONS } from './menu-editor/constants';
+export type { MenuParentOption } from './menu-editor/types';
 
-const menuFormSchema = z.object({
-  menuName: z
-    .string()
-    .trim()
-    .min(1, '请输入菜单名称')
-    .max(50, '菜单名称不能超过 50 个字符'),
-  parentId: z.string().min(1),
-  orderNum: z
-    .string()
-    .trim()
-    .refine((value) => {
-      if (value === '') return true;
-      const parsed = Number(value);
-      return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999;
-    }, '显示顺序需为 0 到 9999 的整数'),
-  path: z.string().trim().max(200, '路由地址不超过 200 个字符'),
-  component: z
-    .string()
-    .trim()
-    .max(255, '组件路径不超过 255 个字符')
-    .optional()
-    .or(z.literal('')),
-  query: z
-    .string()
-    .trim()
-    .max(255, '路由参数不超过 255 个字符')
-    .optional()
-    .or(z.literal('')),
-  routeName: z
-    .string()
-    .trim()
-    .min(1, '请输入路由名称')
-    .max(50, '路由名称不能超过 50 个字符'),
-  isFrame: z.boolean(),
-  isCache: z.boolean(),
-  menuType: z.enum(['M', 'C', 'F']),
-  visible: z.enum(['0', '1']),
-  status: z.enum(['0', '1']),
-  perms: z
-    .string()
-    .trim()
-    .max(100, '权限标识不超过 100 个字符')
-    .optional()
-    .or(z.literal('')),
-  icon: z
-    .string()
-    .trim()
-    .max(100, '图标标识不超过 100 个字符')
-    .default('#'),
-  remark: z
-    .string()
-    .trim()
-    .max(500, '备注最长 500 个字符')
-    .optional()
-    .or(z.literal('')),
-});
+const menuFormSchema = z
+  .object({
+    menuName: z
+      .string()
+      .trim()
+      .min(1, '请输入菜单名称')
+      .max(50, '菜单名称不能超过 50 个字符'),
+    parentId: z.string().min(1),
+    orderNum: z
+      .string()
+      .trim()
+      .refine((value) => {
+        if (value === '') return true;
+        const parsed = Number(value);
+        return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999;
+      }, '显示顺序需为 0 到 9999 的整数'),
+    path: z.string().trim().max(200, '路由地址不超过 200 个字符'),
+    component: z
+      .string()
+      .trim()
+      .max(255, '组件路径不超过 255 个字符')
+      .optional()
+      .or(z.literal('')),
+    query: z
+      .string()
+      .trim()
+      .max(255, '路由参数不超过 255 个字符')
+      .optional()
+      .or(z.literal('')),
+    routeName: z
+      .string()
+      .trim()
+      .max(50, '路由名称不能超过 50 个字符')
+      .optional()
+      .or(z.literal('')),
+    isFrame: z.boolean(),
+    isCache: z.boolean(),
+    menuType: z.enum(['M', 'C', 'F']),
+    visible: z.enum(['0', '1']),
+    status: z.enum(['0', '1']),
+    perms: z
+      .string()
+      .trim()
+      .max(100, '权限标识不超过 100 个字符')
+      .optional()
+      .or(z.literal('')),
+    icon: z
+      .string()
+      .trim()
+      .max(100, '图标标识不超过 100 个字符')
+      .default('#'),
+    remark: z
+      .string()
+      .trim()
+      .max(500, '备注最长 500 个字符')
+      .optional()
+      .or(z.literal('')),
+  })
+  .superRefine((data, ctx) => {
+    if (data.menuType !== 'F') {
+      if (!data.path || data.path.trim().length === 0) {
+        ctx.addIssue({
+          path: ['path'],
+          code: z.ZodIssueCode.custom,
+          message: '请输入路由地址',
+        });
+      }
+      if (!data.routeName || data.routeName.trim().length === 0) {
+        ctx.addIssue({
+          path: ['routeName'],
+          code: z.ZodIssueCode.custom,
+          message: '请输入路由名称',
+        });
+      }
+    }
+    if (data.menuType === 'F') {
+      if (!data.perms || data.perms.trim().length === 0) {
+        ctx.addIssue({
+          path: ['perms'],
+          code: z.ZodIssueCode.custom,
+          message: '请输入权限标识',
+        });
+      }
+    }
+  });
 
 const DEFAULT_VALUES: MenuFormValues = {
   menuName: '',
@@ -96,11 +122,6 @@ const DEFAULT_VALUES: MenuFormValues = {
   remark: '',
 };
 
-export interface MenuParentOption {
-  label: string;
-  value: string;
-}
-
 interface MenuEditorDialogProps {
   mode: 'create' | 'edit';
   open: boolean;
@@ -110,12 +131,6 @@ interface MenuEditorDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: MenuFormValues) => void;
 }
-
-const MENU_TYPE_OPTIONS: Array<{ label: string; value: MenuType; description: string }> = [
-  { label: '目录', value: 'M', description: '仅作为分组容器，不可点击跳转' },
-  { label: '菜单', value: 'C', description: '常规路由菜单，对应页面组件' },
-  { label: '按钮', value: 'F', description: '仅用于权限控制，不在侧边栏展示' },
-];
 
 export function MenuEditorDialog({
   mode,
@@ -131,6 +146,8 @@ export function MenuEditorDialog({
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
+  const menuType = form.watch('menuType');
+
   useEffect(() => {
     if (open) {
       form.reset(defaultValues ?? DEFAULT_VALUES);
@@ -138,17 +155,30 @@ export function MenuEditorDialog({
   }, [defaultValues, form, open]);
 
   const handleSubmit = form.handleSubmit((values) => {
-    onSubmit({
+    const payload: MenuFormValues = {
       ...values,
       menuName: values.menuName.trim(),
       path: values.path.trim(),
-      routeName: values.routeName.trim(),
+      routeName: values.routeName?.trim() ?? '',
       component: values.component?.trim() ?? '',
       query: values.query?.trim() ?? '',
       perms: values.perms?.trim() ?? '',
       icon: values.icon.trim() || '#',
       remark: values.remark?.trim() ?? '',
-    });
+    };
+
+    if (payload.menuType === 'F') {
+      payload.path = '';
+      payload.routeName = '';
+      payload.component = '';
+      payload.query = '';
+      payload.isFrame = false;
+      payload.isCache = false;
+      payload.visible = '0';
+      payload.icon = '#';
+    }
+
+    onSubmit(payload);
   });
 
   const title = mode === 'create' ? '新增菜单' : '编辑菜单';
@@ -168,292 +198,41 @@ export function MenuEditorDialog({
           </ResponsiveDialog.Header>
 
           <Form {...form}>
-            <form
-              className="flex h-full flex-1 flex-col min-h-0"
-              onSubmit={handleSubmit}
-            >
+            <form className="flex h-full flex-1 flex-col min-h-0" onSubmit={handleSubmit}>
               <div className="flex-1 overflow-y-auto px-6 py-5">
-                <div className="space-y-6 pb-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="menuName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            <span className="mr-1 text-destructive">*</span>
-                            菜单名称
-                          </FormLabel>
-                          <FormControl>
-                            <Input placeholder="请输入菜单名称" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="parentId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>父级菜单</FormLabel>
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="请选择父级菜单" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {parentOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="orderNum"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>显示顺序</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="默认 0"
-                              value={field.value}
-                              onChange={(event) => field.onChange(event.target.value)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="menuType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>菜单类型</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              className="grid gap-2 md:grid-cols-3"
-                              value={field.value}
-                              onValueChange={(value: MenuType) => field.onChange(value)}
-                            >
-                              {MENU_TYPE_OPTIONS.map((option) => (
-                                <FormItem
-                                  key={option.value}
-                                  className="flex flex-col gap-1 rounded-lg border border-border/60 px-3 py-2"
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <FormControl>
-                                        <RadioGroupItem value={option.value} />
-                                      </FormControl>
-                                      <span className="text-sm font-medium">{option.label}</span>
-                                    </div>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground">
-                                    {option.description}
-                                  </p>
-                                </FormItem>
-                              ))}
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="path"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>路由地址</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例如 system/user" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="routeName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>路由名称</FormLabel>
-                          <FormControl>
-                            <Input placeholder="用于 keepalive 等场景" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="component"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>组件路径</FormLabel>
-                          <FormControl>
-                            <Input placeholder="可选，例如 system/user/index" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="query"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>路由参数</FormLabel>
-                          <FormControl>
-                            <Input placeholder="可选，例如 role=admin" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="perms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>权限标识</FormLabel>
-                          <FormControl>
-                            <Input placeholder="可选，例如 system:user:list" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="icon"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>菜单图标</FormLabel>
-                          <FormControl>
-                            <Input placeholder="可选，例如 user" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="isFrame"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-lg border border-border/60 px-4 py-3">
-                          <div>
-                            <FormLabel className="font-medium">外链跳转</FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              开启后点击菜单将直接访问外部链接。
-                            </p>
+                <div className="space-y-8 pb-4">
+                  <BasicInfoSection form={form} parentOptions={parentOptions} />
+                  <Tabs
+                    value={menuType}
+                    onValueChange={(value) => form.setValue('menuType', value as MenuType)}
+                  >
+                    <TabsList className="flex flex-wrap gap-2 rounded-lg border border-border/60 bg-muted/40 p-1">
+                      {MENU_TYPE_OPTIONS.map((option) => (
+                        <TabsTrigger
+                          key={option.value}
+                          value={option.value}
+                          className="flex-1 rounded-md px-3 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow"
+                        >
+                          <div className="flex flex-col items-start text-left">
+                            <span className="font-medium text-foreground">{option.label}</span>
+                            <span className="text-xs text-muted-foreground">{option.description}</span>
                           </div>
-                          <FormControl>
-                            <Switch checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="isCache"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-lg border border-border/60 px-4 py-3">
-                          <div>
-                            <FormLabel className="font-medium">禁用缓存</FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              开启后不使用 keepalive。关闭则保持页面状态。
-                            </p>
-                          </div>
-                          <FormControl>
-                            <Switch checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="visible"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>显示状态</FormLabel>
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="请选择显示状态" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="0">显示</SelectItem>
-                              <SelectItem value="1">隐藏</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>菜单状态</FormLabel>
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="请选择状态" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="0">正常</SelectItem>
-                              <SelectItem value="1">停用</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="remark"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>备注</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            className="min-h-[96px] resize-none"
-                            placeholder="请输入备注（可选）"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    <div className="mt-4 space-y-6">
+                      <TabsContent value="M" className="mt-0">
+                        <DirectorySection form={form} />
+                      </TabsContent>
+                      <TabsContent value="C" className="mt-0">
+                        <PageSection form={form} />
+                      </TabsContent>
+                      <TabsContent value="F" className="mt-0">
+                        <ButtonSection form={form} />
+                      </TabsContent>
+                    </div>
+                  </Tabs>
+                  <RemarkSection form={form} />
                 </div>
               </div>
 

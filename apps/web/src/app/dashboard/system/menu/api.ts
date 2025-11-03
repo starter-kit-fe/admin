@@ -38,5 +38,7 @@ export function removeMenu(menuId: number) {
 }
 
 export function reorderMenus(payload: MenuOrderUpdate[]) {
-  return put<void>('/v1/system/menus/reorder', payload);
+  return put<void>('/v1/system/menus/reorder', {
+    items: payload,
+  });
 }
