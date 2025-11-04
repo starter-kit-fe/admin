@@ -1,3 +1,6 @@
+export type MenuType = 'M' | 'C' | 'F';
+export type MenuStatus = '0' | '1';
+
 export interface MenuTreeNode {
   menuId: number;
   menuName: string;
@@ -9,17 +12,14 @@ export interface MenuTreeNode {
   routeName: string;
   isFrame: boolean;
   isCache: boolean;
-  menuType: string;
-  visible: string;
-  status: string;
+  menuType: MenuType;
+  visible: MenuStatus;
+  status: MenuStatus;
   perms?: string | null;
   icon: string;
   remark?: string;
   children?: MenuTreeNode[];
 }
-
-export type MenuType = 'M' | 'C' | 'F';
-export type MenuStatus = '0' | '1';
 
 export interface MenuFormValues {
   menuName: string;

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -150,6 +150,34 @@ export function MenuEditorDialog({
   }, [form]);
 
   const menuType = (form.watch('menuType') as MenuType) ?? 'C';
+  const parentId = form.watch('parentId');
+
+  const allowedMenuTypes = useMemo(() => {
+    if (parentId === '0') {
+      return ['C', 'M'] as MenuType[];
+    }
+    const currentParent = parentOptions.find((option) => option.value === parentId);
+    if (!currentParent) {
+      return ['C', 'M'] as MenuType[];
+    }
+    if (currentParent.menuType === 'M') {
+      return ['C', 'M'] as MenuType[];
+    }
+    if (currentParent.menuType === 'C') {
+      return ['F'] as MenuType[];
+    }
+    return ['C', 'M'] as MenuType[];
+  }, [parentId, parentOptions]);
+
+  useEffect(() => {
+    if (allowedMenuTypes.length === 0) {
+      return;
+    }
+    if (!allowedMenuTypes.includes(menuType)) {
+      form.setValue('menuType', allowedMenuTypes[0]);
+    }
+  }, [allowedMenuTypes, form, menuType]);
+
   useEffect(() => {
     if (open) {
       form.reset(defaultValues ?? DEFAULT_VALUES);
@@ -203,7 +231,11 @@ export function MenuEditorDialog({
             <form className="flex h-full flex-1 flex-col min-h-0" onSubmit={handleSubmit}>
               <div className="flex-1 overflow-y-auto px-6 py-5">
                 <div className="space-y-8 pb-4">
-                  <MenuTypeTabs value={menuType} onChange={(next) => form.setValue('menuType', next)} />
+                  <MenuTypeTabs
+                    value={menuType}
+                    allowedTypes={allowedMenuTypes}
+                    onChange={(next) => form.setValue('menuType', next)}
+                  />
                   <BasicInfoSection form={form} parentOptions={parentOptions} />
                   {menuType === 'M' ? <DirectorySection form={form} /> : null}
                   {menuType === 'C' ? <PageSection form={form} /> : null}

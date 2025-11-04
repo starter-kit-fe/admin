@@ -1,3 +1,5 @@
+import type { MenuType } from '../../type';
+
 export interface MenuParentOption {
   label: string;
   value: string;
@@ -5,4 +7,5 @@ export interface MenuParentOption {
   path: string[];
   parentId?: string;
   disabled?: boolean;
+  menuType?: MenuType;
 }

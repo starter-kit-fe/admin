@@ -24,8 +24,9 @@ import {
 import Image from 'next/image';
 import { type ComponentType, type ReactNode, useMemo } from 'react';
 
-import { NavMain } from './nav-main';
 import pkg from '../../../package.json';
+import { resolveMenuLink } from './menu-routing';
+import { NavMain } from './nav-main';
 
 const iconRegistry: Record<string, ComponentType<{ className?: string }>> = {
   system: Cog,
@@ -47,177 +48,44 @@ function resolveIcon(name?: string | null) {
   return <Icon className="h-4 w-4" />;
 }
 
-function parsePathSegments(path?: string | null): string[] {
-  if (!path) {
-    return [];
-  }
-  return path
-    .split('/')
-    .map((segment) => segment.trim())
-    .filter(Boolean)
-    .filter((segment, index, segments) => {
-      if (index !== segments.length - 1) {
-        return true;
-      }
-      return segment.toLowerCase() !== 'index';
-    });
-}
-
-function composeSegments(
-  parentSegments: string[],
-  currentPath?: string | null,
-) {
-  const parent = parentSegments;
-  const current = parsePathSegments(currentPath);
-  if (current.length === 0) {
-    return parent;
-  }
-
-  const isExplicitAbsolute = Boolean(
-    currentPath && currentPath.startsWith('/'),
-  );
-  const isCurrentAbsolute =
-    !isExplicitAbsolute &&
-    parent.length > 0 &&
-    current.length >= parent.length &&
-    parent.every((segment, index) => current[index] === segment);
-
-  if (isExplicitAbsolute || isCurrentAbsolute) {
-    return current;
-  }
-
-  return [...parent, ...current];
-}
-
-function buildDashboardUrl(segments: string[]): string {
-  if (segments.length === 0) {
-    return '/dashboard';
-  }
-
-  if (segments[0] === 'dashboard') {
-    return `/${segments.join('/')}`;
-  }
-
-  return `/dashboard/${segments.join('/')}`;
-}
-
-function isExternalMenu(menu: MenuNode): boolean {
-  const path = menu.path ?? '';
-  const link = menu.meta?.link ?? '';
-  return /^https?:\/\//.test(path) || /^https?:\/\//.test(link ?? '');
-}
-
-function resolveMenuLink(menu: MenuNode, parentSegments: string[]) {
-  if (isExternalMenu(menu)) {
-    const link = menu.meta?.link?.trim();
-    const path = (menu.path ?? '').trim();
-    return {
-      url: link || path || '#',
-      segments: parentSegments,
-      external: true,
-    };
-  }
-
-  const segments = composeSegments(parentSegments, menu.path);
-  return {
-    url: buildDashboardUrl(segments),
-    segments,
-    external: false,
-  };
-}
-
-type MenuLink = {
-  node: MenuNode;
-  url: string;
-  external: boolean;
-  segments: string[];
-};
-
-function collectVisibleLeaves(
-  nodes?: MenuNode[],
-  parentSegments: string[] = [],
-): MenuLink[] {
-  if (!nodes) {
-    return [];
-  }
-  return nodes
-    .filter((node) => !node.hidden)
-    .flatMap((node) => {
-      const { url, segments, external } = resolveMenuLink(node, parentSegments);
-
-      if (node.children && node.children.length > 0) {
-        const nextSegments = external ? parentSegments : segments;
-        const leaves = collectVisibleLeaves(node.children, nextSegments);
-        if (leaves.length > 0) {
-          return leaves;
-        }
-      }
-
-      return [
-        {
-          node,
-          url,
-          external,
-          segments,
-        },
-      ];
-    });
-}
-
-export function buildNavItems(
-  nodes: MenuNode[],
-  parentSegments: string[] = [],
-): Array<{
+export type NavItem = {
   title: string;
   url: string;
   icon?: ReactNode;
   external?: boolean;
-  items?: { title: string; url: string; external?: boolean }[];
-}> {
+  items?: NavItem[];
+};
+
+export function buildNavItems(
+  nodes: MenuNode[],
+  parentSegments: string[] = [],
+  depth = 0,
+): NavItem[] {
   if (!Array.isArray(nodes)) {
     return [];
   }
 
-  const items: Array<{
-    title: string;
-    url: string;
-    icon?: ReactNode;
-    external?: boolean;
-    items?: { title: string; url: string; external?: boolean }[];
-  }> = [];
-
-  nodes
+  return nodes
     .filter((node) => !node.hidden)
-    .forEach((node) => {
-      const icon = resolveIcon(node.meta?.icon);
+    .map((node) => {
       const title = node.meta?.title ?? node.name;
       const { url, external, segments } = resolveMenuLink(node, parentSegments);
-      const children = node.children?.filter((child) => !child.hidden) ?? [];
+      const childSegments = external ? parentSegments : segments;
+      const children = node.children ?? [];
+      const items = buildNavItems(children, childSegments, depth + 1);
+      const navItem: NavItem = {
+        title,
+        url,
+        external,
+        items: items.length > 0 ? items : undefined,
+      };
 
-      if (children.length > 0) {
-        const childParentSegments = external ? parentSegments : segments;
-        const leaves = collectVisibleLeaves(children, childParentSegments);
-        if (leaves.length === 0) {
-          items.push({ title, url, icon, external });
-        } else {
-          items.push({
-            title,
-            url,
-            icon,
-            external,
-            items: leaves.map((leaf) => ({
-              title: leaf.node.meta?.title ?? leaf.node.name,
-              url: leaf.url,
-              external: leaf.external,
-            })),
-          });
-        }
-      } else {
-        items.push({ title, url, icon, external });
+      if (depth === 0) {
+        navItem.icon = resolveIcon(node.meta?.icon);
       }
-    });
 
-  return items;
+      return navItem;
+    });
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

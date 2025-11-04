@@ -1,19 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { toast } from 'sonner';
-
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DeleteConfirmDialog } from '../user/components/delete-confirm-dialog';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
+import { DeleteConfirmDialog } from '../user/components/delete-confirm-dialog';
 import {
   createMenu,
   listMenuTree,
@@ -21,14 +22,17 @@ import {
   reorderMenus,
   updateMenu,
 } from './api';
+import {
+  MenuEditorDialog,
+  type MenuParentOption,
+} from './components/menu-editor-dialog';
+import { MenuTreeView } from './components/menu-tree-view';
 import type {
   CreateMenuPayload,
   MenuFormValues,
   MenuOrderUpdate,
   MenuTreeNode,
 } from './type';
-import { MenuEditorDialog, type MenuParentOption } from './components/menu-editor-dialog';
-import { MenuTreeView } from './components/menu-tree-view';
 
 const STATUS_TABS = [
   { value: 'all', label: '全部' },
@@ -96,16 +100,25 @@ function toCreatePayload(values: MenuFormValues): CreateMenuPayload {
   };
 }
 
-function buildParentOptions(nodes: MenuTreeNode[], excludeIds: Set<number>): MenuParentOption[] {
+function buildParentOptions(
+  nodes: MenuTreeNode[],
+  excludeIds: Set<number>,
+): MenuParentOption[] {
   const options: MenuParentOption[] = [
     {
       value: '0',
       label: '顶级菜单',
       level: 0,
       path: ['顶级菜单'],
+      disabled: false,
     },
   ];
-  const walk = (items: MenuTreeNode[], depth: number, ancestors: string[], parentId: number) => {
+  const walk = (
+    items: MenuTreeNode[],
+    depth: number,
+    ancestors: string[],
+    parentId: number,
+  ) => {
     items.forEach((item) => {
       if (excludeIds.has(item.menuId)) {
         return;
@@ -117,6 +130,8 @@ function buildParentOptions(nodes: MenuTreeNode[], excludeIds: Set<number>): Men
         level: depth,
         path: currentPath,
         parentId: String(parentId),
+        disabled: item.menuType === 'F',
+        menuType: item.menuType,
       });
       if (item.children && item.children.length > 0) {
         walk(item.children, depth + 1, currentPath, item.menuId);
@@ -141,7 +156,29 @@ function collectDescendantIds(node?: MenuTreeNode): number[] {
   return result;
 }
 
-function reorderTree(nodes: MenuTreeNode[], parentId: number, orderedIds: number[]): MenuTreeNode[] {
+function findMenuNodeById(
+  nodes: MenuTreeNode[],
+  menuId: number,
+): MenuTreeNode | null {
+  for (const node of nodes) {
+    if (node.menuId === menuId) {
+      return node;
+    }
+    if (node.children && node.children.length > 0) {
+      const found = findMenuNodeById(node.children, menuId);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return null;
+}
+
+function reorderTree(
+  nodes: MenuTreeNode[],
+  parentId: number,
+  orderedIds: number[],
+): MenuTreeNode[] {
   if (parentId === 0) {
     const map = new Map(nodes.map((node) => [node.menuId, node]));
     return orderedIds
@@ -158,7 +195,9 @@ function reorderTree(nodes: MenuTreeNode[], parentId: number, orderedIds: number
   }
   return nodes.map((node) => {
     if (node.menuId === parentId) {
-      const childMap = new Map((node.children ?? []).map((child) => [child.menuId, child]));
+      const childMap = new Map(
+        (node.children ?? []).map((child) => [child.menuId, child]),
+      );
       const newChildren = orderedIds
         .map((id, index) => {
           const current = childMap.get(id);
@@ -227,21 +266,28 @@ export function MenuManagement() {
       invalidateMenus();
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : '创建菜单失败，请稍后再试';
+      const message =
+        error instanceof Error ? error.message : '创建菜单失败，请稍后再试';
       toast.error(message);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ menuId, payload }: { menuId: number; payload: CreateMenuPayload }) =>
-      updateMenu(menuId, payload),
+    mutationFn: ({
+      menuId,
+      payload,
+    }: {
+      menuId: number;
+      payload: CreateMenuPayload;
+    }) => updateMenu(menuId, payload),
     onSuccess: () => {
       toast.success('菜单已更新');
       setEditorState({ open: false });
       invalidateMenus();
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : '更新菜单失败，请稍后再试';
+      const message =
+        error instanceof Error ? error.message : '更新菜单失败，请稍后再试';
       toast.error(message);
     },
   });
@@ -254,7 +300,8 @@ export function MenuManagement() {
       invalidateMenus();
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : '删除菜单失败，请稍后再试';
+      const message =
+        error instanceof Error ? error.message : '删除菜单失败，请稍后再试';
       toast.error(message);
     },
   });
@@ -266,7 +313,8 @@ export function MenuManagement() {
       invalidateMenus();
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : '更新排序失败，请稍后再试';
+      const message =
+        error instanceof Error ? error.message : '更新排序失败，请稍后再试';
       toast.error(message);
       invalidateMenus();
     },
@@ -290,11 +338,23 @@ export function MenuManagement() {
 
   const handleEditorSubmit = (values: MenuFormValues) => {
     const payload = toCreatePayload(values);
-    if (editorState.open && editorState.mode === 'edit') {
-      updateMutation.mutate({ menuId: editorState.menu.menuId, payload });
-    } else {
-      createMutation.mutate(payload);
+    if (editorState.open) {
+      if (editorState.mode === 'edit') {
+        updateMutation.mutate({ menuId: editorState.menu.menuId, payload });
+        return;
+      }
+
+      if (editorState.mode === 'create') {
+        if (values.orderNum.trim() === '') {
+          const parentIdForOrder = Number(values.parentId) || 0;
+          payload.orderNum = getNextOrderNum(parentIdForOrder);
+        }
+        createMutation.mutate(payload);
+        return;
+      }
     }
+
+    createMutation.mutate(payload);
   };
 
   const handleOpenDelete = (menu: MenuTreeNode) => {
@@ -327,14 +387,43 @@ export function MenuManagement() {
 
   const parentOptions = useMemo(() => {
     if (!editorState.open) {
-      return [{ value: '0', label: '顶级菜单' }];
+      return [
+        {
+          value: '0',
+          label: '顶级菜单',
+          level: 0,
+          path: ['顶级菜单'],
+          disabled: false,
+        },
+      ];
     }
     if (editorState.mode === 'edit') {
-      const excludeIds = new Set<number>([editorState.menu.menuId, ...collectDescendantIds(editorState.menu)]);
+      const excludeIds = new Set<number>([
+        editorState.menu.menuId,
+        ...collectDescendantIds(editorState.menu),
+      ]);
       return buildParentOptions(menuTree, excludeIds);
     }
     return buildParentOptions(menuTree, new Set<number>());
   }, [editorState, menuTree]);
+
+  const getNextOrderNum = useCallback(
+    (parentId: number) => {
+      const siblings =
+        parentId === 0
+          ? menuTree
+          : findMenuNodeById(menuTree, parentId)?.children ?? [];
+      if (!siblings || siblings.length === 0) {
+        return 1;
+      }
+      const maxOrder = siblings.reduce(
+        (max, item) => Math.max(max, item.orderNum ?? 0),
+        0,
+      );
+      return maxOrder + 1;
+    },
+    [menuTree],
+  );
 
   const handleReorder = (parentId: number, orderedIds: number[]) => {
     setMenuTree((prev) => reorderTree(prev, parentId, orderedIds));
@@ -352,7 +441,9 @@ export function MenuManagement() {
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <CardTitle className="text-xl font-semibold">菜单管理</CardTitle>
-            <CardDescription>维护系统菜单树结构，支持新增、编辑与顺序调整。</CardDescription>
+            <CardDescription>
+              维护系统菜单树结构，支持新增、编辑与顺序调整。
+            </CardDescription>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
@@ -392,31 +483,46 @@ export function MenuManagement() {
       <Card className="border-border/70 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg font-semibold">菜单列表</CardTitle>
-          <CardDescription>支持上下移动调整同级菜单顺序，操作项可快速新增、编辑或删除。</CardDescription>
+          <CardDescription>
+            支持上下移动调整同级菜单顺序，操作项可快速新增、编辑或删除。
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {menuQuery.isError ? (
-            <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 text-sm text-destructive">
-              加载菜单失败，请稍后重试。
-              <Button type="button" variant="outline" size="sm" onClick={() => menuQuery.refetch()}>
-                重新加载
-              </Button>
-            </div>
-          ) : (
-            <MenuTreeView
-              nodes={menuTree}
-              loading={menuQuery.isLoading}
-              onAddChild={(parent) => handleOpenCreate(parent.menuId)}
-              onEdit={handleOpenEdit}
-              onDelete={handleOpenDelete}
-              onReorder={handleReorder}
-            />
-          )}
+          <div className="h-[60vh] overflow-auto">
+            {menuQuery.isError ? (
+              <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 text-sm text-destructive">
+                加载菜单失败，请稍后重试。
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => menuQuery.refetch()}
+                >
+                  重新加载
+                </Button>
+              </div>
+            ) : (
+              <MenuTreeView
+                nodes={menuTree}
+                loading={menuQuery.isLoading}
+                onAddChild={(parent) => handleOpenCreate(parent.menuId)}
+                onEdit={handleOpenEdit}
+                onDelete={handleOpenDelete}
+                onReorder={handleReorder}
+              />
+            )}
+          </div>
         </CardContent>
       </Card>
 
       <MenuEditorDialog
-        mode={editorState.open ? (editorState.mode === 'edit' ? 'edit' : 'create') : 'create'}
+        mode={
+          editorState.open
+            ? editorState.mode === 'edit'
+              ? 'edit'
+              : 'create'
+            : 'create'
+        }
         open={editorState.open}
         defaultValues={editorDefaultValues}
         parentOptions={parentOptions}

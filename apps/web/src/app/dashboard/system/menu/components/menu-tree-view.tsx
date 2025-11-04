@@ -202,19 +202,28 @@ export function MenuTreeView({
         const hasPerms = Boolean(node.perms && node.perms.trim().length > 0);
         const isLast = index === items.length - 1;
         const rawSegment = (node.path ?? '').trim();
-        const normalizedSegment = rawSegment.replace(/^\/+|\/+$/g, '');
+        const isExternalLink = /^https?:\/\//i.test(rawSegment);
+        const normalizedSegment = isExternalLink
+          ? rawSegment
+          : rawSegment.replace(/^\/+|\/+$/g, '');
         const hasSegment =
           normalizedSegment !== '' && normalizedSegment !== '#';
         const routeSegments =
-          !isButton && hasSegment
+          !isButton && hasSegment && !isExternalLink
             ? [...parentPathSegments, normalizedSegment]
             : parentPathSegments;
         const displayRoute =
-          !isButton && hasSegment && routeSegments.length > 0
-            ? `/${routeSegments.join('/')}`
+          !isButton && hasSegment
+            ? isExternalLink
+              ? normalizedSegment
+              : routeSegments.length > 0
+                ? `/${routeSegments.join('/')}`
+                : null
             : null;
         const nextPathSegments =
-          !isButton && hasSegment ? routeSegments : parentPathSegments;
+          !isButton && hasSegment && !isExternalLink
+            ? routeSegments
+            : parentPathSegments;
 
         return (
           <div key={node.menuId} className="text-sm">

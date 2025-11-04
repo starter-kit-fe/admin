@@ -1,6 +1,12 @@
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import type { UseFormReturn } from 'react-hook-form';
+import { useWatch, type UseFormReturn } from 'react-hook-form';
 
 import type { MenuFormValues } from '../../type';
 import type { MenuParentOption } from './types';
@@ -14,6 +20,11 @@ interface BasicInfoSectionProps {
 
 export function BasicInfoSection({ form, parentOptions }: BasicInfoSectionProps) {
   const { control } = form;
+  const menuType = useWatch({
+    control,
+    name: 'menuType',
+  });
+  const currentMenuType = (menuType ?? 'C') as MenuFormValues['menuType'];
 
   return (
     <div className="space-y-4">
@@ -45,6 +56,7 @@ export function BasicInfoSection({ form, parentOptions }: BasicInfoSectionProps)
                 <MenuParentTreeSelect
                   options={parentOptions}
                   value={field.value}
+                  menuType={currentMenuType}
                   onChange={field.onChange}
                 />
               </FormControl>

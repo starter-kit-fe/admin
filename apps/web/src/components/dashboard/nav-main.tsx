@@ -22,25 +22,12 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 import { cn } from '@/lib/utils';
+import type { NavItem } from './sidebar';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { type ReactNode, useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
-
-// NavItem mirrors the menu payload returned by the backend for sidebar rendering.
-type NavItem = {
-  title: string;
-  url: string;
-  icon?: ReactNode;
-  isActive?: boolean;
-  external?: boolean; // open with <a target="_blank" when true
-  items?: Array<{
-    title: string;
-    url: string;
-    external?: boolean;
-  }>;
-};
 
 export function NavMain({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
@@ -121,20 +108,145 @@ export function NavMain({ items }: { items: NavItem[] }) {
     };
   }, [pathname, items]);
 
+  const hasActive = (entry: NavItem): boolean => {
+    if (isActiveLink(entry.url, entry.external)) {
+      return true;
+    }
+    if (entry.items && entry.items.length > 0) {
+      return entry.items.some((child) => hasActive(child));
+    }
+    return false;
+  };
+
+  const renderHoverEntry = (entry: NavItem, depth = 0): JSX.Element => {
+    const key = `${entry.title}-${entry.url ?? 'root'}-${depth}-hover`;
+    const children = entry.items ?? [];
+    const hasChildren = children.length > 0;
+    const active = hasActive(entry);
+    const linkClasses = cn(
+      'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
+      active
+        ? 'bg-primary/10 text-primary font-semibold'
+        : 'hover:bg-muted hover:text-foreground',
+    );
+    const linkElement = entry.external ? (
+      <a
+        href={entry.url}
+        target="_blank"
+        rel="noreferrer"
+        className={linkClasses}
+      >
+        <span>{entry.title}</span>
+      </a>
+    ) : (
+      <Link href={entry.url || '#'} className={linkClasses}>
+        <span>{entry.title}</span>
+      </Link>
+    );
+
+    if (!hasChildren) {
+      return (
+        <div key={key} className={depth > 0 ? 'pl-3' : undefined}>
+          {linkElement}
+        </div>
+      );
+    }
+
+    return (
+      <div
+        key={key}
+        className={cn('flex flex-col gap-1', depth > 0 && 'pl-3')}
+      >
+        {linkElement}
+        <div className="flex flex-col gap-1 border-l border-border/40 pl-3">
+          {children.map((child) => renderHoverEntry(child, depth + 1))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderSubItems = (entries: NavItem[], depth = 1): JSX.Element[] =>
+    entries.map((entry) => {
+      const key = `${entry.title}-${entry.url ?? 'root'}-${depth}-sub`;
+      const children = entry.items ?? [];
+      const hasChildren = children.length > 0;
+      const active = hasActive(entry);
+
+      if (!hasChildren) {
+        return (
+          <SidebarMenuSubItem key={key} className="relative">
+            <span
+              data-sidebar-highlight
+              data-active={active}
+              className="pointer-events-none absolute inset-0 rounded-md bg-primary/15 opacity-0 shadow-[inset_2px_0_0_0_hsl(var(--primary))] will-change-transform"
+            />
+            <SidebarMenuSubButton
+              asChild
+              isActive={active}
+              className="relative z-10 data-[active=true]:bg-transparent data-[active=true]:before:bg-transparent data-[active=true]:before:opacity-0"
+            >
+              {entry.external ? (
+                <a
+                  href={entry.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <span>{entry.title}</span>
+                </a>
+              ) : (
+                <Link
+                  href={entry.url || '#'}
+                  className="flex items-center gap-2"
+                >
+                  <span>{entry.title}</span>
+                </Link>
+              )}
+            </SidebarMenuSubButton>
+          </SidebarMenuSubItem>
+        );
+      }
+
+      return (
+        <Collapsible
+          key={key}
+          asChild
+          defaultOpen={active}
+          className="group/subcollapsible"
+        >
+          <SidebarMenuSubItem className="relative">
+            <span
+              data-sidebar-highlight
+              data-active={active}
+              className="pointer-events-none absolute inset-0 rounded-md bg-primary/15 opacity-0 shadow-[inset_2px_0_0_0_hsl(var(--primary))] will-change-transform"
+            />
+            <CollapsibleTrigger asChild>
+              <SidebarMenuSubButton
+                isActive={active}
+                className="relative z-10 flex w-full items-center gap-2 justify-between data-[active=true]:bg-transparent data-[active=true]:before:bg-transparent data-[active=true]:before:opacity-0"
+              >
+                <span className="truncate">{entry.title}</span>
+                <ChevronRight className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/subcollapsible:rotate-90" />
+              </SidebarMenuSubButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub className="ml-3 border-l border-border/60 pl-3">
+                {renderSubItems(children, depth + 1)}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuSubItem>
+        </Collapsible>
+      );
+    });
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>菜单导航</SidebarGroupLabel>
       <div ref={menuRef}>
         <SidebarMenu>
           {items.map((item) => {
-            const hasChildren = item.items && item.items.length > 0;
-            const active =
-              item.isActive ||
-              (hasChildren
-                ? item.items!.some((child) =>
-                    isActiveLink(child.url, child.external),
-                  )
-                : isActiveLink(item.url, item.external));
+            const hasChildren = Boolean(item.items && item.items.length > 0);
+            const active = hasActive(item);
             const buttonLabel = showButtonLabel ? (
               <span>{item.title}</span>
             ) : null;
@@ -181,7 +293,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                     <HoverCardTrigger asChild>
                       <SidebarMenuButton
                         tooltip={tooltipLabel}
-                        isActive={false}
+                        isActive={active}
                         className={cn(buttonClassName, active && 'text-primary')}
                       >
                         {item.icon}
@@ -195,42 +307,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                       className="w-60 p-2"
                     >
                       <div className="flex flex-col gap-1">
-                        {item.items?.map((subItem) => {
-                          const childActive = isActiveLink(
-                            subItem.url,
-                            subItem.external,
-                          );
-                          const linkClasses = cn(
-                            'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
-                            childActive
-                              ? 'bg-primary/10 text-primary font-semibold'
-                              : 'hover:bg-muted hover:text-foreground',
-                          );
-
-                          if (subItem.external) {
-                            return (
-                              <a
-                                key={subItem.title}
-                                href={subItem.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={linkClasses}
-                              >
-                                <span>{subItem.title}</span>
-                              </a>
-                            );
-                          }
-
-                          return (
-                            <Link
-                              key={subItem.title}
-                              href={subItem.url || '#'}
-                              className={linkClasses}
-                            >
-                              <span>{subItem.title}</span>
-                            </Link>
-                          );
-                        })}
+                        {item.items?.map((subItem) => renderHoverEntry(subItem))}
                       </div>
                     </HoverCardContent>
                   </HoverCard>
@@ -249,7 +326,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                       tooltip={tooltipLabel}
-                      isActive={false}
+                      isActive={active}
                       className={cn(
                         active ? 'text-primary' : undefined,
                         buttonClassName,
@@ -262,45 +339,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarMenuSub>
-                      {item.items?.map((subItem) => {
-                        const childActive = isActiveLink(
-                          subItem.url,
-                          subItem.external,
-                        );
-
-                        return (
-                          <SidebarMenuSubItem key={subItem.title}>
-                          <span
-                            data-sidebar-highlight
-                            data-active={childActive}
-                            className="pointer-events-none absolute inset-0 rounded-md bg-primary/15 opacity-0 shadow-[inset_2px_0_0_0_hsl(var(--primary))] will-change-transform"
-                          />
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={childActive}
-                              className="relative z-10 data-[active=true]:bg-transparent data-[active=true]:before:bg-transparent data-[active=true]:before:opacity-0"
-                            >
-                              {subItem.external ? (
-                                <a
-                                  href={subItem.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="flex items-center gap-2"
-                                >
-                                  <span>{subItem.title}</span>
-                                </a>
-                              ) : (
-                                <Link
-                                  href={subItem.url || '#'}
-                                  className="flex items-center gap-2"
-                                >
-                                  <span>{subItem.title}</span>
-                                </Link>
-                              )}
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        );
-                      })}
+                      {item.items ? renderSubItems(item.items) : null}
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>
