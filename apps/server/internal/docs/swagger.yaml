@@ -100,7 +100,7 @@ definitions:
         example: ry@163.com
         type: string
       nickName:
-        example: 若依
+        example: admin
         type: string
       phonenumber:
         example: "15888888888"

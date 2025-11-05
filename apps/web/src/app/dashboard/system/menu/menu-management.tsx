@@ -1,15 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { StatusTabItem } from '@/components/status-tabs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -27,6 +19,7 @@ import {
   type MenuParentOption,
 } from './components/menu-editor-dialog';
 import { MenuTreeView } from './components/menu-tree-view';
+import { MenuManagementHeader } from './components/menu-management-header';
 import type {
   CreateMenuPayload,
   MenuFormValues,
@@ -435,85 +428,63 @@ export function MenuManagement() {
     reorderMutation.mutate(payload);
   };
 
+  const statusTabItems = useMemo<StatusTabItem[]>(
+    () =>
+      STATUS_TABS.map((tab) => ({
+        value: tab.value,
+        label: tab.label,
+      })),
+    [],
+  );
+
+  const isMutating =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending ||
+    reorderMutation.isPending;
+
+  const isRefreshing = menuQuery.isFetching;
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-3 pb-10">
-      <Card className="border-border/70 shadow-sm">
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-xl font-semibold">菜单管理</CardTitle>
-            <CardDescription>
-              维护系统菜单树结构，支持新增、编辑与顺序调整。
-            </CardDescription>
+      <MenuManagementHeader
+        onRefresh={handleRefresh}
+        onCreateRoot={() => handleOpenCreate(0)}
+        disableActions={isMutating}
+        isRefreshing={isRefreshing}
+        status={status}
+        statusTabs={statusTabItems}
+        onStatusChange={handleStatusChange}
+        keyword={keyword}
+        onKeywordChange={setKeyword}
+      />
+
+      <section className="flex max-h-[520px] flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3 shadow-sm dark:border-border/40">
+        {menuQuery.isError ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 text-sm text-destructive">
+            加载菜单失败，请稍后重试。
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => menuQuery.refetch()}
+            >
+              重新加载
+            </Button>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleRefresh}
-                disabled={menuQuery.isFetching}
-              >
-                刷新
-              </Button>
-              <Button type="button" onClick={() => handleOpenCreate(0)}>
-                新增顶级菜单
-              </Button>
-            </div>
-            <Input
-              className="sm:w-64"
-              placeholder="搜索菜单名称"
-              value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
+        ) : (
+          <div className="flex-1 overflow-y-auto rounded-lg bg-muted/20 p-3 dark:bg-muted/10">
+            <MenuTreeView
+              nodes={menuTree}
+              loading={menuQuery.isLoading}
+              onAddChild={(parent) => handleOpenCreate(parent.menuId)}
+              onEdit={handleOpenEdit}
+              onDelete={handleOpenDelete}
+              onReorder={handleReorder}
             />
           </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={status} onValueChange={handleStatusChange}>
-            <TabsList>
-              {STATUS_TABS.map((tab) => (
-                <TabsTrigger key={tab.value} value={tab.value}>
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/70 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">菜单列表</CardTitle>
-          <CardDescription>
-            支持上下移动调整同级菜单顺序，操作项可快速新增、编辑或删除。
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div>
-            {menuQuery.isError ? (
-              <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 text-sm text-destructive">
-                加载菜单失败，请稍后重试。
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => menuQuery.refetch()}
-                >
-                  重新加载
-                </Button>
-              </div>
-            ) : (
-              <MenuTreeView
-                nodes={menuTree}
-                loading={menuQuery.isLoading}
-                onAddChild={(parent) => handleOpenCreate(parent.menuId)}
-                onEdit={handleOpenEdit}
-                onDelete={handleOpenDelete}
-                onReorder={handleReorder}
-              />
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        )}
+      </section>
 
       <MenuEditorDialog
         mode={

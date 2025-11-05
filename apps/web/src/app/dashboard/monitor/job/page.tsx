@@ -1,3 +1,5 @@
+import { JobManagement } from "./job-management"
+
 export default function Page() {
-  return <div>online</div>;
+  return <JobManagement />
 }

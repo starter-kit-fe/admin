@@ -1,10 +1,11 @@
+import { StatusTabs } from '@/components/status-tabs';
+
 import { AppliedFilters } from './applied-filters';
 import {
   FiltersBar,
   type FiltersFormState,
   type RoleOption,
 } from './filters-bar';
-import { StatusTabs } from './status-tabs';
 
 export interface FilterChip {
   key: string;

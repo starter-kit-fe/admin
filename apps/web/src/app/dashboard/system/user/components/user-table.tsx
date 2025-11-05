@@ -298,7 +298,7 @@ export function UserTable({
   const visibleColumnCount = table.getVisibleLeafColumns().length;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border/60 bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-xl border border-border/60 bg-card shadow-sm dark:border-border/40">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -342,7 +342,7 @@ export function UserTable({
                   key={row.id}
                   className={cn(
                     'transition-colors hover:bg-muted/60',
-                    isSelected && 'bg-emerald-50/70',
+                    isSelected && 'bg-emerald-50/70 dark:bg-emerald-500/20',
                   )}
                 >
                   {row.getVisibleCells().map((cell) => (

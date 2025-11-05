@@ -1,54 +1,46 @@
-import { RefreshCw, ShieldPlus } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { Plus, RefreshCcw } from 'lucide-react';
 
-interface RoleManagementHeaderProps {
+interface PostManagementHeaderProps {
   onRefresh: () => void;
   onCreate: () => void;
   disableActions?: boolean;
   isRefreshing?: boolean;
 }
 
-export function RoleManagementHeader({
+export function PostManagementHeader({
   onRefresh,
   onCreate,
   disableActions = false,
   isRefreshing = false,
-}: RoleManagementHeaderProps) {
+}: PostManagementHeaderProps) {
   const refreshDisabled = disableActions || isRefreshing;
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">角色管理</h1>
+        <h1 className="text-2xl font-semibold text-foreground">岗位管理</h1>
         <p className="text-sm text-muted-foreground">
-          维护系统角色与权限字符，支持解锁批量操作与细粒度数据范围。
+          通过状态筛选、批量操作和弹窗编辑维护系统岗位。
         </p>
       </div>
       <div className="flex items-center gap-2">
         <Button
-          type="button"
           variant="outline"
           onClick={onRefresh}
           disabled={refreshDisabled}
-          className="flex items-center gap-2"
         >
           {isRefreshing ? (
-            <Spinner className="size-4" />
+            <Spinner className="mr-2 size-4" />
           ) : (
-            <RefreshCw className="size-4" />
+            <RefreshCcw className="mr-2 size-4" />
           )}
           刷新
         </Button>
-        <Button
-          type="button"
-          onClick={onCreate}
-          disabled={disableActions}
-          className="flex items-center gap-2"
-        >
-          <ShieldPlus className="size-4" />
-          新建角色
+        <Button onClick={onCreate} disabled={disableActions}>
+          <Plus className="mr-2 size-4" />
+          新增岗位
         </Button>
       </div>
     </div>

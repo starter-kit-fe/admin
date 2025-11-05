@@ -1,29 +1,31 @@
-import { RefreshCw, ShieldPlus } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { Plus, RefreshCcw } from 'lucide-react';
 
-interface RoleManagementHeaderProps {
+interface DepartmentManagementHeaderProps {
   onRefresh: () => void;
-  onCreate: () => void;
+  onCreateRoot: () => void;
   disableActions?: boolean;
   isRefreshing?: boolean;
 }
 
-export function RoleManagementHeader({
+export function DepartmentManagementHeader({
   onRefresh,
-  onCreate,
+  onCreateRoot,
   disableActions = false,
   isRefreshing = false,
-}: RoleManagementHeaderProps) {
+}: DepartmentManagementHeaderProps) {
   const refreshDisabled = disableActions || isRefreshing;
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">角色管理</h1>
+        <h1 className="text-2xl font-semibold text-foreground">部门管理</h1>
         <p className="text-sm text-muted-foreground">
-          维护系统角色与权限字符，支持解锁批量操作与细粒度数据范围。
+          统一在顶部查看说明，快速掌握组织层级与维护准则。
+        </p>
+        <p className="text-sm text-muted-foreground">
+          使用下方筛选定位部门，并配合树视图完成新增或调整。
         </p>
       </div>
       <div className="flex items-center gap-2">
@@ -37,20 +39,20 @@ export function RoleManagementHeader({
           {isRefreshing ? (
             <Spinner className="size-4" />
           ) : (
-            <RefreshCw className="size-4" />
+            <RefreshCcw className="size-4" />
           )}
           刷新
         </Button>
         <Button
           type="button"
-          onClick={onCreate}
+          onClick={onCreateRoot}
           disabled={disableActions}
           className="flex items-center gap-2"
         >
-          <ShieldPlus className="size-4" />
-          新建角色
+          <Plus className="size-4" />
+          新增部门
         </Button>
       </div>
-    </div>
+    </section>
   );
 }

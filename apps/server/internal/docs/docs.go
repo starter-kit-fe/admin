@@ -469,7 +469,7 @@ const docTemplate = `{
                 },
                 "nickName": {
                     "type": "string",
-                    "example": "若依"
+                    "example": "admin"
                 },
                 "phonenumber": {
                     "type": "string",

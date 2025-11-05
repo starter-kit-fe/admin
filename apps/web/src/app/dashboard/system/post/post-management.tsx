@@ -1,134 +1,547 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { toast } from 'sonner';
 
-import { InlineLoading } from '@/components/loading';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 
-import { listPosts } from './api';
-import type { Post } from './type';
+import { DeleteConfirmDialog } from '../user/components/delete-confirm-dialog';
+import { SelectionBanner } from '@/components/selection-banner';
+
+import { createPost, listPosts, removePost, updatePost } from './api';
+import { AppliedFilters, type PostFilterChip } from './components/applied-filters';
+import { PostManagementFilters } from './components/post-management-filters';
+import { PostManagementHeader } from './components/post-management-header';
+import { PostEditorDialog } from './components/post-editor-dialog';
+import { PostTable } from './components/post-table';
+import type {
+  CreatePostPayload,
+  Post,
+  PostFormValues,
+  PostListResponse,
+  UpdatePostPayload,
+} from './type';
 
 const STATUS_TABS = [
-  { value: 'all', label: '全部' },
-  { value: '0', label: '在岗' },
-  { value: '1', label: '停用' },
+  { value: 'all', label: '全部', activeColor: 'bg-slate-900 text-white' },
+  { value: '0', label: '在岗', activeColor: 'bg-emerald-500 text-white' },
+  { value: '1', label: '停用', activeColor: 'bg-rose-500 text-white' },
 ] as const;
 
+const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
+
+type StatusValue = (typeof STATUS_TABS)[number]['value'];
+
+type EditorState =
+  | { open: false }
+  | { open: true; mode: 'create' }
+  | { open: true; mode: 'edit'; post: Post };
+
+interface DeleteState {
+  open: boolean;
+  post?: Post;
+}
+
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebounced(value);
+    }, delay);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debounced;
+}
+
+function resolveErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+  if (typeof error === 'string' && error.trim().length > 0) {
+    return error;
+  }
+  return fallback;
+}
+
+function toFormValues(post: Post): PostFormValues {
+  return {
+    postCode: post.postCode ?? '',
+    postName: post.postName ?? '',
+    status: post.status ?? '0',
+    remark: post.remark ?? '',
+  };
+}
+
+function normalizeOptional(value: string): string | undefined {
+  const trimmed = value.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
+function toCreatePayload(values: PostFormValues, sort: number): CreatePostPayload {
+  return {
+    postCode: values.postCode.trim(),
+    postName: values.postName.trim(),
+    postSort: Number.isNaN(sort) ? 0 : sort,
+    status: values.status,
+    remark: normalizeOptional(values.remark) ?? null,
+  };
+}
+
+function toUpdatePayload(values: PostFormValues, sort: number): UpdatePostPayload {
+  return toCreatePayload(values, sort);
+}
+
+function computeNextSort(posts: Post[], total: number): number {
+  let max = total;
+  posts.forEach((item) => {
+    if (item.postSort != null && item.postSort > max) {
+      max = item.postSort;
+    }
+  });
+  return max + 1;
+}
+
 export function PostManagement() {
-  const [status, setStatus] = useState<(typeof STATUS_TABS)[number]['value']>('all');
-  const [postName, setPostName] = useState('');
-  const [postCode, setPostCode] = useState('');
+  const [status, setStatus] = useState<StatusValue>('all');
+  const [postNameInput, setPostNameInput] = useState('');
+  const [pageNum, setPageNum] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
+  const [editorState, setEditorState] = useState<EditorState>({ open: false });
+  const [deleteState, setDeleteState] = useState<DeleteState>({ open: false });
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
+  const debouncedPostName = useDebouncedValue(postNameInput.trim(), 350);
+
+  const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['system', 'posts', status, postName, postCode],
+    queryKey: [
+      'system',
+      'posts',
+      'list',
+      status,
+      debouncedPostName,
+      pageNum,
+      pageSize,
+    ],
     queryFn: () =>
       listPosts({
         status: status === 'all' ? undefined : status,
-        postName: postName || undefined,
-        postCode: postCode || undefined,
+        postName: debouncedPostName || undefined,
+        pageNum,
+        pageSize,
       }),
+    keepPreviousData: true,
   });
 
-  const posts: Post[] = query.data ?? [];
+  const data = query.data;
+  const posts = data?.items ?? [];
+  const total = data?.total ?? 0;
 
-  const statusTabs = useMemo(
+  const statusCountQueryConfigs = useMemo(
+    () =>
+    STATUS_TABS.filter((tab) => tab.value !== 'all').map((tab) => ({
+        status: tab.value,
+        query: {
+          queryKey: [
+            'system',
+            'posts',
+            'count',
+            tab.value,
+            debouncedPostName,
+          ],
+          queryFn: () =>
+            listPosts({
+              status: tab.value,
+              postName: debouncedPostName || undefined,
+              pageNum: 1,
+              pageSize: 1,
+            }),
+          select: (response: PostListResponse) => response.total,
+        },
+      })),
+    [debouncedPostName],
+  );
+
+  const statusCountQueries = useQueries({
+    queries: statusCountQueryConfigs.map(({ query }) => query),
+  });
+
+  const statusCounts = useMemo(() => {
+    const result: Record<string, number> = {};
+    result['all'] = total;
+    statusCountQueryConfigs.forEach(({ status }, index) => {
+      result[status] = statusCountQueries[index]?.data ?? 0;
+    });
+    return result;
+  }, [statusCountQueries, statusCountQueryConfigs, total]);
+
+  const statusTabsWithCount = useMemo(
     () =>
       STATUS_TABS.map((tab) => ({
         value: tab.value,
         label: tab.label,
+        count: statusCounts[tab.value] ?? 0,
+        activeColor: tab.activeColor,
       })),
-    [],
+    [statusCounts],
   );
 
-  return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 pb-10">
-      <Card className="border-border/70 shadow-sm">
-        <CardHeader className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <CardTitle className="text-xl font-semibold">岗位管理</CardTitle>
-              <CardDescription>查看系统岗位信息，支持按名称、编码与状态筛选。</CardDescription>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Input
-                className="sm:w-48"
-                placeholder="岗位编码"
-                value={postCode}
-                onChange={(event) => setPostCode(event.target.value)}
-              />
-              <Input
-                className="sm:w-48"
-                placeholder="岗位名称"
-                value={postName}
-                onChange={(event) => setPostName(event.target.value)}
-              />
-            </div>
-          </div>
-          <Tabs value={status} onValueChange={(value) => setStatus(value as (typeof STATUS_TABS)[number]['value'])}>
-            <TabsList>
-              {statusTabs.map((tab) => (
-                <TabsTrigger key={tab.value} value={tab.value}>
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        </CardHeader>
-      </Card>
+  const appliedFilterChips = useMemo<PostFilterChip[]>(() => {
+    const chips: PostFilterChip[] = [];
+    if (status !== 'all') {
+      const currentTab = STATUS_TABS.find((tab) => tab.value === status);
+      chips.push({
+        key: 'status',
+        label: '状态',
+        value: currentTab?.label ?? status,
+      });
+    }
+    const keyword = postNameInput.trim();
+    if (keyword) {
+      chips.push({ key: 'postName', label: '岗位名称', value: keyword });
+    }
+    return chips;
+  }, [postNameInput, status]);
 
-      <Card className="border-border/70 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">岗位列表</CardTitle>
-          <CardDescription>当前仅提供查询功能，后续可扩展新增与编辑。</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {query.isLoading ? (
-            <div className="flex min-h-[240px] items-center justify-center">
-              <InlineLoading label="加载中" />
-            </div>
-          ) : query.isError ? (
-            <div className="py-10 text-center text-sm text-destructive">加载岗位数据失败，请稍后再试。</div>
-          ) : posts.length === 0 ? (
-            <div className="py-10 text-center text-sm text-muted-foreground">暂无数据</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[120px]">岗位编码</TableHead>
-                    <TableHead className="min-w-[160px]">岗位名称</TableHead>
-                    <TableHead className="w-[120px]">排序</TableHead>
-                    <TableHead className="w-[120px]">状态</TableHead>
-                    <TableHead>备注</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {posts.map((post) => (
-                    <TableRow key={post.postId}>
-                      <TableCell>{post.postCode}</TableCell>
-                      <TableCell>{post.postName}</TableCell>
-                      <TableCell>{post.postSort}</TableCell>
-                      <TableCell>
-                        <Badge variant={post.status === '0' ? 'secondary' : 'outline'}>
-                          {post.status === '0' ? '在岗' : '停用'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-[320px] truncate text-muted-foreground">
-                        {post.remark ?? '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      if (posts.length === 0) {
+        return prev.size === 0 ? prev : new Set();
+      }
+      const next = new Set<number>();
+      posts.forEach((post) => {
+        if (prev.has(post.postId)) {
+          next.add(post.postId);
+        }
+      });
+      if (next.size === prev.size) {
+        let identical = true;
+        for (const id of next) {
+          if (!prev.has(id)) {
+            identical = false;
+            break;
+          }
+        }
+        if (identical) {
+          return prev;
+        }
+      }
+      return next;
+    });
+  }, [posts]);
+
+  useEffect(() => {
+    if (query.isLoading || query.isFetching) {
+      return;
+    }
+    if (posts.length === 0 && total > 0 && pageNum > 1) {
+      const lastPage = Math.max(1, Math.ceil(total / pageSize));
+      if (pageNum !== lastPage) {
+        setPageNum(lastPage);
+      }
+    }
+  }, [pageNum, pageSize, posts.length, query.isFetching, query.isLoading, total]);
+
+  const invalidatePosts = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['system', 'posts'] });
+  }, [queryClient]);
+
+  const createMutation = useMutation({
+    mutationFn: (payload: CreatePostPayload) => createPost(payload),
+    onSuccess: () => {
+      toast.success('新增岗位成功');
+      setEditorState({ open: false });
+      invalidatePosts();
+    },
+    onError: (error: unknown) => {
+      toast.error(resolveErrorMessage(error, '新增岗位失败'));
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({
+      postId,
+      payload,
+    }: {
+      postId: number;
+      payload: UpdatePostPayload;
+    }) => updatePost(postId, payload),
+    onSuccess: () => {
+      toast.success('岗位信息已更新');
+      setEditorState({ open: false });
+      invalidatePosts();
+    },
+    onError: (error: unknown) => {
+      toast.error(resolveErrorMessage(error, '更新岗位失败'));
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (postId: number) => removePost(postId),
+    onSuccess: () => {
+      toast.success('岗位已删除');
+      setDeleteState({ open: false });
+      invalidatePosts();
+    },
+    onError: (error: unknown) => {
+      toast.error(resolveErrorMessage(error, '删除岗位失败'));
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      await Promise.all(ids.map((id) => removePost(id)));
+    },
+    onSuccess: () => {
+      toast.success('批量删除成功');
+      setBulkDeleteOpen(false);
+      setSelectedIds(new Set());
+      invalidatePosts();
+    },
+    onError: (error: unknown) => {
+      toast.error(resolveErrorMessage(error, '批量删除失败'));
+    },
+  });
+
+  const handleStatusChange = useCallback((value: string) => {
+    setStatus(value as StatusValue);
+    setPageNum(1);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handlePostNameChange = useCallback((value: string) => {
+    setPostNameInput(value);
+    setPageNum(1);
+  }, []);
+
+  const handleAddPost = useCallback(() => {
+    setEditorState({ open: true, mode: 'create' });
+  }, []);
+
+  const handleRemoveFilter = useCallback(
+    (key: string) => {
+      if (key === 'status') {
+        handleStatusChange('all');
+        return;
+      }
+      if (key === 'postName') {
+        setPostNameInput('');
+        setPageNum(1);
+        setSelectedIds(new Set());
+      }
+    },
+    [handleStatusChange, setPageNum, setPostNameInput, setSelectedIds],
+  );
+
+  const handleEditPost = useCallback((post: Post) => {
+    setEditorState({ open: true, mode: 'edit', post });
+  }, []);
+
+  const handleDeletePost = useCallback((post: Post) => {
+    setDeleteState({ open: true, post });
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteState.post) {
+      return;
+    }
+    deleteMutation.mutate(deleteState.post.postId);
+  }, [deleteMutation, deleteState.post]);
+
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setDeleteState({ open: false });
+    }
+  }, []);
+
+  const handleEditorOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setEditorState({ open: false });
+    }
+  }, []);
+
+  const handleEditorSubmit = useCallback(
+    (values: PostFormValues) => {
+      if (!editorState.open) {
+        return;
+      }
+      if (editorState.mode === 'create') {
+        const sort = computeNextSort(posts, total);
+        createMutation.mutate(toCreatePayload(values, sort));
+        return;
+      }
+      updateMutation.mutate({
+        postId: editorState.post.postId,
+        payload: toUpdatePayload(values, editorState.post.postSort ?? 0),
+      });
+    },
+    [createMutation, editorState, posts, total, updateMutation],
+  );
+
+  const handlePageChange = useCallback((nextPage: number) => {
+    setPageNum(nextPage);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handlePageSizeChange = useCallback((nextSize: number) => {
+    setPageNum(1);
+    setPageSize(nextSize);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleToggleSelectAll = useCallback((checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(posts.map((post) => post.postId)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  }, [posts]);
+
+  const handleToggleSelect = useCallback((postId: number, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) {
+        next.add(postId);
+      } else {
+        next.delete(postId);
+      }
+      return next;
+    });
+  }, []);
+
+  const editorDefaults = useMemo<PostFormValues | undefined>(() => {
+    if (!editorState.open) {
+      return undefined;
+    }
+    if (editorState.mode === 'create') {
+      return {
+        postCode: '',
+        postName: '',
+        status: '0',
+        remark: '',
+      };
+    }
+    return toFormValues(editorState.post);
+  }, [editorState]);
+
+  const selectedCount = selectedIds.size;
+  const isAllSelected =
+    posts.length > 0 && posts.every((post) => selectedIds.has(post.postId));
+  const headerCheckboxState = isAllSelected
+    ? true
+    : selectedCount > 0
+      ? ('indeterminate' as const)
+      : false;
+
+  const isMutating = createMutation.isPending || updateMutation.isPending;
+  const isRefreshing = query.isFetching;
+
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
+      <PostManagementHeader
+        onRefresh={invalidatePosts}
+        onCreate={handleAddPost}
+        disableActions={isMutating}
+        isRefreshing={isRefreshing}
+      />
+
+      <PostManagementFilters
+        status={status}
+        tabs={statusTabsWithCount}
+        onStatusChange={handleStatusChange}
+        postName={postNameInput}
+        onPostNameChange={handlePostNameChange}
+      />
+
+      <AppliedFilters items={appliedFilterChips} onRemove={handleRemoveFilter} />
+
+      <SelectionBanner
+        count={selectedCount}
+        onClear={() => setSelectedIds(new Set())}
+        onBulkDelete={() => setBulkDeleteOpen(true)}
+      />
+
+      <PostTable
+        rows={posts}
+        onEdit={handleEditPost}
+        onDelete={handleDeletePost}
+        selectedIds={selectedIds}
+        headerCheckboxState={headerCheckboxState}
+        onToggleSelectAll={handleToggleSelectAll}
+        onToggleSelect={handleToggleSelect}
+        loading={query.isLoading}
+        isError={query.isError}
+      />
+
+      <PaginationToolbar
+        totalItems={total}
+        currentPage={pageNum}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+        disabled={isRefreshing}
+      />
+
+      <PostEditorDialog
+        mode={editorState.open ? editorState.mode : 'create'}
+        open={editorState.open}
+        defaultValues={editorDefaults}
+        submitting={
+          editorState.open
+            ? editorState.mode === 'create'
+              ? createMutation.isPending
+              : updateMutation.isPending
+            : false
+        }
+        onOpenChange={handleEditorOpenChange}
+        onSubmit={handleEditorSubmit}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteState.open}
+        onOpenChange={handleDeleteOpenChange}
+        loading={deleteMutation.isPending}
+        title="删除岗位"
+        description={
+          deleteState.post
+            ? `确认删除「${deleteState.post.postName}」岗位吗？`
+            : '确认删除该岗位吗？'
+        }
+        onConfirm={handleDeleteConfirm}
+        confirmLabel="确认删除"
+      />
+
+      <DeleteConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setBulkDeleteOpen(false);
+          }
+        }}
+        loading={bulkDeleteMutation.isPending}
+        title="批量删除岗位"
+        description={
+          selectedCount > 0
+            ? `确认删除选中的 ${selectedCount} 个岗位吗？`
+            : '请选择要删除的岗位'
+        }
+        onConfirm={() => bulkDeleteMutation.mutate(Array.from(selectedIds))}
+        confirmLabel="确认删除"
+      />
     </div>
   );
 }

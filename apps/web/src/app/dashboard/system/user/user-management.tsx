@@ -14,7 +14,7 @@ import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { createUser, listUsers, removeUser, updateUser } from './api';
 import { DeleteConfirmDialog } from './components/delete-confirm-dialog';
 import type { FiltersFormState, RoleOption } from './components/filters-bar';
-import { SelectionBanner } from './components/selection-banner';
+import { SelectionBanner } from '@/components/selection-banner';
 import { UserEditorDialog } from './components/user-editor-dialog';
 import { UserManagementFilters } from './components/user-management-filters';
 import type { FilterChip } from './components/user-management-filters';

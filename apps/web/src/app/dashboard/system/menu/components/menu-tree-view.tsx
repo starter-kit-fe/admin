@@ -38,9 +38,9 @@ const TYPE_META: Record<
 };
 
 const TYPE_BADGE_CLASSES: Record<string, string> = {
-  M: 'border border-slate-200 bg-slate-100 text-slate-700',
-  C: 'border border-sky-200 bg-sky-50 text-sky-700',
-  F: 'border border-amber-200 bg-amber-50 text-amber-700',
+  M: 'border border-slate-300/70 bg-slate-100 text-slate-700 dark:border-slate-400/50 dark:bg-slate-500/20 dark:text-slate-100',
+  C: 'border border-sky-300/70 bg-sky-100 text-sky-700 dark:border-sky-400/50 dark:bg-sky-500/20 dark:text-sky-100',
+  F: 'border border-amber-300/70 bg-amber-100 text-amber-700 dark:border-amber-400/50 dark:bg-amber-500/25 dark:text-amber-100',
 };
 
 const STATUS_META: Record<string, { label: string }> = {
@@ -187,7 +187,7 @@ export function MenuTreeView({
         };
         const badgeTone =
           TYPE_BADGE_CLASSES[node.menuType] ??
-          'border border-muted bg-muted text-foreground/80';
+          'border border-muted/60 bg-muted/20 text-foreground/80 dark:border-border/40 dark:bg-muted/20 dark:text-muted-foreground';
         const statusMeta = STATUS_META[node.status] ?? {
           label: node.status,
         };
@@ -225,7 +225,7 @@ export function MenuTreeView({
           <div key={node.menuId} className="text-sm">
             <div className="flex items-stretch">
               <TreeLines depth={depth} ancestors={ancestors} isLast={isLast} />
-              <div className="flex flex-1 flex-col gap-1 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/40">
+              <div className="flex flex-1 flex-col gap-1 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/40 dark:hover:bg-muted/20">
                 <div className="flex flex-wrap items-center gap-2">
                   {hasChildren ? (
                     <Button
@@ -258,7 +258,7 @@ export function MenuTreeView({
                         {typeMeta.label}
                       </Badge>
                       {node.visible !== '0' ? (
-                        <Badge className="border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700">
+                        <Badge className="border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/20 dark:text-amber-100">
                           {VISIBLE_META[node.visible] ?? node.visible}
                         </Badge>
                       ) : null}

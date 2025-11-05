@@ -26,13 +26,9 @@ import type { NavItem } from './sidebar';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useLayoutEffect, useRef } from 'react';
-import gsap from 'gsap';
 
 export function NavMain({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const hasAnimatedRef = useRef(false);
   const { state, isMobile } = useSidebar();
   const isCollapsed = state === 'collapsed';
   const enableHoverMenus = isCollapsed && !isMobile;
@@ -45,68 +41,8 @@ export function NavMain({ items }: { items: NavItem[] }) {
     return pathname.startsWith(url);
   };
 
-  useLayoutEffect(() => {
-    const menuEl = menuRef.current;
-    if (!menuEl) {
-      return;
-    }
-
-    const ctx = gsap.context(() => {
-      const highlightEls = gsap.utils.toArray<HTMLElement>(
-        menuEl.querySelectorAll('[data-sidebar-highlight]'),
-      );
-
-      if (highlightEls.length === 0) {
-        return;
-      }
-
-      gsap.killTweensOf(highlightEls);
-
-      const activeEls = highlightEls.filter(
-        (element) => element.dataset.active === 'true',
-      );
-
-      const inactiveEls = highlightEls.filter(
-        (element) => element.dataset.active !== 'true',
-      );
-
-      if (inactiveEls.length > 0) {
-        gsap.to(inactiveEls, {
-          opacity: 0,
-          x: -6,
-          duration: 0.18,
-          ease: 'power2.out',
-          overwrite: 'auto',
-          clearProps: 'opacity,transform',
-        });
-      }
-
-      if (activeEls.length > 0) {
-        if (!hasAnimatedRef.current) {
-          gsap.set(activeEls, { opacity: 1, x: 0 });
-        } else {
-          gsap.fromTo(
-            activeEls,
-            { opacity: 0, x: -8 },
-            {
-              opacity: 1,
-              x: 0,
-              duration: 0.24,
-              ease: 'power2.out',
-              overwrite: 'auto',
-              immediateRender: false,
-            },
-          );
-        }
-      }
-    }, menuEl);
-
-    hasAnimatedRef.current = true;
-
-    return () => {
-      ctx.revert();
-    };
-  }, [pathname, items]);
+  const hoverOverlayClass =
+    'hover:!bg-transparent data-[active=true]:!bg-transparent after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-[inherit] after:content-[""] after:opacity-0 after:transition-opacity after:duration-200 hover:after:opacity-100 hover:after:[background:color-mix(in_oklab,var(--color-sidebar-border)_60%,transparent)] data-[active=true]:after:opacity-100 data-[active=true]:after:[background:color-mix(in_oklab,var(--primary)_80%,transparent)] data-[active=true]:hover:after:[background:color-mix(in_oklab,var(--primary)_80%,transparent)]';
 
   const hasActive = (entry: NavItem): boolean => {
     if (isActiveLink(entry.url, entry.external)) {
@@ -175,15 +111,10 @@ export function NavMain({ items }: { items: NavItem[] }) {
       if (!hasChildren) {
         return (
           <SidebarMenuSubItem key={key} className="relative">
-            <span
-              data-sidebar-highlight
-              data-active={active}
-              className="pointer-events-none absolute inset-0 rounded-md bg-primary/15 opacity-0 shadow-[inset_2px_0_0_0_hsl(var(--primary))] will-change-transform"
-            />
             <SidebarMenuSubButton
               asChild
               isActive={active}
-              className="relative z-10 data-[active=true]:bg-transparent data-[active=true]:before:bg-transparent data-[active=true]:before:opacity-0"
+              className={hoverOverlayClass}
             >
               {entry.external ? (
                 <a
@@ -215,15 +146,12 @@ export function NavMain({ items }: { items: NavItem[] }) {
           className="group/subcollapsible"
         >
           <SidebarMenuSubItem className="relative">
-            <span
-              data-sidebar-highlight
-              data-active={active}
-              className="pointer-events-none absolute inset-0 rounded-md bg-primary/15 opacity-0 shadow-[inset_2px_0_0_0_hsl(var(--primary))] will-change-transform"
-            />
             <CollapsibleTrigger asChild>
               <SidebarMenuSubButton
-                isActive={active}
-                className="relative z-10 flex w-full items-center gap-2 justify-between data-[active=true]:bg-transparent data-[active=true]:before:bg-transparent data-[active=true]:before:opacity-0"
+                className={cn(
+                  'flex w-full items-center justify-between gap-2',
+                  hoverOverlayClass,
+                )}
               >
                 <span className="truncate">{entry.title}</span>
                 <ChevronRight className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/subcollapsible:rotate-90" />
@@ -242,7 +170,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>菜单导航</SidebarGroupLabel>
-      <div ref={menuRef}>
+      <div>
         <SidebarMenu>
           {items.map((item) => {
             const hasChildren = Boolean(item.items && item.items.length > 0);
@@ -260,7 +188,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                     tooltip={tooltipLabel}
                     isActive={active}
                     asChild
-                    className={buttonClassName}
+                    className={cn(hoverOverlayClass, buttonClassName)}
                   >
                     {item.external ? (
                       <a
@@ -293,8 +221,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                     <HoverCardTrigger asChild>
                       <SidebarMenuButton
                         tooltip={tooltipLabel}
-                        isActive={active}
-                        className={cn(buttonClassName, active && 'text-primary')}
+                        className={cn(hoverOverlayClass, buttonClassName)}
                       >
                         {item.icon}
                         {buttonLabel}
@@ -326,11 +253,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                       tooltip={tooltipLabel}
-                      isActive={active}
-                      className={cn(
-                        active ? 'text-primary' : undefined,
-                        buttonClassName,
-                      )}
+                      className={cn(hoverOverlayClass, buttonClassName)}
                     >
                       {item.icon}
                       {buttonLabel ?? <span>{item.title}</span>}

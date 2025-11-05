@@ -227,10 +227,10 @@ func registerSystemRoutes(group *gin.RouterGroup, opts Options) {
 	if opts.PostHandler != nil {
 		posts.GET("", middleware.RequirePermissions("system:post:list"), opts.PostHandler.List)
 		posts.GET("/export", middleware.RequirePermissions("system:post:export"), notImplemented("export posts"))
-		posts.POST("", middleware.RequirePermissions("system:post:add"), notImplemented("create post"))
+		posts.POST("", middleware.RequirePermissions("system:post:add"), opts.PostHandler.Create)
 		posts.GET("/:id", middleware.RequirePermissions("system:post:query"), notImplemented("get post"))
-		posts.PUT("/:id", middleware.RequirePermissions("system:post:edit"), notImplemented("update post"))
-		posts.DELETE("/:id", middleware.RequirePermissions("system:post:remove"), notImplemented("delete post"))
+		posts.PUT("/:id", middleware.RequirePermissions("system:post:edit"), opts.PostHandler.Update)
+		posts.DELETE("/:id", middleware.RequirePermissions("system:post:remove"), opts.PostHandler.Delete)
 	} else {
 		posts.GET("", middleware.RequirePermissions("system:post:list"), notImplemented("list posts"))
 		posts.GET("/export", middleware.RequirePermissions("system:post:export"), notImplemented("export posts"))

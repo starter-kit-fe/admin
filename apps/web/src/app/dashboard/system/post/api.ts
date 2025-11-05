@@ -1,11 +1,17 @@
-import { get } from '@/lib/request';
+import { del, get, post as postRequest, put } from '@/lib/request';
 
-import type { Post } from './type';
+import type {
+  CreatePostPayload,
+  PostListResponse,
+  UpdatePostPayload,
+} from './type';
 
 export interface PostListParams {
   status?: string;
   postName?: string;
   postCode?: string;
+  pageNum?: number;
+  pageSize?: number;
 }
 
 function buildQuery(params: PostListParams = {}) {
@@ -19,9 +25,27 @@ function buildQuery(params: PostListParams = {}) {
   if (params.postCode && params.postCode.trim()) {
     query.postCode = params.postCode.trim();
   }
+  if (typeof params.pageNum === 'number') {
+    query.pageNum = String(params.pageNum);
+  }
+  if (typeof params.pageSize === 'number') {
+    query.pageSize = String(params.pageSize);
+  }
   return Object.keys(query).length > 0 ? query : undefined;
 }
 
 export function listPosts(params: PostListParams = {}) {
-  return get<Post[]>('/v1/system/posts', buildQuery(params));
+  return get<PostListResponse>('/v1/system/posts', buildQuery(params));
+}
+
+export function createPost(payload: CreatePostPayload) {
+  return postRequest<Post>('/v1/system/posts', payload);
+}
+
+export function updatePost(postId: number, payload: UpdatePostPayload) {
+  return put<Post>(`/v1/system/posts/${postId}`, payload);
+}
+
+export function removePost(postId: number) {
+  return del<void>(`/v1/system/posts/${postId}`);
 }

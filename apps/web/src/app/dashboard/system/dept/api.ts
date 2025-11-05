@@ -1,6 +1,10 @@
-import { get } from '@/lib/request';
+import { del, get, post, put } from '@/lib/request';
 
-import type { DepartmentNode } from './type';
+import type {
+  CreateDepartmentPayload,
+  DepartmentNode,
+  UpdateDepartmentPayload,
+} from './type';
 
 function buildQuery(params?: { status?: string; deptName?: string }) {
   if (!params) {
@@ -18,4 +22,16 @@ function buildQuery(params?: { status?: string; deptName?: string }) {
 
 export function listDepartmentTree(params?: { status?: string; deptName?: string }) {
   return get<DepartmentNode[]>('/v1/system/departments/tree', buildQuery(params));
+}
+
+export function createDepartment(payload: CreateDepartmentPayload) {
+  return post<DepartmentNode>('/v1/system/departments', payload);
+}
+
+export function updateDepartment(deptId: number, payload: UpdateDepartmentPayload) {
+  return put<DepartmentNode>(`/v1/system/departments/${deptId}`, payload);
+}
+
+export function removeDepartment(deptId: number) {
+  return del<void>(`/v1/system/departments/${deptId}`);
 }

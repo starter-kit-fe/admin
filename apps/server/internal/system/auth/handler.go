@@ -66,7 +66,7 @@ type UserInfo struct {
 	UserID      int64   `json:"userId" example:"1"`
 	DeptID      *int64  `json:"deptId" example:"103"`
 	UserName    string  `json:"userName" example:"admin"`
-	NickName    string  `json:"nickName" example:"若依"`
+	NickName    string  `json:"nickName" example:"admin"`
 	Email       string  `json:"email" example:"ry@163.com"`
 	Phonenumber string  `json:"phonenumber" example:"15888888888"`
 	Sex         string  `json:"sex" example:"1"`

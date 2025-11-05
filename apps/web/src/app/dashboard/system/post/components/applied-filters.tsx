@@ -1,33 +1,31 @@
-import { X, Trash2 } from 'lucide-react';
+import { X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-type FilterChip = {
+export type PostFilterChip = {
   key: string;
   label: string;
   value: string;
 };
 
 interface AppliedFiltersProps {
-  items: FilterChip[];
+  items: PostFilterChip[];
   onRemove: (key: string) => void;
-  onClear: () => void;
 }
 
-export function AppliedFilters({ items, onRemove, onClear }: AppliedFiltersProps) {
+export function AppliedFilters({ items, onRemove }: AppliedFiltersProps) {
   if (items.length === 0) {
     return null;
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg bg-muted/40 px-4 py-3">
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-3 shadow-sm">
       {items.map((item) => (
         <Badge
           key={item.key}
           variant="secondary"
-          className="flex items-center gap-2 rounded-full px-3 py-1 text-sm shadow-sm dark:bg-secondary/30 dark:text-secondary-foreground"
+          className="flex items-center gap-2 rounded-full px-3 py-1 text-sm shadow-sm"
         >
           <span className="font-medium text-muted-foreground">{item.label}：</span>
           <span className="text-foreground">{item.value}</span>
@@ -43,14 +41,6 @@ export function AppliedFilters({ items, onRemove, onClear }: AppliedFiltersProps
           </button>
         </Badge>
       ))}
-      <Button
-        type="button"
-        variant="link"
-        className="inline-flex items-center gap-1 px-0 text-sm text-destructive hover:text-destructive dark:text-destructive dark:hover:text-destructive/80"
-        onClick={onClear}
-      >
-        <Trash2 className="size-4" /> 清除
-      </Button>
     </div>
   );
 }

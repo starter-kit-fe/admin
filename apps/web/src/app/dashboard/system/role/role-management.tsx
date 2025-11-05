@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 
-import { SelectionBanner } from '../user/components/selection-banner';
+import { SelectionBanner } from '@/components/selection-banner';
 import { DeleteConfirmDialog } from '../user/components/delete-confirm-dialog';
 
 import { createRole, getRoleDetail, listRoles, removeRole, updateRole } from './api';
