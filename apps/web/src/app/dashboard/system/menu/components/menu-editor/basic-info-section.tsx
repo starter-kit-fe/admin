@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   FormControl,
   FormField,
@@ -16,9 +17,20 @@ import { MenuParentTreeSelect } from './menu-parent-tree-select';
 interface BasicInfoSectionProps {
   form: UseFormReturn<MenuFormValues>;
   parentOptions: MenuParentOption[];
+  mode: 'create' | 'edit';
 }
 
-export function BasicInfoSection({ form, parentOptions }: BasicInfoSectionProps) {
+export function BasicInfoSection({
+  form,
+  parentOptions,
+  mode,
+}: BasicInfoSectionProps) {
+  useEffect(() => {
+    if (mode === 'create') {
+      form.register('orderNum');
+    }
+  }, [form, mode]);
+
   const { control } = form;
   const menuType = useWatch({
     control,
@@ -64,24 +76,26 @@ export function BasicInfoSection({ form, parentOptions }: BasicInfoSectionProps)
             </FormItem>
           )}
         />
-        <FormField
-          control={control}
-          name="orderNum"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>显示顺序</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="默认 0"
-                  value={field.value}
-                  onChange={(event) => field.onChange(event.target.value)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {mode === 'edit' ? (
+          <FormField
+            control={control}
+            name="orderNum"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>显示顺序</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="默认 0"
+                    value={field.value}
+                    onChange={(event) => field.onChange(event.target.value)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : null}
       </div>
     </div>
   );

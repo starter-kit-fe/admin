@@ -236,7 +236,11 @@ export function MenuEditorDialog({
                     allowedTypes={allowedMenuTypes}
                     onChange={(next) => form.setValue('menuType', next)}
                   />
-                  <BasicInfoSection form={form} parentOptions={parentOptions} />
+                  <BasicInfoSection
+                    form={form}
+                    parentOptions={parentOptions}
+                    mode={mode}
+                  />
                   {menuType === 'M' ? <DirectorySection form={form} /> : null}
                   {menuType === 'C' ? <PageSection form={form} /> : null}
                   {menuType === 'F' ? <ButtonSection form={form} /> : null}

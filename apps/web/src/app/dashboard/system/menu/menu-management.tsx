@@ -412,7 +412,7 @@ export function MenuManagement() {
       const siblings =
         parentId === 0
           ? menuTree
-          : findMenuNodeById(menuTree, parentId)?.children ?? [];
+          : (findMenuNodeById(menuTree, parentId)?.children ?? []);
       if (!siblings || siblings.length === 0) {
         return 1;
       }
@@ -488,7 +488,7 @@ export function MenuManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[60vh] overflow-auto">
+          <div>
             {menuQuery.isError ? (
               <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 text-sm text-destructive">
                 加载菜单失败，请稍后重试。

@@ -43,12 +43,9 @@ const TYPE_BADGE_CLASSES: Record<string, string> = {
   F: 'border border-amber-200 bg-amber-50 text-amber-700',
 };
 
-const STATUS_META: Record<
-  string,
-  { label: string; variant: 'default' | 'destructive' | 'secondary' }
-> = {
-  '0': { label: '正常', variant: 'secondary' },
-  '1': { label: '停用', variant: 'destructive' },
+const STATUS_META: Record<string, { label: string }> = {
+  '0': { label: '正常' },
+  '1': { label: '停用' },
 };
 
 const VISIBLE_META: Record<string, string> = {
@@ -193,7 +190,6 @@ export function MenuTreeView({
           'border border-muted bg-muted text-foreground/80';
         const statusMeta = STATUS_META[node.status] ?? {
           label: node.status,
-          variant: 'default',
         };
         const isButton = node.menuType === 'F';
         const canMoveUp = index > 0;
@@ -261,18 +257,19 @@ export function MenuTreeView({
                       >
                         {typeMeta.label}
                       </Badge>
-                      <Badge
-                        variant="outline"
-                        className="px-2 py-0.5 text-[11px]"
-                      >
-                        {VISIBLE_META[node.visible] ?? node.visible}
-                      </Badge>
-                      <Badge
-                        variant={statusMeta.variant}
-                        className="px-2 py-0.5 text-[11px]"
-                      >
-                        {statusMeta.label}
-                      </Badge>
+                      {node.visible !== '0' ? (
+                        <Badge className="border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700">
+                          {VISIBLE_META[node.visible] ?? node.visible}
+                        </Badge>
+                      ) : null}
+                      {node.status !== '0' ? (
+                        <Badge
+                          variant="destructive"
+                          className="px-2 py-0.5 text-[11px]"
+                        >
+                          {statusMeta.label}
+                        </Badge>
+                      ) : null}
                     </div>
                     <div className=" flex flex-wrap items-center gap-x-6 gap-y-1">
                       {!isButton ? (
@@ -291,20 +288,14 @@ export function MenuTreeView({
                           )}
                         </span>
                       ) : null}
-                      {!isButton ? (
+                      {!isButton && node.routeName ? (
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
                           <span className="text-[11px] text-muted-foreground/70">
                             标识
                           </span>
-                          {node.routeName ? (
-                            <code className="rounded bg-muted px-1.5 py-[1px] font-mono text-[11px] text-foreground">
-                              {node.routeName}
-                            </code>
-                          ) : (
-                            <span className="text-muted-foreground/45">
-                              未配置
-                            </span>
-                          )}
+                          <code className="rounded bg-muted px-1.5 py-[1px] font-mono text-[11px] text-foreground">
+                            {node.routeName}
+                          </code>
                         </span>
                       ) : null}
                       {!isRoot ? (
