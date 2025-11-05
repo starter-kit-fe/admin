@@ -1,8 +1,8 @@
 'use client';
 
+import gsap from 'gsap';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import gsap from 'gsap';
 
 type RouteProgressBarProps = {
   className?: string;
@@ -87,7 +87,12 @@ export function RouteProgressBar({ className }: RouteProgressBarProps) {
           ease: 'power3.inOut',
           delay: 0.12,
         })
-        .to(bar, { opacity: 0, duration: 0.3, ease: 'power2.out', delay: 0.06 });
+        .to(bar, {
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power2.out',
+          delay: 0.06,
+        });
 
       timelineRef.current = tl;
       rafRef.current = null;

@@ -2,94 +2,111 @@
 
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import gsap from 'gsap';
-import { useEffect, useRef } from 'react';
-
-import pkg from '../../package.json';
 
 interface LoadingPageProps {
   label?: string;
   className?: string;
 }
-export function LoadingPage({ label, className }: LoadingPageProps) {
-  const displayName =
-    label ??
-    pkg.seo?.title?.split('—')?.[0]?.trim() ??
-    pkg.name ??
-    'Admin Template';
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const nameRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!containerRef.current || !nameRef.current) {
-      return;
-    }
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '.loading-line',
-        { opacity: 0, y: 12 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: 'power3.out',
-          stagger: 0.2,
-        },
-      );
-      //   const gradientTimeline = gsap.timeline({ repeat: -1, repeatDelay: 0.6 });
-      //   gradientTimeline.fromTo(
-      //     '.loading-name',
-      //     { backgroundPosition: '0% 50%' },
-      //     {
-      //       backgroundPosition: '200% 50%',
-      //       duration: 1.6,
-      //       ease: 'power2.inOut',
-      //     },
-      //   );
-      gsap.fromTo(
-        nameRef.current,
-        { yPercent: 8, opacity: 0 },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.2,
-          ease: 'power3.out',
-        },
-      );
-    }, containerRef);
-    return () => {
-      ctx.revert();
-    };
-  }, []);
+
+export function LoadingPage({
+  label = '页面加载中',
+  className,
+}: LoadingPageProps) {
   return (
     <div
-      ref={containerRef}
       className={cn(
-        'relative flex min-h-dvh w-full items-center justify-center overflow-hidden bg-primary text-primary-foreground',
+        'relative min-h-dvh bg-background text-foreground',
         className,
       )}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.14),_transparent_55%)]" />
-      <div className="absolute inset-0 bg-gradient-to-b from-primary via-primary/95 to-primary/80" />
-      <div className="relative z-10 flex flex-col items-center gap-4 px-6 text-center">
-        <p className="loading-line text-xs uppercase tracking-[0.55em] text-primary-foreground/75">
-          正在加载
-        </p>
-        <div
-          ref={nameRef}
-          className="relative flex min-h-[40vh] items-center justify-center overflow-hidden text-[12vw] font-semibold leading-tight sm:text-[8vw]"
-        >
-          <span className="loading-name block bg-gradient-to-r from-white via-white/80 to-white/25 bg-[length:200%_100%] bg-clip-text text-transparent">
-            {displayName}
-          </span>
+      <div
+        role="status"
+        aria-live="polite"
+        aria-label={label}
+        className="loading-top-bar"
+      >
+        <span className="sr-only">{label}</span>
+        <div className="loading-top-bar__progress">
+          <div className="loading-top-bar__peg" />
         </div>
       </div>
+
+      <style jsx>{`
+        .loading-top-bar {
+          pointer-events: none;
+          position: fixed;
+          inset: 0 0 auto;
+          height: 3px;
+          width: 100%;
+          z-index: 60;
+          overflow: hidden;
+          filter: drop-shadow(0 4px 12px hsl(var(--primary) / 0.28));
+        }
+
+        .loading-top-bar__progress {
+          position: absolute;
+          inset: 0;
+          transform-origin: left center;
+          transform: scaleX(0);
+          animation: loading-bar-progress 0.85s
+            cubic-bezier(0.22, 0.8, 0.32, 1) forwards;
+          background-image: linear-gradient(
+            90deg,
+            hsl(var(--primary)) 0%,
+            hsl(var(--primary) / 0.82) 55%,
+            hsl(var(--primary) / 0.6) 75%,
+            hsl(var(--primary) / 0.4) 100%
+          );
+          box-shadow: 0 0 12px hsl(var(--primary) / 0.35),
+            0 4px 14px hsl(var(--primary) / 0.22);
+          border-bottom-right-radius: 999px;
+          border-top-right-radius: 999px;
+          will-change: transform;
+        }
+
+        .loading-top-bar__peg {
+          position: absolute;
+          right: -56px;
+          top: 50%;
+          transform: translateY(-50%) rotate(4deg);
+          width: 110px;
+          height: 160%;
+          background-image: linear-gradient(
+            90deg,
+            hsl(var(--primary) / 0.78),
+            transparent 75%
+          );
+          opacity: 0.9;
+          filter: blur(4px);
+        }
+
+        @keyframes loading-bar-progress {
+          0% {
+            transform: scaleX(0);
+          }
+          35% {
+            transform: scaleX(0.3);
+          }
+          55% {
+            transform: scaleX(0.32);
+          }
+          56% {
+            transform: scaleX(1);
+          }
+          100% {
+            transform: scaleX(1);
+          }
+        }
+      `}</style>
     </div>
   );
 }
+
 interface InlineLoadingProps {
   label?: string;
   className?: string;
 }
+
 export function InlineLoading({
   label = '加载中...',
   className,

@@ -6,6 +6,11 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
@@ -16,16 +21,12 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card';
 import { cn } from '@/lib/utils';
-import type { NavItem } from './sidebar';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
+import type { NavItem } from './sidebar';
 
 export function NavMain({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
@@ -41,8 +42,14 @@ export function NavMain({ items }: { items: NavItem[] }) {
     return pathname.startsWith(url);
   };
 
-  const hoverOverlayClass =
-    'hover:!bg-transparent data-[active=true]:!bg-transparent after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-[inherit] after:content-[""] after:opacity-0 after:transition-opacity after:duration-200 hover:after:opacity-100 hover:after:[background:color-mix(in_oklab,var(--color-sidebar-border)_60%,transparent)] data-[active=true]:after:opacity-100 data-[active=true]:after:[background:color-mix(in_oklab,var(--primary)_80%,transparent)] data-[active=true]:hover:after:[background:color-mix(in_oklab,var(--primary)_80%,transparent)]';
+  const hoverOverlayClass = cn(
+    'relative overflow-hidden hover:!bg-transparent data-[active=true]:!bg-transparent',
+    'data-[active=true]:before:content-none data-[active=true]:before:opacity-0',
+    'after:pointer-events-none after:absolute after:inset-[1px] after:-z-10 after:rounded-[inherit] after:content-[""] after:opacity-0 after:transition-all after:duration-200 after:bg-gradient-to-r after:from-transparent after:via-transparent after:to-transparent',
+    'hover:after:opacity-100 hover:after:from-primary/8 hover:after:via-primary/5 hover:after:to-transparent hover:after:shadow-[0_12px_32px_-26px_rgba(59,130,246,0.25)]',
+    'data-[active=true]:after:opacity-100 data-[active=true]:after:from-primary/18 data-[active=true]:after:via-primary/10 data-[active=true]:after:to-transparent data-[active=true]:after:shadow-[0_20px_46px_-28px_rgba(59,130,246,0.5)]',
+    'data-[active=true]:!text-primary data-[active=true]:font-semibold data-[active=true]:[&>svg]:!text-primary',
+  );
 
   const hasActive = (entry: NavItem): boolean => {
     if (isActiveLink(entry.url, entry.external)) {
@@ -54,7 +61,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
     return false;
   };
 
-  const renderHoverEntry = (entry: NavItem, depth = 0): JSX.Element => {
+  const renderHoverEntry = (entry: NavItem, depth = 0): React.ReactElement => {
     const key = `${entry.title}-${entry.url ?? 'root'}-${depth}-hover`;
     const children = entry.items ?? [];
     const hasChildren = children.length > 0;
@@ -89,10 +96,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
     }
 
     return (
-      <div
-        key={key}
-        className={cn('flex flex-col gap-1', depth > 0 && 'pl-3')}
-      >
+      <div key={key} className={cn('flex flex-col gap-1', depth > 0 && 'pl-3')}>
         {linkElement}
         <div className="flex flex-col gap-1 border-l border-border/40 pl-3">
           {children.map((child) => renderHoverEntry(child, depth + 1))}
@@ -101,7 +105,10 @@ export function NavMain({ items }: { items: NavItem[] }) {
     );
   };
 
-  const renderSubItems = (entries: NavItem[], depth = 1): JSX.Element[] =>
+  const renderSubItems = (
+    entries: NavItem[],
+    depth = 1,
+  ): React.ReactElement[] =>
     entries.map((entry) => {
       const key = `${entry.title}-${entry.url ?? 'root'}-${depth}-sub`;
       const children = entry.items ?? [];
@@ -234,7 +241,9 @@ export function NavMain({ items }: { items: NavItem[] }) {
                       className="w-60 p-2"
                     >
                       <div className="flex flex-col gap-1">
-                        {item.items?.map((subItem) => renderHoverEntry(subItem))}
+                        {item.items?.map((subItem) =>
+                          renderHoverEntry(subItem),
+                        )}
                       </div>
                     </HoverCardContent>
                   </HoverCard>
