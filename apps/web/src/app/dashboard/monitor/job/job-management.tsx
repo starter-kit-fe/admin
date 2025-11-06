@@ -1,508 +1,533 @@
-'use client'
+'use client';
 
-import { useMemo, useState, type ComponentType } from "react"
+import { useEffect, useMemo, useState } from 'react';
 import {
-  AlertCircle,
-  BarChart3,
-  CalendarCheck,
-  Clock,
-  PauseCircle,
-  PlayCircle,
-  Plus,
-  RefreshCcw,
-  Users,
-} from "lucide-react"
-
-import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { toast } from 'sonner';
+import { Clock, MoreHorizontal, Play, RefreshCcw, Trash2 } from 'lucide-react';
+
+import { InlineLoading } from '@/components/loading';
+import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+
+import { DeleteConfirmDialog } from '../../system/user/components/delete-confirm-dialog';
+
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
-import { Separator } from "@/components/ui/separator"
+  changeJobStatus,
+  deleteJob,
+  listJobs,
+  runJob,
+  type JobListParams,
+} from './api';
+import type { Job } from './type';
 
-type JobStatus = "scheduled" | "running" | "paused" | "failed" | "completed"
+const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 
-type JobRecord = {
-  id: string
-  name: string
-  description: string
-  status: JobStatus
-  owner: string
-  cadence: string
-  nextRun: string
-  lastRun: string
-  successRate: number
-  duration: string
+const STATUS_FILTER_OPTIONS = [
+  { value: 'all', label: '全部状态' },
+  { value: '0', label: '正常' },
+  { value: '1', label: '暂停' },
+] as const;
+
+const STATUS_BADGE_VARIANT: Record<string, 'secondary' | 'destructive' | 'outline'> = {
+  '0': 'secondary',
+  '1': 'outline',
+};
+
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delay);
+    return () => window.clearTimeout(timer);
+  }, [value, delay]);
+
+  return debounced;
 }
 
-const JOBS: JobRecord[] = [
-  {
-    id: "JOB-0042",
-    name: "Daily Revenue Snapshot",
-    description:
-      "Aggregates order and refund metrics into the finance warehouse for dashboards.",
-    status: "running",
-    owner: "Finance Ops",
-    cadence: "0 3 * * *",
-    nextRun: "2024-11-08 03:00",
-    lastRun: "2024-11-07 03:01",
-    successRate: 99,
-    duration: "6m 24s",
-  },
-  {
-    id: "JOB-0163",
-    name: "CRM Contact Sync",
-    description:
-      "Pushes newly onboarded users to the CRM with lifecycle metadata.",
-    status: "scheduled",
-    owner: "Growth",
-    cadence: "*/15 * * * *",
-    nextRun: "2024-11-07 09:15",
-    lastRun: "2024-11-07 09:00",
-    successRate: 100,
-    duration: "52s",
-  },
-  {
-    id: "JOB-0205",
-    name: "Segment Cleanup",
-    description:
-      "Archives inactive workspace segments older than 90 days.",
-    status: "paused",
-    owner: "Growth",
-    cadence: "0 1 * * 1",
-    nextRun: "Paused",
-    lastRun: "2024-10-28 01:04",
-    successRate: 94,
-    duration: "2m 12s",
-  },
-  {
-    id: "JOB-0317",
-    name: "Anomaly Detector",
-    description:
-      "Runs statistical checks on incoming telemetry and notifies SRE on spikes.",
-    status: "failed",
-    owner: "SRE",
-    cadence: "*/5 * * * *",
-    nextRun: "2024-11-07 09:05",
-    lastRun: "2024-11-07 09:00",
-    successRate: 82,
-    duration: "1m 09s",
-  },
-  {
-    id: "JOB-0371",
-    name: "Usage Snapshot",
-    description:
-      "Captures hourly usage tallies for billing and quota enforcement.",
-    status: "running",
-    owner: "Platform",
-    cadence: "0 * * * *",
-    nextRun: "2024-11-07 10:00",
-    lastRun: "2024-11-07 09:00",
-    successRate: 98,
-    duration: "3m 48s",
-  },
-  {
-    id: "JOB-0432",
-    name: "Weekly Churn Digest",
-    description:
-      "Compiles churn candidates and posts summary to the GTM Slack channel.",
-    status: "completed",
-    owner: "Analytics",
-    cadence: "0 8 * * 1",
-    nextRun: "2024-11-11 08:00",
-    lastRun: "2024-11-04 08:02",
-    successRate: 100,
-    duration: "4m 02s",
-  },
-  {
-    id: "JOB-0519",
-    name: "Data Retention Enforcement",
-    description:
-      "Purges expired personal data exports that exceeded retention windows.",
-    status: "completed",
-    owner: "Security",
-    cadence: "0 */12 * * *",
-    nextRun: "2024-11-07 21:00",
-    lastRun: "2024-11-07 09:00",
-    successRate: 100,
-    duration: "1m 55s",
-  },
-  {
-    id: "JOB-0590",
-    name: "Webhook Retry Backfill",
-    description:
-      "Replays failed webhook deliveries from the previous day.",
-    status: "failed",
-    owner: "Integrations",
-    cadence: "30 2 * * *",
-    nextRun: "2024-11-08 02:30",
-    lastRun: "2024-11-07 02:30",
-    successRate: 76,
-    duration: "7m 18s",
-  },
-]
-
-const PAGE_SIZE = 6
-
-const STATUS_LEGEND: Record<
-  JobStatus,
-  {
-    label: string
-    tone: "default" | "secondary" | "destructive" | "outline"
-    icon: ComponentType<{ className?: string }>
-  }
-> = {
-  scheduled: {
-    label: "Scheduled",
-    tone: "outline",
-    icon: Clock,
-  },
-  running: {
-    label: "Running",
-    tone: "default",
-    icon: PlayCircle,
-  },
-  paused: {
-    label: "Paused",
-    tone: "secondary",
-    icon: PauseCircle,
-  },
-  failed: {
-    label: "Failed",
-    tone: "destructive",
-    icon: AlertCircle,
-  },
-  completed: {
-    label: "Completed",
-    tone: "outline",
-    icon: CalendarCheck,
-  },
+function resolveStatusLabel(status: string) {
+  return status === '0' ? '正常' : '暂停';
 }
 
-const FILTERS: Array<
-  {
-    key: "all" | JobStatus
-    title: string
-    description: string
+function resolveMisfireLabel(policy: string) {
+  switch (policy) {
+    case '1':
+      return '立即执行';
+    case '2':
+      return '执行一次';
+    case '3':
+    default:
+      return '放弃执行';
   }
-> = [
-  {
-    key: "all",
-    title: "All jobs",
-    description: "Combined execution health",
-  },
-  {
-    key: "running",
-    title: "Running now",
-    description: "Currently processing workloads",
-  },
-  {
-    key: "scheduled",
-    title: "Scheduled",
-    description: "Waiting for next trigger",
-  },
-  {
-    key: "failed",
-    title: "Needs attention",
-    description: "Last run ended in failure",
-  },
-  {
-    key: "paused",
-    title: "Paused",
-    description: "Manually stopped jobs",
-  },
-  {
-    key: "completed",
-    title: "Completed",
-    description: "Last run finished cleanly",
-  },
-]
+}
+
+function resolveConcurrentLabel(flag: string) {
+  return flag === '0' ? '允许' : '禁止';
+}
+
+interface DeleteState {
+  open: boolean;
+  job?: Job;
+}
 
 export function JobManagement() {
-  const [activeFilter, setActiveFilter] = useState<(typeof FILTERS)[number]["key"]>("all")
-  const [page, setPage] = useState(1)
+  const queryClient = useQueryClient();
 
-  const filteredJobs = useMemo(() => {
-    const dataset =
-      activeFilter === "all"
-        ? JOBS
-        : JOBS.filter((job) => job.status === activeFilter)
+  const [jobNameInput, setJobNameInput] = useState('');
+  const [jobGroupInput, setJobGroupInput] = useState('');
+  const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTER_OPTIONS)[number]['value']>('all');
 
-    return dataset
-  }, [activeFilter])
+  const [pageNum, setPageNum] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / PAGE_SIZE))
-  const currentPage = Math.min(page, totalPages)
-  const start = (currentPage - 1) * PAGE_SIZE
-  const end = start + PAGE_SIZE
-  const paginatedJobs = filteredJobs.slice(start, end)
+  const [deleteState, setDeleteState] = useState<DeleteState>({ open: false });
+  const [pendingRunId, setPendingRunId] = useState<number | null>(null);
+  const [pendingStatusId, setPendingStatusId] = useState<number | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
 
-  const counts = useMemo(() => {
-    return FILTERS.reduce(
-      (acc, filter) => {
-        if (filter.key === "all") {
-          acc[filter.key] = JOBS.length
-        } else {
-          acc[filter.key] = JOBS.filter((job) => job.status === filter.key).length
-        }
-        return acc
-      },
-      {} as Record<(typeof FILTERS)[number]["key"], number>
-    )
-  }, [])
+  const debouncedJobName = useDebouncedValue(jobNameInput.trim(), 250);
+  const debouncedJobGroup = useDebouncedValue(jobGroupInput.trim(), 250);
 
-  const handlePageChange = (nextPage: number) => {
-    setPage(nextPage)
-  }
+  const queryParams: JobListParams = useMemo(() => {
+    const params: JobListParams = {
+      pageNum,
+      pageSize,
+    };
 
-  const handleFilterChange = (nextFilter: (typeof FILTERS)[number]["key"]) => {
-    setActiveFilter(nextFilter)
-    setPage(1)
-  }
+    if (debouncedJobName) {
+      params.jobName = debouncedJobName;
+    }
+    if (debouncedJobGroup) {
+      params.jobGroup = debouncedJobGroup;
+    }
+    if (statusFilter !== 'all') {
+      params.status = statusFilter;
+    }
 
-  return (
-    <div className="flex flex-col gap-8">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight">Job management</h1>
-          <p className="text-sm text-muted-foreground">
-            Monitor scheduled workloads, drill into failures, and orchestrate refreshes from this view.
-          </p>
-        </div>
-        <ButtonGroup>
-          <Button variant="outline" className="gap-2" size="sm">
-            <RefreshCcw className="size-4" aria-hidden="true" />
-            Refresh
-          </Button>
-          <Button className="gap-2" size="sm">
-            <Plus className="size-4" aria-hidden="true" />
-            Add job
-          </Button>
-        </ButtonGroup>
-      </section>
+    return params;
+  }, [pageNum, pageSize, debouncedJobName, debouncedJobGroup, statusFilter]);
 
-      <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        {FILTERS.map((filter) => (
-          <Card
-            key={filter.key}
-            role="button"
-            tabIndex={0}
-            onClick={() => handleFilterChange(filter.key)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault()
-                handleFilterChange(filter.key)
-              }
-            }}
-            aria-pressed={activeFilter === filter.key}
-            className={cn(
-              "border-border/70 bg-card shadow-none transition hover:border-primary/60 hover:bg-muted/20 focus-visible:border-primary focus-visible:outline-none dark:border-border/40 dark:hover:bg-muted/30",
-              activeFilter === filter.key &&
-                "border-primary bg-primary/10 shadow-sm dark:bg-primary/20"
-            )}
-          >
-            <CardHeader className="space-y-1 pb-2">
-              <CardTitle className="text-sm font-semibold">{filter.title}</CardTitle>
-              <CardDescription className="text-xs">{filter.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-2xl font-semibold text-foreground">
-                {counts[filter.key]}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
+  const query = useQuery({
+    queryKey: ['monitor', 'jobs', queryParams],
+    queryFn: () => listJobs(queryParams),
+    keepPreviousData: true,
+  });
 
-      <Separator />
+  const jobs = query.data?.items ?? [];
+  const total = query.data?.total ?? 0;
 
-      <section className="grid gap-4 md:grid-cols-2">
-        {paginatedJobs.map((job) => {
-          const statusMeta = STATUS_LEGEND[job.status]
-          const StatusIcon = statusMeta.icon
+  useEffect(() => {
+    setPageNum(1);
+  }, [debouncedJobName, debouncedJobGroup, statusFilter]);
+
+  const columnHelper = useMemo(() => createColumnHelper<Job>(), []);
+
+  const runJobMutation = useMutation({
+    mutationFn: async (jobId: number) => {
+      await runJob(jobId);
+      return jobId;
+    },
+    onMutate: (jobId) => setPendingRunId(jobId),
+    onSuccess: () => {
+      toast.success('任务已提交执行');
+      void queryClient.invalidateQueries({ queryKey: ['monitor', 'jobs'] });
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : '操作失败，请稍后重试';
+      toast.error(message);
+    },
+    onSettled: () => setPendingRunId(null),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: async ({ jobId, nextStatus }: { jobId: number; nextStatus: string }) => {
+      await changeJobStatus(jobId, nextStatus);
+      return { jobId, nextStatus };
+    },
+    onMutate: ({ jobId }) => setPendingStatusId(jobId),
+    onSuccess: ({ nextStatus }) => {
+      toast.success(nextStatus === '0' ? '任务已恢复' : '任务已暂停');
+      void queryClient.invalidateQueries({ queryKey: ['monitor', 'jobs'] });
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : '更新任务状态失败，请稍后重试';
+      toast.error(message);
+    },
+    onSettled: () => setPendingStatusId(null),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (jobId: number) => {
+      await deleteJob(jobId);
+      return jobId;
+    },
+    onMutate: (jobId) => setPendingDeleteId(jobId),
+    onSuccess: () => {
+      toast.success('任务已删除');
+      void queryClient.invalidateQueries({ queryKey: ['monitor', 'jobs'] });
+      setDeleteState({ open: false });
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : '删除任务失败，请稍后重试';
+      toast.error(message);
+    },
+    onSettled: () => setPendingDeleteId(null),
+  });
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('jobName', {
+        header: () => '任务名称',
+        cell: ({ row }) => {
+          const job = row.original;
+          return (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">{job.jobName || '-'}</p>
+              <p className="text-xs font-mono uppercase text-muted-foreground">{job.jobGroup || 'DEFAULT'}</p>
+            </div>
+          );
+        },
+        meta: {
+          headerClassName: 'min-w-[200px]',
+        },
+      }),
+      columnHelper.accessor('invokeTarget', {
+        header: () => '调用目标',
+        cell: ({ getValue }) => (
+          <div className="max-w-[320px] truncate font-mono text-xs">{getValue()}</div>
+        ),
+        meta: {
+          headerClassName: 'min-w-[280px]',
+        },
+      }),
+      columnHelper.accessor('cronExpression', {
+        header: () => 'Cron 表达式',
+        cell: ({ row }) => {
+          const job = row.original;
+          return (
+            <div className="space-y-1">
+              <p className="font-mono text-xs text-foreground">{job.cronExpression || '-'}</p>
+              <p className="text-xs text-muted-foreground">策略：{resolveMisfireLabel(job.misfirePolicy)}</p>
+            </div>
+          );
+        },
+        meta: {
+          headerClassName: 'min-w-[220px]',
+        },
+      }),
+      columnHelper.accessor('concurrent', {
+        header: () => '并发',
+        cell: ({ getValue }) => <span>{resolveConcurrentLabel(getValue() ?? '')}</span>,
+        meta: {
+          headerClassName: 'w-[80px]',
+        },
+      }),
+      columnHelper.accessor('status', {
+        header: () => '状态',
+        cell: ({ getValue }) => {
+          const status = getValue() ?? '1';
+          return (
+            <Badge variant={STATUS_BADGE_VARIANT[status] ?? 'outline'}>{resolveStatusLabel(status)}</Badge>
+          );
+        },
+        meta: {
+          headerClassName: 'w-[100px]',
+        },
+      }),
+      columnHelper.display({
+        id: 'timestamps',
+        header: () => '更新时间',
+        cell: ({ row }) => {
+          const job = row.original;
+          return (
+            <div className="space-y-1 text-xs text-muted-foreground">
+              <p>创建：{job.createTime || '-'}</p>
+              <p>更新：{job.updateTime || '-'}</p>
+            </div>
+          );
+        },
+        meta: {
+          headerClassName: 'min-w-[200px]',
+        },
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: () => <span className="block text-right">操作</span>,
+        cell: ({ row }) => {
+          const job = row.original;
+          const jobId = job.jobId ?? 0;
+          const isRunning = pendingRunId === jobId && runJobMutation.isPending;
+          const isUpdatingStatus = pendingStatusId === jobId && statusMutation.isPending;
+
+          const nextStatus = job.status === '0' ? '1' : '0';
 
           return (
-            <Card
-              key={job.id}
-              className="border-border/60 bg-card shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/80 dark:border-border/40"
+            <div className="flex justify-end">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 px-2">
+                    操作
+                    <MoreHorizontal className="ml-1.5 size-4 opacity-60" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem
+                    disabled={isRunning}
+                    onSelect={() => runJobMutation.mutate(jobId)}
+                  >
+                    {isRunning ? (
+                      <>
+                        <Spinner className="mr-2 size-4" />
+                        触发中...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="mr-2 size-4" />
+                        触发一次
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={isUpdatingStatus}
+                    onSelect={() => statusMutation.mutate({ jobId, nextStatus })}
+                  >
+                    {isUpdatingStatus ? (
+                      <>
+                        <Spinner className="mr-2 size-4" />
+                        更新中...
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="mr-2 size-4" />
+                        {nextStatus === '0' ? '恢复任务' : '暂停任务'}
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onSelect={() => setDeleteState({ open: true, job })}
+                  >
+                    <Trash2 className="mr-2 size-4" />
+                    删除
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+        meta: {
+          headerClassName: 'w-[120px] text-right',
+          cellClassName: 'text-right',
+        },
+      }),
+    ],
+    [
+      columnHelper,
+      pendingRunId,
+      runJobMutation.isPending,
+      pendingStatusId,
+      statusMutation.isPending,
+    ],
+  );
+
+  const table = useReactTable({
+    data: jobs,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const handlePageChange = (nextPage: number) => {
+    setPageNum(nextPage);
+  };
+
+  const handlePageSizeChange = (nextSize: number) => {
+    setPageSize(nextSize);
+    setPageNum(1);
+  };
+
+  const isLoading = query.isLoading && jobs.length === 0;
+  const isError = query.isError;
+  const isRefetching = query.isRefetching;
+
+  const visibleColumnCount = table.getVisibleLeafColumns().length || columns.length;
+
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
+      <Card className="border-border/70 shadow-sm">
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle className="text-2xl font-semibold text-foreground">定时任务</CardTitle>
+              <CardDescription>查看并管理调度任务，支持按名称、分组与状态筛选。</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => void query.refetch()}
+              disabled={isLoading || isRefetching}
             >
-              <CardHeader className="space-y-2 pb-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-base font-semibold">{job.name}</CardTitle>
-                    <CardDescription className="text-xs uppercase tracking-wide text-muted-foreground">
-                      {job.id}
-                    </CardDescription>
-                  </div>
-                  <Badge variant={statusMeta.tone} className="flex items-center gap-1 text-xs">
-                    <StatusIcon className="size-3.5" aria-hidden="true" />
-                    {statusMeta.label}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">{job.description}</p>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <CalendarCheck className="size-3.5 text-muted-foreground/80" aria-hidden="true" />
-                    Next: <span className="font-medium text-foreground">{job.nextRun}</span>
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="size-3.5 text-muted-foreground/80" aria-hidden="true" />
-                    Last: <span className="font-medium text-foreground">{job.lastRun}</span>
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <PlayCircle className="size-3.5 text-muted-foreground/80" aria-hidden="true" />
-                    SLA: <span className="font-medium text-foreground">{job.duration}</span>
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Users className="size-3.5 text-muted-foreground/80" aria-hidden="true" />
-                    Owner: <span className="font-medium text-foreground">{job.owner}</span>
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <BarChart3 className="size-3.5 text-muted-foreground/80" aria-hidden="true" />
-                    Success:{" "}
-                    <span className="font-medium text-foreground">
-                      {job.successRate}%
-                    </span>
-                  </span>
-                  <span className="flex items-center gap-1.5 font-mono text-xs uppercase text-muted-foreground/80">
-                    {job.cadence}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-        {paginatedJobs.length === 0 && (
-          <Card className="border-dashed border-border/60 bg-muted/20">
-            <CardContent className="flex h-36 flex-col items-center justify-center gap-2 text-center">
-              <CardTitle className="text-base font-semibold">No jobs in this view</CardTitle>
-              <CardDescription className="text-sm">
-                Adjust your filter to see available jobs or create a new one.
-              </CardDescription>
-            </CardContent>
-          </Card>
-        )}
-      </section>
-
-      <Pagination className="pt-2">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              href="#"
-              onClick={(event) => {
-                event.preventDefault()
-                handlePageChange(Math.max(1, currentPage - 1))
-              }}
-              className={cn(
-                currentPage === 1 &&
-                  "pointer-events-none opacity-50"
+              {isRefetching ? (
+                <>
+                  <Spinner className="mr-2 size-4" />
+                  刷新中
+                </>
+              ) : (
+                <>
+                  <RefreshCcw className="mr-2 size-4" />
+                  刷新
+                </>
               )}
+            </Button>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="job-name">任务名称</Label>
+              <Input
+                id="job-name"
+                placeholder="按名称筛选"
+                value={jobNameInput}
+                onChange={(event) => setJobNameInput(event.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="job-group">任务分组</Label>
+              <Input
+                id="job-group"
+                placeholder="按分组筛选"
+                value={jobGroupInput}
+                onChange={(event) => setJobGroupInput(event.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>状态</Label>
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as (typeof STATUS_FILTER_OPTIONS)[number]['value'])}>
+                <SelectTrigger>
+                  <SelectValue placeholder="全部状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_FILTER_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id} className="bg-muted/40">
+                    {headerGroup.headers.map((header) => (
+                      <TableHead
+                        key={header.id}
+                        className={cn(header.column.columnDef.meta?.headerClassName as string | undefined)}
+                      >
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={visibleColumnCount} className="h-32 text-center align-middle">
+                      <InlineLoading label="正在加载任务..." />
+                    </TableCell>
+                  </TableRow>
+                ) : isError ? (
+                  <TableRow>
+                    <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-destructive">
+                      加载失败，请稍后再试。
+                    </TableCell>
+                  </TableRow>
+                ) : table.getRowModel().rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-muted-foreground">
+                      暂无任务数据。
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id} className="transition-colors hover:bg-muted/60">
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className={cn(cell.column.columnDef.meta?.cellClassName as string | undefined)}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {!isLoading && !isError && total > 0 ? (
+            <PaginationToolbar
+              totalItems={total}
+              currentPage={pageNum}
+              pageSize={pageSize}
+              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
             />
-          </PaginationItem>
-          {Array.from({ length: totalPages }).map((_, index) => {
-            const pageNumber = index + 1
-            if (totalPages > 5) {
-              if (pageNumber === 1 || pageNumber === totalPages) {
-                return (
-                  <PaginationItem key={pageNumber}>
-                    <PaginationLink
-                      href="#"
-                      isActive={pageNumber === currentPage}
-                      onClick={(event) => {
-                        event.preventDefault()
-                        handlePageChange(pageNumber)
-                      }}
-                    >
-                      {pageNumber}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              }
+          ) : null}
+        </CardContent>
+      </Card>
 
-              if (
-                Math.abs(pageNumber - currentPage) <= 1 ||
-                (currentPage <= 2 && pageNumber <= 3) ||
-                (currentPage >= totalPages - 1 && pageNumber >= totalPages - 2)
-              ) {
-                return (
-                  <PaginationItem key={pageNumber}>
-                    <PaginationLink
-                      href="#"
-                      isActive={pageNumber === currentPage}
-                      onClick={(event) => {
-                        event.preventDefault()
-                        handlePageChange(pageNumber)
-                      }}
-                    >
-                      {pageNumber}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              }
-
-              if (
-                pageNumber === 2 ||
-                pageNumber === totalPages - 1
-              ) {
-                return (
-                  <PaginationItem key={pageNumber}>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )
-              }
-
-              return null
-            }
-
-            return (
-              <PaginationItem key={pageNumber}>
-                <PaginationLink
-                  href="#"
-                  isActive={pageNumber === currentPage}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    handlePageChange(pageNumber)
-                  }}
-                >
-                  {pageNumber}
-                </PaginationLink>
-              </PaginationItem>
-            )
-          })}
-          <PaginationItem>
-            <PaginationNext
-              href="#"
-              onClick={(event) => {
-                event.preventDefault()
-                handlePageChange(Math.min(totalPages, currentPage + 1))
-              }}
-              className={cn(
-                currentPage === totalPages &&
-                  "pointer-events-none opacity-50"
-              )}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      <DeleteConfirmDialog
+        open={deleteState.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteState({ open: false });
+          }
+        }}
+        title="删除定时任务"
+        description={
+          deleteState.job
+            ? `确定要删除任务“${deleteState.job.jobName}”吗？`
+            : '确定要删除该任务吗？'
+        }
+        confirmLabel="删除任务"
+        loading={deleteMutation.isPending && pendingDeleteId === (deleteState.job?.jobId ?? null)}
+        onConfirm={() => {
+          if (!deleteState.job || deleteMutation.isPending) {
+            return;
+          }
+          deleteMutation.mutate(deleteState.job.jobId);
+        }}
+      />
     </div>
-  )
+  );
+}
+
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData, TValue> {
+    headerClassName?: string;
+    cellClassName?: string;
+  }
 }

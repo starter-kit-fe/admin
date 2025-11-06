@@ -1,3 +1,5 @@
+import { CacheList } from './cache-list';
+
 export default function Page() {
-  return <div>monitor cache list</div>;
+  return <CacheList />;
 }

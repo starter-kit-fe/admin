@@ -1,3 +1,5 @@
+import { ServerMonitor } from './server-monitor';
+
 export default function Page() {
-  return <div>online</div>;
+  return <ServerMonitor />;
 }

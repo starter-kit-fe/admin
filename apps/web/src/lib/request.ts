@@ -153,17 +153,24 @@ export class HttpClient {
         const jsonPayload = await response.json();
         return this.resolveJsonResponse<T>(jsonPayload, response);
       } else if (contentType?.startsWith('text/')) {
-        const responseData = (await response.text()) as T;
+        const textPayload = await response.text();
         if (response.status === 401) {
           const textMessage =
-            typeof responseData === 'string' && responseData.trim().length > 0
-              ? responseData
+            typeof textPayload === 'string' && textPayload.trim().length > 0
+              ? textPayload
               : undefined;
           this.handleUnauthorized(textMessage);
           throw new Error(textMessage ?? DEFAULT_UNAUTHORIZED_MESSAGE);
         }
+        if (!response.ok) {
+          const message =
+            typeof textPayload === 'string' && textPayload.trim().length > 0
+              ? textPayload
+              : response.statusText || DEFAULT_ERROR_MESSAGE;
+          throw new Error(message);
+        }
         return {
-          data: responseData,
+          data: textPayload as T,
           status: response.status,
           ok: response.ok,
         };
@@ -172,6 +179,9 @@ export class HttpClient {
       if (response.status === 401) {
         this.handleUnauthorized();
         throw new Error(DEFAULT_UNAUTHORIZED_MESSAGE);
+      }
+      if (!response.ok) {
+        throw new Error(response.statusText || DEFAULT_ERROR_MESSAGE);
       }
 
       return {

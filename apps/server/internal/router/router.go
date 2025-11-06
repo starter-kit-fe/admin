@@ -19,18 +19,22 @@ import (
 
 	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
+	"github.com/starter-kit-fe/admin/internal/system/cache"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
 	sysconfig "github.com/starter-kit-fe/admin/internal/system/config"
 	"github.com/starter-kit-fe/admin/internal/system/dept"
 	"github.com/starter-kit-fe/admin/internal/system/dict"
 	"github.com/starter-kit-fe/admin/internal/system/docs"
 	"github.com/starter-kit-fe/admin/internal/system/health"
+	"github.com/starter-kit-fe/admin/internal/system/job"
 	"github.com/starter-kit-fe/admin/internal/system/loginlog"
 	"github.com/starter-kit-fe/admin/internal/system/menu"
 	"github.com/starter-kit-fe/admin/internal/system/notice"
+	"github.com/starter-kit-fe/admin/internal/system/online"
 	"github.com/starter-kit-fe/admin/internal/system/operlog"
 	"github.com/starter-kit-fe/admin/internal/system/post"
 	"github.com/starter-kit-fe/admin/internal/system/role"
+	"github.com/starter-kit-fe/admin/internal/system/server"
 	"github.com/starter-kit-fe/admin/internal/system/user"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
@@ -51,10 +55,15 @@ type Options struct {
 	NoticeHandler      *notice.Handler
 	OperLogHandler     *operlog.Handler
 	LoginLogHandler    *loginlog.Handler
+	JobHandler         *job.Handler
+	OnlineHandler      *online.Handler
+	ServerHandler      *server.Handler
+	CacheHandler       *cache.Handler
 	Middlewares        []gin.HandlerFunc
 	AuthSecret         string
 	AuthCookieName     string
 	PermissionProvider middleware.PermissionProvider
+	TokenBlocklist     middleware.TokenBlocklist
 	PublicMWs          []gin.HandlerFunc
 	ProtectedMWs       []gin.HandlerFunc
 }
@@ -152,6 +161,7 @@ func registerProtectedRoutes(api *gin.RouterGroup, opts Options) {
 		CookieName: opts.AuthCookieName,
 		Provider:   opts.PermissionProvider,
 		Logger:     opts.Logger,
+		Blocklist:  opts.TokenBlocklist,
 	}))
 	for _, mw := range opts.ProtectedMWs {
 		if mw != nil {
@@ -336,7 +346,12 @@ func registerMonitorRoutes(group *gin.RouterGroup, opts Options) {
 	monitor := group.Group("/monitor")
 
 	online := monitor.Group("/online/users")
-	{
+	if opts.OnlineHandler != nil {
+		online.GET("", middleware.RequirePermissions("monitor:online:list"), opts.OnlineHandler.List)
+		online.POST("/batch-logout", middleware.RequirePermissions("monitor:online:batchLogout"), opts.OnlineHandler.BatchForceLogout)
+		online.GET("/:id", middleware.RequirePermissions("monitor:online:query"), opts.OnlineHandler.Get)
+		online.POST("/:id/force-logout", middleware.RequirePermissions("monitor:online:forceLogout"), opts.OnlineHandler.ForceLogout)
+	} else {
 		online.GET("", middleware.RequirePermissions("monitor:online:list"), notImplemented("list online users"))
 		online.POST("/batch-logout", middleware.RequirePermissions("monitor:online:batchLogout"), notImplemented("batch logout online users"))
 		online.GET("/:id", middleware.RequirePermissions("monitor:online:query"), notImplemented("get online user"))
@@ -344,7 +359,16 @@ func registerMonitorRoutes(group *gin.RouterGroup, opts Options) {
 	}
 
 	jobs := monitor.Group("/jobs")
-	{
+	if opts.JobHandler != nil {
+		jobs.GET("", middleware.RequirePermissions("monitor:job:list"), opts.JobHandler.List)
+		jobs.GET("/export", middleware.RequirePermissions("monitor:job:export"), notImplemented("export jobs"))
+		jobs.POST("", middleware.RequirePermissions("monitor:job:add"), opts.JobHandler.Create)
+		jobs.GET("/:id", middleware.RequirePermissions("monitor:job:query"), opts.JobHandler.Get)
+		jobs.PUT("/:id", middleware.RequirePermissions("monitor:job:edit"), opts.JobHandler.Update)
+		jobs.DELETE("/:id", middleware.RequirePermissions("monitor:job:remove"), opts.JobHandler.Delete)
+		jobs.PATCH("/:id/status", middleware.RequirePermissions("monitor:job:changeStatus"), opts.JobHandler.ChangeStatus)
+		jobs.POST("/:id/run", middleware.RequirePermissions("monitor:job:run"), opts.JobHandler.Trigger)
+	} else {
 		jobs.GET("", middleware.RequirePermissions("monitor:job:list"), notImplemented("list jobs"))
 		jobs.GET("/export", middleware.RequirePermissions("monitor:job:export"), notImplemented("export jobs"))
 		jobs.POST("", middleware.RequirePermissions("monitor:job:add"), notImplemented("create job"))
@@ -352,15 +376,23 @@ func registerMonitorRoutes(group *gin.RouterGroup, opts Options) {
 		jobs.PUT("/:id", middleware.RequirePermissions("monitor:job:edit"), notImplemented("update job"))
 		jobs.DELETE("/:id", middleware.RequirePermissions("monitor:job:remove"), notImplemented("delete job"))
 		jobs.PATCH("/:id/status", middleware.RequirePermissions("monitor:job:changeStatus"), notImplemented("change job status"))
+		jobs.POST("/:id/run", middleware.RequirePermissions("monitor:job:run"), notImplemented("run job"))
 	}
 
 	monitor.GET("/druid", middleware.RequirePermissions("monitor:druid:list"), notImplemented("view druid"))
-	monitor.GET("/server", middleware.RequirePermissions("monitor:server:list"), notImplemented("view server monitor"))
+	if opts.ServerHandler != nil {
+		monitor.GET("/server", middleware.RequirePermissions("monitor:server:list"), opts.ServerHandler.Status)
+	} else {
+		monitor.GET("/server", middleware.RequirePermissions("monitor:server:list"), notImplemented("view server monitor"))
+	}
 
-	cache := monitor.Group("/cache")
-	{
-		cache.GET("", middleware.RequirePermissions("monitor:cache:list"), notImplemented("view cache overview"))
-		cache.GET("/list", middleware.RequirePermissions("monitor:cache:list"), notImplemented("list cache keys"))
+	cacheGroup := monitor.Group("/cache")
+	if opts.CacheHandler != nil {
+		cacheGroup.GET("", middleware.RequirePermissions("monitor:cache:list"), opts.CacheHandler.Overview)
+		cacheGroup.GET("/list", middleware.RequirePermissions("monitor:cache:list"), opts.CacheHandler.List)
+	} else {
+		cacheGroup.GET("", middleware.RequirePermissions("monitor:cache:list"), notImplemented("view cache overview"))
+		cacheGroup.GET("/list", middleware.RequirePermissions("monitor:cache:list"), notImplemented("list cache keys"))
 	}
 
 	operLog := monitor.Group("/logs/operations")

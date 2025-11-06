@@ -1,9 +1,12 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,8 +18,10 @@ import (
 	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/model"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
+	"github.com/starter-kit-fe/admin/internal/system/online"
 	jwtpkg "github.com/starter-kit-fe/admin/pkg/jwt"
 	"github.com/starter-kit-fe/admin/pkg/resp"
+	"github.com/starter-kit-fe/admin/pkg/security"
 )
 
 type Handler struct {
@@ -31,6 +36,7 @@ type Handler struct {
 	cookieSecure   bool
 	cookieHTTPOnly bool
 	cookieSameSite http.SameSite
+	onlineService  *online.Service
 }
 
 type AuthOptions struct {
@@ -102,7 +108,7 @@ type MenuNode struct {
 	Children   []*MenuNode `json:"children,omitempty"`
 }
 
-func NewHandler(repo *Repository, captcha *captcha.Service, opts AuthOptions) *Handler {
+func NewHandler(repo *Repository, captcha *captcha.Service, opts AuthOptions, onlineSvc *online.Service) *Handler {
 	opts.Secret = strings.TrimSpace(opts.Secret)
 	if repo == nil || opts.Secret == "" {
 		return nil
@@ -142,6 +148,7 @@ func NewHandler(repo *Repository, captcha *captcha.Service, opts AuthOptions) *H
 		cookieSecure:   opts.CookieSecure,
 		cookieHTTPOnly: cookieHTTPOnly,
 		cookieSameSite: cookieSameSite,
+		onlineService:  onlineSvc,
 	}
 }
 
@@ -223,6 +230,7 @@ func (h *Handler) Login(ctx *gin.Context) {
 		resp.InternalServerError(ctx, resp.WithMessage("failed to issue token"))
 		return
 	}
+	h.recordOnlineSession(ctx, token, user)
 	maxAge := 0
 	if h.tokenDuration > 0 {
 		maxAge = int(h.tokenDuration / time.Second)
@@ -243,6 +251,7 @@ func (h *Handler) Logout(ctx *gin.Context) {
 		resp.Success(ctx, true)
 		return
 	}
+	h.removeOnlineSession(ctx)
 	h.setTokenCookie(ctx, "", -1)
 	resp.Success(ctx, true)
 }
@@ -566,6 +575,156 @@ func stringPtr(value string) *string {
 	}
 	cp := value
 	return &cp
+}
+
+func (h *Handler) recordOnlineSession(ctx *gin.Context, token string, user *model.SysUser) {
+	if h == nil || h.onlineService == nil || user == nil {
+		return
+	}
+	tokenHash := security.SHA256Hex(token)
+	if tokenHash == "" {
+		return
+	}
+
+	now := time.Now()
+	expiresAt := now.Add(h.tokenDuration)
+	if expiresAt.Before(now) {
+		expiresAt = now.Add(constant.JWT_EXP)
+	}
+
+	ua := ""
+	if ctx.Request != nil {
+		ua = ctx.Request.UserAgent()
+	}
+	browser, os := parseUserAgent(ua)
+
+	session := online.Session{
+		SessionID:      generateSessionID(),
+		TokenHash:      tokenHash,
+		UserID:         user.UserID,
+		UserName:       user.UserName,
+		NickName:       user.NickName,
+		IPAddr:         clientIP(ctx),
+		Browser:        browser,
+		OS:             os,
+		Status:         "0",
+		Msg:            "登录成功",
+		LoginTime:      now,
+		LastAccessTime: now,
+		ExpiresAt:      expiresAt,
+	}
+
+	_ = h.onlineService.RecordSession(ctx.Request.Context(), session)
+}
+
+func (h *Handler) removeOnlineSession(ctx *gin.Context) {
+	if h == nil || h.onlineService == nil {
+		return
+	}
+
+	token := h.extractToken(ctx)
+	tokenHash := security.SHA256Hex(token)
+	if tokenHash == "" {
+		return
+	}
+	_ = h.onlineService.RemoveSessionByTokenHash(ctx.Request.Context(), tokenHash)
+}
+
+func (h *Handler) extractToken(ctx *gin.Context) string {
+	if ctx == nil {
+		return ""
+	}
+
+	if ctx.Request != nil {
+		if header := strings.TrimSpace(ctx.GetHeader("Authorization")); header != "" {
+			if token := parseBearerToken(header); token != "" {
+				return token
+			}
+		}
+	}
+
+	if token := strings.TrimSpace(ctx.Query("token")); token != "" {
+		return token
+	}
+
+	if h.cookieName != "" {
+		if token, err := ctx.Cookie(h.cookieName); err == nil {
+			if trimmed := strings.TrimSpace(token); trimmed != "" {
+				return trimmed
+			}
+		}
+	}
+
+	return ""
+}
+
+func clientIP(ctx *gin.Context) string {
+	if ctx == nil {
+		return ""
+	}
+	return strings.TrimSpace(ctx.ClientIP())
+}
+
+func parseUserAgent(ua string) (string, string) {
+	ua = strings.TrimSpace(ua)
+	if ua == "" {
+		return "", ""
+	}
+
+	lower := strings.ToLower(ua)
+
+	var browser string
+	switch {
+	case strings.Contains(lower, "chrome"):
+		browser = "Chrome"
+	case strings.Contains(lower, "firefox"):
+		browser = "Firefox"
+	case strings.Contains(lower, "safari") && !strings.Contains(lower, "chrome"):
+		browser = "Safari"
+	case strings.Contains(lower, "edge"):
+		browser = "Edge"
+	case strings.Contains(lower, "msie"), strings.Contains(lower, "trident"):
+		browser = "Internet Explorer"
+	default:
+		browser = ua
+	}
+
+	var os string
+	switch {
+	case strings.Contains(lower, "windows"):
+		os = "Windows"
+	case strings.Contains(lower, "mac os x"):
+		os = "macOS"
+	case strings.Contains(lower, "android"):
+		os = "Android"
+	case strings.Contains(lower, "iphone"), strings.Contains(lower, "ipad"), strings.Contains(lower, "ios"):
+		os = "iOS"
+	case strings.Contains(lower, "linux"):
+		os = "Linux"
+	default:
+		os = ""
+	}
+
+	return browser, os
+}
+
+func parseBearerToken(header string) string {
+	parts := strings.SplitN(header, " ", 2)
+	if len(parts) != 2 {
+		return ""
+	}
+	if !strings.EqualFold(parts[0], "Bearer") {
+		return ""
+	}
+	return strings.TrimSpace(parts[1])
+}
+
+func generateSessionID() string {
+	buf := make([]byte, 16)
+	if _, err := rand.Read(buf); err == nil {
+		return hex.EncodeToString(buf)
+	}
+	return strconv.FormatInt(time.Now().UnixNano(), 36)
 }
 
 func requestUsesHTTPS(req *http.Request) bool {

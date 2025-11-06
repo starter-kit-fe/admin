@@ -1,3 +1,5 @@
+import { OnlineUserManagement } from './online-user-management';
+
 export default function Page() {
-  return <div>online</div>;
+  return <OnlineUserManagement />;
 }

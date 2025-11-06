@@ -9,10 +9,15 @@ import (
 
 	jwtpkg "github.com/starter-kit-fe/admin/pkg/jwt"
 	"github.com/starter-kit-fe/admin/pkg/resp"
+	"github.com/starter-kit-fe/admin/pkg/security"
 )
 
 type PermissionProvider interface {
 	LoadPermissions(ctx context.Context, userID uint) ([]string, error)
+}
+
+type TokenBlocklist interface {
+	IsTokenBlocked(ctx context.Context, tokenHash string) (bool, error)
 }
 
 type JWTAuthOptions struct {
@@ -20,6 +25,7 @@ type JWTAuthOptions struct {
 	CookieName string
 	Provider   PermissionProvider
 	Logger     *slog.Logger
+	Blocklist  TokenBlocklist
 }
 
 func NewJWTAuthMiddleware(options JWTAuthOptions) gin.HandlerFunc {
@@ -27,6 +33,7 @@ func NewJWTAuthMiddleware(options JWTAuthOptions) gin.HandlerFunc {
 	cookieName := strings.TrimSpace(options.CookieName)
 	logger := options.Logger
 	provider := options.Provider
+	blocklist := options.Blocklist
 
 	jwtMaker := jwtpkg.NewJWTMaker()
 
@@ -55,6 +62,26 @@ func NewJWTAuthMiddleware(options JWTAuthOptions) gin.HandlerFunc {
 			resp.Unauthorized(ctx, resp.WithMessage("invalid or expired token"))
 			ctx.Abort()
 			return
+		}
+
+		if blocklist != nil {
+			tokenHash := security.SHA256Hex(token)
+			if tokenHash != "" {
+				blocked, err := blocklist.IsTokenBlocked(ctx.Request.Context(), tokenHash)
+				if err != nil {
+					if logger != nil {
+						logger.Error("check token blocklist failed", "error", err)
+					}
+					resp.InternalServerError(ctx, resp.WithMessage("token validation failed"))
+					ctx.Abort()
+					return
+				}
+				if blocked {
+					resp.Unauthorized(ctx, resp.WithMessage("token revoked"))
+					ctx.Abort()
+					return
+				}
+			}
 		}
 
 		setClaims(ctx, claims)

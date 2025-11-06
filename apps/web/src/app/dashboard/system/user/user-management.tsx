@@ -1,5 +1,7 @@
 'use client';
 
+import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
+import { SelectionBanner } from '@/components/selection-banner';
 import {
   useMutation,
   useQueries,
@@ -9,12 +11,9 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
-
 import { createUser, listUsers, removeUser, updateUser } from './api';
 import { DeleteConfirmDialog } from './components/delete-confirm-dialog';
 import type { FiltersFormState, RoleOption } from './components/filters-bar';
-import { SelectionBanner } from '@/components/selection-banner';
 import { UserEditorDialog } from './components/user-editor-dialog';
 import { UserManagementFilters } from './components/user-management-filters';
 import type { FilterChip } from './components/user-management-filters';
@@ -248,7 +247,7 @@ export function UserManagement() {
   const statusTabsWithCount = STATUS_TABS.map((tab) => ({
     value: tab.value,
     label: tab.label,
-    count: statusCounts[tab.value] ?? 0,
+    // count: statusCounts[tab.value] ?? 0,
     activeColor: tab.color,
   }));
 

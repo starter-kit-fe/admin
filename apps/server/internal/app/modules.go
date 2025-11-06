@@ -7,18 +7,22 @@ import (
 	"github.com/starter-kit-fe/admin/internal/config"
 	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
+	"github.com/starter-kit-fe/admin/internal/system/cache"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
 	sysconfig "github.com/starter-kit-fe/admin/internal/system/config"
 	"github.com/starter-kit-fe/admin/internal/system/dept"
 	"github.com/starter-kit-fe/admin/internal/system/dict"
 	"github.com/starter-kit-fe/admin/internal/system/docs"
 	"github.com/starter-kit-fe/admin/internal/system/health"
+	"github.com/starter-kit-fe/admin/internal/system/job"
 	"github.com/starter-kit-fe/admin/internal/system/loginlog"
 	"github.com/starter-kit-fe/admin/internal/system/menu"
 	"github.com/starter-kit-fe/admin/internal/system/notice"
+	"github.com/starter-kit-fe/admin/internal/system/online"
 	"github.com/starter-kit-fe/admin/internal/system/operlog"
 	"github.com/starter-kit-fe/admin/internal/system/post"
 	"github.com/starter-kit-fe/admin/internal/system/role"
+	"github.com/starter-kit-fe/admin/internal/system/server"
 	"github.com/starter-kit-fe/admin/internal/system/user"
 )
 
@@ -37,6 +41,14 @@ type moduleSet struct {
 	noticeHandler   *notice.Handler
 	operLogHandler  *operlog.Handler
 	loginLogHandler *loginlog.Handler
+	jobHandler      *job.Handler
+	jobService      *job.Service
+	onlineHandler   *online.Handler
+	onlineService   *online.Service
+	serverHandler   *server.Handler
+	serverService   *server.Service
+	cacheHandler    *cache.Handler
+	cacheService    *cache.Service
 
 	permissionProvider middleware.PermissionProvider
 }
@@ -51,6 +63,17 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	captchaHandler := captcha.NewHandler(captchaSvc)
 
 	authRepo := auth.NewRepository(sqlDB)
+	onlineRepo := online.NewRepository(sqlDB, redisCache)
+	onlineSvc := online.NewService(onlineRepo)
+	onlineHandler := online.NewHandler(onlineSvc)
+	jobRepo := job.NewRepository(sqlDB)
+	jobSvc := job.NewService(jobRepo)
+	jobHandler := job.NewHandler(jobSvc)
+	serverSvc := server.NewService()
+	serverHandler := server.NewHandler(serverSvc)
+	cacheSvc := cache.NewService(redisCache)
+	cacheHandler := cache.NewHandler(cacheSvc)
+
 	authHandler := auth.NewHandler(authRepo, captchaSvc, auth.AuthOptions{
 		Secret:         cfg.Auth.Secret,
 		TokenDuration:  cfg.Auth.TokenDuration,
@@ -60,7 +83,7 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 		CookieSecure:   cfg.Auth.CookieSecure,
 		CookieHTTPOnly: cfg.Auth.CookieHTTPOnly,
 		CookieSameSite: cfg.Auth.CookieSameSite,
-	})
+	}, onlineSvc)
 
 	userRepo := user.NewRepository(sqlDB)
 	userSvc := user.NewService(userRepo)
@@ -117,6 +140,14 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 		noticeHandler:      noticeHandler,
 		operLogHandler:     operLogHandler,
 		loginLogHandler:    loginLogHandler,
+		jobHandler:         jobHandler,
+		jobService:         jobSvc,
+		onlineHandler:      onlineHandler,
+		onlineService:      onlineSvc,
+		serverHandler:      serverHandler,
+		serverService:      serverSvc,
+		cacheHandler:       cacheHandler,
+		cacheService:       cacheSvc,
 		permissionProvider: authRepo,
 	}
 }

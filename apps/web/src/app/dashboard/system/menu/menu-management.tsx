@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import type { StatusTabItem } from '@/components/status-tabs';
+import { Button } from '@/components/ui/button';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -18,8 +18,8 @@ import {
   MenuEditorDialog,
   type MenuParentOption,
 } from './components/menu-editor-dialog';
-import { MenuTreeView } from './components/menu-tree-view';
 import { MenuManagementHeader } from './components/menu-management-header';
+import { MenuTreeView } from './components/menu-tree-view';
 import type {
   CreateMenuPayload,
   MenuFormValues,
@@ -459,7 +459,7 @@ export function MenuManagement() {
         onKeywordChange={setKeyword}
       />
 
-      <section className="flex max-h-[520px] flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3 shadow-sm dark:border-border/40">
+      <section className="flex  flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3 shadow-sm dark:border-border/40">
         {menuQuery.isError ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 text-sm text-destructive">
             加载菜单失败，请稍后重试。
