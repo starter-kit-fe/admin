@@ -1,33 +1,18 @@
-import { StatusTabs, type StatusTabItem } from '@/components/status-tabs';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCcw } from 'lucide-react';
 
-interface MenuManagementHeaderProps {
-  onRefresh: () => void;
-  onCreateRoot: () => void;
-  disableActions?: boolean;
-  isRefreshing?: boolean;
-  status: string;
-  statusTabs: StatusTabItem[];
-  onStatusChange: (value: string) => void;
-  keyword: string;
-  onKeywordChange: (value: string) => void;
-}
+import {
+  useMenuManagementRefresh,
+  useMenuManagementStatus,
+  useMenuManagementStore,
+} from '../store';
 
-export function MenuManagementHeader({
-  onRefresh,
-  onCreateRoot,
-  disableActions = false,
-  isRefreshing = false,
-  status,
-  statusTabs,
-  onStatusChange,
-  keyword,
-  onKeywordChange,
-}: MenuManagementHeaderProps) {
-  const refreshDisabled = disableActions || isRefreshing;
+export function MenuManagementHeader() {
+  const { openCreate } = useMenuManagementStore();
+  const { isRefreshing, isMutating } = useMenuManagementStatus();
+  const refresh = useMenuManagementRefresh();
+  const refreshDisabled = isMutating || isRefreshing;
 
   return (
     <section className="flex flex-col gap-4">
@@ -45,7 +30,7 @@ export function MenuManagementHeader({
           <Button
             type="button"
             variant="outline"
-            onClick={onRefresh}
+            onClick={() => refresh()}
             disabled={refreshDisabled}
             className="flex items-center gap-2"
           >
@@ -58,27 +43,14 @@ export function MenuManagementHeader({
           </Button>
           <Button
             type="button"
-            onClick={onCreateRoot}
-            disabled={disableActions}
+            onClick={() => openCreate(0)}
+            disabled={isMutating}
             className="flex items-center gap-2"
           >
             <Plus className="size-4" />
             新增顶级菜单
           </Button>
         </div>
-      </div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <StatusTabs
-          value={status}
-          onValueChange={onStatusChange}
-          tabs={statusTabs}
-        />
-        <Input
-          placeholder="搜索菜单名称"
-          value={keyword}
-          onChange={(event) => onKeywordChange(event.target.value)}
-          className="sm:max-w-sm"
-        />
       </div>
     </section>
   );

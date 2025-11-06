@@ -39,7 +39,12 @@ export function NavMain({ items }: { items: NavItem[] }) {
     if (external || !url || url === '#') {
       return false;
     }
-    return pathname.startsWith(url);
+    const normalizedPath = pathname.replace(/\/+$/, '');
+    const normalizedUrl = url.replace(/\/+$/, '');
+    if (normalizedPath === normalizedUrl) {
+      return true;
+    }
+    return normalizedPath.startsWith(`${normalizedUrl}/`);
   };
 
   const hoverOverlayClass = cn(

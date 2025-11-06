@@ -1,21 +1,20 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCcw } from 'lucide-react';
 
-interface DepartmentManagementHeaderProps {
-  onRefresh: () => void;
-  onCreateRoot: () => void;
-  disableActions?: boolean;
-  isRefreshing?: boolean;
-}
+import {
+  useDepartmentManagementRefresh,
+  useDepartmentManagementStatus,
+  useDepartmentManagementStore,
+} from '@/app/dashboard/system/dept/store';
 
-export function DepartmentManagementHeader({
-  onRefresh,
-  onCreateRoot,
-  disableActions = false,
-  isRefreshing = false,
-}: DepartmentManagementHeaderProps) {
-  const refreshDisabled = disableActions || isRefreshing;
+export function DepartmentManagementHeader() {
+  const { openCreate } = useDepartmentManagementStore();
+  const { isRefreshing, isMutating } = useDepartmentManagementStatus();
+  const refresh = useDepartmentManagementRefresh();
+  const refreshDisabled = isRefreshing || isMutating;
 
   return (
     <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -32,7 +31,7 @@ export function DepartmentManagementHeader({
         <Button
           type="button"
           variant="outline"
-          onClick={onRefresh}
+          onClick={() => refresh()}
           disabled={refreshDisabled}
           className="flex items-center gap-2"
         >
@@ -45,8 +44,8 @@ export function DepartmentManagementHeader({
         </Button>
         <Button
           type="button"
-          onClick={onCreateRoot}
-          disabled={disableActions}
+          onClick={() => openCreate(0)}
+          disabled={isMutating}
           className="flex items-center gap-2"
         >
           <Plus className="size-4" />

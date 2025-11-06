@@ -1,21 +1,20 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCcw } from 'lucide-react';
 
-interface PostManagementHeaderProps {
-  onRefresh: () => void;
-  onCreate: () => void;
-  disableActions?: boolean;
-  isRefreshing?: boolean;
-}
+import {
+  usePostManagementRefresh,
+  usePostManagementStatus,
+  usePostManagementStore,
+} from '@/app/dashboard/system/post/store';
 
-export function PostManagementHeader({
-  onRefresh,
-  onCreate,
-  disableActions = false,
-  isRefreshing = false,
-}: PostManagementHeaderProps) {
-  const refreshDisabled = disableActions || isRefreshing;
+export function PostManagementHeader() {
+  const { openCreate } = usePostManagementStore();
+  const { isRefreshing, isMutating } = usePostManagementStatus();
+  const refresh = usePostManagementRefresh();
+  const refreshDisabled = isRefreshing || isMutating;
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -28,7 +27,7 @@ export function PostManagementHeader({
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
-          onClick={onRefresh}
+          onClick={() => refresh()}
           disabled={refreshDisabled}
         >
           {isRefreshing ? (
@@ -38,7 +37,7 @@ export function PostManagementHeader({
           )}
           刷新
         </Button>
-        <Button onClick={onCreate} disabled={disableActions}>
+        <Button onClick={() => openCreate()} disabled={isMutating}>
           <Plus className="mr-2 size-4" />
           新增岗位
         </Button>

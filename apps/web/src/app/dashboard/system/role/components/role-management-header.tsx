@@ -1,22 +1,21 @@
+'use client';
+
 import { RefreshCw, ShieldPlus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
-interface RoleManagementHeaderProps {
-  onRefresh: () => void;
-  onCreate: () => void;
-  disableActions?: boolean;
-  isRefreshing?: boolean;
-}
+import {
+  useRoleManagementRefresh,
+  useRoleManagementStatus,
+  useRoleManagementStore,
+} from '@/app/dashboard/system/role/store';
 
-export function RoleManagementHeader({
-  onRefresh,
-  onCreate,
-  disableActions = false,
-  isRefreshing = false,
-}: RoleManagementHeaderProps) {
-  const refreshDisabled = disableActions || isRefreshing;
+export function RoleManagementHeader() {
+  const { openCreate } = useRoleManagementStore();
+  const { isRefreshing, isMutating } = useRoleManagementStatus();
+  const refresh = useRoleManagementRefresh();
+  const refreshDisabled = isRefreshing || isMutating;
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -30,7 +29,7 @@ export function RoleManagementHeader({
         <Button
           type="button"
           variant="outline"
-          onClick={onRefresh}
+          onClick={() => refresh()}
           disabled={refreshDisabled}
           className="flex items-center gap-2"
         >
@@ -43,8 +42,8 @@ export function RoleManagementHeader({
         </Button>
         <Button
           type="button"
-          onClick={onCreate}
-          disabled={disableActions}
+          onClick={() => openCreate()}
+          disabled={isMutating}
           className="flex items-center gap-2"
         >
           <ShieldPlus className="size-4" />

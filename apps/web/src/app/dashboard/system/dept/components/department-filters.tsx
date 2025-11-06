@@ -1,3 +1,5 @@
+'use client';
+
 import { StatusTabs, type StatusTabItem } from '@/components/status-tabs';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

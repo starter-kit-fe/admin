@@ -1,0 +1,190 @@
+import type { MenuParentOption } from './components/menu-editor-dialog';
+import type {
+  CreateMenuPayload,
+  MenuFormValues,
+  MenuTreeNode,
+} from './type';
+
+export function toFormValues(menu: MenuTreeNode): MenuFormValues {
+  return {
+    menuName: menu.menuName ?? '',
+    parentId: String(menu.parentId ?? 0),
+    orderNum: menu.orderNum != null ? String(menu.orderNum) : '',
+    path: menu.path ?? '',
+    component: menu.component ?? '',
+    query: menu.query ?? '',
+    routeName: menu.routeName ?? '',
+    isFrame: Boolean(menu.isFrame),
+    isCache: Boolean(menu.isCache),
+    menuType: menu.menuType as MenuFormValues['menuType'],
+    visible: menu.visible as MenuFormValues['visible'],
+    status: menu.status as MenuFormValues['status'],
+    perms: menu.perms ?? '',
+    icon: menu.icon ?? '#',
+    remark: menu.remark ?? '',
+  };
+}
+
+export function toCreatePayload(values: MenuFormValues): CreateMenuPayload {
+  const parentId = Number(values.parentId) || 0;
+  const orderNum = values.orderNum.trim() === '' ? 0 : Number(values.orderNum);
+  return {
+    menuName: values.menuName.trim(),
+    parentId,
+    orderNum,
+    path: values.path.trim(),
+    component: values.component?.trim() || undefined,
+    query: values.query?.trim() || undefined,
+    routeName: values.routeName.trim(),
+    isFrame: values.isFrame,
+    isCache: values.isCache,
+    menuType: values.menuType,
+    visible: values.visible,
+    status: values.status,
+    perms: values.perms?.trim() || undefined,
+    icon: values.icon.trim() || '#',
+    remark: values.remark?.trim() || undefined,
+  };
+}
+
+export function buildParentOptions(
+  nodes: MenuTreeNode[],
+  excludeIds: Set<number>,
+): MenuParentOption[] {
+  const options: MenuParentOption[] = [
+    {
+      value: '0',
+      label: '顶级菜单',
+      level: 0,
+      path: ['顶级菜单'],
+      disabled: false,
+    },
+  ];
+
+  const walk = (
+    items: MenuTreeNode[],
+    depth: number,
+    ancestors: string[],
+    parentId: number,
+  ) => {
+    items.forEach((item) => {
+      if (excludeIds.has(item.menuId)) {
+        return;
+      }
+      const currentPath = [...ancestors, item.menuName];
+      options.push({
+        value: String(item.menuId),
+        label: item.menuName,
+        level: depth,
+        path: currentPath,
+        parentId: String(parentId),
+        disabled: item.menuType === 'F',
+        menuType: item.menuType,
+      });
+      if (item.children && item.children.length > 0) {
+        walk(item.children, depth + 1, currentPath, item.menuId);
+      }
+    });
+  };
+
+  walk(nodes, 1, [], 0);
+  return options;
+}
+
+export function collectDescendantIds(node?: MenuTreeNode): number[] {
+  if (!node?.children) return [];
+  const result: number[] = [];
+  const stack = [...node.children];
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    result.push(current.menuId);
+    if (current.children) {
+      stack.push(...current.children);
+    }
+  }
+  return result;
+}
+
+export function findMenuNodeById(
+  nodes: MenuTreeNode[],
+  menuId: number,
+): MenuTreeNode | null {
+  for (const node of nodes) {
+    if (node.menuId === menuId) {
+      return node;
+    }
+    if (node.children && node.children.length > 0) {
+      const found = findMenuNodeById(node.children, menuId);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return null;
+}
+
+export function reorderTree(
+  nodes: MenuTreeNode[],
+  parentId: number,
+  orderedIds: number[],
+): MenuTreeNode[] {
+  if (parentId === 0) {
+    const map = new Map(nodes.map((node) => [node.menuId, node]));
+    return orderedIds
+      .map((id, index) => {
+        const current = map.get(id);
+        if (!current) return null;
+        return {
+          ...current,
+          orderNum: index + 1,
+          children: current.children ? [...current.children] : undefined,
+        };
+      })
+      .filter(Boolean) as MenuTreeNode[];
+  }
+
+  return nodes.map((node) => {
+    if (node.menuId === parentId) {
+      const childMap = new Map(
+        (node.children ?? []).map((child) => [child.menuId, child]),
+      );
+      const newChildren = orderedIds
+        .map((id, index) => {
+          const current = childMap.get(id);
+          if (!current) return null;
+          return {
+            ...current,
+            orderNum: index + 1,
+            children: current.children ? [...current.children] : undefined,
+          };
+        })
+        .filter(Boolean) as MenuTreeNode[];
+      return {
+        ...node,
+        children: newChildren,
+      };
+    }
+    if (node.children && node.children.length > 0) {
+      return {
+        ...node,
+        children: reorderTree(node.children, parentId, orderedIds),
+      };
+    }
+    return node;
+  });
+}
+
+export function getNextOrderNum(nodes: MenuTreeNode[], parentId: number) {
+  const siblings =
+    parentId === 0
+      ? nodes
+      : (findMenuNodeById(nodes, parentId)?.children ?? []);
+  if (!siblings || siblings.length === 0) {
+    return 1;
+  }
+  const maxOrder = siblings.reduce(
+    (max, item) => Math.max(max, item.orderNum ?? 0),
+    0,
+  );
+  return maxOrder + 1;
+}
