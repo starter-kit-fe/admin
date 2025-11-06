@@ -1,3 +1,5 @@
+import { OperLogManagement } from './operlog-management';
+
 export default function Page() {
-  return <div>monitor operlog</div>;
+  return <OperLogManagement />;
 }

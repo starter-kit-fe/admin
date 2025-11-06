@@ -8,27 +8,35 @@ import (
 	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
+	sysconfig "github.com/starter-kit-fe/admin/internal/system/config"
 	"github.com/starter-kit-fe/admin/internal/system/dept"
 	"github.com/starter-kit-fe/admin/internal/system/dict"
 	"github.com/starter-kit-fe/admin/internal/system/docs"
 	"github.com/starter-kit-fe/admin/internal/system/health"
+	"github.com/starter-kit-fe/admin/internal/system/loginlog"
 	"github.com/starter-kit-fe/admin/internal/system/menu"
+	"github.com/starter-kit-fe/admin/internal/system/notice"
+	"github.com/starter-kit-fe/admin/internal/system/operlog"
 	"github.com/starter-kit-fe/admin/internal/system/post"
 	"github.com/starter-kit-fe/admin/internal/system/role"
 	"github.com/starter-kit-fe/admin/internal/system/user"
 )
 
 type moduleSet struct {
-	healthHandler  *health.Handler
-	docsHandler    *docs.Handler
-	captchaHandler *captcha.Handler
-	authHandler    *auth.Handler
-	userHandler    *user.Handler
-	roleHandler    *role.Handler
-	menuHandler    *menu.Handler
-	deptHandler    *dept.Handler
-	postHandler    *post.Handler
-	dictHandler    *dict.Handler
+	healthHandler   *health.Handler
+	docsHandler     *docs.Handler
+	captchaHandler  *captcha.Handler
+	authHandler     *auth.Handler
+	userHandler     *user.Handler
+	roleHandler     *role.Handler
+	menuHandler     *menu.Handler
+	deptHandler     *dept.Handler
+	postHandler     *post.Handler
+	dictHandler     *dict.Handler
+	configHandler   *sysconfig.Handler
+	noticeHandler   *notice.Handler
+	operLogHandler  *operlog.Handler
+	loginLogHandler *loginlog.Handler
 
 	permissionProvider middleware.PermissionProvider
 }
@@ -74,6 +82,22 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	dictSvc := dict.NewService(dictRepo)
 	dictHandler := dict.NewHandler(dictSvc)
 
+	configRepo := sysconfig.NewRepository(sqlDB)
+	configSvc := sysconfig.NewService(configRepo)
+	configHandler := sysconfig.NewHandler(configSvc)
+
+	noticeRepo := notice.NewRepository(sqlDB)
+	noticeSvc := notice.NewService(noticeRepo)
+	noticeHandler := notice.NewHandler(noticeSvc)
+
+	operLogRepo := operlog.NewRepository(sqlDB)
+	operLogSvc := operlog.NewService(operLogRepo)
+	operLogHandler := operlog.NewHandler(operLogSvc)
+
+	loginLogRepo := loginlog.NewRepository(sqlDB)
+	loginLogSvc := loginlog.NewService(loginLogRepo)
+	loginLogHandler := loginlog.NewHandler(loginLogSvc)
+
 	roleRepo := role.NewRepository(sqlDB)
 	roleSvc := role.NewService(roleRepo, menuRepo)
 	roleHandler := role.NewHandler(roleSvc)
@@ -89,6 +113,10 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 		deptHandler:        deptHandler,
 		postHandler:        postHandler,
 		dictHandler:        dictHandler,
+		configHandler:      configHandler,
+		noticeHandler:      noticeHandler,
+		operLogHandler:     operLogHandler,
+		loginLogHandler:    loginLogHandler,
 		permissionProvider: authRepo,
 	}
 }

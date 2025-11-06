@@ -20,11 +20,15 @@ import (
 	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
+	sysconfig "github.com/starter-kit-fe/admin/internal/system/config"
 	"github.com/starter-kit-fe/admin/internal/system/dept"
 	"github.com/starter-kit-fe/admin/internal/system/dict"
 	"github.com/starter-kit-fe/admin/internal/system/docs"
 	"github.com/starter-kit-fe/admin/internal/system/health"
+	"github.com/starter-kit-fe/admin/internal/system/loginlog"
 	"github.com/starter-kit-fe/admin/internal/system/menu"
+	"github.com/starter-kit-fe/admin/internal/system/notice"
+	"github.com/starter-kit-fe/admin/internal/system/operlog"
 	"github.com/starter-kit-fe/admin/internal/system/post"
 	"github.com/starter-kit-fe/admin/internal/system/role"
 	"github.com/starter-kit-fe/admin/internal/system/user"
@@ -43,6 +47,10 @@ type Options struct {
 	DeptHandler        *dept.Handler
 	PostHandler        *post.Handler
 	DictHandler        *dict.Handler
+	ConfigHandler      *sysconfig.Handler
+	NoticeHandler      *notice.Handler
+	OperLogHandler     *operlog.Handler
+	LoginLogHandler    *loginlog.Handler
 	Middlewares        []gin.HandlerFunc
 	AuthSecret         string
 	AuthCookieName     string
@@ -153,7 +161,7 @@ func registerProtectedRoutes(api *gin.RouterGroup, opts Options) {
 
 	registerProtectedAuthRoutes(protected, opts)
 	registerSystemRoutes(protected, opts)
-	registerMonitorRoutes(protected)
+	registerMonitorRoutes(protected, opts)
 	registerToolRoutes(protected)
 }
 
@@ -244,10 +252,14 @@ func registerSystemRoutes(group *gin.RouterGroup, opts Options) {
 	if opts.DictHandler != nil {
 		dicts.GET("", middleware.RequirePermissions("system:dict:list"), opts.DictHandler.List)
 		dicts.GET("/export", middleware.RequirePermissions("system:dict:export"), notImplemented("export dictionaries"))
-		dicts.POST("", middleware.RequirePermissions("system:dict:add"), notImplemented("create dictionary"))
-		dicts.GET("/:id", middleware.RequirePermissions("system:dict:query"), notImplemented("get dictionary"))
-		dicts.PUT("/:id", middleware.RequirePermissions("system:dict:edit"), notImplemented("update dictionary"))
-		dicts.DELETE("/:id", middleware.RequirePermissions("system:dict:remove"), notImplemented("delete dictionary"))
+		dicts.POST("", middleware.RequirePermissions("system:dict:add"), opts.DictHandler.Create)
+		dicts.GET("/:id", middleware.RequirePermissions("system:dict:query"), opts.DictHandler.Get)
+		dicts.PUT("/:id", middleware.RequirePermissions("system:dict:edit"), opts.DictHandler.Update)
+		dicts.DELETE("/:id", middleware.RequirePermissions("system:dict:remove"), opts.DictHandler.Delete)
+		dicts.GET("/:id/data", middleware.RequirePermissions("system:dict:list"), opts.DictHandler.ListData)
+		dicts.POST("/:id/data", middleware.RequirePermissions("system:dict:add"), opts.DictHandler.CreateData)
+		dicts.PUT("/:id/data/:itemId", middleware.RequirePermissions("system:dict:edit"), opts.DictHandler.UpdateData)
+		dicts.DELETE("/:id/data/:itemId", middleware.RequirePermissions("system:dict:remove"), opts.DictHandler.DeleteData)
 	} else {
 		dicts.GET("", middleware.RequirePermissions("system:dict:list"), notImplemented("list dictionaries"))
 		dicts.GET("/export", middleware.RequirePermissions("system:dict:export"), notImplemented("export dictionaries"))
@@ -255,10 +267,21 @@ func registerSystemRoutes(group *gin.RouterGroup, opts Options) {
 		dicts.GET("/:id", middleware.RequirePermissions("system:dict:query"), notImplemented("get dictionary"))
 		dicts.PUT("/:id", middleware.RequirePermissions("system:dict:edit"), notImplemented("update dictionary"))
 		dicts.DELETE("/:id", middleware.RequirePermissions("system:dict:remove"), notImplemented("delete dictionary"))
+		dicts.GET("/:id/data", middleware.RequirePermissions("system:dict:list"), notImplemented("list dictionary data"))
+		dicts.POST("/:id/data", middleware.RequirePermissions("system:dict:add"), notImplemented("create dictionary data"))
+		dicts.PUT("/:id/data/:itemId", middleware.RequirePermissions("system:dict:edit"), notImplemented("update dictionary data"))
+		dicts.DELETE("/:id/data/:itemId", middleware.RequirePermissions("system:dict:remove"), notImplemented("delete dictionary data"))
 	}
 
 	configs := system.Group("/configs")
-	{
+	if opts.ConfigHandler != nil {
+		configs.GET("", middleware.RequirePermissions("system:config:list"), opts.ConfigHandler.List)
+		configs.GET("/export", middleware.RequirePermissions("system:config:export"), notImplemented("export configs"))
+		configs.POST("", middleware.RequirePermissions("system:config:add"), opts.ConfigHandler.Create)
+		configs.GET("/:id", middleware.RequirePermissions("system:config:query"), opts.ConfigHandler.Get)
+		configs.PUT("/:id", middleware.RequirePermissions("system:config:edit"), opts.ConfigHandler.Update)
+		configs.DELETE("/:id", middleware.RequirePermissions("system:config:remove"), opts.ConfigHandler.Delete)
+	} else {
 		configs.GET("", middleware.RequirePermissions("system:config:list"), notImplemented("list configs"))
 		configs.GET("/export", middleware.RequirePermissions("system:config:export"), notImplemented("export configs"))
 		configs.POST("", middleware.RequirePermissions("system:config:add"), notImplemented("create config"))
@@ -268,7 +291,13 @@ func registerSystemRoutes(group *gin.RouterGroup, opts Options) {
 	}
 
 	notices := system.Group("/notices")
-	{
+	if opts.NoticeHandler != nil {
+		notices.GET("", middleware.RequirePermissions("system:notice:list"), opts.NoticeHandler.List)
+		notices.POST("", middleware.RequirePermissions("system:notice:add"), opts.NoticeHandler.Create)
+		notices.GET("/:id", middleware.RequirePermissions("system:notice:query"), opts.NoticeHandler.Get)
+		notices.PUT("/:id", middleware.RequirePermissions("system:notice:edit"), opts.NoticeHandler.Update)
+		notices.DELETE("/:id", middleware.RequirePermissions("system:notice:remove"), opts.NoticeHandler.Delete)
+	} else {
 		notices.GET("", middleware.RequirePermissions("system:notice:list"), notImplemented("list notices"))
 		notices.POST("", middleware.RequirePermissions("system:notice:add"), notImplemented("create notice"))
 		notices.GET("/:id", middleware.RequirePermissions("system:notice:query"), notImplemented("get notice"))
@@ -303,7 +332,7 @@ func registerSystemUserRoutes(system *gin.RouterGroup, opts Options) {
 	users.POST("/:id/reset-password", middleware.RequirePermissions("system:user:resetPwd"), notImplemented("reset user password"))
 }
 
-func registerMonitorRoutes(group *gin.RouterGroup) {
+func registerMonitorRoutes(group *gin.RouterGroup, opts Options) {
 	monitor := group.Group("/monitor")
 
 	online := monitor.Group("/online/users")
@@ -335,7 +364,12 @@ func registerMonitorRoutes(group *gin.RouterGroup) {
 	}
 
 	operLog := monitor.Group("/logs/operations")
-	{
+	if opts.OperLogHandler != nil {
+		operLog.GET("", middleware.RequirePermissions("monitor:operlog:list"), opts.OperLogHandler.List)
+		operLog.GET("/export", middleware.RequirePermissions("monitor:operlog:export"), notImplemented("export operation logs"))
+		operLog.GET("/:id", middleware.RequirePermissions("monitor:operlog:query"), opts.OperLogHandler.Get)
+		operLog.DELETE("/:id", middleware.RequirePermissions("monitor:operlog:remove"), opts.OperLogHandler.Delete)
+	} else {
 		operLog.GET("", middleware.RequirePermissions("monitor:operlog:list"), notImplemented("list operation logs"))
 		operLog.GET("/export", middleware.RequirePermissions("monitor:operlog:export"), notImplemented("export operation logs"))
 		operLog.GET("/:id", middleware.RequirePermissions("monitor:operlog:query"), notImplemented("get operation log"))
@@ -343,7 +377,13 @@ func registerMonitorRoutes(group *gin.RouterGroup) {
 	}
 
 	loginLog := monitor.Group("/logs/login")
-	{
+	if opts.LoginLogHandler != nil {
+		loginLog.GET("", middleware.RequirePermissions("monitor:logininfor:list"), opts.LoginLogHandler.List)
+		loginLog.GET("/export", middleware.RequirePermissions("monitor:logininfor:export"), notImplemented("export login logs"))
+		loginLog.GET("/:id", middleware.RequirePermissions("monitor:logininfor:query"), opts.LoginLogHandler.Get)
+		loginLog.DELETE("/:id", middleware.RequirePermissions("monitor:logininfor:remove"), opts.LoginLogHandler.Delete)
+		loginLog.POST("/:id/unlock", middleware.RequirePermissions("monitor:logininfor:unlock"), opts.LoginLogHandler.Unlock)
+	} else {
 		loginLog.GET("", middleware.RequirePermissions("monitor:logininfor:list"), notImplemented("list login logs"))
 		loginLog.GET("/export", middleware.RequirePermissions("monitor:logininfor:export"), notImplemented("export login logs"))
 		loginLog.GET("/:id", middleware.RequirePermissions("monitor:logininfor:query"), notImplemented("get login log"))

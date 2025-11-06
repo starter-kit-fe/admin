@@ -1,3 +1,5 @@
+import { ConfigManagement } from './config-management';
+
 export default function Page() {
-  return <div>system config</div>;
+  return <ConfigManagement />;
 }

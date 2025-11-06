@@ -1,3 +1,5 @@
+import { LoginLogManagement } from './login-log-management';
+
 export default function Page() {
-  return <div>monitor logininfor</div>;
+  return <LoginLogManagement />;
 }
