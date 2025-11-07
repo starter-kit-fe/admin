@@ -42,25 +42,27 @@ export class HttpClient {
   private defaultHeaders: Record<string, string>;
 
   constructor(config: RequestConfig = {}) {
-   this.baseURL = config.baseURL || '';
-   this.defaultHeaders = {
-     'Content-Type': 'application/json',
-     ...config.headers,
-   };
+    this.baseURL = config.baseURL || '';
+    this.defaultHeaders = {
+      'Content-Type': 'application/json',
+      ...config.headers,
+    };
   }
   updateToken(token?: string | null) {
-   if (!token) {
-     Reflect.deleteProperty(this.defaultHeaders, 'Authorization');
-     return;
-   }
-   this.defaultHeaders['Authorization'] = `Bearer ${token}`;
+    if (!token) {
+      Reflect.deleteProperty(this.defaultHeaders, 'Authorization');
+      return;
+    }
+    this.defaultHeaders['Authorization'] = `Bearer ${token}`;
   }
 
   private handleUnauthorized(message?: string) {
     this.updateToken(null);
 
     const fallbackMessage =
-      message && message.trim().length > 0 ? message : DEFAULT_UNAUTHORIZED_MESSAGE;
+      message && message.trim().length > 0
+        ? message
+        : DEFAULT_UNAUTHORIZED_MESSAGE;
 
     if (typeof window === 'undefined') {
       throw new Error(fallbackMessage);
@@ -285,9 +287,7 @@ export class HttpClient {
         : undefined;
 
     const businessCode =
-      typeof record?.code === 'number'
-        ? (record.code as number)
-        : undefined;
+      typeof record?.code === 'number' ? (record.code as number) : undefined;
     const message =
       record && (typeof record.msg === 'string' || record.msg === null)
         ? ((record.msg ?? null) as string | null)
