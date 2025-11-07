@@ -1,5 +1,1 @@
-import { LoginLogManagement } from './login-log-management';
-
-export default function Page() {
-  return <LoginLogManagement />;
-}
+export { default } from '@/app/dashboard/system/log/logininfor/page';

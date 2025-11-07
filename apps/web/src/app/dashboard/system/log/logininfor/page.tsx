@@ -1,1 +1,5 @@
-export { default } from "../../../monitor/logininfor/page";
+import { LoginLogManagement } from './login-log-management';
+
+export default function Page() {
+  return <LoginLogManagement />;
+}

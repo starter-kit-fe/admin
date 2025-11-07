@@ -1,5 +1,1 @@
-import { OperLogManagement } from './operlog-management';
-
-export default function Page() {
-  return <OperLogManagement />;
-}
+export { default } from '@/app/dashboard/system/log/operlog/page';
