@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
@@ -62,7 +62,7 @@ export function PostDataSection() {
         pageNum: pagination.pageNum,
         pageSize: pagination.pageSize,
       }),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   const statusCountQueries = useQueries({
@@ -222,7 +222,7 @@ export function PostDataSection() {
             onToggleSelect={handleToggleSelectRow}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            isLoading={postListQuery.isLoading}
+            loading={postListQuery.isLoading}
             isError={postListQuery.isError}
           />
         </div>

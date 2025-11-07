@@ -19,7 +19,12 @@ import {
   OPER_LOG_REQUEST_METHOD_OPTIONS,
   OPER_LOG_STATUS_OPTIONS,
 } from '../constants';
-import { useOperLogManagementStore } from '../store';
+import {
+  useOperLogManagementStore,
+  type OperLogBusinessTypeValue,
+  type OperLogRequestMethodValue,
+  type OperLogStatusValue,
+} from '../store';
 
 export function OperLogFiltersSection() {
   const {
@@ -44,7 +49,11 @@ export function OperLogFiltersSection() {
   }, [applyFilters, filterForm.operName, filterForm.title]);
 
   const handleSelectChange = (
-    patch: Partial<typeof filterForm>,
+    patch: Partial<{
+      businessType: OperLogBusinessTypeValue;
+      status: OperLogStatusValue;
+      requestMethod: OperLogRequestMethodValue;
+    }>,
   ) => {
     const next = { ...filterForm, ...patch };
     setFilterForm(next);
@@ -92,7 +101,9 @@ export function OperLogFiltersSection() {
           <Select
             value={filterForm.businessType}
             onValueChange={(value) =>
-              handleSelectChange({ businessType: value })
+              handleSelectChange({
+                businessType: value as OperLogBusinessTypeValue,
+              })
             }
           >
             <SelectTrigger>
@@ -112,7 +123,7 @@ export function OperLogFiltersSection() {
           <Select
             value={filterForm.status}
             onValueChange={(value) =>
-              handleSelectChange({ status: value })
+              handleSelectChange({ status: value as OperLogStatusValue })
             }
           >
             <SelectTrigger>
@@ -132,7 +143,9 @@ export function OperLogFiltersSection() {
           <Select
             value={filterForm.requestMethod}
             onValueChange={(value) =>
-              handleSelectChange({ requestMethod: value })
+              handleSelectChange({
+                requestMethod: value as OperLogRequestMethodValue,
+              })
             }
           >
             <SelectTrigger>

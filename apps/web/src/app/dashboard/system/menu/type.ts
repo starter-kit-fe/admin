@@ -26,17 +26,17 @@ export interface MenuFormValues {
   parentId: string;
   orderNum: string;
   path: string;
-  component?: string;
-  query?: string;
+  component: string;
+  query: string;
   routeName: string;
   isFrame: boolean;
   isCache: boolean;
   menuType: MenuType;
   visible: MenuStatus;
   status: MenuStatus;
-  perms?: string;
+  perms: string;
   icon: string;
-  remark?: string;
+  remark: string;
 }
 
 export interface CreateMenuPayload {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
@@ -79,7 +79,7 @@ export function OperLogDataSection() {
             ? undefined
             : appliedFilters.requestMethod,
       }),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   useEffect(() => {
@@ -221,9 +221,9 @@ export function OperLogDataSection() {
               </Table>
             </div>
             <PaginationToolbar
-              page={pagination.pageNum}
+              currentPage={pagination.pageNum}
               pageSize={pagination.pageSize}
-              total={total}
+              totalItems={total}
               pageSizeOptions={OPER_LOG_PAGE_SIZE_OPTIONS}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -75,7 +76,7 @@ export function LoginLogDataSection() {
         userName: appliedFilters.userName || undefined,
         ipaddr: appliedFilters.ipaddr || undefined,
       }),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   useEffect(() => {
@@ -213,9 +214,9 @@ export function LoginLogDataSection() {
               </Table>
             </div>
             <PaginationToolbar
-              page={pagination.pageNum}
+              currentPage={pagination.pageNum}
               pageSize={pagination.pageSize}
-              total={total}
+              totalItems={total}
               pageSizeOptions={LOGIN_LOG_PAGE_SIZE_OPTIONS}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}

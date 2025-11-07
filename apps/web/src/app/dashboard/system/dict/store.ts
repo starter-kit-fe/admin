@@ -165,8 +165,13 @@ const setDictTypesAtom = atom(
 
 const setSelectedDictIdAtom = atom(
   null,
-  (_get, set, dictId: number | null) => {
-    set(selectedDictIdAtom, dictId);
+  (get, set, action: SetStateAction<number | null>) => {
+    const current = get(selectedDictIdAtom);
+    const next =
+      typeof action === 'function'
+        ? (action as (prev: number | null) => number | null)(current)
+        : action;
+    set(selectedDictIdAtom, next);
   },
 );
 
@@ -278,7 +283,7 @@ export interface DictManagementStore {
   dictTypes: DictType[];
   setDictTypes: (types: DictType[]) => void;
   selectedDictId: number | null;
-  setSelectedDictId: (dictId: number | null) => void;
+  setSelectedDictId: (dictId: SetStateAction<number | null>) => void;
 
   dictData: DictData[];
   setDictData: (data: DictData[]) => void;

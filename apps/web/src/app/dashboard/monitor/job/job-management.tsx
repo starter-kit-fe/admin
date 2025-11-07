@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -128,7 +129,7 @@ export function JobManagement() {
   const query = useQuery({
     queryKey: ['monitor', 'jobs', queryParams],
     queryFn: () => listJobs(queryParams),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   const jobs = query.data?.items ?? [];

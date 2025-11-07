@@ -31,7 +31,7 @@ const statusAtom = atom<StatusValue>('all');
 const filterFormAtom = atom<FilterState>({ postName: '' });
 const appliedFiltersAtom = atom<FilterState>({ postName: '' });
 const paginationAtom = atom<PaginationState>({ ...DEFAULT_PAGINATION });
-const selectedIdsAtom = atom<Set<number>>(new Set());
+const selectedIdsAtom = atom<Set<number>>(new Set<number>());
 const statusCountsAtom = atom<StatusCounts>({
   all: 0,
   '0': 0,
@@ -54,7 +54,7 @@ const setStatusAtom = atom(
   (_get, set, value: StatusValue) => {
     set(statusAtom, value);
     set(paginationAtom, { ...DEFAULT_PAGINATION });
-    set(selectedIdsAtom, new Set());
+    set(selectedIdsAtom, new Set<number>());
   },
 );
 
@@ -95,7 +95,7 @@ const resetFiltersAtom = atom(null, (_get, set) => {
   set(filterFormAtom, { postName: '' });
   set(appliedFiltersAtom, { postName: '' });
   set(paginationAtom, { ...DEFAULT_PAGINATION });
-  set(selectedIdsAtom, new Set());
+  set(selectedIdsAtom, new Set<number>());
 });
 
 const setPaginationAtom = atom(
@@ -124,7 +124,7 @@ const setSelectedIdsAtom = atom(
 );
 
 const clearSelectedIdsAtom = atom(null, (_get, set) => {
-  set(selectedIdsAtom, new Set());
+  set(selectedIdsAtom, new Set<number>());
 });
 
 const setStatusCountsAtom = atom(

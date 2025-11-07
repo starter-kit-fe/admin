@@ -11,12 +11,12 @@ interface PaginationToolbarProps {
   pageSize: number;
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
-  pageSizeOptions?: number[];
+  pageSizeOptions?: ReadonlyArray<number>;
   disabled?: boolean;
   className?: string;
 }
 
-function formatPageSizeOptions(options?: number[]) {
+function formatPageSizeOptions(options?: ReadonlyArray<number>) {
   if (!options || options.length === 0) {
     return [];
   }

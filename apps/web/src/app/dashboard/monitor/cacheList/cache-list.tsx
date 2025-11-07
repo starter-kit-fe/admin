@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
@@ -96,7 +96,7 @@ export function CacheList() {
   const query = useQuery({
     queryKey: ['monitor', 'cache', 'list', params],
     queryFn: () => listCacheKeys(params),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   const data = query.data ?? ({} as CacheKeyListResponse);

@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button } from '@/components/ui/button';
@@ -19,32 +18,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-import type { ConfigFormValues } from '../type';
-
-const configFormSchema = z.object({
-  configName: z
-    .string()
-    .trim()
-    .min(1, '请输入参数名称')
-    .max(100, '参数名称不能超过 100 个字符'),
-  configKey: z
-    .string()
-    .trim()
-    .min(1, '请输入参数键名')
-    .max(100, '参数键名不能超过 100 个字符'),
-  configValue: z
-    .string()
-    .trim()
-    .min(1, '请输入参数键值')
-    .max(500, '参数键值过长'),
-  configType: z.enum(['Y', 'N']),
-  remark: z
-    .string()
-    .trim()
-    .max(255, '备注不能超过 255 个字符')
-    .optional()
-    .or(z.literal('')),
-});
+import { configFormSchema, type ConfigFormValues } from '../type';
 
 const DEFAULT_VALUES: ConfigFormValues = {
   configName: '',
@@ -67,6 +41,8 @@ interface ConfigEditorDialogProps {
   onSubmit: (values: ConfigFormValues) => void;
 }
 
+type ConfigFormResolverContext = Record<string, never>;
+
 export function ConfigEditorDialog({
   mode,
   open,
@@ -75,7 +51,7 @@ export function ConfigEditorDialog({
   onOpenChange,
   onSubmit,
 }: ConfigEditorDialogProps) {
-  const form = useForm<ConfigFormValues>({
+  const form = useForm<ConfigFormValues, ConfigFormResolverContext, ConfigFormValues>({
     resolver: zodResolver(configFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });

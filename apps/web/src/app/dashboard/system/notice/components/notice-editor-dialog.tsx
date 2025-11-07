@@ -34,9 +34,7 @@ const noticeFormSchema = z.object({
   remark: z
     .string()
     .trim()
-    .max(255, '备注不能超过 255 个字符')
-    .optional()
-    .or(z.literal('')),
+    .max(255, '备注不能超过 255 个字符'),
 });
 
 const DEFAULT_VALUES: NoticeFormValues = {
@@ -85,7 +83,7 @@ export function NoticeEditorDialog({
       noticeType: values.noticeType,
       noticeContent: values.noticeContent.trim(),
       status: values.status,
-      remark: values.remark?.trim() ?? '',
+      remark: values.remark.trim(),
     });
   });
 

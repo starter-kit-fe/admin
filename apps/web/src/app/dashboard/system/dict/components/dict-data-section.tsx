@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Edit2, Plus, Trash2 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,10 +49,12 @@ export function DictDataSection() {
   } = useDictManagementStore();
   const setRefreshing = useDictManagementSetRefreshing();
 
-  const selectedDict: DictType | undefined = useMemo(
-    () => dictTypes.find((item) => item.dictId === selectedDictId ?? -1),
-    [dictTypes, selectedDictId],
-  );
+  const selectedDict: DictType | undefined = useMemo(() => {
+    if (selectedDictId == null) {
+      return undefined;
+    }
+    return dictTypes.find((item) => item.dictId === selectedDictId);
+  }, [dictTypes, selectedDictId]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -87,7 +89,7 @@ export function DictDataSection() {
       });
     },
     enabled: Boolean(selectedDictId),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   useEffect(() => {

@@ -2,6 +2,7 @@ import { del, get, post as postRequest, put } from '@/lib/request';
 
 import type {
   CreatePostPayload,
+  Post,
   PostListResponse,
   UpdatePostPayload,
 } from './type';

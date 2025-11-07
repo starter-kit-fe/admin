@@ -29,7 +29,7 @@ export function toDictDataFormValues(data: DictData): DictDataFormValues {
   return {
     dictLabel: data.dictLabel ?? '',
     dictValue: data.dictValue ?? '',
-    dictSort: data.dictSort ?? 0,
+    dictSort: typeof data.dictSort === 'number' ? String(data.dictSort) : '',
     status: data.status ?? '0',
     isDefault: data.isDefault ?? 'N',
     remark: data.remark ?? '',
@@ -42,6 +42,7 @@ export function normalizeOptional(value: string): string | undefined {
 }
 
 export const emptyDictDataList: DictDataList = {
+  type: undefined,
   items: [],
   total: 0,
 };

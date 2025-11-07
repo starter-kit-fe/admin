@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -163,7 +164,7 @@ export function OnlineUserManagement() {
   const query = useQuery({
     queryKey: ['monitor', 'online-users', queryParams],
     queryFn: () => listOnlineUsers(queryParams),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   const rawData = query.data;

@@ -34,7 +34,7 @@ const statusAtom = atom<StatusValue>('all');
 const filterFormAtom = atom<FiltersFormState>(defaultFilters);
 const appliedFiltersAtom = atom<FiltersFormState>(defaultFilters);
 const paginationAtom = atom<PaginationState>({ ...DEFAULT_PAGINATION });
-const selectedIdsAtom = atom<Set<number>>(new Set());
+const selectedIdsAtom = atom<Set<number>>(new Set<number>());
 const roleOptionsAtom = atom<RoleOption[]>([
   { label: '全部角色', value: DEFAULT_ROLE_VALUE },
 ]);
@@ -91,7 +91,7 @@ const applyFiltersAtom = atom(
 
     set(appliedFiltersAtom, { ...filters });
     set(paginationAtom, { ...DEFAULT_PAGINATION });
-    set(selectedIdsAtom, new Set());
+    set(selectedIdsAtom, new Set<number>());
   },
 );
 
@@ -99,7 +99,7 @@ const resetFiltersAtom = atom(null, (_get, set) => {
   set(filterFormAtom, { ...defaultFilters });
   set(appliedFiltersAtom, { ...defaultFilters });
   set(paginationAtom, { ...DEFAULT_PAGINATION });
-  set(selectedIdsAtom, new Set());
+  set(selectedIdsAtom, new Set<number>());
 });
 
 const setPaginationAtom = atom(
@@ -132,7 +132,7 @@ const setSelectedIdsAtom = atom(
 );
 
 const clearSelectedIdsAtom = atom(null, (_get, set) => {
-  set(selectedIdsAtom, new Set());
+  set(selectedIdsAtom, new Set<number>());
 });
 
 const setRoleOptionsAtom = atom(

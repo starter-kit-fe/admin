@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button } from '@/components/ui/button';
@@ -19,38 +18,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-import type { DictDataFormValues } from '../type';
-
-const dictDataFormSchema = z.object({
-  dictLabel: z
-    .string()
-    .trim()
-    .min(1, '请输入字典标签')
-    .max(100, '字典标签不能超过 100 个字符'),
-  dictValue: z
-    .string()
-    .trim()
-    .min(1, '请输入字典键值')
-    .max(100, '字典键值不能超过 100 个字符'),
-  dictSort: z.coerce
-    .number({
-      errorMap: () => ({ message: '排序需为非负整数' }),
-    })
-    .min(0, '排序需为非负整数'),
-  status: z.enum(['0', '1']),
-  isDefault: z.enum(['Y', 'N']),
-  remark: z
-    .string()
-    .trim()
-    .max(255, '备注不能超过 255 个字符')
-    .optional()
-    .or(z.literal('')),
-});
+import { dictDataFormSchema, type DictDataFormValues } from '../type';
 
 const DEFAULT_VALUES: DictDataFormValues = {
   dictLabel: '',
   dictValue: '',
-  dictSort: 0,
+  dictSort: '0',
   status: '0',
   isDefault: 'N',
   remark: '',
@@ -59,6 +32,8 @@ const DEFAULT_VALUES: DictDataFormValues = {
 function RequiredMark() {
   return <span className="mr-1 text-destructive">*</span>;
 }
+
+type DictDataFormResolverContext = Record<string, never>;
 
 interface DictDataEditorDialogProps {
   mode: 'create' | 'edit';
@@ -78,7 +53,11 @@ export function DictDataEditorDialog({
   onOpenChange,
   onSubmit,
 }: DictDataEditorDialogProps) {
-  const form = useForm<DictDataFormValues>({
+  const form = useForm<
+    DictDataFormValues,
+    DictDataFormResolverContext,
+    DictDataFormValues
+  >({
     resolver: zodResolver(dictDataFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
@@ -93,10 +72,10 @@ export function DictDataEditorDialog({
     onSubmit({
       dictLabel: values.dictLabel.trim(),
       dictValue: values.dictValue.trim(),
-      dictSort: Number.isNaN(values.dictSort) ? 0 : values.dictSort,
+      dictSort: values.dictSort.trim(),
       status: values.status,
       isDefault: values.isDefault,
-      remark: values.remark?.trim() ?? '',
+      remark: values.remark.trim(),
     });
   });
 
@@ -157,18 +136,18 @@ export function DictDataEditorDialog({
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        min={0}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="0"
-                        value={Number.isNaN(field.value) ? '' : field.value}
+                        value={field.value}
                         onChange={(event) => {
                           const raw = event.target.value;
                           if (raw === '') {
                             field.onChange('');
                             return;
                           }
-                          const next = Number(raw);
-                          field.onChange(Number.isNaN(next) ? field.value : next);
+                          field.onChange(raw.replace(/[^\d]/g, ''));
                         }}
                       />
                     </FormControl>

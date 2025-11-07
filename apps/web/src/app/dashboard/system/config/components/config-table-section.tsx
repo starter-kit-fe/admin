@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit2, Trash2 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -52,7 +52,7 @@ export function ConfigTableSection() {
         configName: appliedFilters.configName || undefined,
         configKey: appliedFilters.configKey || undefined,
       }),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   useEffect(() => {

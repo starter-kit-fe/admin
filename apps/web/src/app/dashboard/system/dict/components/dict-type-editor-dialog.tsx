@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button } from '@/components/ui/button';
@@ -19,27 +18,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-import type { DictTypeFormValues } from '../type';
-
-const dictTypeFormSchema = z.object({
-  dictName: z
-    .string()
-    .trim()
-    .min(1, '请输入字典名称')
-    .max(100, '字典名称不能超过 100 个字符'),
-  dictType: z
-    .string()
-    .trim()
-    .min(1, '请输入字典类型')
-    .max(100, '字典类型不能超过 100 个字符'),
-  status: z.enum(['0', '1']),
-  remark: z
-    .string()
-    .trim()
-    .max(255, '备注不能超过 255 个字符')
-    .optional()
-    .or(z.literal('')),
-});
+import { dictTypeFormSchema, type DictTypeFormValues } from '../type';
 
 const DEFAULT_VALUES: DictTypeFormValues = {
   dictName: '',
@@ -51,6 +30,8 @@ const DEFAULT_VALUES: DictTypeFormValues = {
 function RequiredMark() {
   return <span className="mr-1 text-destructive">*</span>;
 }
+
+type DictTypeFormResolverContext = Record<string, never>;
 
 interface DictTypeEditorDialogProps {
   mode: 'create' | 'edit';
@@ -69,7 +50,11 @@ export function DictTypeEditorDialog({
   onOpenChange,
   onSubmit,
 }: DictTypeEditorDialogProps) {
-  const form = useForm<DictTypeFormValues>({
+  const form = useForm<
+    DictTypeFormValues,
+    DictTypeFormResolverContext,
+    DictTypeFormValues
+  >({
     resolver: zodResolver(dictTypeFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
@@ -85,7 +70,7 @@ export function DictTypeEditorDialog({
       dictName: values.dictName.trim(),
       dictType: values.dictType.trim(),
       status: values.status,
-      remark: values.remark?.trim() ?? '',
+      remark: values.remark.trim(),
     });
   });
 

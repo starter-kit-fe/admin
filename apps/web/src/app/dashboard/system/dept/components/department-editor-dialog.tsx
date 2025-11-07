@@ -1,71 +1,33 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 
-import type { DepartmentFormValues, DepartmentParentOption } from '../type';
-
-const departmentFormSchema = z.object({
-  deptName: z
-    .string()
-    .trim()
-    .min(1, '请输入部门名称')
-    .max(50, '部门名称不能超过 50 个字符'),
-  parentId: z.string().trim().min(1, '请选择上级部门'),
-  orderNum: z
-    .string()
-    .trim()
-    .refine((value) => {
-      if (value === '') return true;
-      if (!/^\d+$/.test(value)) return false;
-      const parsed = Number(value);
-      return parsed >= 0 && parsed <= 9999;
-    }, '显示排序需为 0 到 9999 的整数'),
-  leader: z
-    .string()
-    .trim()
-    .max(50, '负责人不能超过 50 个字符')
-    .optional()
-    .or(z.literal('')),
-  phone: z
-    .string()
-    .trim()
-    .refine(
-      (value) =>
-        value === '' ||
-        /^1\d{10}$/.test(value) ||
-        /^0\d{2,3}-?\d{7,8}$/.test(value) ||
-        /^\+?[0-9\-]{6,18}$/.test(value),
-      '请输入有效联系电话',
-    )
-    .optional()
-    .or(z.literal('')),
-  email: z
-    .string()
-    .trim()
-    .refine(
-      (value) => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
-      '请输入正确邮箱',
-    )
-    .optional()
-    .or(z.literal('')),
-  status: z.enum(['0', '1']),
-  remark: z
-    .string()
-    .trim()
-    .max(255, '备注不能超过 255 个字符')
-    .optional()
-    .or(z.literal('')),
-});
+import {
+  type DepartmentFormValues,
+  type DepartmentParentOption,
+  departmentFormSchema,
+} from '../type';
 
 const DEFAULT_VALUES: DepartmentFormValues = {
   deptName: '',
@@ -77,6 +39,8 @@ const DEFAULT_VALUES: DepartmentFormValues = {
   status: '0',
   remark: '',
 };
+
+type DepartmentFormResolverContext = Record<string, never>;
 
 function RequiredMark() {
   return <span className="mr-1 text-destructive">*</span>;
@@ -101,7 +65,11 @@ export function DepartmentEditorDialog({
   onOpenChange,
   onSubmit,
 }: DepartmentEditorDialogProps) {
-  const form = useForm<DepartmentFormValues>({
+  const form = useForm<
+    DepartmentFormValues,
+    DepartmentFormResolverContext,
+    DepartmentFormValues
+  >({
     resolver: zodResolver(departmentFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
@@ -117,9 +85,9 @@ export function DepartmentEditorDialog({
       deptName: values.deptName.trim(),
       parentId: values.parentId,
       orderNum: values.orderNum.trim(),
-      leader: values.leader?.trim() ?? '',
-      phone: values.phone?.trim() ?? '',
-      email: values.email?.trim() ?? '',
+      leader: values.leader.trim(),
+      phone: values.phone.trim(),
+      email: values.email.trim(),
       status: values.status,
       remark: values.remark?.trim() ?? '',
     });
@@ -145,7 +113,8 @@ export function DepartmentEditorDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      <RequiredMark />上级部门
+                      <RequiredMark />
+                      上级部门
                     </FormLabel>
                     <Select
                       value={field.value}
@@ -183,7 +152,8 @@ export function DepartmentEditorDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      <RequiredMark />部门名称
+                      <RequiredMark />
+                      部门名称
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="输入部门名称" {...field} />
@@ -198,7 +168,8 @@ export function DepartmentEditorDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      <RequiredMark />显示排序
+                      <RequiredMark />
+                      显示排序
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="0" inputMode="numeric" {...field} />
@@ -252,7 +223,8 @@ export function DepartmentEditorDialog({
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
                     <FormLabel>
-                      <RequiredMark />部门状态
+                      <RequiredMark />
+                      部门状态
                     </FormLabel>
                     <FormControl>
                       <RadioGroup

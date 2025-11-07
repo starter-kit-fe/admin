@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
@@ -58,7 +58,7 @@ export function RoleDataSection() {
         status: status === 'all' ? undefined : status,
         roleName: appliedFilters.keyword || undefined,
       }),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   const statusCountQueries = useQueries({

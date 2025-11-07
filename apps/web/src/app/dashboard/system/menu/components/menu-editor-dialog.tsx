@@ -37,21 +37,15 @@ const menuFormSchema = z
     component: z
       .string()
       .trim()
-      .max(255, '组件路径不超过 255 个字符')
-      .optional()
-      .or(z.literal('')),
+      .max(255, '组件路径不超过 255 个字符'),
     query: z
       .string()
       .trim()
-      .max(255, '路由参数不超过 255 个字符')
-      .optional()
-      .or(z.literal('')),
+      .max(255, '路由参数不超过 255 个字符'),
     routeName: z
       .string()
       .trim()
-      .max(50, '路由名称不能超过 50 个字符')
-      .optional()
-      .or(z.literal('')),
+      .max(50, '路由名称不能超过 50 个字符'),
     isFrame: z.boolean(),
     isCache: z.boolean(),
     menuType: z.enum(['M', 'C', 'F']),
@@ -60,20 +54,15 @@ const menuFormSchema = z
     perms: z
       .string()
       .trim()
-      .max(100, '权限标识不超过 100 个字符')
-      .optional()
-      .or(z.literal('')),
+      .max(100, '权限标识不超过 100 个字符'),
     icon: z
       .string()
       .trim()
-      .max(100, '图标标识不超过 100 个字符')
-      .default('#'),
+      .max(100, '图标标识不超过 100 个字符'),
     remark: z
       .string()
       .trim()
-      .max(500, '备注最长 500 个字符')
-      .optional()
-      .or(z.literal('')),
+      .max(500, '备注最长 500 个字符'),
   })
   .superRefine((data, ctx) => {
     if (data.menuType !== 'F') {

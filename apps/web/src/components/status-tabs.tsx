@@ -12,7 +12,7 @@ export type StatusTabItem = {
 type StatusTabsProps = {
   value: string
   onValueChange: (value: string) => void
-  tabs: StatusTabItem[]
+  tabs: ReadonlyArray<StatusTabItem>
 }
 
 export function StatusTabs({ value, onValueChange, tabs }: StatusTabsProps) {

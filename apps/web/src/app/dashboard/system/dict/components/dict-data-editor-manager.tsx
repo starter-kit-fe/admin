@@ -38,7 +38,7 @@ export function DictDataEditorManager() {
       createDictData(dictTypeId, {
         dictLabel: values.dictLabel.trim(),
         dictValue: values.dictValue.trim(),
-        dictSort: values.dictSort ?? 0,
+        dictSort: resolveSortValue(values.dictSort),
         status: values.status,
         isDefault: values.isDefault,
         remark: normalizeOptional(values.remark),
@@ -72,7 +72,7 @@ export function DictDataEditorManager() {
       updateDictData(dictTypeId, dictCode, {
         dictLabel: values.dictLabel.trim(),
         dictValue: values.dictValue.trim(),
-        dictSort: values.dictSort ?? 0,
+        dictSort: resolveSortValue(values.dictSort),
         status: values.status,
         isDefault: values.isDefault,
         remark: normalizeOptional(values.remark),
@@ -140,3 +140,7 @@ export function DictDataEditorManager() {
     />
   );
 }
+  const resolveSortValue = (value: string) => {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  };

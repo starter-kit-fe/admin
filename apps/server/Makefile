@@ -16,6 +16,12 @@ TMP_DIR=./tmp
 # Directory for final production builds
 BUILD_DIR=./build
 
+# --- Deployment ---
+DEPLOY_HOST ?= oci-fr
+REMOTE_DIR ?= /opt/admin
+REMOTE_TMP ?= /tmp/admin-deploy
+SERVICE_NAME ?= admin.service
+
 # --- Versioning ---
 # Get version from the root package.json. Use shell to execute the command and assign the result.
 # The `:=` operator evaluates the right-hand side immediately.
@@ -67,7 +73,19 @@ deploy:
 	# Copy the service file from the deployments directory
 	cp deployments/admin.service $(BUILD_DIR)/admin.service
 	cp ./.env $(BUILD_DIR)/.env
-	scp -r ./build/*  root@129.151.228.240:/opt/admin
+	@echo "📡 Preparing remote host $(DEPLOY_HOST)..."
+	ssh $(DEPLOY_HOST) "rm -rf $(REMOTE_TMP) && mkdir -p $(REMOTE_TMP)"
+	scp -r $(BUILD_DIR)/. $(DEPLOY_HOST):$(REMOTE_TMP)/
+	@echo "🚚 Installing artifacts on $(DEPLOY_HOST)..."
+	ssh $(DEPLOY_HOST) "\
+		set -e; \
+		sudo mkdir -p $(REMOTE_DIR); \
+		sudo install -m 755 $(REMOTE_TMP)/$(BINARY_NAME) $(REMOTE_DIR)/$(BINARY_NAME); \
+		sudo install -m 600 $(REMOTE_TMP)/.env $(REMOTE_DIR)/.env; \
+		sudo install -m 644 $(REMOTE_TMP)/admin.service /etc/systemd/system/$(SERVICE_NAME); \
+		sudo systemctl daemon-reload; \
+		sudo systemctl restart $(SERVICE_NAME); \
+		rm -rf $(REMOTE_TMP)"
 	@echo "✅ Build complete! Binary is at $(BUILD_DIR)/$(BINARY_NAME)"
 
 # Target: docs

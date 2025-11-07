@@ -36,9 +36,7 @@ const postFormSchema = z.object({
   remark: z
     .string()
     .trim()
-    .max(255, '备注不能超过 255 个字符')
-    .optional()
-    .or(z.literal('')),
+    .max(255, '备注不能超过 255 个字符'),
 });
 
 const DEFAULT_VALUES: PostFormValues = {
@@ -85,7 +83,7 @@ export function PostEditorDialog({
       postCode: values.postCode.trim(),
       postName: values.postName.trim(),
       status: values.status,
-      remark: values.remark?.trim() ?? '',
+      remark: values.remark.trim(),
     });
   });
 

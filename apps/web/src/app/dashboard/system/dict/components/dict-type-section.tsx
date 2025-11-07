@@ -175,9 +175,9 @@ export function DictTypeSection() {
                       <Button
                         type="button"
                         variant="ghost"
-                        size="xs"
+                        size="sm"
                         onClick={() => openTypeEdit(dict)}
-                        className="gap-1 text-xs"
+                        className="h-7 gap-1 px-2 text-xs"
                       >
                         <Edit2 className="size-3.5" />
                         编辑
@@ -185,9 +185,9 @@ export function DictTypeSection() {
                       <Button
                         type="button"
                         variant="ghost"
-                        size="xs"
+                        size="sm"
                         onClick={() => handleAddData(dict)}
-                        className="gap-1 text-xs"
+                        className="h-7 gap-1 px-2 text-xs"
                       >
                         <Plus className="size-3.5" />
                         新增字典项
@@ -195,9 +195,9 @@ export function DictTypeSection() {
                       <Button
                         type="button"
                         variant="ghost"
-                        size="xs"
+                        size="sm"
                         onClick={() => handleDelete(dict)}
-                        className="gap-1 text-xs text-destructive hover:text-destructive"
+                        className="h-7 gap-1 px-2 text-xs text-destructive hover:text-destructive"
                       >
                         <Trash2 className="size-3.5" />
                         删除
