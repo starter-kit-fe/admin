@@ -24,6 +24,18 @@ func SeedDefaults(ctx context.Context, db *gorm.DB, logger *slog.Logger) error {
 	}
 
 	prefix := constant.DB_PREFIX
+
+	exists, err := alreadySeeded(ctx, db, prefix)
+	if err != nil {
+		return fmt.Errorf("check seed data: %w", err)
+	}
+	if exists {
+		if logger != nil {
+			logger.Info("skipping default seed; data already present")
+		}
+		return nil
+	}
+
 	statements := buildSeedStatements(prefix)
 	if len(statements) == 0 {
 		if logger != nil {
@@ -176,4 +188,17 @@ func splitSQLValues(s string) []string {
 		result = append(result, strings.TrimSpace(buf.String()))
 	}
 	return result
+}
+
+func alreadySeeded(ctx context.Context, db *gorm.DB, prefix string) (bool, error) {
+	table := prefix + "sys_user"
+	var count int64
+
+	if err := db.WithContext(ctx).Table(table).Count(&count).Error; err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "does not exist") {
+			return false, nil
+		}
+		return false, err
+	}
+	return count > 0, nil
 }

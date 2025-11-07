@@ -12,10 +12,16 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { use, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import pkg from '../../../../package.json';
 
@@ -26,11 +32,23 @@ const HERO_IMAGES = [
   'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1600&q=80',
 ] as const;
 
+const BACKDROP_SWITCH_DELAY = 1300;
+
+const pickRandomHeroImage = (exclude?: string) => {
+  const pool = exclude
+    ? HERO_IMAGES.filter((image) => image !== exclude)
+    : [...HERO_IMAGES];
+  const fallbackPool = pool.length ? pool : HERO_IMAGES;
+  const index = Math.floor(Math.random() * fallbackPool.length);
+  return fallbackPool[index] ?? HERO_IMAGES[0];
+};
+
 export default function HeroSection() {
   const { user, isAuthenticated } = useAuthStore();
   const heroRef = useRef<HTMLElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
-  console.log(user, isAuthenticated);
+  const crossfadeTimelineRef = useRef<gsap.core.Timeline | null>(null);
+  const hasAnimatedBackdropRef = useRef(false);
   const heroTitle = useMemo(() => {
     const [main, ...rest] = (pkg.seo?.title ?? 'Admin Template')
       .split('—')
@@ -44,22 +62,90 @@ export default function HeroSection() {
   const keywords = useMemo(() => pkg.seo.keywords.slice(0, 3), []);
 
   const [heroImage, setHeroImage] = useState<string>(HERO_IMAGES[0]);
+  const currentHeroImageRef = useRef(heroImage);
 
   useEffect(() => {
+    currentHeroImageRef.current = heroImage;
+  }, [heroImage]);
+
+  const changeHeroImage = useCallback(
+    (nextImage: string) => {
+      if (!nextImage || nextImage === currentHeroImageRef.current) {
+        return;
+      }
+
+      const reduceMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (reduceMotion) {
+        setHeroImage(nextImage);
+        currentHeroImageRef.current = nextImage;
+        return;
+      }
+
+      const backdrop = backdropRef.current;
+      if (!backdrop) {
+        setHeroImage(nextImage);
+        currentHeroImageRef.current = nextImage;
+        return;
+      }
+
+      crossfadeTimelineRef.current?.kill();
+
+      const timeline = gsap.timeline({
+        defaults: { ease: 'power2.out' },
+        onComplete: () => {
+          crossfadeTimelineRef.current = null;
+        },
+      });
+
+      timeline.to(backdrop, { opacity: 0, duration: 0.45 });
+      timeline.add(() => {
+        setHeroImage(nextImage);
+        currentHeroImageRef.current = nextImage;
+      });
+      timeline.to(backdrop, { opacity: 1, duration: 0.65 });
+
+      crossfadeTimelineRef.current = timeline;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    return () => {
+      crossfadeTimelineRef.current?.kill();
+    };
+  }, []);
+
+  useLayoutEffect(() => {
     const root = heroRef.current;
-    if (!root) {
+    if (!root || typeof window === 'undefined') {
       return;
     }
 
-    gsap.registerPlugin(ScrollTrigger);
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+    if (prefersReducedMotion) {
+      return;
+    }
 
     const ctx = gsap.context(() => {
-      gsap.from(root.querySelectorAll('.hero-animate'), {
-        y: 28,
-        opacity: 0,
+      const heroTargets = root.querySelectorAll<HTMLElement>('.hero-animate');
+      if (!heroTargets.length) {
+        return;
+      }
+
+      gsap.set(heroTargets, { y: 28, opacity: 0 });
+
+      gsap.to(heroTargets, {
+        y: 0,
+        opacity: 1,
         duration: 0.9,
         ease: 'power3.out',
         stagger: 0.12,
+        clearProps: 'transform,opacity',
       });
 
       if (backdropRef.current) {
@@ -72,6 +158,7 @@ export default function HeroSection() {
             duration: 1.2,
             ease: 'power2.out',
             delay: 0.15,
+            clearProps: 'opacity,scale',
           },
         );
       }
@@ -81,13 +168,19 @@ export default function HeroSection() {
   }, []);
 
   useEffect(() => {
-    if (HERO_IMAGES.length <= 1) {
+    if (HERO_IMAGES.length <= 1 || hasAnimatedBackdropRef.current) {
       return;
     }
-    const index = Math.floor(Math.random() * HERO_IMAGES.length);
-    const chosen = HERO_IMAGES[index] ?? HERO_IMAGES[0];
-    setHeroImage(chosen);
-  }, []);
+
+    hasAnimatedBackdropRef.current = true;
+
+    const timer = window.setTimeout(() => {
+      const nextHeroImage = pickRandomHeroImage(currentHeroImageRef.current);
+      changeHeroImage(nextHeroImage);
+    }, BACKDROP_SWITCH_DELAY);
+
+    return () => window.clearTimeout(timer);
+  }, [changeHeroImage]);
 
   const ctaHref = isAuthenticated ? '/dashboard' : '/login';
 
