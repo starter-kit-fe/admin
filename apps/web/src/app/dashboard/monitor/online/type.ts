@@ -22,9 +22,3 @@ export interface OnlineUserListResponse {
   pageNum?: number;
   pageSize?: number;
 }
-
-export function isOnlineUserListResponse(
-  data: OnlineUserListResponse | OnlineUser[] | undefined,
-): data is OnlineUserListResponse {
-  return Boolean(data) && !Array.isArray(data) && Array.isArray((data as OnlineUserListResponse).items);
-}
