@@ -41,6 +41,7 @@ type createUserRequest struct {
 	Password    string  `json:"password" binding:"required"`
 	Remark      *string `json:"remark"`
 	RoleIDs     []int64 `json:"roleIds"`
+	PostIDs     []int64 `json:"postIds"`
 }
 
 type updateUserRequest struct {
@@ -53,11 +54,16 @@ type updateUserRequest struct {
 	Status      *string  `json:"status"`
 	Remark      *string  `json:"remark"`
 	RoleIDs     *[]int64 `json:"roleIds"`
+	PostIDs     *[]int64 `json:"postIds"`
 }
 
 type listOptionsQuery struct {
 	Keyword string `form:"keyword"`
 	Limit   int    `form:"limit"`
+}
+
+type resetPasswordRequest struct {
+	Password string `json:"password" binding:"required"`
 }
 
 func (h *Handler) List(ctx *gin.Context) {
@@ -128,6 +134,27 @@ func (h *Handler) ListRoleOptions(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(options))
 }
 
+func (h *Handler) ListPostOptions(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
+		return
+	}
+
+	var query listOptionsQuery
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid query parameters"))
+		return
+	}
+
+	options, err := h.service.ListPostOptions(ctx.Request.Context(), query.Keyword, query.Limit)
+	if err != nil {
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load posts"))
+		return
+	}
+
+	resp.OK(ctx, resp.WithData(options))
+}
+
 func (h *Handler) Get(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
@@ -178,6 +205,7 @@ func (h *Handler) Create(ctx *gin.Context) {
 		Remark:      payload.Remark,
 		Operator:    operator,
 		RoleIDs:     payload.RoleIDs,
+		PostIDs:     payload.PostIDs,
 	})
 	if err != nil {
 		switch {
@@ -189,6 +217,8 @@ func (h *Handler) Create(ctx *gin.Context) {
 			resp.BadRequest(ctx, resp.WithMessage("invalid user status"))
 		case errors.Is(err, ErrInvalidRoleSelection):
 			resp.BadRequest(ctx, resp.WithMessage("invalid role selection"))
+		case errors.Is(err, ErrInvalidPostSelection):
+			resp.BadRequest(ctx, resp.WithMessage("invalid post selection"))
 		default:
 			resp.InternalServerError(ctx, resp.WithMessage("failed to create user"))
 		}
@@ -229,6 +259,7 @@ func (h *Handler) Update(ctx *gin.Context) {
 		Remark:      payload.Remark,
 		Operator:    operator,
 		RoleIDs:     payload.RoleIDs,
+		PostIDs:     payload.PostIDs,
 	})
 	if err != nil {
 		switch {
@@ -240,6 +271,8 @@ func (h *Handler) Update(ctx *gin.Context) {
 			resp.BadRequest(ctx, resp.WithMessage("invalid user status"))
 		case errors.Is(err, ErrInvalidRoleSelection):
 			resp.BadRequest(ctx, resp.WithMessage("invalid role selection"))
+		case errors.Is(err, ErrInvalidPostSelection):
+			resp.BadRequest(ctx, resp.WithMessage("invalid post selection"))
 		default:
 			resp.InternalServerError(ctx, resp.WithMessage("failed to update user"))
 		}
@@ -275,6 +308,46 @@ func (h *Handler) Delete(ctx *gin.Context) {
 	}
 
 	resp.NoContent(ctx)
+}
+
+func (h *Handler) ResetPassword(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
+		return
+	}
+
+	id, err := parseUserID(ctx.Param("id"))
+	if err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid user id"))
+		return
+	}
+
+	var payload resetPasswordRequest
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid password payload"))
+		return
+	}
+
+	operator := resolveOperator(ctx)
+	if err := h.service.ResetPassword(ctx.Request.Context(), ResetPasswordInput{
+		UserID:   id,
+		Password: payload.Password,
+		Operator: operator,
+	}); err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			resp.NotFound(ctx, resp.WithMessage("user not found"))
+		case errors.Is(err, ErrPasswordRequired):
+			resp.BadRequest(ctx, resp.WithMessage("password is required"))
+		case errors.Is(err, ErrPasswordTooShort):
+			resp.BadRequest(ctx, resp.WithMessage("password must be at least 6 characters"))
+		default:
+			resp.InternalServerError(ctx, resp.WithMessage("failed to reset password"))
+		}
+		return
+	}
+
+	resp.OK(ctx, resp.WithMessage("password reset"))
 }
 
 func parseUserID(param string) (int64, error) {

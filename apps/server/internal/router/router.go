@@ -329,6 +329,7 @@ func registerSystemUserRoutes(system *gin.RouterGroup, opts Options) {
 		users.DELETE("/:id", middleware.RequirePermissions("system:user:remove"), notImplemented("delete user"))
 		users.GET("/options/departments", middleware.RequirePermissions("system:user:list"), notImplemented("list department options"))
 		users.GET("/options/roles", middleware.RequirePermissions("system:user:list"), notImplemented("list role options"))
+		users.GET("/options/posts", middleware.RequirePermissions("system:user:list"), notImplemented("list post options"))
 	} else {
 		users.GET("", middleware.RequirePermissions("system:user:list"), opts.UserHandler.List)
 		users.POST("", middleware.RequirePermissions("system:user:add"), opts.UserHandler.Create)
@@ -337,9 +338,14 @@ func registerSystemUserRoutes(system *gin.RouterGroup, opts Options) {
 		users.DELETE("/:id", middleware.RequirePermissions("system:user:remove"), opts.UserHandler.Delete)
 		users.GET("/options/departments", middleware.RequirePermissions("system:user:list"), opts.UserHandler.ListDepartmentOptions)
 		users.GET("/options/roles", middleware.RequirePermissions("system:user:list"), opts.UserHandler.ListRoleOptions)
+		users.GET("/options/posts", middleware.RequirePermissions("system:user:list"), opts.UserHandler.ListPostOptions)
 	}
 
-	users.POST("/:id/reset-password", middleware.RequirePermissions("system:user:resetPwd"), notImplemented("reset user password"))
+	if opts.UserHandler == nil {
+		users.POST("/:id/reset-password", middleware.RequirePermissions("system:user:resetPwd"), notImplemented("reset user password"))
+	} else {
+		users.POST("/:id/reset-password", middleware.RequirePermissions("system:user:resetPwd"), opts.UserHandler.ResetPassword)
+	}
 }
 
 func registerMonitorRoutes(group *gin.RouterGroup, opts Options) {

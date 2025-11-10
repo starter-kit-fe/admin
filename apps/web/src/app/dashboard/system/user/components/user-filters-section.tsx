@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { STATUS_TABS } from '../constants';
@@ -10,7 +11,19 @@ import {
   type FilterChip,
 } from './user-management-filters';
 
-export function UserFiltersSection() {
+interface UserFiltersSectionProps {
+  variant?: 'panel' | 'mobile';
+  actionSlot?: ReactNode;
+  titleSlot?: ReactNode;
+  refreshSlot?: ReactNode;
+}
+
+export function UserFiltersSection({
+  variant = 'panel',
+  actionSlot,
+  titleSlot,
+  refreshSlot,
+}: UserFiltersSectionProps) {
   const {
     status,
     setStatus,
@@ -20,7 +33,6 @@ export function UserFiltersSection() {
     applyFilters,
     resetFilters,
     roleOptions,
-    statusCounts,
   } = useUserManagementStore();
 
   const keywordDebounceRef = useRef<number | null>(null);
@@ -43,10 +55,9 @@ export function UserFiltersSection() {
       STATUS_TABS.map((tab) => ({
         value: tab.value,
         label: tab.label,
-        count: statusCounts[tab.value],
         activeColor: tab.color,
       })),
-    [statusCounts],
+    [],
   );
 
   const appliedFilterChips = useMemo<FilterChip[]>(() => {
@@ -125,6 +136,10 @@ export function UserFiltersSection() {
       appliedFilters={appliedFilterChips}
       onRemoveFilter={handleRemoveFilter}
       onResetFilters={handleResetFilters}
+      variant={variant}
+      actionSlot={actionSlot}
+      titleSlot={titleSlot}
+      refreshSlot={refreshSlot}
     />
   );
 }

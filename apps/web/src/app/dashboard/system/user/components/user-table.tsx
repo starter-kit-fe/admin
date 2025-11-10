@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { KeyRound, MoreHorizontal, Pencil, Trash2, UserCog } from 'lucide-react';
+import { KeyRound, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import type { User } from '../type';
 import {
   formatPhoneNumber,
+  getAccountLabel,
   getAvatarFallback,
   getCompanyLabel,
   getDisplayName,
@@ -37,7 +38,6 @@ interface UserTableProps {
   onToggleSelect: (userId: number, checked: boolean) => void;
   onEdit: (user: User) => void;
   onResetPassword?: (user: User) => void;
-  onChangeRole?: (user: User) => void;
   onDelete: (user: User) => void;
   isLoading?: boolean;
   isError?: boolean;
@@ -47,7 +47,6 @@ interface RowActionsProps {
   user: User;
   onEdit: (user: User) => void;
   onResetPassword?: (user: User) => void;
-  onChangeRole?: (user: User) => void;
   onDelete: (user: User) => void;
   disableDelete: boolean;
 }
@@ -56,7 +55,6 @@ function RowActions({
   user,
   onEdit,
   onResetPassword,
-  onChangeRole,
   onDelete,
   disableDelete,
 }: RowActionsProps) {
@@ -104,13 +102,6 @@ function RowActions({
             <KeyRound className="mr-2 size-4" />
             重置密码
           </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!onChangeRole}
-            onSelect={handleSelect(onChangeRole)}
-          >
-            <UserCog className="mr-2 size-4" />
-            修改角色
-          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             disabled={disableDelete}
@@ -134,7 +125,6 @@ export function UserTable({
   onToggleSelect,
   onEdit,
   onResetPassword,
-  onChangeRole,
   onDelete,
   isLoading,
   isError,
@@ -154,11 +144,11 @@ export function UserTable({
         ),
         cell: ({ row }) => {
           const user = row.original;
-          const displayName = getDisplayName(user);
+          const label = getAccountLabel(user, getDisplayName(user));
           const isSelected = selectedIds.has(user.userId);
           return (
             <Checkbox
-              aria-label={`选择 ${displayName}`}
+              aria-label={`选择 ${label}`}
               checked={isSelected}
               onCheckedChange={(checked) => onToggleSelect(user.userId, checked === true)}
             />
@@ -172,10 +162,11 @@ export function UserTable({
         },
       }),
       columnHelper.display({
-        id: 'name',
-        header: () => '姓名',
+        id: 'account',
+        header: () => '账号',
         cell: ({ row }) => {
           const user = row.original;
+          const accountLabel = getAccountLabel(user);
           const displayName = getDisplayName(user);
           const emailLabel = getEmailLabel(user);
 
@@ -186,7 +177,7 @@ export function UserTable({
                 <AvatarFallback>{getAvatarFallback(user)}</AvatarFallback>
               </Avatar>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">{displayName}</p>
+                <p className="text-sm font-medium text-foreground">{accountLabel}</p>
                 <p className="text-xs text-muted-foreground">{emailLabel}</p>
               </div>
             </div>
@@ -194,6 +185,18 @@ export function UserTable({
         },
         meta: {
           headerClassName: 'min-w-[220px]',
+        },
+      }),
+      columnHelper.display({
+        id: 'nickname',
+        header: () => '昵称',
+        cell: ({ row }) => {
+          const user = row.original;
+          const nickName = user.nickName?.trim();
+          return <span className="text-sm text-muted-foreground">{nickName && nickName.length > 0 ? nickName : '—'}</span>;
+        },
+        meta: {
+          headerClassName: 'min-w-[160px]',
         },
       }),
       columnHelper.display({
@@ -263,7 +266,6 @@ export function UserTable({
               user={user}
               onEdit={onEdit}
               onResetPassword={onResetPassword}
-              onChangeRole={onChangeRole}
               onDelete={onDelete}
               disableDelete={isSuperAdmin}
             />
@@ -284,7 +286,6 @@ export function UserTable({
       onToggleSelect,
       onEdit,
       onResetPassword,
-      onChangeRole,
       onDelete,
     ],
   );

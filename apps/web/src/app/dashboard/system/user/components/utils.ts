@@ -15,6 +15,11 @@ export const getDisplayName = (user: User) => {
   return base && base.length > 0 ? base : '用户';
 };
 
+export const getAccountLabel = (user: User, fallback = '—') => {
+  const base = user.userName?.trim();
+  return base && base.length > 0 ? base : fallback;
+};
+
 export const getAvatarFallback = (user: User) => {
   const name = getDisplayName(user);
   return name.slice(0, 1).toUpperCase();
@@ -60,7 +65,16 @@ export const toFormValues = (user: User): UserFormValues => ({
   deptId: user.deptId ? String(user.deptId) : '',
   remark: user.remark ?? '',
   password: '',
-  roleId: user.roles?.[0] ? String(user.roles[0].roleId) : '',
+  roleIds: Array.isArray(user.roles)
+    ? user.roles
+        .filter((role) => role.roleId != null)
+        .map((role) => String(role.roleId))
+    : [],
+  postIds: Array.isArray(user.posts)
+    ? user.posts
+        .filter((post) => post.postId != null)
+        .map((post) => String(post.postId))
+    : [],
 });
 
 export const sanitizeDeptId = (value: string) => {
@@ -71,10 +85,23 @@ export const sanitizeDeptId = (value: string) => {
   return parsed;
 };
 
-export const sanitizeRoleId = (value: string) => {
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-  const parsed = Number.parseInt(trimmed, 10);
-  if (Number.isNaN(parsed)) return undefined;
-  return parsed;
+export const sanitizeIdList = (values: string[]) => {
+  if (!Array.isArray(values)) {
+    return [];
+  }
+  const result: number[] = [];
+  const seen = new Set<number>();
+  values.forEach((value) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return;
+    }
+    const parsed = Number.parseInt(trimmed, 10);
+    if (Number.isNaN(parsed) || seen.has(parsed)) {
+      return;
+    }
+    seen.add(parsed);
+    result.push(parsed);
+  });
+  return result;
 };

@@ -1,7 +1,8 @@
 export default function Page() {
+  const url = process.env.BASE_URL;
   return (
     <iframe
-      src="http://127.0.0.1:27401"
+      src={url}
       title="Swagger UI"
       style={{ width: '100%', height: 'calc(100vh - 64px)', border: 'none' }}
     />

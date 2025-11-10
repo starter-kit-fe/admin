@@ -14,8 +14,6 @@ type PaginationState = {
   pageSize: number;
 };
 
-type StatusCounts = Record<StatusValue, number>;
-
 type EditorState =
   | { open: false }
   | { open: true; mode: 'create' }
@@ -38,13 +36,9 @@ const selectedIdsAtom = atom<Set<number>>(new Set<number>());
 const roleOptionsAtom = atom<RoleOption[]>([
   { label: '全部角色', value: DEFAULT_ROLE_VALUE },
 ]);
-const statusCountsAtom = atom<StatusCounts>({
-  all: 0,
-  '0': 0,
-  '1': 0,
-});
 const editorStateAtom = atom<EditorState>({ open: false });
 const deleteTargetAtom = atom<User | null>(null);
+const resetPasswordTargetAtom = atom<User | null>(null);
 const bulkDeleteOpenAtom = atom(false);
 const refreshingAtom = atom(false);
 const activeMutationsAtom = atom(0);
@@ -142,13 +136,6 @@ const setRoleOptionsAtom = atom(
   },
 );
 
-const setStatusCountsAtom = atom(
-  null,
-  (_get, set, counts: StatusCounts) => {
-    set(statusCountsAtom, counts);
-  },
-);
-
 const openCreateAtom = atom(null, (_get, set) => {
   set(editorStateAtom, { open: true, mode: 'create' });
 });
@@ -165,6 +152,13 @@ const setDeleteTargetAtom = atom(
   null,
   (_get, set, user: User | null) => {
     set(deleteTargetAtom, user);
+  },
+);
+
+const setResetPasswordTargetAtom = atom(
+  null,
+  (_get, set, user: User | null) => {
+    set(resetPasswordTargetAtom, user);
   },
 );
 
@@ -213,14 +207,14 @@ export interface UserManagementStore {
   clearSelectedIds: () => void;
   roleOptions: RoleOption[];
   setRoleOptions: (options: RoleOption[]) => void;
-  statusCounts: StatusCounts;
-  setStatusCounts: (counts: StatusCounts) => void;
   editorState: EditorState;
   openCreate: () => void;
   openEdit: (user: User) => void;
   closeEditor: () => void;
   deleteTarget: User | null;
   setDeleteTarget: (user: User | null) => void;
+  resetPasswordTarget: User | null;
+  setResetPasswordTarget: (user: User | null) => void;
   bulkDeleteOpen: boolean;
   setBulkDeleteOpen: (open: boolean) => void;
 }
@@ -232,9 +226,9 @@ export const useUserManagementStore = (): UserManagementStore => {
   const pagination = useAtomValue(paginationAtom);
   const selectedIds = useAtomValue(selectedIdsAtom);
   const roleOptions = useAtomValue(roleOptionsAtom);
-  const statusCounts = useAtomValue(statusCountsAtom);
   const editorState = useAtomValue(editorStateAtom);
   const deleteTarget = useAtomValue(deleteTargetAtom);
+  const resetPasswordTarget = useAtomValue(resetPasswordTargetAtom);
   const bulkDeleteOpen = useAtomValue(bulkDeleteOpenAtom);
 
   const setStatus = useSetAtom(setStatusAtom);
@@ -246,11 +240,11 @@ export const useUserManagementStore = (): UserManagementStore => {
   const setSelectedIds = useSetAtom(setSelectedIdsAtom);
   const clearSelectedIds = useSetAtom(clearSelectedIdsAtom);
   const setRoleOptions = useSetAtom(setRoleOptionsAtom);
-  const setStatusCounts = useSetAtom(setStatusCountsAtom);
   const openCreate = useSetAtom(openCreateAtom);
   const openEdit = useSetAtom(openEditAtom);
   const closeEditor = useSetAtom(closeEditorAtom);
   const setDeleteTarget = useSetAtom(setDeleteTargetAtom);
+  const setResetPasswordTarget = useSetAtom(setResetPasswordTargetAtom);
   const setBulkDeleteOpen = useSetAtom(setBulkDeleteOpenAtom);
 
   const applyFilters = (
@@ -276,14 +270,14 @@ export const useUserManagementStore = (): UserManagementStore => {
     clearSelectedIds,
     roleOptions,
     setRoleOptions,
-    statusCounts,
-    setStatusCounts,
     editorState,
     openCreate,
     openEdit,
     closeEditor,
     deleteTarget,
     setDeleteTarget,
+    resetPasswordTarget,
+    setResetPasswordTarget,
     bulkDeleteOpen,
     setBulkDeleteOpen,
   };

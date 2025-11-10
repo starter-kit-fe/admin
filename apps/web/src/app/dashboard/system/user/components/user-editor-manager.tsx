@@ -11,11 +11,7 @@ import {
   useUserManagementStore,
 } from '../store';
 import type { UserFormValues } from '../type';
-import {
-  sanitizeDeptId,
-  sanitizeRoleId,
-  toFormValues,
-} from './utils';
+import { sanitizeDeptId, sanitizeIdList, toFormValues } from './utils';
 import { UserEditorDialog } from './user-editor-dialog';
 
 export function UserEditorManager() {
@@ -30,7 +26,8 @@ export function UserEditorManager() {
   const createMutation = useMutation({
     mutationFn: (values: UserFormValues) => {
       const deptId = sanitizeDeptId(values.deptId);
-      const roleId = sanitizeRoleId(values.roleId);
+      const roleIds = sanitizeIdList(values.roleIds);
+      const postIds = sanitizeIdList(values.postIds);
       const remark = values.remark.trim();
       return createUser({
         userName: values.userName.trim(),
@@ -42,7 +39,8 @@ export function UserEditorManager() {
         status: values.status,
         password: values.password?.trim() ?? '',
         remark: remark === '' ? undefined : remark,
-        roleIds: roleId !== undefined ? [roleId] : undefined,
+        roleIds,
+        postIds,
       });
     },
     onMutate: () => {
@@ -67,7 +65,8 @@ export function UserEditorManager() {
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: number; values: UserFormValues }) => {
       const deptId = sanitizeDeptId(values.deptId);
-      const roleId = sanitizeRoleId(values.roleId);
+      const roleIds = sanitizeIdList(values.roleIds);
+      const postIds = sanitizeIdList(values.postIds);
       const remark = values.remark.trim();
 
       return updateUser(id, {
@@ -79,7 +78,8 @@ export function UserEditorManager() {
         sex: values.sex,
         status: values.status,
         remark: remark === '' ? undefined : remark,
-        roleIds: roleId !== undefined ? [roleId] : undefined,
+        roleIds,
+        postIds,
       });
     },
     onMutate: () => {

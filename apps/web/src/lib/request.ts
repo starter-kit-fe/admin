@@ -2,8 +2,6 @@
  * HTTP 请求类封装（强类型，无 any）
  * 配合 React Query 使用，简化超时和重试逻辑
  */
-import { toast } from 'sonner';
-
 interface RequestConfig {
   baseURL?: string;
   headers?: Record<string, string>;
@@ -29,6 +27,19 @@ const DEFAULT_UNAUTHORIZED_MESSAGE = '登录信息已过期，请重新登录';
 const LOGIN_ROUTE = '/login';
 
 let hasTriggeredUnauthorizedRedirect = false;
+
+const showSessionExpiredDialog = (message: string, onConfirm: () => void) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  const confirmed =
+    typeof window.confirm === 'function' ? window.confirm(message) : true;
+  if (confirmed) {
+    onConfirm();
+    return;
+  }
+  hasTriggeredUnauthorizedRedirect = false;
+};
 
 function isSuccessfulStatus(code?: number) {
   if (typeof code !== 'number') {
@@ -84,14 +95,14 @@ export class HttpClient {
     }
 
     hasTriggeredUnauthorizedRedirect = true;
-    toast.error(fallbackMessage);
-
     const currentUrl =
       window.location.pathname + window.location.search + window.location.hash;
     const redirectParam = encodeURIComponent(currentUrl || '/');
     const target = `${LOGIN_ROUTE}?redirect=${redirectParam}`;
 
-    window.location.replace(target);
+    showSessionExpiredDialog(fallbackMessage, () => {
+      window.location.replace(target);
+    });
   }
 
   private unwrapResponse<T>(response: ApiResponse<T>): T {

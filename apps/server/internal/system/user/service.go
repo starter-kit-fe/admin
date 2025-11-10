@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -16,8 +17,10 @@ var (
 	ErrServiceUnavailable   = errors.New("user service is not initialized")
 	ErrDuplicateUsername    = errors.New("username already exists")
 	ErrPasswordRequired     = errors.New("password is required")
+	ErrPasswordTooShort     = errors.New("password is too short")
 	ErrInvalidStatus        = errors.New("invalid user status")
 	ErrInvalidRoleSelection = errors.New("invalid role selection")
+	ErrInvalidPostSelection = errors.New("invalid post selection")
 )
 
 type Service struct {
@@ -56,6 +59,12 @@ type RoleOption struct {
 	RoleKey  string `json:"roleKey"`
 }
 
+type PostOption struct {
+	PostID   int64  `json:"postId"`
+	PostName string `json:"postName"`
+	PostCode string `json:"postCode"`
+}
+
 type User struct {
 	UserID        int64        `json:"userId"`
 	DeptID        *int64       `json:"deptId,omitempty"`
@@ -77,6 +86,7 @@ type User struct {
 	UpdateBy      string       `json:"updateBy"`
 	UpdateTime    *time.Time   `json:"updateTime,omitempty"`
 	Roles         []RoleOption `json:"roles"`
+	Posts         []PostOption `json:"posts"`
 }
 
 type CreateUserInput struct {
@@ -91,6 +101,7 @@ type CreateUserInput struct {
 	Remark      *string
 	Operator    string
 	RoleIDs     []int64
+	PostIDs     []int64
 }
 
 type UpdateUserInput struct {
@@ -105,10 +116,17 @@ type UpdateUserInput struct {
 	Remark      *string
 	Operator    string
 	RoleIDs     *[]int64
+	PostIDs     *[]int64
 }
 
 type DeleteUserInput struct {
 	ID       int64
+	Operator string
+}
+
+type ResetPasswordInput struct {
+	UserID   int64
+	Password string
 	Operator string
 }
 
@@ -239,6 +257,17 @@ func (s *Service) CreateUser(ctx context.Context, input CreateUserInput) (*User,
 		}
 	}
 
+	postIDs := normalizeIDs(input.PostIDs)
+	if len(postIDs) > 0 {
+		postMap, err := s.repo.GetPostsByIDs(ctx, postIDs)
+		if err != nil {
+			return nil, err
+		}
+		if len(postMap) != len(postIDs) {
+			return nil, ErrInvalidPostSelection
+		}
+	}
+
 	user := &model.SysUser{
 		DeptID:        input.DeptID,
 		UserName:      username,
@@ -268,6 +297,10 @@ func (s *Service) CreateUser(ctx context.Context, input CreateUserInput) (*User,
 	}
 
 	if err := s.repo.ReplaceUserRoles(ctx, user.UserID, roleIDs); err != nil {
+		return nil, err
+	}
+
+	if err := s.repo.ReplaceUserPosts(ctx, user.UserID, postIDs); err != nil {
 		return nil, err
 	}
 
@@ -309,6 +342,22 @@ func (s *Service) UpdateUser(ctx context.Context, input UpdateUserInput) (*User,
 			updates["user_type"] = primaryRoleKey
 		} else {
 			updates["user_type"] = "00"
+		}
+	}
+
+	postUpdateRequested := false
+	var postIDs []int64
+	if input.PostIDs != nil {
+		postUpdateRequested = true
+		postIDs = normalizeIDs(*input.PostIDs)
+		if len(postIDs) > 0 {
+			postMap, err := s.repo.GetPostsByIDs(ctx, postIDs)
+			if err != nil {
+				return nil, err
+			}
+			if len(postMap) != len(postIDs) {
+				return nil, ErrInvalidPostSelection
+			}
 		}
 	}
 
@@ -369,7 +418,7 @@ func (s *Service) UpdateUser(ctx context.Context, input UpdateUserInput) (*User,
 		}
 	}
 
-	if len(updates) == 0 && !roleUpdateRequested {
+	if len(updates) == 0 && !roleUpdateRequested && !postUpdateRequested {
 		return s.GetUser(ctx, input.ID)
 	}
 
@@ -393,6 +442,12 @@ func (s *Service) UpdateUser(ctx context.Context, input UpdateUserInput) (*User,
 		}
 	}
 
+	if postUpdateRequested {
+		if err := s.repo.ReplaceUserPosts(ctx, input.ID, postIDs); err != nil {
+			return nil, err
+		}
+	}
+
 	return s.GetUser(ctx, input.ID)
 }
 
@@ -406,6 +461,33 @@ func (s *Service) DeleteUser(ctx context.Context, input DeleteUserInput) error {
 
 	operator := sanitizeOperator(input.Operator)
 	return s.repo.SoftDeleteUser(ctx, input.ID, operator, time.Now())
+}
+
+func (s *Service) ResetPassword(ctx context.Context, input ResetPasswordInput) error {
+	if s == nil || s.repo == nil {
+		return ErrServiceUnavailable
+	}
+	if input.UserID <= 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	password := strings.TrimSpace(input.Password)
+	if password == "" {
+		return ErrPasswordRequired
+	}
+	if utf8.RuneCountInString(password) < 6 {
+		return ErrPasswordTooShort
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	operator := sanitizeOperator(input.Operator)
+	now := time.Now()
+
+	return s.repo.UpdateUserPassword(ctx, input.UserID, string(hashedPassword), operator, now)
 }
 
 func (s *Service) composeUsers(ctx context.Context, records []model.SysUser) ([]User, error) {
@@ -438,9 +520,22 @@ func (s *Service) composeUsers(ctx context.Context, records []model.SysUser) ([]
 		}
 	}
 
+	postIDMap, err := s.repo.GetUserPostIDs(ctx, userIDs)
+	if err != nil {
+		return nil, err
+	}
+	postIDs := collectPostIDs(postIDMap)
+	postMap := map[int64]model.SysPost{}
+	if len(postIDs) > 0 {
+		postMap, err = s.repo.GetPostsByIDs(ctx, postIDs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	users := make([]User, len(records))
 	for i, record := range records {
-		users[i] = toUserDTO(record, deptMap, roleIDMap, roleMap)
+		users[i] = toUserDTO(record, deptMap, roleIDMap, roleMap, postIDMap, postMap)
 	}
 	return users, nil
 }
@@ -502,6 +597,23 @@ func collectRoleIDs(roleIDMap map[int64][]int64) []int64 {
 	return result
 }
 
+func collectPostIDs(postIDMap map[int64][]int64) []int64 {
+	seen := make(map[int64]struct{})
+	result := make([]int64, 0)
+
+	for _, ids := range postIDMap {
+		for _, id := range ids {
+			if _, ok := seen[id]; ok {
+				continue
+			}
+			seen[id] = struct{}{}
+			result = append(result, id)
+		}
+	}
+
+	return result
+}
+
 func buildUserRoles(userRoleIDs []int64, roleMap map[int64]model.SysRole) []RoleOption {
 	if len(userRoleIDs) == 0 {
 		return []RoleOption{}
@@ -525,7 +637,37 @@ func buildUserRoles(userRoleIDs []int64, roleMap map[int64]model.SysRole) []Role
 	return roles
 }
 
-func toUserDTO(user model.SysUser, deptMap map[int64]model.SysDept, roleIDMap map[int64][]int64, roleMap map[int64]model.SysRole) User {
+func buildUserPosts(userPostIDs []int64, postMap map[int64]model.SysPost) []PostOption {
+	if len(userPostIDs) == 0 {
+		return []PostOption{}
+	}
+
+	posts := make([]PostOption, 0, len(userPostIDs))
+	for _, postID := range userPostIDs {
+		post, ok := postMap[postID]
+		if !ok {
+			continue
+		}
+		if post.Status != "0" {
+			continue
+		}
+		posts = append(posts, PostOption{
+			PostID:   post.PostID,
+			PostName: post.PostName,
+			PostCode: post.PostCode,
+		})
+	}
+	return posts
+}
+
+func toUserDTO(
+	user model.SysUser,
+	deptMap map[int64]model.SysDept,
+	roleIDMap map[int64][]int64,
+	roleMap map[int64]model.SysRole,
+	postIDMap map[int64][]int64,
+	postMap map[int64]model.SysPost,
+) User {
 	var deptName *string
 	if user.DeptID != nil {
 		if dept, ok := deptMap[*user.DeptID]; ok {
@@ -535,6 +677,7 @@ func toUserDTO(user model.SysUser, deptMap map[int64]model.SysDept, roleIDMap ma
 	}
 
 	roles := buildUserRoles(roleIDMap[user.UserID], roleMap)
+	posts := buildUserPosts(postIDMap[user.UserID], postMap)
 	userType := user.UserType
 	if len(roles) > 0 {
 		primaryKey := strings.TrimSpace(roles[0].RoleKey)
@@ -564,6 +707,7 @@ func toUserDTO(user model.SysUser, deptMap map[int64]model.SysDept, roleIDMap ma
 		UpdateBy:      user.UpdateBy,
 		UpdateTime:    user.UpdateTime,
 		Roles:         roles,
+		Posts:         posts,
 	}
 }
 
@@ -649,6 +793,34 @@ func (s *Service) ListRoleOptions(ctx context.Context, keyword string, limit int
 			RoleID:   role.RoleID,
 			RoleName: role.RoleName,
 			RoleKey:  role.RoleKey,
+		})
+	}
+	return options, nil
+}
+
+func (s *Service) ListPostOptions(ctx context.Context, keyword string, limit int) ([]PostOption, error) {
+	if s == nil || s.repo == nil {
+		return nil, ErrServiceUnavailable
+	}
+
+	if limit <= 0 {
+		limit = 15
+	}
+
+	posts, err := s.repo.ListPosts(ctx, keyword, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	options := make([]PostOption, 0, len(posts))
+	for _, post := range posts {
+		if post.Status != "0" {
+			continue
+		}
+		options = append(options, PostOption{
+			PostID:   post.PostID,
+			PostName: post.PostName,
+			PostCode: post.PostCode,
 		})
 	}
 	return options, nil

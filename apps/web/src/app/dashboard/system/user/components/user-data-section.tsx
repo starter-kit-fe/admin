@@ -1,23 +1,25 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useEffect, useMemo, useRef } from 'react';
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInView } from 'framer-motion';
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { SelectionBanner } from '@/components/selection-banner';
+import { Spinner } from '@/components/ui/spinner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import { listUsers } from '../api';
-import { DEFAULT_PAGINATION, PAGE_SIZE_OPTIONS, STATUS_TABS } from '../constants';
+import { DEFAULT_PAGINATION, PAGE_SIZE_OPTIONS } from '../constants';
 import {
   useUserManagementSetRefreshHandler,
   useUserManagementSetRefreshing,
   useUserManagementStatus,
   useUserManagementStore,
-  type StatusValue,
 } from '../store';
 import type { User, UserListResponse } from '../type';
 import { DEFAULT_ROLE_VALUE, getRoleLabel } from './utils';
+import { UserMobileList } from './user-mobile-list';
 import { UserTable } from './user-table';
 
 export function UserDataSection() {
@@ -31,15 +33,19 @@ export function UserDataSection() {
     clearSelectedIds,
     roleOptions,
     setRoleOptions,
-    statusCounts,
-    setStatusCounts,
     setDeleteTarget,
     openEdit,
     setBulkDeleteOpen,
+    setResetPasswordTarget,
   } = useUserManagementStore();
   const { isMutating } = useUserManagementStatus();
   const setRefreshing = useUserManagementSetRefreshing();
   const setRefreshHandler = useUserManagementSetRefreshHandler();
+  const isMobile = useIsMobile();
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreInView = useInView(loadMoreRef, {
+    margin: '0px 0px -120px 0px',
+  });
 
   const userListQuery = useQuery({
     queryKey: [
@@ -59,62 +65,104 @@ export function UserDataSection() {
         userName: appliedFilters.keyword || undefined,
       }),
     placeholderData: keepPreviousData,
+    enabled: !isMobile,
   });
 
-  const statusCountQueries = useQueries({
-    queries: STATUS_TABS.map((tab) => ({
-      queryKey: [
-        'system',
-        'users',
-        'count',
-        tab.value,
-        appliedFilters.keyword,
-      ],
-      queryFn: () =>
-        listUsers({
-          pageNum: 1,
-          pageSize: 1,
-          status: tab.value === 'all' ? undefined : tab.value,
-          userName: appliedFilters.keyword || undefined,
-        }),
-      select: (data: UserListResponse) => data.total,
-    })),
+  const mobileUserListQuery = useInfiniteQuery({
+    queryKey: [
+      'system',
+      'users',
+      'list',
+      'infinite',
+      status,
+      appliedFilters.keyword,
+      pagination.pageSize,
+    ],
+    queryFn: ({ pageParam = 1 }) =>
+      listUsers({
+        pageNum: pageParam,
+        pageSize: pagination.pageSize,
+        status: status === 'all' ? undefined : status,
+        userName: appliedFilters.keyword || undefined,
+      }),
+    getNextPageParam: (lastPage) => {
+      const hasMoreByTotal =
+        typeof lastPage.total === 'number'
+          ? lastPage.pageNum * lastPage.pageSize < lastPage.total
+          : lastPage.items.length === lastPage.pageSize;
+      return hasMoreByTotal ? lastPage.pageNum + 1 : undefined;
+    },
+    initialPageParam: 1,
+    enabled: isMobile,
   });
+  const {
+    data: mobileData,
+    fetchNextPage,
+    hasNextPage,
+    isFetching: mobileIsFetching,
+    isFetchingNextPage,
+    isLoading: mobileIsLoading,
+    isError: mobileIsError,
+    refetch: mobileRefetch,
+  } = mobileUserListQuery;
+  const mobileHasNextPage = hasNextPage ?? false;
 
   useEffect(() => {
-    const counts = STATUS_TABS.reduce<Record<StatusValue, number>>(
-      (acc, tab, index) => {
-        const value = statusCountQueries[index]?.data ?? 0;
-        acc[tab.value as StatusValue] = value;
-        return acc;
-      },
-      { all: 0, '0': 0, '1': 0 },
-    );
-
-    const changed = STATUS_TABS.some(
-      (tab) => counts[tab.value as StatusValue] !== statusCounts[tab.value as StatusValue],
-    );
-
-    if (changed) {
-      setStatusCounts(counts);
-    }
-  }, [setStatusCounts, statusCounts, statusCountQueries]);
+    const next =
+      isMobile && !mobileIsLoading
+        ? mobileIsFetching && !isFetchingNextPage
+        : userListQuery.isFetching;
+    setRefreshing(next);
+  }, [
+    isMobile,
+    mobileIsFetching,
+    isFetchingNextPage,
+    mobileIsLoading,
+    setRefreshing,
+    userListQuery.isFetching,
+  ]);
 
   useEffect(() => {
-    setRefreshing(userListQuery.isFetching);
-  }, [setRefreshing, userListQuery.isFetching]);
-
-  useEffect(() => {
-    const refetch = userListQuery.refetch;
+    const refetch = isMobile ? mobileRefetch : userListQuery.refetch;
     setRefreshHandler(() => {
       void refetch();
     });
     return () => {
       setRefreshHandler(() => {});
     };
-  }, [setRefreshHandler, userListQuery.refetch]);
+  }, [
+    isMobile,
+    mobileRefetch,
+    setRefreshHandler,
+    userListQuery.refetch,
+  ]);
 
-  const rows = useMemo(() => userListQuery.data?.items ?? [], [userListQuery.data?.items]);
+  useEffect(() => {
+    if (
+      !isMobile ||
+      !mobileHasNextPage ||
+      !loadMoreInView ||
+      isFetchingNextPage ||
+      mobileIsLoading
+    ) {
+      return;
+    }
+    void fetchNextPage();
+  }, [
+    isMobile,
+    loadMoreInView,
+    mobileHasNextPage,
+    isFetchingNextPage,
+    mobileIsLoading,
+    fetchNextPage,
+  ]);
+
+  const rows = useMemo(() => {
+    if (isMobile) {
+      return mobileData?.pages.flatMap((page) => page.items) ?? [];
+    }
+    return userListQuery.data?.items ?? [];
+  }, [isMobile, mobileData?.pages, userListQuery.data?.items]);
 
   const computedRoleOptions = useMemo(() => {
     const labels = new Set<string>();
@@ -204,11 +252,14 @@ export function UserDataSection() {
   };
 
   const handleResetPassword = (user: User) => {
-    void user;
-    toast.info('重置密码功能暂未开放，敬请期待。');
+    setResetPasswordTarget(user);
   };
 
-  const total = userListQuery.data?.total ?? 0;
+  const total = isMobile
+    ? mobileData?.pages?.[0]?.total ?? 0
+    : userListQuery.data?.total ?? 0;
+  const listIsLoading = isMobile ? mobileIsLoading : userListQuery.isLoading;
+  const listIsError = isMobile ? mobileIsError : userListQuery.isError;
 
   return (
     <div className="flex flex-col gap-4">
@@ -222,33 +273,66 @@ export function UserDataSection() {
         }}
       />
 
-      <section className="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm dark:border-border/40">
-        <div className="flex-1 overflow-x-auto">
-          <UserTable
-            rows={filteredRows}
-            headerCheckboxState={headerCheckboxState}
-            onToggleSelectAll={handleToggleSelectAll}
-            selectedIds={selectedIds}
-            onToggleSelect={handleToggleSelectRow}
-            onEdit={openEdit}
-            onResetPassword={handleResetPassword}
-            onChangeRole={openEdit}
-            onDelete={setDeleteTarget}
-            isLoading={userListQuery.isLoading}
-            isError={userListQuery.isError}
-          />
-        </div>
+      <section className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm dark:border-border/40">
+        {isMobile ? (
+          <div className="flex flex-col p-2">
+            <UserMobileList
+              rows={filteredRows}
+              selectedIds={selectedIds}
+              onToggleSelect={handleToggleSelectRow}
+              onEdit={openEdit}
+              onResetPassword={handleResetPassword}
+              onDelete={setDeleteTarget}
+              isLoading={listIsLoading}
+              isError={listIsError}
+            />
+            <div
+              ref={loadMoreRef}
+              className="flex min-h-12 items-center justify-center px-3 pb-1 pt-4 text-xs text-muted-foreground"
+            >
+              {listIsLoading && filteredRows.length === 0 ? null : mobileHasNextPage ? (
+                isFetchingNextPage ? (
+                  <span className="flex items-center gap-2">
+                    <Spinner className="size-4" />
+                    正在加载更多...
+                  </span>
+                ) : (
+                  '上拉加载更多'
+                )
+              ) : (
+                '没有更多了'
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 overflow-x-auto">
+            <UserTable
+              rows={filteredRows}
+              headerCheckboxState={headerCheckboxState}
+              onToggleSelectAll={handleToggleSelectAll}
+              selectedIds={selectedIds}
+              onToggleSelect={handleToggleSelectRow}
+              onEdit={openEdit}
+              onResetPassword={handleResetPassword}
+              onDelete={setDeleteTarget}
+              isLoading={userListQuery.isLoading}
+              isError={userListQuery.isError}
+            />
+          </div>
+        )}
       </section>
 
-      <PaginationToolbar
-        totalItems={total}
-        currentPage={pagination.pageNum}
-        pageSize={pagination.pageSize}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-        pageSizeOptions={PAGE_SIZE_OPTIONS}
-        disabled={userListQuery.isFetching || isMutating}
-      />
+      {!isMobile ? (
+        <PaginationToolbar
+          totalItems={total}
+          currentPage={pagination.pageNum}
+          pageSize={pagination.pageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          pageSizeOptions={PAGE_SIZE_OPTIONS}
+          disabled={userListQuery.isFetching || isMutating}
+        />
+      ) : null}
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { del, get, post, put } from '@/lib/request';
 import type {
   CreateUserPayload,
   DeptOption,
+  PostOption,
+  ResetPasswordPayload,
   RoleOption,
   UpdateUserPayload,
   User,
@@ -59,4 +61,15 @@ export function listRoleOptions(keyword?: string) {
     '/v1/system/users/options/roles',
     keyword ? { keyword, limit: 15 } : { limit: 15 },
   );
+}
+
+export function listPostOptions(keyword?: string) {
+  return get<PostOption[]>(
+    '/v1/system/users/options/posts',
+    keyword ? { keyword, limit: 15 } : { limit: 15 },
+  );
+}
+
+export function resetUserPassword(userId: number, payload: ResetPasswordPayload) {
+  return post<void>(`/v1/system/users/${userId}/reset-password`, payload);
 }

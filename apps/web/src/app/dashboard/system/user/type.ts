@@ -26,6 +26,7 @@ export interface User {
   updateBy: string;
   updateTime?: string | null;
   roles: UserRole[];
+  posts: UserPost[];
 }
 
 export interface UserListResponse {
@@ -46,6 +47,7 @@ export interface CreateUserPayload {
   password: string;
   remark?: string | null;
   roleIds?: number[];
+  postIds?: number[];
 }
 
 export interface UpdateUserPayload {
@@ -58,6 +60,7 @@ export interface UpdateUserPayload {
   status?: string;
   remark?: string | null;
   roleIds?: number[];
+  postIds?: number[];
 }
 
 export interface UserFormValues {
@@ -70,7 +73,8 @@ export interface UserFormValues {
   deptId: string;
   remark: string;
   password?: string;
-  roleId: string;
+  roleIds: string[];
+  postIds: string[];
 }
 
 export interface DeptOption {
@@ -84,8 +88,24 @@ export interface UserRole {
   roleKey: string;
 }
 
+export interface UserPost {
+  postId: number;
+  postName: string;
+  postCode: string;
+}
+
 export interface RoleOption {
   roleId: number;
   roleName: string;
   roleKey: string;
+}
+
+export interface PostOption {
+  postId: number;
+  postName: string;
+  postCode: string;
+}
+
+export interface ResetPasswordPayload {
+  password: string;
 }
