@@ -1,17 +1,5 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit2, Plus, Trash2 } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-
-import { listDictTypes, type DictListParams } from '../api';
-import { TYPE_STATUS_TABS, BASE_TYPE_QUERY_KEY } from '../constants';
 import {
   useDictManagementMutationCounter,
   useDictManagementRefresh,
@@ -19,8 +7,19 @@ import {
   useDictManagementSetRefreshing,
   useDictManagementStore,
 } from '@/app/dashboard/system/dict/store';
-import { resolveErrorMessage } from '../utils';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Edit2, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
+
+import { type DictListParams, listDictTypes } from '../api';
+import { BASE_TYPE_QUERY_KEY, TYPE_STATUS_TABS } from '../constants';
 import type { DictType } from '../type';
+import { resolveErrorMessage } from '../utils';
 
 export function DictTypeSection() {
   const {
@@ -126,7 +125,7 @@ export function DictTypeSection() {
   };
 
   return (
-    <Card className="border border-border/60 bg-card shadow-sm dark:border-border/40">
+    <Card className="border border-border/60 bg-card  dark:border-border/40">
       <CardContent className="px-0 py-0">
         <ScrollArea className="h-[420px]">
           <div className="flex flex-col divide-y divide-border/60">

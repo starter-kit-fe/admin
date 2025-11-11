@@ -1,13 +1,5 @@
 'use client';
 
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -26,6 +18,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 
 import type { Post } from '../type';
 
@@ -139,7 +138,9 @@ export function PostTable({
           <Checkbox
             aria-label={`选择 ${post.postName}`}
             checked={isSelected}
-            onCheckedChange={(checked) => onToggleSelect(post.postId, checked === true)}
+            onCheckedChange={(checked) =>
+              onToggleSelect(post.postId, checked === true)
+            }
           />
         );
       },
@@ -161,7 +162,10 @@ export function PostTable({
         return (
           <Badge
             variant="outline"
-            className={cn('border-transparent px-2.5 py-1 text-xs font-medium', meta.badgeClass)}
+            className={cn(
+              'border-transparent px-2.5 py-1 text-xs font-medium',
+              meta.badgeClass,
+            )}
           >
             {meta.label}
           </Badge>
@@ -187,7 +191,10 @@ export function PostTable({
         <PostActions post={row.original} onEdit={onEdit} onDelete={onDelete} />
       ),
       enableSorting: false,
-      meta: { headerClassName: 'w-[140px] text-right', cellClassName: 'text-right' },
+      meta: {
+        headerClassName: 'w-[140px] text-right',
+        cellClassName: 'text-right',
+      },
     }),
   ];
 
@@ -201,7 +208,7 @@ export function PostTable({
   const rowsModel = table.getRowModel().rows;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border/60 bg-card shadow-sm dark:border-border/40">
+    <div className="overflow-x-auto rounded-xl border border-border/60 bg-card  dark:border-border/40">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -209,11 +216,18 @@ export function PostTable({
               {headerGroup.headers.map((header) => (
                 <TableHead
                   key={header.id}
-                  className={cn(header.column.columnDef.meta?.headerClassName as string | undefined)}
+                  className={cn(
+                    header.column.columnDef.meta?.headerClassName as
+                      | string
+                      | undefined,
+                  )}
                 >
                   {header.isPlaceholder
                     ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                 </TableHead>
               ))}
             </TableRow>
@@ -222,29 +236,45 @@ export function PostTable({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-muted-foreground">
+              <TableCell
+                colSpan={visibleColumnCount}
+                className="h-24 text-center text-sm text-muted-foreground"
+              >
                 正在加载岗位...
               </TableCell>
             </TableRow>
           ) : isError ? (
             <TableRow>
-              <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-destructive">
+              <TableCell
+                colSpan={visibleColumnCount}
+                className="h-24 text-center text-sm text-destructive"
+              >
                 加载失败，请稍后再试。
               </TableCell>
             </TableRow>
           ) : rowsModel.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-muted-foreground">
+              <TableCell
+                colSpan={visibleColumnCount}
+                className="h-24 text-center text-sm text-muted-foreground"
+              >
                 暂无数据
               </TableCell>
             </TableRow>
           ) : (
             rowsModel.map((row) => (
-              <TableRow key={row.id} className="transition-colors hover:bg-muted/60">
+              <TableRow
+                key={row.id}
+                className="transition-colors hover:bg-muted/60"
+              >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell
                     key={cell.id}
-                    className={cn(cell.column.columnDef.meta?.cellClassName as string | undefined)}
+                    className={cn(
+                      cell.column.columnDef.meta?.cellClassName as
+                        | string
+                        | undefined,
+                    )}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>

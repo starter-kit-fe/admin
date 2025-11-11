@@ -1,6 +1,7 @@
 'use client';
 
 import { getMenuTree } from '@/api';
+import { LogoMark } from '@/components/logo-mark';
 import {
   Sidebar,
   SidebarContent,
@@ -21,7 +22,6 @@ import {
   SquareTerminal,
   Users,
 } from 'lucide-react';
-import Image from 'next/image';
 import { type ComponentType, type ReactNode, useMemo } from 'react';
 
 import pkg from '../../../package.json';
@@ -112,16 +112,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             isCollapsed ? 'justify-center gap-0 px-0 py-4' : 'gap-3',
           )}
         >
-          <Image
-            src="/pwa-512x512.png"
-            alt={brandName}
-            width={isCollapsed ? 28 : 32}
-            height={isCollapsed ? 28 : 32}
+          <LogoMark
             className={cn(
-              'shrink-0 rounded-lg object-cover',
+              'shrink-0',
               isCollapsed ? 'h-7 w-7' : 'h-8 w-8',
             )}
-            priority
           />
           {!isCollapsed ? (
             <div className="text-left">

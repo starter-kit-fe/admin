@@ -1,12 +1,11 @@
-import { Trash2, X } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button';
+import { Trash2, X } from 'lucide-react';
 
 type SelectionBannerProps = {
-  count: number
-  onClear: () => void
-  onBulkDelete: () => void
-}
+  count: number;
+  onClear: () => void;
+  onBulkDelete: () => void;
+};
 
 export function SelectionBanner({
   count,
@@ -14,11 +13,11 @@ export function SelectionBanner({
   onBulkDelete,
 }: SelectionBannerProps) {
   if (count <= 0) {
-    return null
+    return null;
   }
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-100/70 px-4 py-3 text-sm text-emerald-900 shadow-sm dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-100">
+    <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-100/70 px-4 py-3 text-sm text-emerald-900  dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-100">
       <div className="flex items-center gap-2 font-medium">
         <span>{count} 个已选择</span>
       </div>
@@ -45,5 +44,5 @@ export function SelectionBanner({
         </Button>
       </div>
     </div>
-  )
+  );
 }

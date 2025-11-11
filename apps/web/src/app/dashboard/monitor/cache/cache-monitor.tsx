@@ -1,5 +1,25 @@
 'use client';
 
+import { InlineLoading } from '@/components/loading';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Spinner } from '@/components/ui/spinner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import {
   Activity,
@@ -11,14 +31,6 @@ import {
   Server,
   Users,
 } from 'lucide-react';
-
-import { InlineLoading } from '@/components/loading';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Spinner } from '@/components/ui/spinner';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { cn } from '@/lib/utils';
 
 import { getCacheOverview } from './api';
 import type { CacheKeyspaceInfo, CacheOverview } from './type';
@@ -37,7 +49,10 @@ function formatBytes(value?: number | null, fractionDigits = 1) {
     return '-';
   }
   const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-  const power = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  const power = Math.min(
+    Math.floor(Math.log(value) / Math.log(1024)),
+    units.length - 1,
+  );
   const adjusted = value / Math.pow(1024, power);
   return `${adjusted.toFixed(fractionDigits)} ${units[power]}`;
 }
@@ -81,7 +96,9 @@ function renderKeyspaceRow(space: CacheKeyspaceInfo) {
 
   return (
     <TableRow key={space.db} className="text-sm">
-      <TableCell className="font-medium text-foreground">{space.db.toUpperCase()}</TableCell>
+      <TableCell className="font-medium text-foreground">
+        {space.db.toUpperCase()}
+      </TableCell>
       <TableCell>{formatNumber(space.keys)}</TableCell>
       <TableCell>{formatNumber(space.expires)}</TableCell>
       <TableCell>{avgTTL}</TableCell>
@@ -109,7 +126,9 @@ export function CacheMonitor() {
       <Card className="border-destructive/40 bg-destructive/10 text-destructive">
         <CardHeader>
           <CardTitle className="text-lg">无法加载缓存监控数据</CardTitle>
-          <CardDescription className="text-destructive/80">请稍后再试。</CardDescription>
+          <CardDescription className="text-destructive/80">
+            请稍后再试。
+          </CardDescription>
         </CardHeader>
       </Card>
     );
@@ -117,11 +136,15 @@ export function CacheMonitor() {
 
   const overview = query.data ?? DEFAULT_OVERVIEW;
   const totalKeys = summarizeKeys(overview.keyspace ?? []);
-  const memoryUsagePercent = safeMemoryGauge(overview.memory.usedMemory, overview.memory.maxMemory);
+  const memoryUsagePercent = safeMemoryGauge(
+    overview.memory.usedMemory,
+    overview.memory.maxMemory,
+  );
   const memoryUsageLabel =
     overview.memory.maxMemory && overview.memory.maxMemory > 0
       ? `${formatBytes(overview.memory.usedMemory)} / ${formatBytes(overview.memory.maxMemory)}`
-      : overview.memory.usedMemoryHuman ?? formatBytes(overview.memory.usedMemory);
+      : (overview.memory.usedMemoryHuman ??
+        formatBytes(overview.memory.usedMemory));
   const hitRate = formatPercent(overview.stats.hitRate);
   const opsPerSec = overview.stats.instantaneousOps ?? 0;
   const lastUpdated =
@@ -156,7 +179,7 @@ export function CacheMonitor() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
-      <Card className="border-border/60 bg-card/90 shadow-sm dark:border-border/40">
+      <Card className="border-border/60 bg-card/90  dark:border-border/40">
         <CardContent className="flex flex-col gap-6 py-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -164,7 +187,9 @@ export function CacheMonitor() {
               Redis 服务监控
             </div>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">缓存概览</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                缓存概览
+              </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 快速洞察 Redis 的运行状态、内存占用与命中效率。
               </p>
@@ -212,9 +237,11 @@ export function CacheMonitor() {
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-border/70 shadow-sm dark:border-border/40">
+        <Card className="border-border/70  dark:border-border/40">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-lg font-semibold">内存与命中情况</CardTitle>
+            <CardTitle className="text-lg font-semibold">
+              内存与命中情况
+            </CardTitle>
             <CardDescription>掌握内存占用与访问效率</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 text-sm text-muted-foreground">
@@ -224,18 +251,23 @@ export function CacheMonitor() {
                   <HardDrive className="size-4 text-muted-foreground" />
                   内存占用
                 </span>
-                <span className="text-base font-semibold text-foreground">{memoryUsageLabel}</span>
+                <span className="text-base font-semibold text-foreground">
+                  {memoryUsageLabel}
+                </span>
               </div>
               <Progress value={memoryUsagePercent} aria-label="内存占用比例" />
               <div className="grid grid-cols-2 gap-y-2 text-xs uppercase tracking-wide text-muted-foreground">
                 <span>峰值占用</span>
                 <span className="text-right text-foreground">
-                  {overview.memory.usedMemoryPeakHuman ?? formatBytes(overview.memory.usedMemoryPeak)}
+                  {overview.memory.usedMemoryPeakHuman ??
+                    formatBytes(overview.memory.usedMemoryPeak)}
                 </span>
                 <span>最大内存</span>
                 <span className="text-right text-foreground">
                   {overview.memory.maxMemoryHuman ??
-                    (overview.memory.maxMemory ? formatBytes(overview.memory.maxMemory) : '未限制')}
+                    (overview.memory.maxMemory
+                      ? formatBytes(overview.memory.maxMemory)
+                      : '未限制')}
                 </span>
                 <span>碎片率</span>
                 <span className="text-right text-foreground">
@@ -244,7 +276,7 @@ export function CacheMonitor() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm text-muted-foreground">
-              <div className="rounded-3xl border border-border/50 bg-background/80 p-4 shadow-sm dark:border-border/40">
+              <div className="rounded-3xl border border-border/50 bg-background/80 p-4  dark:border-border/40">
                 <div className="flex items-center gap-2 text-foreground">
                   <Users className="size-4 text-muted-foreground" />
                   <span className="text-sm font-semibold">客户端连接</span>
@@ -252,15 +284,19 @@ export function CacheMonitor() {
                 <div className="mt-3 space-y-2 text-xs uppercase tracking-wide">
                   <div className="flex items-center justify-between">
                     <span>已连接</span>
-                    <span className="text-foreground">{formatNumber(overview.clients.connected)}</span>
+                    <span className="text-foreground">
+                      {formatNumber(overview.clients.connected)}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>被阻塞</span>
-                    <span className="text-foreground">{formatNumber(overview.clients.blocked)}</span>
+                    <span className="text-foreground">
+                      {formatNumber(overview.clients.blocked)}
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="rounded-3xl border border-border/50 bg-background/80 p-4 shadow-sm dark:border-border/40">
+              <div className="rounded-3xl border border-border/50 bg-background/80 p-4  dark:border-border/40">
                 <div className="flex items-center gap-2 text-foreground">
                   <Layers className="size-4 text-muted-foreground" />
                   <span className="text-sm font-semibold">访问统计</span>
@@ -268,19 +304,27 @@ export function CacheMonitor() {
                 <div className="mt-3 space-y-2 text-xs uppercase tracking-wide">
                   <div className="flex items-center justify-between">
                     <span>命中次数</span>
-                    <span className="text-foreground">{formatNumber(overview.stats.keyspaceHits)}</span>
+                    <span className="text-foreground">
+                      {formatNumber(overview.stats.keyspaceHits)}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>未命中</span>
-                    <span className="text-foreground">{formatNumber(overview.stats.keyspaceMisses)}</span>
+                    <span className="text-foreground">
+                      {formatNumber(overview.stats.keyspaceMisses)}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>过期键</span>
-                    <span className="text-foreground">{formatNumber(overview.stats.expiredKeys)}</span>
+                    <span className="text-foreground">
+                      {formatNumber(overview.stats.expiredKeys)}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>驱逐键</span>
-                    <span className="text-foreground">{formatNumber(overview.stats.evictedKeys)}</span>
+                    <span className="text-foreground">
+                      {formatNumber(overview.stats.evictedKeys)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -288,21 +332,25 @@ export function CacheMonitor() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 shadow-sm dark:border-border/40">
+        <Card className="border-border/70  dark:border-border/40">
           <CardHeader className="space-y-1">
             <CardTitle className="text-lg font-semibold">服务器状态</CardTitle>
             <CardDescription>查看核心运行参数与持久化信息</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
-            <div className="grid grid-cols-2 gap-3 rounded-3xl border border-border/50 bg-background/80 p-4 shadow-sm dark:border-border/40">
+            <div className="grid grid-cols-2 gap-3 rounded-3xl border border-border/50 bg-background/80 p-4  dark:border-border/40">
               {serverMeta.map((item) => (
                 <div key={item.label} className="space-y-1">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">{item.label}</div>
-                  <div className="text-sm font-medium text-foreground">{item.value}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {item.label}
+                  </div>
+                  <div className="text-sm font-medium text-foreground">
+                    {item.value}
+                  </div>
                 </div>
               ))}
             </div>
-            <div className="rounded-3xl border border-border/50 bg-background/80 p-4 shadow-sm dark:border-border/40">
+            <div className="rounded-3xl border border-border/50 bg-background/80 p-4  dark:border-border/40">
               <div className="flex items-center gap-2 text-foreground">
                 <Database className="size-4 text-muted-foreground" />
                 <span className="text-sm font-semibold">持久化</span>
@@ -328,7 +376,14 @@ export function CacheMonitor() {
                 </div>
                 <div>
                   <div className="text-muted-foreground">AOF</div>
-                  <div className={cn('text-sm font-medium', overview.persistence.aofEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground')}>
+                  <div
+                    className={cn(
+                      'text-sm font-medium',
+                      overview.persistence.aofEnabled
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-muted-foreground',
+                    )}
+                  >
                     {overview.persistence.aofEnabled ? '已开启' : '未开启'}
                   </div>
                 </div>
@@ -338,7 +393,7 @@ export function CacheMonitor() {
         </Card>
       </div>
 
-      <Card className="border-border/70 shadow-sm dark:border-border/40">
+      <Card className="border-border/70  dark:border-border/40">
         <CardHeader className="space-y-1">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Layers className="size-4 text-muted-foreground" />
@@ -358,7 +413,9 @@ export function CacheMonitor() {
                     <TableHead>平均 TTL</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>{overview.keyspace.map(renderKeyspaceRow)}</TableBody>
+                <TableBody>
+                  {overview.keyspace.map(renderKeyspaceRow)}
+                </TableBody>
               </Table>
             </div>
           ) : (

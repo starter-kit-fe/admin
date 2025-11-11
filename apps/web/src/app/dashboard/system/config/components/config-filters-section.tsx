@@ -1,16 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
-
+import {
+  type ConfigTypeValue,
+  useConfigManagementStore,
+} from '@/app/dashboard/system/config/store';
+import { StatusTabs } from '@/components/status-tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { StatusTabs } from '@/components/status-tabs';
+import { useEffect } from 'react';
 
 import { CONFIG_TYPE_TABS } from '../constants';
-import {
-  useConfigManagementStore,
-  type ConfigTypeValue,
-} from '@/app/dashboard/system/config/store';
 
 export function ConfigFiltersSection() {
   const {
@@ -36,7 +35,7 @@ export function ConfigFiltersSection() {
   }, [applyFilters, filterForm.configKey, filterForm.configName]);
 
   return (
-    <section className="rounded-xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-5">
+    <section className="rounded-xl border border-border/60 bg-background/90 p-4  sm:p-5">
       <div className="flex flex-col gap-4">
         <StatusTabs
           value={configType}

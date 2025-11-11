@@ -1,9 +1,5 @@
-import type { MenuParentOption } from './components/menu-editor-dialog';
-import type {
-  CreateMenuPayload,
-  MenuFormValues,
-  MenuTreeNode,
-} from './type';
+import type { MenuParentOption } from './components/editor/menu-editor/types';
+import type { CreateMenuPayload, MenuFormValues, MenuTreeNode } from './type';
 
 export function toFormValues(menu: MenuTreeNode): MenuFormValues {
   return {

@@ -1,21 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
-
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { StatusTabs } from '@/components/status-tabs';
-
 import {
-  NOTICE_STATUS_TABS,
-  NOTICE_TYPE_TABS,
-  DEFAULT_DEBOUNCE_MS,
-} from '../constants';
-import {
-  useNoticeManagementStore,
   type NoticeStatusValue,
   type NoticeTypeValue,
+  useNoticeManagementStore,
 } from '@/app/dashboard/system/notice/store';
+import { StatusTabs } from '@/components/status-tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useEffect } from 'react';
+
+import {
+  DEFAULT_DEBOUNCE_MS,
+  NOTICE_STATUS_TABS,
+  NOTICE_TYPE_TABS,
+} from '../constants';
 
 export function NoticeFiltersSection() {
   const {
@@ -40,7 +39,7 @@ export function NoticeFiltersSection() {
   }, [applyFilters, filterForm.noticeTitle]);
 
   return (
-    <section className="rounded-xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-5">
+    <section className="rounded-xl border border-border/60 bg-background/90 p-4  sm:p-5">
       <div className="flex flex-col gap-4">
         <div className="grid gap-4 lg:grid-cols-2">
           <StatusTabs
@@ -50,9 +49,7 @@ export function NoticeFiltersSection() {
           />
           <StatusTabs
             value={noticeType}
-            onValueChange={(value) =>
-              setNoticeType(value as NoticeTypeValue)
-            }
+            onValueChange={(value) => setNoticeType(value as NoticeTypeValue)}
             tabs={NOTICE_TYPE_TABS}
           />
         </div>

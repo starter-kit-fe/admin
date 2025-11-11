@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useEffect } from 'react';
 
 import {
   DEFAULT_DEBOUNCE_MS,
@@ -20,19 +19,15 @@ import {
   OPER_LOG_STATUS_OPTIONS,
 } from '../constants';
 import {
-  useOperLogManagementStore,
   type OperLogBusinessTypeValue,
   type OperLogRequestMethodValue,
   type OperLogStatusValue,
+  useOperLogManagementStore,
 } from '../store';
 
 export function OperLogFiltersSection() {
-  const {
-    filterForm,
-    setFilterForm,
-    applyFilters,
-    resetFilters,
-  } = useOperLogManagementStore();
+  const { filterForm, setFilterForm, applyFilters, resetFilters } =
+    useOperLogManagementStore();
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -68,7 +63,7 @@ export function OperLogFiltersSection() {
   };
 
   return (
-    <section className="rounded-xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-5">
+    <section className="rounded-xl border border-border/60 bg-background/90 p-4  sm:p-5">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <div className="flex flex-col gap-2">
           <Label>操作标题</Label>

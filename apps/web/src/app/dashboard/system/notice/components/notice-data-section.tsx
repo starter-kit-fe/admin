@@ -1,16 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { Edit2, Trash2 } from 'lucide-react';
-
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-
-import { listNotices } from '../api';
-import { BASE_NOTICE_QUERY_KEY } from '../constants';
 import {
   useNoticeManagementMutationCounter,
   useNoticeManagementRefresh,
@@ -18,8 +7,18 @@ import {
   useNoticeManagementSetRefreshing,
   useNoticeManagementStore,
 } from '@/app/dashboard/system/notice/store';
-import { resolveErrorMessage } from '../utils';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Edit2, Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
+
+import { listNotices } from '../api';
+import { BASE_NOTICE_QUERY_KEY } from '../constants';
 import type { Notice } from '../type';
+import { resolveErrorMessage } from '../utils';
 
 export function NoticeDataSection() {
   const {
@@ -34,8 +33,7 @@ export function NoticeDataSection() {
   const setRefreshing = useNoticeManagementSetRefreshing();
   const setRefreshHandler = useNoticeManagementSetRefreshHandler();
   const refresh = useNoticeManagementRefresh();
-  const { beginMutation, endMutation } =
-    useNoticeManagementMutationCounter();
+  const { beginMutation, endMutation } = useNoticeManagementMutationCounter();
   const queryClient = useQueryClient();
 
   const noticeQuery = useQuery({
@@ -83,7 +81,7 @@ export function NoticeDataSection() {
   };
 
   return (
-    <Card className="border border-border/60 shadow-sm dark:border-border/40">
+    <Card className="border border-border/60  dark:border-border/40">
       <CardContent className="flex flex-col gap-3 p-0">
         {noticeQuery.isLoading && notices.length === 0 ? (
           <div className="flex h-40 flex-col items-center justify-center text-sm text-muted-foreground">
@@ -104,7 +102,9 @@ export function NoticeDataSection() {
                   <h2 className="text-lg font-semibold text-foreground">
                     {item.noticeTitle}
                   </h2>
-                  <Badge variant={item.noticeType === '2' ? 'secondary' : 'outline'}>
+                  <Badge
+                    variant={item.noticeType === '2' ? 'secondary' : 'outline'}
+                  >
                     {item.noticeType === '2' ? '公告' : '通知'}
                   </Badge>
                   <Badge
@@ -141,9 +141,13 @@ export function NoticeDataSection() {
                   </Button>
                 </div>
               </header>
-              <p className="text-sm text-muted-foreground">{item.noticeContent}</p>
+              <p className="text-sm text-muted-foreground">
+                {item.noticeContent}
+              </p>
               {item.remark ? (
-                <p className="text-xs text-muted-foreground">备注：{item.remark}</p>
+                <p className="text-xs text-muted-foreground">
+                  备注：{item.remark}
+                </p>
               ) : null}
             </article>
           ))

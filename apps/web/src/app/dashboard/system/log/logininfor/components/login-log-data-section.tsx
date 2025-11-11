@@ -1,17 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { Trash2 } from 'lucide-react';
-
-import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { InlineLoading } from '@/components/loading';
+import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,12 +13,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
+import { listLoginLogs, unlockLogin } from '../api';
 import {
   BASE_LOGIN_LOG_QUERY_KEY,
   LOGIN_LOG_PAGE_SIZE_OPTIONS,
 } from '../constants';
-import { listLoginLogs, unlockLogin } from '../api';
 import {
   useLoginLogManagementMutationCounter,
   useLoginLogManagementSetRefreshHandler,
@@ -55,8 +54,7 @@ export function LoginLogDataSection() {
   } = useLoginLogManagementStore();
   const setRefreshing = useLoginLogManagementSetRefreshing();
   const setRefreshHandler = useLoginLogManagementSetRefreshHandler();
-  const { beginMutation, endMutation } =
-    useLoginLogManagementMutationCounter();
+  const { beginMutation, endMutation } = useLoginLogManagementMutationCounter();
   const queryClient = useQueryClient();
 
   const logQuery = useQuery({
@@ -129,7 +127,7 @@ export function LoginLogDataSection() {
   const error = logQuery.isError && logs.length === 0;
 
   return (
-    <Card className="border border-border/70 shadow-sm dark:border-border/40">
+    <Card className="border border-border/70  dark:border-border/40">
       <CardContent className="p-0">
         {loading ? (
           <div className="flex min-h-[320px] items-center justify-center">

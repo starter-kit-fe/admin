@@ -16,8 +16,6 @@ type FilterState = {
   keyword: string;
 };
 
-type StatusCounts = Record<StatusValue, number>;
-
 type EditorState =
   | { open: false }
   | { open: true; mode: 'create' }
@@ -32,11 +30,6 @@ const filterFormAtom = atom<FilterState>({ keyword: '' });
 const appliedFiltersAtom = atom<FilterState>({ keyword: '' });
 const paginationAtom = atom<PaginationState>({ ...DEFAULT_PAGINATION });
 const selectedIdsAtom = atom<Set<number>>(new Set<number>());
-const statusCountsAtom = atom<StatusCounts>({
-  all: 0,
-  '0': 0,
-  '1': 0,
-});
 const editorStateAtom = atom<EditorState>({ open: false });
 const deleteTargetAtom = atom<Role | null>(null);
 const bulkDeleteOpenAtom = atom(false);
@@ -126,13 +119,6 @@ const clearSelectedIdsAtom = atom(null, (_get, set) => {
   set(selectedIdsAtom, new Set<number>());
 });
 
-const setStatusCountsAtom = atom(
-  null,
-  (_get, set, counts: StatusCounts) => {
-    set(statusCountsAtom, counts);
-  },
-);
-
 const openCreateAtom = atom(null, (_get, set) => {
   set(editorStateAtom, { open: true, mode: 'create' });
 });
@@ -197,8 +183,6 @@ export interface RoleManagementStore {
   selectedIds: Set<number>;
   setSelectedIds: (action: SetStateAction<Set<number>>) => void;
   clearSelectedIds: () => void;
-  statusCounts: StatusCounts;
-  setStatusCounts: (counts: StatusCounts) => void;
   editorState: EditorState;
   openCreate: () => void;
   openEdit: (roleId: number) => void;
@@ -215,7 +199,6 @@ export const useRoleManagementStore = (): RoleManagementStore => {
   const appliedFilters = useAtomValue(appliedFiltersAtom);
   const pagination = useAtomValue(paginationAtom);
   const selectedIds = useAtomValue(selectedIdsAtom);
-  const statusCounts = useAtomValue(statusCountsAtom);
   const editorState = useAtomValue(editorStateAtom);
   const deleteTarget = useAtomValue(deleteTargetAtom);
   const bulkDeleteOpen = useAtomValue(bulkDeleteOpenAtom);
@@ -227,7 +210,6 @@ export const useRoleManagementStore = (): RoleManagementStore => {
   const setPagination = useSetAtom(setPaginationAtom);
   const setSelectedIds = useSetAtom(setSelectedIdsAtom);
   const clearSelectedIds = useSetAtom(clearSelectedIdsAtom);
-  const setStatusCounts = useSetAtom(setStatusCountsAtom);
   const openCreate = useSetAtom(openCreateAtom);
   const openEdit = useSetAtom(openEditAtom);
   const closeEditor = useSetAtom(closeEditorAtom);
@@ -254,8 +236,6 @@ export const useRoleManagementStore = (): RoleManagementStore => {
     selectedIds,
     setSelectedIds,
     clearSelectedIds,
-    statusCounts,
-    setStatusCounts,
     editorState,
     openCreate,
     openEdit,

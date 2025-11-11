@@ -2,6 +2,7 @@
 
 import ThemeToggle from '@/components/theme-toggle';
 import { buttonVariants } from '@/components/ui/button';
+import { LogoMark } from '@/components/logo-mark';
 import {
   Drawer,
   DrawerClose,
@@ -187,7 +188,7 @@ export default function Header() {
           href="/"
           className="group flex items-center gap-3 text-base font-semibold text-inherit"
         >
-          <img src="/pwa-512x512.png" alt="" className="size-[28px]" />
+          <LogoMark className="size-[28px] shrink-0" />
           <span className="hidden text-xl text-muted-foreground transition-colors group-hover:text-foreground dark:text-white/85 dark:group-hover:text-white sm:inline font-bold">
             {brandName}
           </span>

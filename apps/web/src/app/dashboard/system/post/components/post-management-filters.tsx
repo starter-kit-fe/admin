@@ -1,6 +1,6 @@
 'use client';
 
-import { StatusTabs, type StatusTabItem } from '@/components/status-tabs';
+import { type StatusTabItem, StatusTabs } from '@/components/status-tabs';
 import { Input } from '@/components/ui/input';
 
 interface PostManagementFiltersProps {
@@ -21,7 +21,7 @@ export function PostManagementFilters({
   disabled = false,
 }: PostManagementFiltersProps) {
   return (
-    <div className="rounded-xl border border-border/60 bg-background/80 p-4 shadow-sm sm:p-5">
+    <div className="rounded-xl border border-border/60 bg-background/80 p-4  sm:p-5">
       <div className="flex flex-col gap-4">
         <StatusTabs value={status} onValueChange={onStatusChange} tabs={tabs} />
 

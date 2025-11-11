@@ -36,7 +36,7 @@ const SOCIAL_LINKS = [
   },
   {
     label: '邮箱',
-    href: 'mailto:hello@admin.com',
+    href: 'mailto:service@h06i.com',
     icon: Mail,
   },
 ] as const;
@@ -113,10 +113,10 @@ export default function Footer() {
                 有任何建议或合作意向，欢迎随时与我们联系。
               </p>
               <Link
-                href="mailto:hello@admin.com"
+                href="mailto:service@h06i.com"
                 className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
               >
-                service@admin.com
+                service@h06i.com
               </Link>
             </div>
           </div>

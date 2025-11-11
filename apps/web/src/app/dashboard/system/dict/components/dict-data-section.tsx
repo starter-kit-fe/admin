@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { Edit2, Plus, Trash2 } from 'lucide-react';
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import {
+  useDictManagementSetRefreshing,
+  useDictManagementStore,
+} from '@/app/dashboard/system/dict/store';
 import { StatusTabs } from '@/components/status-tabs';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -16,17 +17,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { Edit2, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
 
 import { listDictData } from '../api';
 import { DATA_STATUS_TABS, DEFAULT_DEBOUNCE_MS } from '../constants';
-import {
-  useDictManagementSetRefreshing,
-  useDictManagementStore,
-} from '@/app/dashboard/system/dict/store';
-import { emptyDictDataList, resolveErrorMessage } from '../utils';
 import type { DictData, DictType } from '../type';
+import { emptyDictDataList, resolveErrorMessage } from '../utils';
 
 export function DictDataSection() {
   const {
@@ -117,7 +116,7 @@ export function DictDataSection() {
   const statusTabs = DATA_STATUS_TABS;
 
   const handleStatusChange = (value: string) => {
-    setDataStatus(value as typeof statusTabs[number]['value']);
+    setDataStatus(value as (typeof statusTabs)[number]['value']);
   };
 
   const handleAdd = () => {
@@ -151,7 +150,7 @@ export function DictDataSection() {
   };
 
   return (
-    <Card className="border border-border/60 shadow-sm dark:border-border/40">
+    <Card className="border border-border/60  dark:border-border/40">
       <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle className="text-lg font-semibold text-foreground">
@@ -251,7 +250,9 @@ export function DictDataSection() {
                           默认
                         </Badge>
                       ) : (
-                        <span className="text-xs text-muted-foreground">否</span>
+                        <span className="text-xs text-muted-foreground">
+                          否
+                        </span>
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">

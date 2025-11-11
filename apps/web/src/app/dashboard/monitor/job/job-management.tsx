@@ -1,6 +1,41 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { InlineLoading } from '@/components/loading';
+import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import {
   keepPreviousData,
   useMutation,
@@ -13,30 +48,17 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { toast } from 'sonner';
 import { Clock, MoreHorizontal, Play, RefreshCcw, Trash2 } from 'lucide-react';
-
-import { InlineLoading } from '@/components/loading';
-import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Spinner } from '@/components/ui/spinner';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { cn } from '@/lib/utils';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { DeleteConfirmDialog } from '../../system/user/components/delete-confirm-dialog';
-
 import {
+  type JobListParams,
   changeJobStatus,
   deleteJob,
   listJobs,
   runJob,
-  type JobListParams,
 } from './api';
 import type { Job } from './type';
 
@@ -48,7 +70,10 @@ const STATUS_FILTER_OPTIONS = [
   { value: '1', label: '暂停' },
 ] as const;
 
-const STATUS_BADGE_VARIANT: Record<string, 'secondary' | 'destructive' | 'outline'> = {
+const STATUS_BADGE_VARIANT: Record<
+  string,
+  'secondary' | 'destructive' | 'outline'
+> = {
   '0': 'secondary',
   '1': 'outline',
 };
@@ -94,7 +119,8 @@ export function JobManagement() {
 
   const [jobNameInput, setJobNameInput] = useState('');
   const [jobGroupInput, setJobGroupInput] = useState('');
-  const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTER_OPTIONS)[number]['value']>('all');
+  const [statusFilter, setStatusFilter] =
+    useState<(typeof STATUS_FILTER_OPTIONS)[number]['value']>('all');
 
   const [pageNum, setPageNum] = useState(1);
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
@@ -152,14 +178,21 @@ export function JobManagement() {
       void queryClient.invalidateQueries({ queryKey: ['monitor', 'jobs'] });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : '操作失败，请稍后重试';
+      const message =
+        error instanceof Error ? error.message : '操作失败，请稍后重试';
       toast.error(message);
     },
     onSettled: () => setPendingRunId(null),
   });
 
   const statusMutation = useMutation({
-    mutationFn: async ({ jobId, nextStatus }: { jobId: number; nextStatus: string }) => {
+    mutationFn: async ({
+      jobId,
+      nextStatus,
+    }: {
+      jobId: number;
+      nextStatus: string;
+    }) => {
       await changeJobStatus(jobId, nextStatus);
       return { jobId, nextStatus };
     },
@@ -169,7 +202,8 @@ export function JobManagement() {
       void queryClient.invalidateQueries({ queryKey: ['monitor', 'jobs'] });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : '更新任务状态失败，请稍后重试';
+      const message =
+        error instanceof Error ? error.message : '更新任务状态失败，请稍后重试';
       toast.error(message);
     },
     onSettled: () => setPendingStatusId(null),
@@ -187,7 +221,8 @@ export function JobManagement() {
       setDeleteState({ open: false });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : '删除任务失败，请稍后重试';
+      const message =
+        error instanceof Error ? error.message : '删除任务失败，请稍后重试';
       toast.error(message);
     },
     onSettled: () => setPendingDeleteId(null),
@@ -201,8 +236,12 @@ export function JobManagement() {
           const job = row.original;
           return (
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">{job.jobName || '-'}</p>
-              <p className="text-xs font-mono uppercase text-muted-foreground">{job.jobGroup || 'DEFAULT'}</p>
+              <p className="text-sm font-medium text-foreground">
+                {job.jobName || '-'}
+              </p>
+              <p className="text-xs font-mono uppercase text-muted-foreground">
+                {job.jobGroup || 'DEFAULT'}
+              </p>
             </div>
           );
         },
@@ -213,7 +252,9 @@ export function JobManagement() {
       columnHelper.accessor('invokeTarget', {
         header: () => '调用目标',
         cell: ({ getValue }) => (
-          <div className="max-w-[320px] truncate font-mono text-xs">{getValue()}</div>
+          <div className="max-w-[320px] truncate font-mono text-xs">
+            {getValue()}
+          </div>
         ),
         meta: {
           headerClassName: 'min-w-[280px]',
@@ -225,8 +266,12 @@ export function JobManagement() {
           const job = row.original;
           return (
             <div className="space-y-1">
-              <p className="font-mono text-xs text-foreground">{job.cronExpression || '-'}</p>
-              <p className="text-xs text-muted-foreground">策略：{resolveMisfireLabel(job.misfirePolicy)}</p>
+              <p className="font-mono text-xs text-foreground">
+                {job.cronExpression || '-'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                策略：{resolveMisfireLabel(job.misfirePolicy)}
+              </p>
             </div>
           );
         },
@@ -236,7 +281,9 @@ export function JobManagement() {
       }),
       columnHelper.accessor('concurrent', {
         header: () => '并发',
-        cell: ({ getValue }) => <span>{resolveConcurrentLabel(getValue() ?? '')}</span>,
+        cell: ({ getValue }) => (
+          <span>{resolveConcurrentLabel(getValue() ?? '')}</span>
+        ),
         meta: {
           headerClassName: 'w-[80px]',
         },
@@ -246,7 +293,9 @@ export function JobManagement() {
         cell: ({ getValue }) => {
           const status = getValue() ?? '1';
           return (
-            <Badge variant={STATUS_BADGE_VARIANT[status] ?? 'outline'}>{resolveStatusLabel(status)}</Badge>
+            <Badge variant={STATUS_BADGE_VARIANT[status] ?? 'outline'}>
+              {resolveStatusLabel(status)}
+            </Badge>
           );
         },
         meta: {
@@ -276,7 +325,8 @@ export function JobManagement() {
           const job = row.original;
           const jobId = job.jobId ?? 0;
           const isRunning = pendingRunId === jobId && runJobMutation.isPending;
-          const isUpdatingStatus = pendingStatusId === jobId && statusMutation.isPending;
+          const isUpdatingStatus =
+            pendingStatusId === jobId && statusMutation.isPending;
 
           const nextStatus = job.status === '0' ? '1' : '0';
 
@@ -308,7 +358,9 @@ export function JobManagement() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     disabled={isUpdatingStatus}
-                    onSelect={() => statusMutation.mutate({ jobId, nextStatus })}
+                    onSelect={() =>
+                      statusMutation.mutate({ jobId, nextStatus })
+                    }
                   >
                     {isUpdatingStatus ? (
                       <>
@@ -368,16 +420,21 @@ export function JobManagement() {
   const isError = query.isError;
   const isRefetching = query.isRefetching;
 
-  const visibleColumnCount = table.getVisibleLeafColumns().length || columns.length;
+  const visibleColumnCount =
+    table.getVisibleLeafColumns().length || columns.length;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
-      <Card className="border-border/70 shadow-sm">
+      <Card className="border-border/70 ">
         <CardHeader className="space-y-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <CardTitle className="text-2xl font-semibold text-foreground">定时任务</CardTitle>
-              <CardDescription>查看并管理调度任务，支持按名称、分组与状态筛选。</CardDescription>
+              <CardTitle className="text-2xl font-semibold text-foreground">
+                定时任务
+              </CardTitle>
+              <CardDescription>
+                查看并管理调度任务，支持按名称、分组与状态筛选。
+              </CardDescription>
             </div>
             <Button
               variant="outline"
@@ -418,7 +475,14 @@ export function JobManagement() {
             </div>
             <div className="flex flex-col gap-2">
               <Label>状态</Label>
-              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as (typeof STATUS_FILTER_OPTIONS)[number]['value'])}>
+              <Select
+                value={statusFilter}
+                onValueChange={(value) =>
+                  setStatusFilter(
+                    value as (typeof STATUS_FILTER_OPTIONS)[number]['value'],
+                  )
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="全部状态" />
                 </SelectTrigger>
@@ -442,9 +506,18 @@ export function JobManagement() {
                     {headerGroup.headers.map((header) => (
                       <TableHead
                         key={header.id}
-                        className={cn(header.column.columnDef.meta?.headerClassName as string | undefined)}
+                        className={cn(
+                          header.column.columnDef.meta?.headerClassName as
+                            | string
+                            | undefined,
+                        )}
                       >
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -453,31 +526,50 @@ export function JobManagement() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={visibleColumnCount} className="h-32 text-center align-middle">
+                    <TableCell
+                      colSpan={visibleColumnCount}
+                      className="h-32 text-center align-middle"
+                    >
                       <InlineLoading label="正在加载任务..." />
                     </TableCell>
                   </TableRow>
                 ) : isError ? (
                   <TableRow>
-                    <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-destructive">
+                    <TableCell
+                      colSpan={visibleColumnCount}
+                      className="h-24 text-center text-sm text-destructive"
+                    >
                       加载失败，请稍后再试。
                     </TableCell>
                   </TableRow>
                 ) : table.getRowModel().rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-muted-foreground">
+                    <TableCell
+                      colSpan={visibleColumnCount}
+                      className="h-24 text-center text-sm text-muted-foreground"
+                    >
                       暂无任务数据。
                     </TableCell>
                   </TableRow>
                 ) : (
                   table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="transition-colors hover:bg-muted/60">
+                    <TableRow
+                      key={row.id}
+                      className="transition-colors hover:bg-muted/60"
+                    >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell
                           key={cell.id}
-                          className={cn(cell.column.columnDef.meta?.cellClassName as string | undefined)}
+                          className={cn(
+                            cell.column.columnDef.meta?.cellClassName as
+                              | string
+                              | undefined,
+                          )}
                         >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -514,7 +606,10 @@ export function JobManagement() {
             : '确定要删除该任务吗？'
         }
         confirmLabel="删除任务"
-        loading={deleteMutation.isPending && pendingDeleteId === (deleteState.job?.jobId ?? null)}
+        loading={
+          deleteMutation.isPending &&
+          pendingDeleteId === (deleteState.job?.jobId ?? null)
+        }
         onConfirm={() => {
           if (!deleteState.job || deleteMutation.isPending) {
             return;

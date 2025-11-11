@@ -1,11 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Trash2 } from 'lucide-react';
-
-import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { InlineLoading } from '@/components/loading';
+import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,6 +13,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
 
 import { listOperLogs } from '../api';
 import {
@@ -71,9 +74,7 @@ export function OperLogDataSection() {
             ? undefined
             : appliedFilters.businessType,
         status:
-          appliedFilters.status === 'all'
-            ? undefined
-            : appliedFilters.status,
+          appliedFilters.status === 'all' ? undefined : appliedFilters.status,
         requestMethod:
           appliedFilters.requestMethod === 'all'
             ? undefined
@@ -116,7 +117,7 @@ export function OperLogDataSection() {
   const error = logQuery.isError && logs.length === 0;
 
   return (
-    <Card className="border border-border/70 shadow-sm dark:border-border/40">
+    <Card className="border border-border/70  dark:border-border/40">
       <CardContent className="p-0">
         {loading ? (
           <div className="flex min-h-[320px] items-center justify-center">
@@ -136,27 +137,13 @@ export function OperLogDataSection() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[160px]">
-                      操作标题
-                    </TableHead>
-                    <TableHead className="min-w-[120px]">
-                      业务类型
-                    </TableHead>
-                    <TableHead className="min-w-[120px]">
-                      执行结果
-                    </TableHead>
-                    <TableHead className="min-w-[120px]">
-                      请求方式
-                    </TableHead>
-                    <TableHead className="min-w-[160px]">
-                      操作人员
-                    </TableHead>
-                    <TableHead className="min-w-[220px]">
-                      请求地址
-                    </TableHead>
-                    <TableHead className="min-w-[160px]">
-                      操作时间
-                    </TableHead>
+                    <TableHead className="min-w-[160px]">操作标题</TableHead>
+                    <TableHead className="min-w-[120px]">业务类型</TableHead>
+                    <TableHead className="min-w-[120px]">执行结果</TableHead>
+                    <TableHead className="min-w-[120px]">请求方式</TableHead>
+                    <TableHead className="min-w-[160px]">操作人员</TableHead>
+                    <TableHead className="min-w-[220px]">请求地址</TableHead>
+                    <TableHead className="min-w-[160px]">操作时间</TableHead>
                     <TableHead className="min-w-[120px] text-right">
                       操作
                     </TableHead>
@@ -173,9 +160,7 @@ export function OperLogDataSection() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={getOperLogStatusBadgeVariant(
-                            item.status,
-                          )}
+                          variant={getOperLogStatusBadgeVariant(item.status)}
                         >
                           {getOperLogStatusLabel(item.status)}
                         </Badge>

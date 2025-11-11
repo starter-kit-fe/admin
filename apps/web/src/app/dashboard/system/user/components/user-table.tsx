@@ -1,9 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
-import { KeyRound, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,11 +11,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { KeyRound, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
 
 import type { User } from '../type';
 import {
+  STATUS_META,
   formatPhoneNumber,
   getAccountLabel,
   getAvatarFallback,
@@ -27,7 +39,6 @@ import {
   getDisplayName,
   getEmailLabel,
   getRoleLabel,
-  STATUS_META,
 } from './utils';
 
 interface UserTableProps {
@@ -71,14 +82,14 @@ function RowActions({
   };
 
   return (
-    <div className="flex justify-end gap-1">
+    <div className="flex justify-end">
       <Button
         variant="ghost"
         size="sm"
-        className="h-8 px-2.5 text-sm font-medium"
+        className=" gap-0.5 px-2.5 hover:text-primary cursor-pointer"
         onClick={() => onEdit(user)}
       >
-        <Pencil className="mr-1.5 size-3.5" />
+        <Pencil className="mr-1.5 size-3" />
         修改
       </Button>
       <DropdownMenu modal={false}>
@@ -86,7 +97,7 @@ function RowActions({
           <Button
             variant="ghost"
             size="icon"
-            className="size-8"
+            className="size-8  hover:text-primary  cursor-pointer"
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
             aria-label="更多操作"
@@ -150,7 +161,9 @@ export function UserTable({
             <Checkbox
               aria-label={`选择 ${label}`}
               checked={isSelected}
-              onCheckedChange={(checked) => onToggleSelect(user.userId, checked === true)}
+              onCheckedChange={(checked) =>
+                onToggleSelect(user.userId, checked === true)
+              }
             />
           );
         },
@@ -172,12 +185,16 @@ export function UserTable({
 
           return (
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 border border-border/60 shadow-sm">
-                {user.avatar ? <AvatarImage src={user.avatar} alt={displayName} /> : null}
+              <Avatar className="h-10 w-10 border border-border/60 ">
+                {user.avatar ? (
+                  <AvatarImage src={user.avatar} alt={displayName} />
+                ) : null}
                 <AvatarFallback>{getAvatarFallback(user)}</AvatarFallback>
               </Avatar>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">{accountLabel}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {accountLabel}
+                </p>
                 <p className="text-xs text-muted-foreground">{emailLabel}</p>
               </div>
             </div>
@@ -193,7 +210,11 @@ export function UserTable({
         cell: ({ row }) => {
           const user = row.original;
           const nickName = user.nickName?.trim();
-          return <span className="text-sm text-muted-foreground">{nickName && nickName.length > 0 ? nickName : '—'}</span>;
+          return (
+            <span className="text-sm text-muted-foreground">
+              {nickName && nickName.length > 0 ? nickName : '—'}
+            </span>
+          );
         },
         meta: {
           headerClassName: 'min-w-[160px]',
@@ -204,7 +225,11 @@ export function UserTable({
         header: () => '手机号',
         cell: ({ row }) => {
           const user = row.original;
-          return <span className="text-sm text-muted-foreground">{formatPhoneNumber(user.phonenumber)}</span>;
+          return (
+            <span className="text-sm text-muted-foreground">
+              {formatPhoneNumber(user.phonenumber)}
+            </span>
+          );
         },
         meta: {
           headerClassName: 'min-w-[160px]',
@@ -215,7 +240,11 @@ export function UserTable({
         header: () => '所属部门',
         cell: ({ row }) => {
           const user = row.original;
-          return <span className="text-sm text-muted-foreground">{getCompanyLabel(user)}</span>;
+          return (
+            <span className="text-sm text-muted-foreground">
+              {getCompanyLabel(user)}
+            </span>
+          );
         },
         meta: {
           headerClassName: 'min-w-[180px]',
@@ -226,7 +255,11 @@ export function UserTable({
         header: () => '角色',
         cell: ({ row }) => {
           const user = row.original;
-          return <span className="text-sm text-muted-foreground">{getRoleLabel(user)}</span>;
+          return (
+            <span className="text-sm text-muted-foreground">
+              {getRoleLabel(user)}
+            </span>
+          );
         },
         meta: {
           headerClassName: 'min-w-[160px]',
@@ -237,7 +270,10 @@ export function UserTable({
         header: () => '状态',
         cell: ({ row }) => {
           const user = row.original;
-          const statusMeta = STATUS_META[user.status as keyof typeof STATUS_META] ?? STATUS_META['1'];
+          const statusMeta =
+            STATUS_META[user.status as keyof typeof STATUS_META] ??
+            STATUS_META['1'];
+
           return (
             <Badge
               variant="outline"
@@ -281,12 +317,12 @@ export function UserTable({
     [
       columnHelper,
       headerCheckboxState,
-      onToggleSelectAll,
-      selectedIds,
-      onToggleSelect,
+      onDelete,
       onEdit,
       onResetPassword,
-      onDelete,
+      onToggleSelect,
+      onToggleSelectAll,
+      selectedIds,
     ],
   );
 
@@ -299,7 +335,7 @@ export function UserTable({
   const visibleColumnCount = table.getVisibleLeafColumns().length;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border/60 bg-card shadow-sm dark:border-border/40">
+    <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -307,9 +343,18 @@ export function UserTable({
               {headerGroup.headers.map((header) => (
                 <TableHead
                   key={header.id}
-                  className={cn(header.column.columnDef.meta?.headerClassName as string | undefined)}
+                  className={cn(
+                    header.column.columnDef.meta?.headerClassName as
+                      | string
+                      | undefined,
+                  )}
                 >
-                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                 </TableHead>
               ))}
             </TableRow>
@@ -318,19 +363,28 @@ export function UserTable({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-muted-foreground">
+              <TableCell
+                colSpan={visibleColumnCount}
+                className="h-24 text-center text-sm text-muted-foreground"
+              >
                 正在加载用户...
               </TableCell>
             </TableRow>
           ) : isError ? (
             <TableRow>
-              <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-destructive">
+              <TableCell
+                colSpan={visibleColumnCount}
+                className="h-24 text-center text-sm text-destructive"
+              >
                 加载失败，请稍后再试。
               </TableCell>
             </TableRow>
           ) : table.getRowModel().rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-muted-foreground">
+              <TableCell
+                colSpan={visibleColumnCount}
+                className="h-24 text-center text-sm text-muted-foreground"
+              >
                 暂无数据
               </TableCell>
             </TableRow>
@@ -349,9 +403,16 @@ export function UserTable({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={cn(cell.column.columnDef.meta?.cellClassName as string | undefined)}
+                      className={cn(
+                        cell.column.columnDef.meta?.cellClassName as
+                          | string
+                          | undefined,
+                      )}
                     >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>

@@ -2,7 +2,10 @@
 
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 
-import type { FiltersFormState, RoleOption } from './components/filters-bar';
+import type {
+  FiltersFormState,
+  RoleOption,
+} from './components/filters/filters-bar';
 import { DEFAULT_ROLE_VALUE } from './components/utils';
 import { DEFAULT_PAGINATION, STATUS_TABS } from './constants';
 import type { User } from './type';

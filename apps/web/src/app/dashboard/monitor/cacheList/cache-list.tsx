@@ -1,6 +1,26 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { InlineLoading } from '@/components/loading';
+import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
@@ -9,18 +29,10 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Clipboard, RefreshCcw, Search, TimerReset } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { InlineLoading } from '@/components/loading';
-import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Spinner } from '@/components/ui/spinner';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { cn } from '@/lib/utils';
-
-import { listCacheKeys, type CacheKeyListParams } from '../cache/api';
+import { type CacheKeyListParams, listCacheKeys } from '../cache/api';
 import type { CacheKeyItem, CacheKeyListResponse } from '../cache/type';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -41,7 +53,10 @@ function formatBytes(value?: number | null) {
     return '-';
   }
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const power = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  const power = Math.min(
+    Math.floor(Math.log(value) / Math.log(1024)),
+    units.length - 1,
+  );
   const adjusted = value / Math.pow(1024, power);
   return `${adjusted.toFixed(power === 0 ? 0 : 2)} ${units[power]}`;
 }
@@ -101,7 +116,10 @@ export function CacheList() {
 
   const data = query.data ?? ({} as CacheKeyListResponse);
   const rows = data.items ?? [];
-  const total = typeof data.total === 'number' && data.total >= 0 ? data.total : rows.length;
+  const total =
+    typeof data.total === 'number' && data.total >= 0
+      ? data.total
+      : rows.length;
 
   const columnHelper = useMemo(() => createColumnHelper<CacheKeyItem>(), []);
 
@@ -134,7 +152,11 @@ export function CacheList() {
       }),
       columnHelper.accessor('type', {
         header: '类型',
-        cell: (info) => <span className="rounded-full bg-muted px-2 py-0.5 text-xs uppercase">{info.getValue() ?? '-'}</span>,
+        cell: (info) => (
+          <span className="rounded-full bg-muted px-2 py-0.5 text-xs uppercase">
+            {info.getValue() ?? '-'}
+          </span>
+        ),
       }),
       columnHelper.accessor('ttlSeconds', {
         header: 'TTL',
@@ -155,7 +177,9 @@ export function CacheList() {
       }),
       columnHelper.accessor('encoding', {
         header: '编码',
-        cell: (info) => <span className="uppercase">{info.getValue() ?? '-'}</span>,
+        cell: (info) => (
+          <span className="uppercase">{info.getValue() ?? '-'}</span>
+        ),
       }),
     ],
     [columnHelper],
@@ -181,10 +205,12 @@ export function CacheList() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
-      <Card className="border-border/60 bg-card/90 shadow-sm dark:border-border/40">
+      <Card className="border-border/60 bg-card/90  dark:border-border/40">
         <CardHeader className="space-y-2">
           <CardTitle className="text-lg font-semibold">缓存键列表</CardTitle>
-          <CardDescription>支持通配符检索，默认最多展示 5000 条数据。</CardDescription>
+          <CardDescription>
+            支持通配符检索，默认最多展示 5000 条数据。
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex w-full items-center gap-3 sm:w-auto">
@@ -225,7 +251,7 @@ export function CacheList() {
         </CardContent>
       </Card>
 
-      <Card className="border-border/70 shadow-sm dark:border-border/40">
+      <Card className="border-border/70  dark:border-border/40">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
@@ -234,7 +260,12 @@ export function CacheList() {
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
                       <TableHead key={header.id}>
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -255,7 +286,9 @@ export function CacheList() {
                       <div className="flex flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
                         <span>未找到匹配的缓存键</span>
                         {debouncedPattern ? (
-                          <span className="text-xs text-muted-foreground/80">尝试调整匹配模式</span>
+                          <span className="text-xs text-muted-foreground/80">
+                            尝试调整匹配模式
+                          </span>
                         ) : null}
                       </div>
                     </TableCell>
@@ -264,8 +297,18 @@ export function CacheList() {
                   table.getRowModel().rows.map((row) => (
                     <TableRow key={row.id} className="text-sm">
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className={cn(cell.column.id === 'key' ? 'max-w-[420px]' : undefined)}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        <TableCell
+                          key={cell.id}
+                          className={cn(
+                            cell.column.id === 'key'
+                              ? 'max-w-[420px]'
+                              : undefined,
+                          )}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
                         </TableCell>
                       ))}
                     </TableRow>

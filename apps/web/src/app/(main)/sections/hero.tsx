@@ -26,10 +26,10 @@ import {
 import pkg from '../../../../package.json';
 
 const HERO_IMAGES = [
-  'https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1600&q=80',
-  'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80',
+  // 'https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1600&q=80',
+  // 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80',
   'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1600&q=80',
-  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1600&q=80',
+  // 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1600&q=80',
 ] as const;
 
 const BACKDROP_SWITCH_DELAY = 1300;
@@ -50,7 +50,7 @@ export default function HeroSection() {
   const crossfadeTimelineRef = useRef<gsap.core.Timeline | null>(null);
   const hasAnimatedBackdropRef = useRef(false);
   const heroTitle = useMemo(() => {
-    const [main, ...rest] = (pkg.seo?.title ?? 'Admin Template')
+    const [main, ...rest] = (pkg.seo?.title)
       .split('—')
       .map((item) => item.trim());
     return {
@@ -68,49 +68,46 @@ export default function HeroSection() {
     currentHeroImageRef.current = heroImage;
   }, [heroImage]);
 
-  const changeHeroImage = useCallback(
-    (nextImage: string) => {
-      if (!nextImage || nextImage === currentHeroImageRef.current) {
-        return;
-      }
+  const changeHeroImage = useCallback((nextImage: string) => {
+    if (!nextImage || nextImage === currentHeroImageRef.current) {
+      return;
+    }
 
-      const reduceMotion =
-        typeof window !== 'undefined' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      if (reduceMotion) {
-        setHeroImage(nextImage);
-        currentHeroImageRef.current = nextImage;
-        return;
-      }
+    if (reduceMotion) {
+      setHeroImage(nextImage);
+      currentHeroImageRef.current = nextImage;
+      return;
+    }
 
-      const backdrop = backdropRef.current;
-      if (!backdrop) {
-        setHeroImage(nextImage);
-        currentHeroImageRef.current = nextImage;
-        return;
-      }
+    const backdrop = backdropRef.current;
+    if (!backdrop) {
+      setHeroImage(nextImage);
+      currentHeroImageRef.current = nextImage;
+      return;
+    }
 
-      crossfadeTimelineRef.current?.kill();
+    crossfadeTimelineRef.current?.kill();
 
-      const timeline = gsap.timeline({
-        defaults: { ease: 'power2.out' },
-        onComplete: () => {
-          crossfadeTimelineRef.current = null;
-        },
-      });
+    const timeline = gsap.timeline({
+      defaults: { ease: 'power2.out' },
+      onComplete: () => {
+        crossfadeTimelineRef.current = null;
+      },
+    });
 
-      timeline.to(backdrop, { opacity: 0, duration: 0.45 });
-      timeline.add(() => {
-        setHeroImage(nextImage);
-        currentHeroImageRef.current = nextImage;
-      });
-      timeline.to(backdrop, { opacity: 1, duration: 0.65 });
+    timeline.to(backdrop, { opacity: 0, duration: 0.45 });
+    timeline.add(() => {
+      setHeroImage(nextImage);
+      currentHeroImageRef.current = nextImage;
+    });
+    timeline.to(backdrop, { opacity: 1, duration: 0.65 });
 
-      crossfadeTimelineRef.current = timeline;
-    },
-    [],
-  );
+    crossfadeTimelineRef.current = timeline;
+  }, []);
 
   useEffect(() => {
     return () => {

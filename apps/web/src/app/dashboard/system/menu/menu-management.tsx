@@ -1,10 +1,10 @@
 'use client';
 
-import { MenuManagementFilters } from './components/menu-management-filters';
-import { MenuManagementHeader } from './components/menu-management-header';
-import { MenuTreeSection } from './components/menu-tree-section';
-import { MenuDeleteDialog } from './components/menu-delete-dialog';
-import { MenuEditorManager } from './components/menu-editor-manager';
+import { MenuManagementFilters } from './components/filters/menu-management-filters';
+import { MenuManagementHeader } from './components/layout/menu-management-header';
+import { MenuTreeSection } from './components/sections/menu-tree-section';
+import { MenuDeleteDialog } from './components/dialogs/menu-delete-dialog';
+import { MenuEditorManager } from './components/editor/menu-editor-manager';
 
 export function MenuManagement() {
   return (

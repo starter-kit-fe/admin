@@ -48,8 +48,8 @@ export function LoadingPage({
           inset: 0;
           transform-origin: left center;
           transform: scaleX(0);
-          animation: loading-bar-progress 0.85s
-            cubic-bezier(0.22, 0.8, 0.32, 1) forwards;
+          animation: loading-bar-progress 0.85s cubic-bezier(0.22, 0.8, 0.32, 1)
+            forwards;
           background-image: linear-gradient(
             90deg,
             hsl(var(--primary)) 0%,
@@ -57,7 +57,8 @@ export function LoadingPage({
             hsl(var(--primary) / 0.6) 75%,
             hsl(var(--primary) / 0.4) 100%
           );
-          box-shadow: 0 0 12px hsl(var(--primary) / 0.35),
+          box-shadow:
+            0 0 12px hsl(var(--primary) / 0.35),
             0 4px 14px hsl(var(--primary) / 0.22);
           border-bottom-right-radius: 999px;
           border-top-right-radius: 999px;

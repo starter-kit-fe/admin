@@ -1,11 +1,17 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
+import {
+  type StatusValue,
+  usePostManagementSetRefreshHandler,
+  usePostManagementSetRefreshing,
+  usePostManagementStatus,
+  usePostManagementStore,
+} from '@/app/dashboard/system/post/store';
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { SelectionBanner } from '@/components/selection-banner';
+import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo } from 'react';
+import { toast } from 'sonner';
 
 import { listPosts } from '../api';
 import {
@@ -14,13 +20,6 @@ import {
   PAGE_SIZE_OPTIONS,
   STATUS_TABS,
 } from '../constants';
-import {
-  usePostManagementSetRefreshHandler,
-  usePostManagementSetRefreshing,
-  usePostManagementStatus,
-  usePostManagementStore,
-  type StatusValue,
-} from '@/app/dashboard/system/post/store';
 import type { Post, PostListResponse } from '../type';
 import { PostTable } from './post-table';
 
@@ -212,7 +211,7 @@ export function PostDataSection() {
         onBulkDelete={handleBulkDelete}
       />
 
-      <section className="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm dark:border-border/40">
+      <section className="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card  dark:border-border/40">
         <div className="flex-1 overflow-x-auto">
           <PostTable
             rows={rows}

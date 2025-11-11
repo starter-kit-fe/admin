@@ -1,7 +1,17 @@
 'use client';
 
-import { useMemo } from 'react';
-import type { ReactNode } from 'react';
+import { InlineLoading } from '@/components/loading';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Spinner } from '@/components/ui/spinner';
 import { useQuery } from '@tanstack/react-query';
 import {
   Cpu,
@@ -12,13 +22,8 @@ import {
   RefreshCcw,
   ServerCog,
 } from 'lucide-react';
-
-import { InlineLoading } from '@/components/loading';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Spinner } from '@/components/ui/spinner';
+import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 
 import { getServerStatus } from './api';
 import type { DiskInfo, ServerStatus } from './type';
@@ -72,8 +77,12 @@ function formatDuration(seconds?: number) {
 function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
-      <span className="text-right text-sm font-medium text-foreground">{value}</span>
+      <span className="text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </span>
+      <span className="text-right text-sm font-medium text-foreground">
+        {value}
+      </span>
     </div>
   );
 }
@@ -92,13 +101,21 @@ function DiskItem({ disk }: { disk: DiskInfo }) {
       <Progress value={usedPercent} aria-label="磁盘占用比例" />
       <div className="mt-3 grid grid-cols-2 gap-y-1 text-sm">
         <span className="text-muted-foreground">容量</span>
-        <span className="text-right font-medium text-foreground">{formatBytes(disk.total)}</span>
+        <span className="text-right font-medium text-foreground">
+          {formatBytes(disk.total)}
+        </span>
         <span className="text-muted-foreground">已用</span>
-        <span className="text-right font-medium text-foreground">{formatBytes(disk.used)}</span>
+        <span className="text-right font-medium text-foreground">
+          {formatBytes(disk.used)}
+        </span>
         <span className="text-muted-foreground">剩余</span>
-        <span className="text-right font-medium text-foreground">{formatBytes(disk.free)}</span>
+        <span className="text-right font-medium text-foreground">
+          {formatBytes(disk.free)}
+        </span>
         <span className="text-muted-foreground">占用</span>
-        <span className="text-right font-medium text-foreground">{formatPercent(disk.usedPercent)}</span>
+        <span className="text-right font-medium text-foreground">
+          {formatPercent(disk.usedPercent)}
+        </span>
       </div>
     </div>
   );
@@ -116,7 +133,10 @@ function ResourceCard({ status }: { status: ServerStatus }) {
       meta: `${Math.max(cpu.cores, 0)} 核心`,
       progress: safeNumber(cpu.usagePercent),
       rows: [
-        { label: '1/5/15 分钟负载', value: `${formatLoad(cpu.load1)} / ${formatLoad(cpu.load5)} / ${formatLoad(cpu.load15)}` },
+        {
+          label: '1/5/15 分钟负载',
+          value: `${formatLoad(cpu.load1)} / ${formatLoad(cpu.load5)} / ${formatLoad(cpu.load15)}`,
+        },
         { label: '后台程序 CPU', value: formatPercent(process.cpuUsage) },
       ],
     },
@@ -130,13 +150,16 @@ function ResourceCard({ status }: { status: ServerStatus }) {
       rows: [
         { label: '已用', value: formatBytes(memory.used) },
         { label: '可用', value: formatBytes(memory.free) },
-        { label: '后台程序占用', value: formatBytes(memory.processAlloc || process.alloc) },
+        {
+          label: '后台程序占用',
+          value: formatBytes(memory.processAlloc || process.alloc),
+        },
       ],
     },
   ];
 
   return (
-    <Card className="border-border/70 shadow-sm dark:border-border/40">
+    <Card className="border-border/70  dark:border-border/40">
       <CardHeader className="space-y-1">
         <CardTitle className="text-lg font-semibold">资源使用概览</CardTitle>
         <CardDescription>即刻掌握 CPU 与内存的运行态势</CardDescription>
@@ -151,22 +174,36 @@ function ResourceCard({ status }: { status: ServerStatus }) {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-foreground">
-                  <span className="flex size-8 items-center justify-center rounded-full bg-background/70 text-muted-foreground shadow-sm dark:bg-muted/40">
+                  <span className="flex size-8 items-center justify-center rounded-full bg-background/70 text-muted-foreground  dark:bg-muted/40">
                     <Icon className="size-4" />
                   </span>
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold">{section.title}</span>
-                    <span className="text-xs text-muted-foreground">{section.meta}</span>
+                    <span className="text-sm font-semibold">
+                      {section.title}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {section.meta}
+                    </span>
                   </div>
                 </div>
-                <span className="text-lg font-semibold text-foreground">{section.highlight}</span>
+                <span className="text-lg font-semibold text-foreground">
+                  {section.highlight}
+                </span>
               </div>
-              <Progress value={section.progress} aria-label={`${section.title} 使用比例`} />
+              <Progress
+                value={section.progress}
+                aria-label={`${section.title} 使用比例`}
+              />
               <div className="space-y-2 text-xs uppercase tracking-wide text-muted-foreground">
                 {section.rows.map((row) => (
-                  <div key={row.label} className="flex items-center justify-between gap-3 text-xs font-medium normal-case">
+                  <div
+                    key={row.label}
+                    className="flex items-center justify-between gap-3 text-xs font-medium normal-case"
+                  >
                     <span className="text-muted-foreground">{row.label}</span>
-                    <span className="text-right text-foreground">{row.value}</span>
+                    <span className="text-right text-foreground">
+                      {row.value}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -188,9 +225,15 @@ function SystemInfoCard({ status }: { status: ServerStatus }) {
       icon: MonitorSmartphone,
       rows: [
         { label: '主机名', value: host.hostname || '-' },
-        { label: '系统', value: [host.os, host.arch].filter(Boolean).join('/') || '-' },
+        {
+          label: '系统',
+          value: [host.os, host.arch].filter(Boolean).join('/') || '-',
+        },
         { label: '内核版本', value: host.kernelVersion || '-' },
-        { label: '运行时长', value: host.uptime || formatDuration(host.uptimeSeconds) },
+        {
+          label: '运行时长',
+          value: host.uptime || formatDuration(host.uptimeSeconds),
+        },
         { label: '当前时间', value: host.currentTime || '-' },
       ],
     },
@@ -199,9 +242,15 @@ function SystemInfoCard({ status }: { status: ServerStatus }) {
       title: '后台程序',
       icon: ServerCog,
       rows: [
-        { label: 'PID', value: <Badge variant="secondary">{process.pid}</Badge> },
+        {
+          label: 'PID',
+          value: <Badge variant="secondary">{process.pid}</Badge>,
+        },
         { label: '启动时间', value: process.startTime || '-' },
-        { label: '运行时长', value: process.uptime || formatDuration(process.uptimeSeconds) },
+        {
+          label: '运行时长',
+          value: process.uptime || formatDuration(process.uptimeSeconds),
+        },
         { label: 'CPU 占用', value: formatPercent(process.cpuUsage) },
         { label: '内存占用', value: formatBytes(process.alloc) },
         { label: 'Goroutines', value: process.numGoroutine.toString() },
@@ -213,7 +262,7 @@ function SystemInfoCard({ status }: { status: ServerStatus }) {
   ];
 
   return (
-    <Card className="border-border/70 shadow-sm dark:border-border/40">
+    <Card className="border-border/70  dark:border-border/40">
       <CardHeader className="space-y-1">
         <CardTitle className="text-lg font-semibold">系统与后台程序</CardTitle>
         <CardDescription>把核心状态归类呈现，更快定位问题</CardDescription>
@@ -224,7 +273,7 @@ function SystemInfoCard({ status }: { status: ServerStatus }) {
           return (
             <div
               key={section.key}
-              className="space-y-3 rounded-3xl border border-border/50 bg-background/60 p-5 shadow-sm dark:border-border/40 dark:bg-muted/25"
+              className="space-y-3 rounded-3xl border border-border/50 bg-background/60 p-5  dark:border-border/40 dark:bg-muted/25"
             >
               <div className="flex items-center gap-2 text-foreground">
                 <span className="flex size-8 items-center justify-center rounded-full bg-muted/40 text-muted-foreground">
@@ -234,7 +283,11 @@ function SystemInfoCard({ status }: { status: ServerStatus }) {
               </div>
               <div className="space-y-2">
                 {section.rows.map((row) => (
-                  <InfoRow key={row.label} label={row.label} value={row.value} />
+                  <InfoRow
+                    key={row.label}
+                    label={row.label}
+                    value={row.value}
+                  />
                 ))}
               </div>
             </div>
@@ -326,7 +379,8 @@ export function ServerMonitor() {
   const cpuUsageLabel = formatPercent(normalizedStatus.cpu.usagePercent);
   const memoryUsageLabel = formatPercent(normalizedStatus.memory.usedPercent);
   const uptimeLabel =
-    normalizedStatus.process.uptime || formatDuration(normalizedStatus.process.uptimeSeconds);
+    normalizedStatus.process.uptime ||
+    formatDuration(normalizedStatus.process.uptimeSeconds);
 
   if (query.isLoading) {
     return (
@@ -341,7 +395,9 @@ export function ServerMonitor() {
       <Card className="border-destructive/40 bg-destructive/10 text-destructive">
         <CardHeader>
           <CardTitle className="text-lg">无法加载服务监控数据</CardTitle>
-          <CardDescription className="text-destructive/80">请稍后刷新重试。</CardDescription>
+          <CardDescription className="text-destructive/80">
+            请稍后刷新重试。
+          </CardDescription>
         </CardHeader>
       </Card>
     );
@@ -349,16 +405,20 @@ export function ServerMonitor() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
-      <Card className="border-border/60 bg-card/90 shadow-sm dark:border-border/40">
+      <Card className="border-border/60 bg-card/90  dark:border-border/40">
         <CardContent className="flex flex-col gap-4 py-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MonitorSmartphone className="size-4" />
-              {normalizedStatus.host.hostname || '未命名主机'} · {normalizedStatus.host.os}/
-              {normalizedStatus.host.arch}
+              {normalizedStatus.host.hostname || '未命名主机'} ·{' '}
+              {normalizedStatus.host.os}/{normalizedStatus.host.arch}
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">服务监控</h1>
-            <p className="text-sm text-muted-foreground">实时掌握服务器、磁盘与后台程序的关键指标。</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              服务监控
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              实时掌握服务器、磁盘与后台程序的关键指标。
+            </p>
             <div className="flex flex-wrap gap-3 text-sm">
               <div className="rounded-full bg-primary/10 px-3 py-1 text-primary">
                 CPU {cpuUsageLabel}
@@ -400,7 +460,7 @@ export function ServerMonitor() {
       <ResourceCard status={normalizedStatus} />
       <SystemInfoCard status={normalizedStatus} />
 
-      <Card className="border-border/70 shadow-sm dark:border-border/40">
+      <Card className="border-border/70  dark:border-border/40">
         <CardHeader className="space-y-1">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Database className="size-5 text-muted-foreground" />
@@ -414,7 +474,12 @@ export function ServerMonitor() {
               未检测到可用磁盘信息
             </div>
           ) : (
-            disks.map((disk) => <DiskItem key={`${disk.mountpoint}-${disk.filesystem}`} disk={disk} />)
+            disks.map((disk) => (
+              <DiskItem
+                key={`${disk.mountpoint}-${disk.filesystem}`}
+                disk={disk}
+              />
+            ))
           )}
         </CardContent>
       </Card>

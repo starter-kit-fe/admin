@@ -1,11 +1,11 @@
 'use client';
 
-import { RoleBulkDeleteDialog } from './components/role-bulk-delete-dialog';
-import { RoleDataSection } from './components/role-data-section';
-import { RoleDeleteDialog } from './components/role-delete-dialog';
-import { RoleEditorManager } from './components/role-editor-manager';
-import { RoleFiltersSection } from './components/role-filters-section';
-import { RoleManagementHeader } from './components/role-management-header';
+import { RoleBulkDeleteDialog } from './components/dialogs/role-bulk-delete-dialog';
+import { RoleDeleteDialog } from './components/dialogs/role-delete-dialog';
+import { RoleEditorManager } from './components/editor/role-editor-manager';
+import { RoleManagementHeader } from './components/layout/role-management-header';
+import { RoleFiltersSection } from './components/sections/role-filters-section';
+import { RoleDataSection } from './components/sections/role-data-section';
 
 export function RoleManagement() {
   return (

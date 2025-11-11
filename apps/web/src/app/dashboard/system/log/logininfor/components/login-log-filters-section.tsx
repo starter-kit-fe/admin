@@ -1,19 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
-
+import { StatusTabs } from '@/components/status-tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { StatusTabs } from '@/components/status-tabs';
+import { useEffect } from 'react';
 
-import {
-  DEFAULT_DEBOUNCE_MS,
-  LOGIN_LOG_STATUS_TABS,
-} from '../constants';
-import {
-  type LoginLogStatusValue,
-  useLoginLogManagementStore,
-} from '../store';
+import { DEFAULT_DEBOUNCE_MS, LOGIN_LOG_STATUS_TABS } from '../constants';
+import { type LoginLogStatusValue, useLoginLogManagementStore } from '../store';
 
 export function LoginLogFiltersSection() {
   const {
@@ -39,14 +32,12 @@ export function LoginLogFiltersSection() {
   }, [applyFilters, filterForm.userName, filterForm.ipaddr]);
 
   return (
-    <section className="rounded-xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-5">
+    <section className="rounded-xl border border-border/60 bg-background/90 p-4  sm:p-5">
       <div className="flex flex-col gap-6">
         <StatusTabs
           value={status}
           tabs={LOGIN_LOG_STATUS_TABS}
-          onValueChange={(value) =>
-            setStatus(value as LoginLogStatusValue)
-          }
+          onValueChange={(value) => setStatus(value as LoginLogStatusValue)}
         />
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-2">

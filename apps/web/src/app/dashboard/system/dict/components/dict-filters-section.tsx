@@ -1,15 +1,15 @@
 'use client';
 
+import {
+  type TypeStatusValue,
+  useDictManagementStore,
+} from '@/app/dashboard/system/dict/store';
+import { StatusTabs } from '@/components/status-tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useEffect, useMemo } from 'react';
 
 import { DEFAULT_DEBOUNCE_MS, TYPE_STATUS_TABS } from '../constants';
-import {
-  useDictManagementStore,
-  type TypeStatusValue,
-} from '@/app/dashboard/system/dict/store';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { StatusTabs } from '@/components/status-tabs';
 
 export function DictFiltersSection() {
   const {
@@ -41,7 +41,7 @@ export function DictFiltersSection() {
   }, [applyTypeFilters, typeFilterForm.dictName, typeFilterForm.dictType]);
 
   return (
-    <section className="rounded-xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-5">
+    <section className="rounded-xl border border-border/60 bg-background/90 p-4  sm:p-5">
       <div className="flex flex-col gap-4">
         <StatusTabs
           value={typeStatus}

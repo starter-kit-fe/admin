@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit2, Trash2 } from 'lucide-react';
-
+import {
+  useConfigManagementSetRefreshHandler,
+  useConfigManagementSetRefreshing,
+  useConfigManagementStore,
+} from '@/app/dashboard/system/config/store';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
@@ -13,18 +16,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { Edit2, Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
 
 import { listConfigs } from '../api';
 import { BASE_QUERY_KEY, CONFIG_TYPE_TABS } from '../constants';
-import {
-  useConfigManagementSetRefreshHandler,
-  useConfigManagementSetRefreshing,
-  useConfigManagementStore,
-} from '@/app/dashboard/system/config/store';
-import { resolveErrorMessage } from '../utils';
 import type { SystemConfig } from '../type';
+import { resolveErrorMessage } from '../utils';
 
 export function ConfigTableSection() {
   const {
@@ -104,7 +107,7 @@ export function ConfigTableSection() {
   };
 
   return (
-    <Card className="border border-border/60 shadow-sm dark:border-border/40">
+    <Card className="border border-border/60  dark:border-border/40">
       <CardContent className="px-0 py-0">
         <Table>
           <TableHeader>

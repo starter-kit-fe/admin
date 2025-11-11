@@ -12,7 +12,7 @@ import { OnlineUserSelectionMeta } from './components/online-selection-meta';
 export function OnlineUserManagement() {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
-      <Card className="border-border/70 shadow-sm">
+      <Card className="border-border/70 ">
         <CardHeader className="space-y-4">
           <OnlineUserManagementHeader />
           <OnlineUserFiltersSection />

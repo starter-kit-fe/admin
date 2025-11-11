@@ -1,18 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-
-import { InlineLoading } from '@/components/loading';
-import { Button } from '@/components/ui/button';
-
-import { listDepartmentTree } from '../api';
-import { BASE_QUERY_KEY } from '../constants';
 import {
   useDepartmentManagementSetRefreshHandler,
   useDepartmentManagementSetRefreshing,
   useDepartmentManagementStore,
 } from '@/app/dashboard/system/dept/store';
+import { InlineLoading } from '@/components/loading';
+import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+
+import { listDepartmentTree } from '../api';
+import { BASE_QUERY_KEY } from '../constants';
 import type { DepartmentNode } from '../type';
 import { DepartmentTreeView } from './department-tree-view';
 
@@ -42,11 +41,7 @@ export function DepartmentTreeSection() {
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 400);
 
   const departmentQuery = useQuery({
-    queryKey: [
-      ...BASE_QUERY_KEY,
-      status,
-      debouncedKeyword,
-    ],
+    queryKey: [...BASE_QUERY_KEY, status, debouncedKeyword],
     queryFn: () =>
       listDepartmentTree({
         status: status === 'all' ? undefined : status,
@@ -87,7 +82,7 @@ export function DepartmentTreeSection() {
   };
 
   return (
-    <section className="flex max-h-[520px] flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3 shadow-sm dark:border-border/40">
+    <section className="flex max-h-[520px] flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3  dark:border-border/40">
       {departmentQuery.isLoading && departmentTree.length === 0 ? (
         <div className="flex flex-1 items-center justify-center">
           <InlineLoading label="加载部门数据..." />

@@ -1,9 +1,21 @@
 import type { User, UserFormValues } from '../type';
 
 export const STATUS_META = {
-  all: { label: '全部', tone: 'default', badgeClass: 'bg-slate-900 text-white' },
-  '0': { label: '启用', tone: 'success', badgeClass: 'bg-emerald-100 text-emerald-700' },
-  '1': { label: '停用', tone: 'danger', badgeClass: 'bg-rose-100 text-rose-700' },
+  all: {
+    label: '全部',
+    tone: 'default',
+    badgeClass: 'bg-slate-900 text-white',
+  },
+  '0': {
+    label: '正常',
+    tone: 'success',
+    badgeClass: 'bg-primary/10 text-primary',
+  },
+  '1': {
+    label: '停用',
+    tone: 'danger',
+    badgeClass: 'bg-rose-100 text-rose-700',
+  },
 } as const;
 
 export type StatusKey = keyof typeof STATUS_META | 'all';
