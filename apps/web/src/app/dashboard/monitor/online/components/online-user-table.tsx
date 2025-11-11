@@ -14,6 +14,12 @@ import { InlineLoading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
 import {
   Table,
@@ -298,9 +304,16 @@ export function OnlineUserTable({
               <TableRow>
                 <TableCell
                   colSpan={visibleColumnCount}
-                  className="h-24 text-center text-sm text-muted-foreground"
+                  className="h-48 text-center align-middle"
                 >
-                  暂无在线用户。
+                  <Empty className="border-0 bg-transparent p-4">
+                    <EmptyHeader>
+                      <EmptyTitle>暂无在线用户</EmptyTitle>
+                      <EmptyDescription>
+                        当前无活跃会话，稍后或刷新系统查看最新在线情况。
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
                 </TableCell>
               </TableRow>
             ) : (

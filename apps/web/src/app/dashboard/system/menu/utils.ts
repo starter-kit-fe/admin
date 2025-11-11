@@ -7,16 +7,14 @@ export function toFormValues(menu: MenuTreeNode): MenuFormValues {
     parentId: String(menu.parentId ?? 0),
     orderNum: menu.orderNum != null ? String(menu.orderNum) : '',
     path: menu.path ?? '',
-    component: menu.component ?? '',
     query: menu.query ?? '',
-    routeName: menu.routeName ?? '',
     isFrame: Boolean(menu.isFrame),
     isCache: Boolean(menu.isCache),
     menuType: menu.menuType as MenuFormValues['menuType'],
     visible: menu.visible as MenuFormValues['visible'],
     status: menu.status as MenuFormValues['status'],
     perms: menu.perms ?? '',
-    icon: menu.icon ?? '#',
+    icon: menu.icon && menu.icon !== '#' ? menu.icon : '',
     remark: menu.remark ?? '',
   };
 }
@@ -29,9 +27,7 @@ export function toCreatePayload(values: MenuFormValues): CreateMenuPayload {
     parentId,
     orderNum,
     path: values.path.trim(),
-    component: values.component?.trim() || undefined,
     query: values.query?.trim() || undefined,
-    routeName: values.routeName.trim(),
     isFrame: values.isFrame,
     isCache: values.isCache,
     menuType: values.menuType,
@@ -43,17 +39,15 @@ export function toCreatePayload(values: MenuFormValues): CreateMenuPayload {
   };
 }
 
-export function buildParentOptions(
-  nodes: MenuTreeNode[],
-  excludeIds: Set<number>,
-): MenuParentOption[] {
+export function buildParentOptions(nodes: MenuTreeNode[]): MenuParentOption[] {
   const options: MenuParentOption[] = [
     {
       value: '0',
-      label: '顶级菜单',
+      label: '根目录',
       level: 0,
-      path: ['顶级菜单'],
+      path: ['根目录'],
       disabled: false,
+      menuType: 'M',
     },
   ];
 
@@ -64,9 +58,6 @@ export function buildParentOptions(
     parentId: number,
   ) => {
     items.forEach((item) => {
-      if (excludeIds.has(item.menuId)) {
-        return;
-      }
       const currentPath = [...ancestors, item.menuName];
       options.push({
         value: String(item.menuId),
@@ -85,6 +76,31 @@ export function buildParentOptions(
 
   walk(nodes, 1, [], 0);
   return options;
+}
+
+export function filterParentOptions(
+  options: MenuParentOption[],
+  excludeIds: Set<number>,
+): MenuParentOption[] {
+  if (!excludeIds || excludeIds.size === 0) {
+    return options;
+  }
+  let changed = false;
+  const filtered = options.filter((option) => {
+    if (option.value === '0') {
+      return true;
+    }
+    const id = Number(option.value);
+    if (!Number.isFinite(id)) {
+      return true;
+    }
+    const shouldKeep = !excludeIds.has(id);
+    if (!shouldKeep) {
+      changed = true;
+    }
+    return shouldKeep;
+  });
+  return changed ? filtered : options;
 }
 
 export function collectDescendantIds(node?: MenuTreeNode): number[] {
@@ -183,4 +199,29 @@ export function getNextOrderNum(nodes: MenuTreeNode[], parentId: number) {
     0,
   );
   return maxOrder + 1;
+}
+
+const normalizeRouteSegment = (value: string) =>
+  value
+    .trim()
+    .replace(/^[\\/]+/, '')
+    .replace(/[\\/]+/g, '-')
+    .replace(/[^a-zA-Z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .toLowerCase();
+
+export function buildRouteSlug(
+  path: string,
+  fallback: string,
+  defaultValue = 'route',
+) {
+  const fromPath = normalizeRouteSegment(path);
+  if (fromPath.length > 0) {
+    return fromPath;
+  }
+  const fromFallback = normalizeRouteSegment(fallback);
+  if (fromFallback.length > 0) {
+    return fromFallback;
+  }
+  return defaultValue;
 }

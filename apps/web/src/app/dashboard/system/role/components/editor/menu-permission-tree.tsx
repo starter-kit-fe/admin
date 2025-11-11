@@ -4,6 +4,12 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 
 import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
@@ -228,7 +234,12 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
       </div>
       <div className="max-h-80 space-y-1 overflow-y-auto rounded-lg border border-border/60 bg-muted/10 p-3">
         {nodes.length === 0 ? (
-          <div className="py-6 text-center text-sm text-muted-foreground">暂无可配置菜单</div>
+          <Empty className="h-48 border-0 bg-transparent p-2">
+            <EmptyHeader>
+              <EmptyTitle>暂无可配置菜单</EmptyTitle>
+              <EmptyDescription>启用菜单后可在此为角色分配权限。</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           renderNodes(nodes)
         )}

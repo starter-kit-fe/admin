@@ -9,44 +9,21 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 import { MenuNode } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import {
-  BookOpen,
-  Boxes,
-  Cog,
-  FolderKanban,
-  Monitor,
-  ShieldCheck,
-  SquareTerminal,
-  Users,
-} from 'lucide-react';
-import { type ComponentType, type ReactNode, useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 
 import pkg from '../../../package.json';
 import { resolveMenuLink } from './menu-routing';
 import { NavMain } from './nav-main';
-
-const iconRegistry: Record<string, ComponentType<{ className?: string }>> = {
-  system: Cog,
-  setting: Cog,
-  config: Cog,
-  monitor: Monitor,
-  tool: FolderKanban,
-  guide: BookOpen,
-  user: Users,
-  role: ShieldCheck,
-  log: Boxes,
-};
-
-const fallbackIcon = SquareTerminal;
-
-function resolveIcon(name?: string | null) {
-  const key = (name ?? '').toLowerCase();
-  const Icon = iconRegistry[key] ?? fallbackIcon;
-  return <Icon className="h-4 w-4" />;
-}
+import { resolveLucideIcon } from '@/lib/lucide-icons';
 
 export type NavItem = {
   title: string;
@@ -80,9 +57,9 @@ export function buildNavItems(
         items: items.length > 0 ? items : undefined,
       };
 
-      if (depth === 0) {
-        navItem.icon = resolveIcon(node.meta?.icon);
-      }
+      const Icon = resolveLucideIcon(node.meta?.icon);
+      const iconSizeClass = depth === 0 ? 'h-4 w-4' : 'h-3.5 w-3.5';
+      navItem.icon = <Icon className={cn('shrink-0', iconSizeClass)} />;
 
       return navItem;
     });
@@ -136,8 +113,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ) : navItems.length > 0 ? (
           <NavMain items={navItems} />
         ) : (
-          <div className="px-4 py-6 text-sm text-muted-foreground">
-            暂无可用菜单
+          <div className="px-4 py-6">
+            <Empty className="border-0 bg-transparent p-2">
+              <EmptyHeader>
+                <EmptyTitle>暂无可用菜单</EmptyTitle>
+                <EmptyDescription>联系管理员为你分配系统权限。</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           </div>
         )}
       </SidebarContent>

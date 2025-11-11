@@ -60,7 +60,7 @@ export interface UpdateUserPayload {
   status?: string;
   remark?: string | null;
   roleIds?: number[];
-  postIds?: number[];
+  postIds: number[];
 }
 
 export interface UserFormValues {
@@ -72,7 +72,7 @@ export interface UserFormValues {
   status: '0' | '1';
   deptId: string;
   remark: string;
-  password?: string;
+  password: string;
   roleIds: string[];
   postIds: string[];
 }

@@ -10,14 +10,31 @@ import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 
 import type { MenuFormValues, MenuType } from '@/app/dashboard/system/menu/type';
-import { BasicInfoSection } from './menu-editor/basic-info-section';
-import { DirectorySection } from './menu-editor/directory-section';
-import { PageSection } from './menu-editor/page-section';
-import { ButtonSection } from './menu-editor/button-section';
-import { RemarkSection } from './menu-editor/remark-section';
+import { buildRouteSlug } from '@/app/dashboard/system/menu/utils';
 import { MenuTypeTabs } from './menu-editor/menu-type-tabs';
+import { DirectoryForm } from './forms/directory-form';
+import { MenuForm } from './forms/menu-form';
+import { ButtonForm } from './forms/button-form';
 import type { MenuParentOption } from './menu-editor/types';
 export type { MenuParentOption } from './menu-editor/types';
+
+const TYPE_LABELS: Record<MenuType, string> = {
+  M: '目录',
+  C: '菜单',
+  F: '按钮',
+};
+
+const CREATE_DESCRIPTIONS: Record<MenuType, string> = {
+  M: '创建新的目录，用于组织子菜单。',
+  C: '创建新的菜单，并配置路由与权限。',
+  F: '创建新的按钮权限，用于控制页面操作。',
+};
+
+const UPDATE_DESCRIPTIONS: Record<MenuType, string> = {
+  M: '更新目录信息，调整层级或显示状态。',
+  C: '更新菜单的路由、图标及权限配置。',
+  F: '更新按钮权限，控制页面内操作。',
+};
 
 const menuFormSchema = z
   .object({
@@ -36,18 +53,10 @@ const menuFormSchema = z
         return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999;
       }, '显示顺序需为 0 到 9999 的整数'),
     path: z.string().trim().max(200, '路由地址不超过 200 个字符'),
-    component: z
-      .string()
-      .trim()
-      .max(255, '组件路径不超过 255 个字符'),
     query: z
       .string()
       .trim()
       .max(255, '路由参数不超过 255 个字符'),
-    routeName: z
-      .string()
-      .trim()
-      .max(50, '路由名称不能超过 50 个字符'),
     isFrame: z.boolean(),
     isCache: z.boolean(),
     menuType: z.enum(['M', 'C', 'F']),
@@ -67,7 +76,7 @@ const menuFormSchema = z
       .max(500, '备注最长 500 个字符'),
   })
   .superRefine((data, ctx) => {
-    if (data.menuType !== 'F') {
+    if (data.menuType === 'C' || data.menuType === 'M') {
       if (!data.path || data.path.trim().length === 0) {
         ctx.addIssue({
           path: ['path'],
@@ -75,14 +84,25 @@ const menuFormSchema = z
           message: '请输入路由地址',
         });
       }
-      if (!data.routeName || data.routeName.trim().length === 0) {
+    }
+
+    if (data.menuType === 'M') {
+      if (!data.orderNum || data.orderNum.trim().length === 0) {
         ctx.addIssue({
-          path: ['routeName'],
+          path: ['orderNum'],
           code: z.ZodIssueCode.custom,
-          message: '请输入路由名称',
+          message: '请输入目录排序',
+        });
+      }
+      if (!data.icon || data.icon.trim().length === 0 || data.icon.trim() === '#') {
+        ctx.addIssue({
+          path: ['icon'],
+          code: z.ZodIssueCode.custom,
+          message: '请填写目录图标',
         });
       }
     }
+
     if (data.menuType === 'F') {
       if (!data.perms || data.perms.trim().length === 0) {
         ctx.addIssue({
@@ -99,16 +119,14 @@ const DEFAULT_VALUES: MenuFormValues = {
   parentId: '0',
   orderNum: '',
   path: '',
-  component: '',
   query: '',
-  routeName: '',
   isFrame: false,
   isCache: false,
   menuType: 'C',
   visible: '0',
   status: '0',
   perms: '',
-  icon: '#',
+  icon: '',
   remark: '',
 };
 
@@ -175,23 +193,38 @@ export function MenuEditorDialog({
     }
   }, [defaultValues, form, open]);
 
+  const formTitleLabel = TYPE_LABELS[menuType] ?? '菜单';
+  const dialogTitle =
+    mode === 'create' ? `新增${formTitleLabel}` : `编辑${formTitleLabel}`;
+  const dialogDescription =
+    mode === 'create'
+      ? CREATE_DESCRIPTIONS[menuType] ?? CREATE_DESCRIPTIONS.C
+      : UPDATE_DESCRIPTIONS[menuType] ?? UPDATE_DESCRIPTIONS.C;
+
   const handleSubmit = form.handleSubmit((values) => {
     const payload: MenuFormValues = {
       ...values,
       menuName: values.menuName.trim(),
       path: values.path.trim(),
-      routeName: values.routeName?.trim() ?? '',
-      component: values.component?.trim() ?? '',
       query: values.query?.trim() ?? '',
       perms: values.perms?.trim() ?? '',
-      icon: values.icon.trim() || '#',
+      icon: values.icon.trim(),
       remark: values.remark?.trim() ?? '',
     };
 
+    if (payload.menuType === 'M') {
+      const generatedSlug = buildRouteSlug(payload.path, payload.menuName, 'directory');
+      if (!payload.path) {
+        payload.path = generatedSlug;
+      }
+      payload.query = '';
+      payload.perms = '';
+      payload.isFrame = false;
+      payload.isCache = false;
+    }
+
     if (payload.menuType === 'F') {
       payload.path = '';
-      payload.routeName = '';
-      payload.component = '';
       payload.query = '';
       payload.isFrame = false;
       payload.isCache = false;
@@ -202,11 +235,6 @@ export function MenuEditorDialog({
     onSubmit(payload);
   });
 
-  const title = mode === 'create' ? '新增菜单' : '编辑菜单';
-  const description =
-    mode === 'create'
-      ? '为系统添加新的菜单项，支持目录、菜单及按钮类型。'
-      : '更新菜单的基础信息、显示状态与权限标识。';
   const submitText = submitting ? '提交中...' : mode === 'create' ? '创建' : '保存';
 
   return (
@@ -214,8 +242,8 @@ export function MenuEditorDialog({
       <ResponsiveDialog.Content className="sm:max-w-2xl max-h-[90vh] overflow-hidden p-0">
         <div className="flex h-full max-h-[90vh] flex-col min-h-0">
           <ResponsiveDialog.Header className="flex-shrink-0 border-b border-border/60 px-6 py-5">
-            <ResponsiveDialog.Title>{title}</ResponsiveDialog.Title>
-            <ResponsiveDialog.Description>{description}</ResponsiveDialog.Description>
+            <ResponsiveDialog.Title>{dialogTitle}</ResponsiveDialog.Title>
+            <ResponsiveDialog.Description>{dialogDescription}</ResponsiveDialog.Description>
           </ResponsiveDialog.Header>
 
           <Form {...form}>
@@ -227,15 +255,15 @@ export function MenuEditorDialog({
                     allowedTypes={allowedMenuTypes}
                     onChange={(next) => form.setValue('menuType', next)}
                   />
-                  <BasicInfoSection
-                    form={form}
-                    parentOptions={parentOptions}
-                    mode={mode}
-                  />
-                  {menuType === 'M' ? <DirectorySection form={form} /> : null}
-                  {menuType === 'C' ? <PageSection form={form} /> : null}
-                  {menuType === 'F' ? <ButtonSection form={form} /> : null}
-                  <RemarkSection form={form} />
+                  {menuType === 'M' ? (
+                    <DirectoryForm form={form} parentOptions={parentOptions} />
+                  ) : null}
+                  {menuType === 'C' ? (
+                    <MenuForm form={form} parentOptions={parentOptions} />
+                  ) : null}
+                  {menuType === 'F' ? (
+                    <ButtonForm form={form} parentOptions={parentOptions} />
+                  ) : null}
                 </div>
               </div>
 

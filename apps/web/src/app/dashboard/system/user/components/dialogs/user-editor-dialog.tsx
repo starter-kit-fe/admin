@@ -9,7 +9,7 @@ import { z } from 'zod';
 
 import { listDeptOptions, listPostOptions, listRoleOptions } from '../../api';
 import type { DeptOption, User, UserFormValues } from '../../type';
-import { UserEditorForm, type OptionItem } from '../editor/user-editor-form';
+import { type OptionItem, UserEditorForm } from '../editor/user-editor-form';
 
 const userFormSchema = z.object({
   userName: z
@@ -41,9 +41,9 @@ const userFormSchema = z.object({
   roleIds: z
     .array(z.string().trim().min(1, '无效的角色'))
     .min(1, '请选择至少一个角色'),
-  postIds: z.array(z.string().trim().min(1, '无效的岗位')).default([]),
+  postIds: z.array(z.string().trim().min(1, '无效的岗位')),
   remark: z.string().trim(),
-  password: z.string().optional(),
+  password: z.string(),
 });
 
 const DEFAULT_VALUES: UserFormValues = {
@@ -82,12 +82,10 @@ export function UserEditorDialog({
   onSubmit,
 }: UserEditorDialogProps) {
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const form = useForm<UserFormValues, UserFormResolverContext, UserFormValues>(
-    {
-      resolver: zodResolver(userFormSchema),
-      defaultValues: defaultValues ?? DEFAULT_VALUES,
-    },
-  );
+  const form = useForm<UserFormValues, UserFormResolverContext>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: defaultValues ?? DEFAULT_VALUES,
+  });
 
   useEffect(() => {
     if (open) {

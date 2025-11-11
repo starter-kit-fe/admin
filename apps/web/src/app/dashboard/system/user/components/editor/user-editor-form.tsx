@@ -35,6 +35,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 
 import type { UserFormValues } from '../../type';
@@ -405,7 +411,16 @@ function SearchableCombobox({
             placeholder="搜索选项"
           />
           <CommandList>
-            <CommandEmpty>{loading ? '加载中…' : '暂无匹配结果'}</CommandEmpty>
+            <CommandEmpty>
+              <Empty className="border-0 bg-transparent p-2">
+                <EmptyHeader>
+                  <EmptyTitle>{loading ? '正在加载' : '暂无匹配结果'}</EmptyTitle>
+                  <EmptyDescription>
+                    {loading ? '请稍候...' : '尝试调整关键字继续搜索。'}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            </CommandEmpty>
             <CommandGroup>
               {allowClear ? (
                 <CommandItem
@@ -532,7 +547,16 @@ function SearchableMultiSelect({
             placeholder="搜索选项"
           />
           <CommandList>
-            <CommandEmpty>{loading ? '加载中…' : '暂无匹配结果'}</CommandEmpty>
+            <CommandEmpty>
+              <Empty className="border-0 bg-transparent p-2">
+                <EmptyHeader>
+                  <EmptyTitle>{loading ? '正在加载' : '暂无匹配结果'}</EmptyTitle>
+                  <EmptyDescription>
+                    {loading ? '请稍候...' : '尝试调整关键字继续搜索。'}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            </CommandEmpty>
             <CommandGroup>
               {allowClear ? (
                 <CommandItem

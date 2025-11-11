@@ -17,6 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -295,9 +301,14 @@ export function RoleTable({
             <TableRow>
               <TableCell
                 colSpan={visibleColumnCount}
-                className="h-24 text-center text-sm text-muted-foreground"
+                className="h-48 text-center align-middle"
               >
-                暂无数据
+                <Empty className="border-0 bg-transparent p-4">
+                  <EmptyHeader>
+                    <EmptyTitle>暂无角色数据</EmptyTitle>
+                    <EmptyDescription>创建角色后即可在此配置权限和成员。</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               </TableCell>
             </TableRow>
           ) : (

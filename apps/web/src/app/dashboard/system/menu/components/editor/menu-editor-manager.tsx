@@ -1,34 +1,32 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import { toast } from 'sonner';
-
 import { createMenu, updateMenu } from '@/app/dashboard/system/menu/api';
-import {
-  MenuEditorDialog,
-  type MenuParentOption,
-} from './menu-editor-dialog';
 import {
   useMenuManagementMutationCounter,
   useMenuManagementRefresh,
   useMenuManagementStore,
 } from '@/app/dashboard/system/menu/store';
+import type {
+  CreateMenuPayload,
+  MenuFormValues,
+} from '@/app/dashboard/system/menu/type';
 import {
   buildParentOptions,
   collectDescendantIds,
+  filterParentOptions,
+  findMenuNodeById,
   getNextOrderNum,
   toCreatePayload,
   toFormValues,
 } from '@/app/dashboard/system/menu/utils';
-import type { CreateMenuPayload, MenuFormValues } from '@/app/dashboard/system/menu/type';
+import { useMutation } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { toast } from 'sonner';
+
+import { MenuEditorDialog, type MenuParentOption } from './menu-editor-dialog';
 
 export function MenuEditorManager() {
-  const {
-    editorState,
-    closeEditor,
-    menuTree,
-  } = useMenuManagementStore();
+  const { editorState, closeEditor, menuTree } = useMenuManagementStore();
   const refresh = useMenuManagementRefresh();
   const { beginMutation, endMutation } = useMenuManagementMutationCounter();
 
@@ -78,6 +76,27 @@ export function MenuEditorManager() {
     },
   });
 
+  const resolvedParentId = useMemo(() => {
+    if (!editorState.open) {
+      return 0;
+    }
+    if (editorState.mode === 'create') {
+      const requested = editorState.parentId ?? 0;
+      if (requested === 0) {
+        return 0;
+      }
+      const parentNode = findMenuNodeById(menuTree, requested);
+      if (!parentNode) {
+        return requested;
+      }
+      if (parentNode.menuType === 'M') {
+        return parentNode.menuId;
+      }
+      return parentNode.parentId ?? 0;
+    }
+    return editorState.mode === 'edit' ? editorState.menu.parentId : 0;
+  }, [editorState, menuTree]);
+
   const editorDefaultValues: MenuFormValues | undefined = useMemo(() => {
     if (!editorState.open) {
       return undefined;
@@ -85,46 +104,43 @@ export function MenuEditorManager() {
     if (editorState.mode === 'edit') {
       return toFormValues(editorState.menu);
     }
+    const defaultMenuType: MenuFormValues['menuType'] =
+      resolvedParentId === 0 ? 'M' : 'C';
     return {
       menuName: '',
-      parentId: String(editorState.parentId ?? 0),
+      parentId: String(resolvedParentId ?? 0),
       orderNum: '',
       path: '',
-      component: '',
       query: '',
-      routeName: '',
       isFrame: false,
       isCache: false,
-      menuType: 'C',
+      menuType: defaultMenuType,
       visible: '0',
       status: '0',
       perms: '',
-      icon: '#',
+      icon: '',
       remark: '',
     };
-  }, [editorState]);
+  }, [editorState, resolvedParentId]);
+
+  const baseParentOptions = useMemo<MenuParentOption[]>(
+    () => buildParentOptions(menuTree),
+    [menuTree],
+  );
 
   const parentOptions = useMemo<MenuParentOption[]>(() => {
     if (!editorState.open) {
-      return [
-        {
-          value: '0',
-          label: '顶级菜单',
-          level: 0,
-          path: ['顶级菜单'],
-          disabled: false,
-        },
-      ];
+      return baseParentOptions;
     }
     if (editorState.mode === 'edit') {
       const excludeIds = new Set<number>([
         editorState.menu.menuId,
         ...collectDescendantIds(editorState.menu),
       ]);
-      return buildParentOptions(menuTree, excludeIds);
+      return filterParentOptions(baseParentOptions, excludeIds);
     }
-    return buildParentOptions(menuTree, new Set<number>());
-  }, [editorState, menuTree]);
+    return baseParentOptions;
+  }, [baseParentOptions, editorState]);
 
   const handleSubmit = (values: MenuFormValues) => {
     const payload = toCreatePayload(values);

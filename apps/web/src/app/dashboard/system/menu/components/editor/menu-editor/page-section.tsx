@@ -18,19 +18,23 @@ import type { UseFormReturn } from 'react-hook-form';
 
 import type { MenuFormValues } from '@/app/dashboard/system/menu/type';
 import { SectionHeader } from './section-header';
+import { MenuIconSelect } from '../menu-icon-select';
 
 export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
   const { control } = form;
 
   return (
     <div className="space-y-4">
-      <SectionHeader title="菜单配置" description="配置菜单路由、组件映射及权限信息。" />
+      <SectionHeader
+        title="菜单配置"
+        description="配置菜单路由、参数及权限信息。"
+      />
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={control}
           name="path"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel>路由地址</FormLabel>
               <FormControl>
                 <Input placeholder="例如 system/user" {...field} />
@@ -41,35 +45,9 @@ export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
         />
         <FormField
           control={control}
-          name="routeName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>路由名称</FormLabel>
-              <FormControl>
-                <Input placeholder="用于 keepalive 等场景" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="component"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>组件路径</FormLabel>
-              <FormControl>
-                <Input placeholder="可选，例如 system/user/index" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
           name="query"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel>路由参数</FormLabel>
               <FormControl>
                 <Input placeholder="可选，例如 role=admin" {...field} />
@@ -119,7 +97,11 @@ export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
             <FormItem>
               <FormLabel>菜单图标</FormLabel>
               <FormControl>
-                <Input placeholder="可选，例如 user" {...field} />
+                <MenuIconSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="搜索 Lucide 图标"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

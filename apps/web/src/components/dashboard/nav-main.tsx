@@ -22,11 +22,34 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import type { NavItem } from './sidebar';
+
+const ExternalLinkIndicator = () => (
+  <div
+    aria-hidden="true"
+    className="ml-auto flex items-center text-muted-foreground/70"
+  >
+    <ExternalLink className="size-3.5 shrink-0" />
+  </div>
+);
+
+const NavEntryContent = ({
+  entry,
+  showExternalIndicator = false,
+}: {
+  entry: NavItem;
+  showExternalIndicator?: boolean;
+}) => (
+  <>
+    {entry.icon}
+    <span className="truncate">{entry.title}</span>
+    {showExternalIndicator ? <ExternalLinkIndicator /> : null}
+  </>
+);
 
 export function NavMain({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
@@ -72,7 +95,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
     const hasChildren = children.length > 0;
     const active = hasActive(entry);
     const linkClasses = cn(
-      'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
+      'flex min-w-0 items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
       active
         ? 'bg-primary/10 text-primary font-semibold'
         : 'hover:bg-muted hover:text-foreground',
@@ -84,11 +107,11 @@ export function NavMain({ items }: { items: NavItem[] }) {
         rel="noreferrer"
         className={linkClasses}
       >
-        <span>{entry.title}</span>
+        <NavEntryContent entry={entry} showExternalIndicator />
       </a>
     ) : (
       <Link href={entry.url || '#'} className={linkClasses}>
-        <span>{entry.title}</span>
+        <NavEntryContent entry={entry} />
       </Link>
     );
 
@@ -133,16 +156,16 @@ export function NavMain({ items }: { items: NavItem[] }) {
                   href={entry.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2"
+                  className="flex min-w-0 items-center gap-2"
                 >
-                  <span>{entry.title}</span>
+                  <NavEntryContent entry={entry} showExternalIndicator />
                 </a>
               ) : (
                 <Link
                   href={entry.url || '#'}
-                  className="flex items-center gap-2"
+                  className="flex min-w-0 items-center gap-2"
                 >
-                  <span>{entry.title}</span>
+                  <NavEntryContent entry={entry} />
                 </Link>
               )}
             </SidebarMenuSubButton>
@@ -161,10 +184,11 @@ export function NavMain({ items }: { items: NavItem[] }) {
             <CollapsibleTrigger asChild>
               <SidebarMenuSubButton
                 className={cn(
-                  'flex w-full items-center justify-between gap-2',
+                  'flex w-full items-center gap-2',
                   hoverOverlayClass,
                 )}
               >
+                {entry.icon}
                 <span className="truncate">{entry.title}</span>
                 <ChevronRight className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/subcollapsible:rotate-90" />
               </SidebarMenuSubButton>
@@ -188,10 +212,11 @@ export function NavMain({ items }: { items: NavItem[] }) {
             const hasChildren = Boolean(item.items && item.items.length > 0);
             const active = hasActive(item);
             const buttonLabel = showButtonLabel ? (
-              <span>{item.title}</span>
+              <span className="truncate">{item.title}</span>
             ) : null;
             const buttonClassName = cn(collapsedDesktop && 'justify-center');
             const tooltipLabel = showButtonLabel ? item.title : undefined;
+            const showExternalIndicator = item.external && showButtonLabel;
 
             if (!hasChildren) {
               return (
@@ -211,6 +236,9 @@ export function NavMain({ items }: { items: NavItem[] }) {
                       >
                         {item.icon}
                         {buttonLabel}
+                        {showExternalIndicator ? (
+                          <ExternalLinkIndicator />
+                        ) : null}
                       </a>
                     ) : (
                       <Link
@@ -219,6 +247,9 @@ export function NavMain({ items }: { items: NavItem[] }) {
                       >
                         {item.icon}
                         {buttonLabel}
+                        {showExternalIndicator ? (
+                          <ExternalLinkIndicator />
+                        ) : null}
                       </Link>
                     )}
                   </SidebarMenuButton>
@@ -270,7 +301,9 @@ export function NavMain({ items }: { items: NavItem[] }) {
                       className={cn(hoverOverlayClass, buttonClassName)}
                     >
                       {item.icon}
-                      {buttonLabel ?? <span>{item.title}</span>}
+                      {buttonLabel ?? (
+                        <span className="truncate">{item.title}</span>
+                      )}
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>

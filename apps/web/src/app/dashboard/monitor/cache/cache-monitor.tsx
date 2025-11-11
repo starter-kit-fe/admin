@@ -9,6 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { Progress } from '@/components/ui/progress';
 import { Spinner } from '@/components/ui/spinner';
 import {
@@ -419,9 +425,14 @@ export function CacheMonitor() {
               </Table>
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
-              暂无 keyspace 数据
-            </div>
+            <Empty className="min-h-[200px] border border-dashed border-border/60 bg-muted/40">
+              <EmptyHeader>
+                <EmptyTitle>暂无 Keyspace 数据</EmptyTitle>
+                <EmptyDescription>
+                  等待缓存上报指标后再来查看分布情况。
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           )}
         </CardContent>
       </Card>

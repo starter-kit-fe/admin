@@ -102,9 +102,7 @@ type SysMenu struct {
 	ParentID   int64      `gorm:"column:parent_id" json:"parent_id"`
 	OrderNum   int        `gorm:"column:order_num" json:"order_num"`
 	Path       string     `gorm:"column:path" json:"path"`
-	Component  *string    `gorm:"column:component" json:"component,omitempty"`
 	Query      *string    `gorm:"column:query" json:"query,omitempty"`
-	RouteName  string     `gorm:"column:route_name" json:"route_name"`
 	IsFrame    bool       `gorm:"column:is_frame" json:"is_frame"`
 	IsCache    bool       `gorm:"column:is_cache" json:"is_cache"`
 	MenuType   string     `gorm:"column:menu_type" json:"menu_type"`

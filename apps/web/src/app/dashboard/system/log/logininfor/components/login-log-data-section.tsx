@@ -6,6 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import {
   Table,
   TableBody,
   TableCell,
@@ -138,9 +144,12 @@ export function LoginLogDataSection() {
             加载登录日志失败，请稍后再试。
           </div>
         ) : logs.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">
-            暂无登录日志数据。
-          </div>
+          <Empty className="mx-auto my-6 min-h-[200px] max-w-xl border border-dashed border-border/60">
+            <EmptyHeader>
+              <EmptyTitle>暂无登录日志数据</EmptyTitle>
+              <EmptyDescription>当有新的登录行为时会自动汇总在此。</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <>
             <div className="overflow-x-auto">

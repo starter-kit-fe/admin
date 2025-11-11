@@ -1,5 +1,6 @@
-"use client";
+'use client';
 
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,18 +8,70 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Monitor, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
-import { useEffect, useMemo, useState } from "react";
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { Monitor, Moon, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import {
+  type MouseEvent as ReactMouseEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 const THEME_ITEMS = [
-  { value: "light", label: "浅色模式", icon: Sun },
-  { value: "dark", label: "深色模式", icon: Moon },
-  { value: "system", label: "跟随系统", icon: Monitor },
+  { value: 'light', label: '浅色模式', icon: Sun },
+  { value: 'dark', label: '深色模式', icon: Moon },
+  { value: 'system', label: '跟随系统', icon: Monitor },
 ] as const;
+
+type ThemeValue = (typeof THEME_ITEMS)[number]['value'];
+
+const runThemeTransition = (
+  event: ReactMouseEvent<HTMLElement> | null,
+  updateTheme: () => void,
+) => {
+  if (
+    typeof document === 'undefined' ||
+    typeof window === 'undefined' ||
+    typeof document.startViewTransition !== 'function'
+  ) {
+    updateTheme();
+    return;
+  }
+
+  const pointerX = event?.clientX ?? Math.floor(window.innerWidth / 2);
+  const pointerY = event?.clientY ?? Math.floor(window.innerHeight / 2);
+
+  const transition = document.startViewTransition(() => {
+    updateTheme();
+  });
+
+  transition.ready
+    .then(() => {
+      const radius = Math.hypot(
+        Math.max(pointerX, window.innerWidth - pointerX),
+        Math.max(pointerY, window.innerHeight - pointerY),
+      );
+
+      document.documentElement.animate(
+        {
+          clipPath: [
+            `circle(0px at ${pointerX}px ${pointerY}px)`,
+            `circle(${radius}px at ${pointerX}px ${pointerY}px)`,
+          ],
+        },
+        {
+          duration: 500,
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          pseudoElement: '::view-transition-new(root)',
+        },
+      );
+    })
+    .catch(() => {
+      /* fallback silently */
+    });
+};
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme, systemTheme } = useTheme();
@@ -30,16 +83,21 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   const activeTheme = useMemo(() => {
     if (!mounted) {
-      return "system";
+      return 'system';
     }
-    if (!theme || theme === "system") {
-      return systemTheme ?? "system";
+    if (!theme || theme === 'system') {
+      return systemTheme ?? 'system';
     }
     return theme;
   }, [mounted, theme, systemTheme]);
 
   const ActiveIcon =
     THEME_ITEMS.find((item) => item.value === activeTheme)?.icon ?? Monitor;
+
+  const handleThemeSelection =
+    (value: ThemeValue) => (event: ReactMouseEvent<HTMLElement>) => {
+      runThemeTransition(event, () => setTheme(value));
+    };
 
   return (
     <DropdownMenu>
@@ -48,8 +106,8 @@ export function ThemeToggle({ className }: { className?: string }) {
           variant="ghost"
           size="icon"
           className={cn(
-            "relative h-10 w-10 rounded-full border border-border/60 hover:border-border hover:bg-muted/50",
-            className
+            'relative h-10 w-10 rounded-full border border-border/60 hover:border-border hover:bg-muted/50',
+            className,
           )}
           aria-label="切换主题"
         >
@@ -67,7 +125,7 @@ export function ThemeToggle({ className }: { className?: string }) {
             <DropdownMenuItem
               key={item.value}
               className="flex items-center gap-2"
-              onClick={() => setTheme(item.value)}
+              onClick={handleThemeSelection(item.value)}
             >
               <Icon className="h-4 w-4" />
               <span className="flex-1 text-sm">{item.label}</span>

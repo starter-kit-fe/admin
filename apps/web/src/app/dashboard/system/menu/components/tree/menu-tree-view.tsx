@@ -1,5 +1,6 @@
 'use client';
 
+import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,6 +9,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { resolveLucideIcon } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';
 import {
   ArrowDown,
@@ -27,8 +35,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-
-import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
 
 const TYPE_META: Record<
   string,
@@ -222,6 +228,7 @@ export function MenuTreeView({
           !isButton && hasSegment && !isExternalLink
             ? routeSegments
             : parentPathSegments;
+        const Icon = resolveLucideIcon(node.icon);
 
         return (
           <div key={node.menuId} className="text-sm">
@@ -248,6 +255,9 @@ export function MenuTreeView({
                   )}
                   <div className="flex flex-1 flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-2">
+                      {!isButton ? (
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                      ) : null}
                       <span className="truncate font-medium text-foreground">
                         {node.menuName}
                       </span>
@@ -288,16 +298,6 @@ export function MenuTreeView({
                               未配置
                             </span>
                           )}
-                        </span>
-                      ) : null}
-                      {!isButton && node.routeName ? (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <span className="text-[11px] text-muted-foreground/70">
-                            标识
-                          </span>
-                          <code className="rounded bg-muted px-1.5 py-[1px] font-mono text-[11px] text-foreground">
-                            {node.routeName}
-                          </code>
                         </span>
                       ) : null}
                       {!isRoot ? (
@@ -376,12 +376,6 @@ export function MenuTreeView({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-36">
-                        {!isButton ? (
-                          <DropdownMenuItem onSelect={() => onAddChild(node)}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            新增子级
-                          </DropdownMenuItem>
-                        ) : null}
                         <DropdownMenuItem onSelect={() => onEdit(node)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           编辑
@@ -430,9 +424,14 @@ export function MenuTreeView({
 
   if (nodes.length === 0) {
     return (
-      <div className="py-10 text-center text-sm text-muted-foreground">
-        暂无菜单数据
-      </div>
+      <Empty className="h-60 border border-dashed border-border/60">
+        <EmptyHeader>
+          <EmptyTitle>暂无菜单数据</EmptyTitle>
+          <EmptyDescription>
+            请先创建目录或菜单，完成后可在此拖拽调整。
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

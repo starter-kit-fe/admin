@@ -7,6 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 
 import type { User } from '../../type';
@@ -60,9 +66,12 @@ export function UserMobileList({
 
   if (rows.length === 0) {
     return (
-      <div className="py-12 text-center text-sm text-muted-foreground">
-        暂无数据
-      </div>
+      <Empty className="h-60 border border-dashed border-border/60">
+        <EmptyHeader>
+          <EmptyTitle>暂无用户数据</EmptyTitle>
+          <EmptyDescription>创建用户后可在此管理详情与权限。</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

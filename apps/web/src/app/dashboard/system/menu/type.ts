@@ -7,9 +7,7 @@ export interface MenuTreeNode {
   parentId: number;
   orderNum: number;
   path: string;
-  component?: string | null;
   query?: string | null;
-  routeName: string;
   isFrame: boolean;
   isCache: boolean;
   menuType: MenuType;
@@ -26,9 +24,7 @@ export interface MenuFormValues {
   parentId: string;
   orderNum: string;
   path: string;
-  component: string;
   query: string;
-  routeName: string;
   isFrame: boolean;
   isCache: boolean;
   menuType: MenuType;
@@ -44,9 +40,7 @@ export interface CreateMenuPayload {
   parentId: number;
   orderNum: number;
   path: string;
-  component?: string | null;
   query?: string | null;
-  routeName: string;
   isFrame: boolean;
   isCache: boolean;
   menuType: MenuType;

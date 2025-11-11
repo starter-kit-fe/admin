@@ -8,6 +8,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 import {
   ChevronDown,
@@ -238,9 +244,12 @@ export function DepartmentTreeView({
 
   if (nodes.length === 0) {
     return (
-      <div className="py-6 text-center text-sm text-muted-foreground">
-        暂无部门数据
-      </div>
+      <Empty className="h-60 border border-dashed border-border/60">
+        <EmptyHeader>
+          <EmptyTitle>暂无部门数据</EmptyTitle>
+          <EmptyDescription>创建组织结构后即可在此维护上下级关系。</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

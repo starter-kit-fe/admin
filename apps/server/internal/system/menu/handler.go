@@ -28,9 +28,7 @@ type createMenuRequest struct {
 	ParentID  int64   `json:"parentId"`
 	OrderNum  *int    `json:"orderNum"`
 	Path      string  `json:"path"`
-	Component *string `json:"component"`
 	Query     *string `json:"query"`
-	RouteName string  `json:"routeName" binding:"required"`
 	IsFrame   bool    `json:"isFrame"`
 	IsCache   bool    `json:"isCache"`
 	MenuType  string  `json:"menuType" binding:"required"`
@@ -46,9 +44,7 @@ type updateMenuRequest struct {
 	ParentID  *int64  `json:"parentId"`
 	OrderNum  *int    `json:"orderNum"`
 	Path      *string `json:"path"`
-	Component *string `json:"component"`
 	Query     *string `json:"query"`
-	RouteName *string `json:"routeName"`
 	IsFrame   *bool   `json:"isFrame"`
 	IsCache   *bool   `json:"isCache"`
 	MenuType  *string `json:"menuType"`
@@ -133,9 +129,7 @@ func (h *Handler) Create(ctx *gin.Context) {
 		ParentID:  payload.ParentID,
 		OrderNum:  payload.OrderNum,
 		Path:      payload.Path,
-		Component: payload.Component,
 		Query:     payload.Query,
-		RouteName: payload.RouteName,
 		IsFrame:   payload.IsFrame,
 		IsCache:   payload.IsCache,
 		MenuType:  payload.MenuType,
@@ -158,8 +152,6 @@ func (h *Handler) Create(ctx *gin.Context) {
 			resp.BadRequest(ctx, resp.WithMessage("invalid menu visibility"))
 		case errors.Is(err, ErrInvalidParentMenu):
 			resp.BadRequest(ctx, resp.WithMessage("invalid parent menu"))
-		case errors.Is(err, ErrInvalidRouteName):
-			resp.BadRequest(ctx, resp.WithMessage("route name is required"))
 		case errors.Is(err, ErrInvalidMenuOrder):
 			resp.BadRequest(ctx, resp.WithMessage("invalid menu order"))
 		default:
@@ -196,9 +188,7 @@ func (h *Handler) Update(ctx *gin.Context) {
 		ParentID:  payload.ParentID,
 		OrderNum:  payload.OrderNum,
 		Path:      payload.Path,
-		Component: payload.Component,
 		Query:     payload.Query,
-		RouteName: payload.RouteName,
 		IsFrame:   payload.IsFrame,
 		IsCache:   payload.IsCache,
 		MenuType:  payload.MenuType,
@@ -223,8 +213,6 @@ func (h *Handler) Update(ctx *gin.Context) {
 			resp.BadRequest(ctx, resp.WithMessage("invalid menu visibility"))
 		case errors.Is(err, ErrInvalidParentMenu):
 			resp.BadRequest(ctx, resp.WithMessage("invalid parent menu"))
-		case errors.Is(err, ErrInvalidRouteName):
-			resp.BadRequest(ctx, resp.WithMessage("route name is required"))
 		case errors.Is(err, ErrInvalidMenuOrder):
 			resp.BadRequest(ctx, resp.WithMessage("invalid menu order"))
 		default:

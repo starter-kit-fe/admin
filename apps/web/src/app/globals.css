@@ -120,4 +120,15 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  @supports (view-transition-name: none) {
+    :root {
+      view-transition-name: root;
+    }
+
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation: none;
+    }
+  }
 }

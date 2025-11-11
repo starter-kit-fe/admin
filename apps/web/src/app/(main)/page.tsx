@@ -1,7 +1,7 @@
 'use client';
 
-import HealthStatusPanel from '@/app/(main)/health-status';
-import HeroSection from '@/app/(main)/sections/hero';
+import HealthStatusPanel from '@/app/(main)/components/health-status';
+import HeroSection from '@/app/(main)/components/hero';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -299,234 +299,234 @@ export default function Page() {
     <>
       <HeroSection />
       <main ref={containerRef} className="space-y-20 pb-20">
-      <section
-        id="features"
-        className="mx-auto max-w-6xl px-6 pt-16 md:px-10 lg:px-12"
-        data-animate-section
-      >
-        <div className="flex flex-col gap-4">
-          <Badge
-            variant="outline"
-            className="w-fit border-dashed"
-            data-animate="intro"
-          >
-            核心特性
-          </Badge>
-          <h2
-            className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
-            data-animate="intro"
-          >
-            从界面到数据，一条龙打造现代化管理后台
-          </h2>
-          <p
-            className="max-w-3xl text-sm text-muted-foreground sm:text-base"
-            data-animate="intro"
-          >
-            {pkg.seo.description}
-          </p>
-        </div>
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {featureCards.map((feature) => {
-            const Icon = feature.icon;
-            return (
-              <Card
-                key={feature.title}
-                className="border-border/60 bg-background/70 backdrop-blur transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg"
-                data-animate="card"
-              >
-                <CardHeader className="gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
-                  <CardDescription className="text-sm text-muted-foreground/90">
-                    {feature.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    {feature.highlights.map((item) => (
-                      <li
-                        key={item}
-                        className="flex items-center gap-2"
-                        data-animate="highlight"
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary/80" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </section>
-
-      <section
-        id="themes"
-        className="mx-auto max-w-6xl px-6 md:px-10 lg:px-12"
-        data-animate-section
-      >
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-center">
-          <div className="space-y-4">
+        <section
+          id="features"
+          className="mx-auto max-w-6xl px-6 pt-16 md:px-10 lg:px-12"
+          data-animate-section
+        >
+          <div className="flex flex-col gap-4">
             <Badge
-              variant="secondary"
-              className="bg-primary/10 text-primary"
+              variant="outline"
+              className="w-fit border-dashed"
               data-animate="intro"
             >
-              多主题模式
+              核心特性
+            </Badge>
+            <h2
+              className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
+              data-animate="intro"
+            >
+              从界面到数据，一条龙打造现代化管理后台
+            </h2>
+            <p
+              className="max-w-3xl text-sm text-muted-foreground sm:text-base"
+              data-animate="intro"
+            >
+              {pkg.seo.description}
+            </p>
+          </div>
+          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {featureCards.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <Card
+                  key={feature.title}
+                  className="border-border/60 bg-background/70 backdrop-blur transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg"
+                  data-animate="card"
+                >
+                  <CardHeader className="gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-lg">{feature.title}</CardTitle>
+                    <CardDescription className="text-sm text-muted-foreground/90">
+                      {feature.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      {feature.highlights.map((item) => (
+                        <li
+                          key={item}
+                          className="flex items-center gap-2"
+                          data-animate="highlight"
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary/80" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+
+        <section
+          id="themes"
+          className="mx-auto max-w-6xl px-6 md:px-10 lg:px-12"
+          data-animate-section
+        >
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-center">
+            <div className="space-y-4">
+              <Badge
+                variant="secondary"
+                className="bg-primary/10 text-primary"
+                data-animate="intro"
+              >
+                多主题模式
+              </Badge>
+              <h2
+                className="text-2xl font-semibold sm:text-3xl"
+                data-animate="intro"
+              >
+                一套设计语言，三种主题体验
+              </h2>
+              <p
+                className="max-w-2xl text-sm text-muted-foreground sm:text-base"
+                data-animate="intro"
+              >
+                默认跟随系统偏好，同时支持手动切换亮色与暗色主题。ThemeToggle
+                组件与 next-themes 深度集成，带来顺滑的切换动效。
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {themeCards.map((theme) => (
+                <Card
+                  key={theme.name}
+                  className="overflow-hidden border-border/60 bg-background/70 backdrop-blur"
+                  data-animate="card"
+                >
+                  <div
+                    className={`h-24 w-full bg-gradient-to-br ${theme.accent}`}
+                    data-parallax
+                  />
+                  <CardHeader className="gap-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Badge
+                        variant="outline"
+                        className="border-dashed border-primary/40 text-xs uppercase tracking-widest text-primary"
+                      >
+                        {theme.badge}
+                      </Badge>
+                      {theme.name}
+                    </CardTitle>
+                    <CardDescription className="text-xs text-muted-foreground/90">
+                      {theme.description}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="resources"
+          className="mx-auto max-w-6xl px-6 md:px-10 lg:px-12"
+          data-animate-section
+        >
+          <div className="flex flex-col gap-4">
+            <Badge
+              variant="outline"
+              className="w-fit border-dotted"
+              data-animate="intro"
+            >
+              资源 & 工具
             </Badge>
             <h2
               className="text-2xl font-semibold sm:text-3xl"
               data-animate="intro"
             >
-              一套设计语言，三种主题体验
+              配套资源加速你的交付
             </h2>
             <p
-              className="max-w-2xl text-sm text-muted-foreground sm:text-base"
+              className="max-w-3xl text-sm text-muted-foreground sm:text-base"
               data-animate="intro"
             >
-              默认跟随系统偏好，同时支持手动切换亮色与暗色主题。ThemeToggle
-              组件与 next-themes 深度集成，带来顺滑的切换动效。
+              完整的后端 API、系统日志、Swagger 文档与 Turborepo
+              架构支撑，让团队协作更顺畅。
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {themeCards.map((theme) => (
-              <Card
-                key={theme.name}
-                className="overflow-hidden border-border/60 bg-background/70 backdrop-blur"
-                data-animate="card"
-              >
-                <div
-                  className={`h-24 w-full bg-gradient-to-br ${theme.accent}`}
-                  data-parallax
-                />
-                <CardHeader className="gap-2">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Badge
-                      variant="outline"
-                      className="border-dashed border-primary/40 text-xs uppercase tracking-widest text-primary"
+          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {resourceCards.map((resource) => {
+              const Icon = resource.icon;
+              const linkProps = resolveLinkProps(resource.href);
+              return (
+                <Card
+                  key={resource.title}
+                  className="border-border/60 bg-background/70 backdrop-blur transition hover:border-primary/60 hover:shadow-md"
+                  data-animate="card"
+                >
+                  <CardHeader className="gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <CardTitle className="text-lg">{resource.title}</CardTitle>
+                    <CardDescription className="text-sm text-muted-foreground">
+                      {resource.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      variant="ghost"
+                      asChild
+                      className="w-fit px-0 text-sm text-primary hover:text-primary/80"
                     >
-                      {theme.badge}
-                    </Badge>
-                    {theme.name}
-                  </CardTitle>
-                  <CardDescription className="text-xs text-muted-foreground/90">
-                    {theme.description}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
+                      <Link
+                        href={linkProps.href}
+                        target={linkProps.target}
+                        rel={linkProps.rel}
+                      >
+                        查看详情 →
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </div>
-      </section>
 
-      <section
-        id="resources"
-        className="mx-auto max-w-6xl px-6 md:px-10 lg:px-12"
-        data-animate-section
-      >
-        <div className="flex flex-col gap-4">
-          <Badge
-            variant="outline"
-            className="w-fit border-dotted"
-            data-animate="intro"
-          >
-            资源 & 工具
-          </Badge>
-          <h2
-            className="text-2xl font-semibold sm:text-3xl"
-            data-animate="intro"
-          >
-            配套资源加速你的交付
-          </h2>
-          <p
-            className="max-w-3xl text-sm text-muted-foreground sm:text-base"
-            data-animate="intro"
-          >
-            完整的后端 API、系统日志、Swagger 文档与 Turborepo
-            架构支撑，让团队协作更顺畅。
-          </p>
-        </div>
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {resourceCards.map((resource) => {
-            const Icon = resource.icon;
-            const linkProps = resolveLinkProps(resource.href);
-            return (
-              <Card
-                key={resource.title}
-                className="border-border/60 bg-background/70 backdrop-blur transition hover:border-primary/60 hover:shadow-md"
-                data-animate="card"
-              >
-                <CardHeader className="gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <CardTitle className="text-lg">{resource.title}</CardTitle>
-                  <CardDescription className="text-sm text-muted-foreground">
-                    {resource.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    variant="ghost"
-                    asChild
-                    className="w-fit px-0 text-sm text-primary hover:text-primary/80"
+          <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-stretch">
+            <div data-animate="card">
+              <HealthStatusPanel />
+            </div>
+            <div
+              className="rounded-2xl border border-primary/20 bg-primary/5 p-8 text-center backdrop-blur"
+              data-animate="card"
+            >
+              <h3 className="text-xl font-semibold text-foreground sm:text-2xl">
+                已搭建完备的前后端体系，下一步就是交付你的业务
+              </h3>
+              <p className="mt-3 text-sm text-muted-foreground sm:text-base">
+                使用 React Query + GSAP + Next.js
+                的组合，打造动态、顺滑并可扩展的管理后台。
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Button size="lg" asChild variant={primaryVariant}>
+                  <Link
+                    href={primaryHref}
+                    target={primaryTarget}
+                    rel={primaryRel}
                   >
-                    <Link
-                      href={linkProps.href}
-                      target={linkProps.target}
-                      rel={linkProps.rel}
-                    >
-                      查看详情 →
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-stretch">
-          <div data-animate="card">
-            <HealthStatusPanel />
-          </div>
-          <div
-            className="rounded-2xl border border-primary/20 bg-primary/5 p-8 text-center backdrop-blur"
-            data-animate="card"
-          >
-            <h3 className="text-xl font-semibold text-foreground sm:text-2xl">
-              已搭建完备的前后端体系，下一步就是交付你的业务
-            </h3>
-            <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-              使用 React Query + GSAP + Next.js
-              的组合，打造动态、顺滑并可扩展的管理后台。
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Button size="lg" asChild variant={primaryVariant}>
-                <Link
-                  href={primaryHref}
-                  target={primaryTarget}
-                  rel={primaryRel}
-                >
-                  {primaryLabel}
-                </Link>
-              </Button>
-              <Button size="lg" asChild variant={secondaryVariant}>
-                <Link
-                  href={secondaryHref}
-                  target={secondaryTarget}
-                  rel={secondaryRel}
-                >
-                  {secondaryLabel}
-                </Link>
-              </Button>
+                    {primaryLabel}
+                  </Link>
+                </Button>
+                <Button size="lg" asChild variant={secondaryVariant}>
+                  <Link
+                    href={secondaryHref}
+                    target={secondaryTarget}
+                    rel={secondaryRel}
+                  >
+                    {secondaryLabel}
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
     </>
   );
 }

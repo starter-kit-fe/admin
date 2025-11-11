@@ -26,6 +26,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
 import {
   Table,
@@ -546,9 +552,14 @@ export function JobManagement() {
                   <TableRow>
                     <TableCell
                       colSpan={visibleColumnCount}
-                      className="h-24 text-center text-sm text-muted-foreground"
+                      className="h-48 text-center align-middle"
                     >
-                      暂无任务数据。
+                      <Empty className="border-0 bg-transparent p-4">
+                        <EmptyHeader>
+                          <EmptyTitle>暂无任务数据</EmptyTitle>
+                          <EmptyDescription>配置定时任务后可在此查看与管理。</EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
                     </TableCell>
                   </TableRow>
                 ) : (

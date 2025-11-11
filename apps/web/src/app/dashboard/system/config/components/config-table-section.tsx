@@ -9,6 +9,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import {
   Table,
   TableBody,
   TableCell,
@@ -125,11 +131,20 @@ export function ConfigTableSection() {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="py-10 text-center text-sm text-muted-foreground"
+                  className="py-10 text-center align-middle"
                 >
-                  {configQuery.isLoading
-                    ? '参数数据加载中...'
-                    : '暂无参数记录。'}
+                  <Empty className="border-0 bg-transparent p-4">
+                    <EmptyHeader>
+                      <EmptyTitle>
+                        {configQuery.isLoading ? '参数数据加载中' : '暂无参数记录'}
+                      </EmptyTitle>
+                      <EmptyDescription>
+                        {configQuery.isLoading
+                          ? '正在获取系统参数，请稍候。'
+                          : '先新增一条参数即可在此维护。'}
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
                 </TableCell>
               </TableRow>
             ) : (

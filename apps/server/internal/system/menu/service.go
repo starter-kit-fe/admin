@@ -19,14 +19,11 @@ var (
 	ErrInvalidMenuVisible = errors.New("invalid menu visibility")
 	ErrInvalidParentMenu  = errors.New("invalid parent menu")
 	ErrInvalidMenuOrder   = errors.New("invalid menu order")
-	ErrInvalidRouteName   = errors.New("route name is required")
 	validMenuTypes        = map[string]struct{}{"M": {}, "C": {}, "F": {}}
 	validStatusValues     = map[string]struct{}{"0": {}, "1": {}}
 	defaultOperator       = "system"
 	maxMenuNameLength     = 50
 	maxPathLength         = 200
-	maxRouteNameLength    = 50
-	maxComponentLength    = 255
 	maxQueryLength        = 255
 	maxPermLength         = 100
 	maxIconLength         = 100
@@ -55,9 +52,7 @@ type Menu struct {
 	ParentID  int64   `json:"parentId"`
 	OrderNum  int     `json:"orderNum"`
 	Path      string  `json:"path"`
-	Component *string `json:"component,omitempty"`
 	Query     *string `json:"query,omitempty"`
-	RouteName string  `json:"routeName"`
 	IsFrame   bool    `json:"isFrame"`
 	IsCache   bool    `json:"isCache"`
 	MenuType  string  `json:"menuType"`
@@ -74,9 +69,7 @@ type CreateMenuInput struct {
 	ParentID  int64
 	OrderNum  *int
 	Path      string
-	Component *string
 	Query     *string
-	RouteName string
 	IsFrame   bool
 	IsCache   bool
 	MenuType  string
@@ -94,9 +87,7 @@ type UpdateMenuInput struct {
 	ParentID  *int64
 	OrderNum  *int
 	Path      *string
-	Component *string
 	Query     *string
-	RouteName *string
 	IsFrame   *bool
 	IsCache   *bool
 	MenuType  *string
@@ -181,25 +172,21 @@ func (s *Service) CreateMenu(ctx context.Context, input CreateMenuInput) (*Menu,
 		return nil, ErrInvalidMenuStatus
 	}
 
-	routeName := strings.TrimSpace(input.RouteName)
-	if routeName == "" {
-		return nil, ErrInvalidRouteName
-	}
-	if len(routeName) > maxRouteNameLength {
-		routeName = routeName[:maxRouteNameLength]
-	}
-
+	var (
+		parent *model.SysMenu
+		err    error
+	)
 	if input.ParentID > 0 {
-		parent, err := s.repo.GetMenu(ctx, input.ParentID)
+		parent, err = s.repo.GetMenu(ctx, input.ParentID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, ErrInvalidParentMenu
 			}
 			return nil, err
 		}
-		if parent.MenuType == "F" {
-			return nil, ErrInvalidParentMenu
-		}
+	}
+	if err := validateParentMenu(menuType, parent, input.ParentID); err != nil {
+		return nil, err
 	}
 
 	orderNum := 0
@@ -221,7 +208,6 @@ func (s *Service) CreateMenu(ctx context.Context, input CreateMenuInput) (*Menu,
 		ParentID:   input.ParentID,
 		OrderNum:   orderNum,
 		Path:       truncate(strings.TrimSpace(input.Path), maxPathLength),
-		RouteName:  routeName,
 		IsFrame:    input.IsFrame,
 		IsCache:    input.IsCache,
 		MenuType:   menuType,
@@ -235,9 +221,6 @@ func (s *Service) CreateMenu(ctx context.Context, input CreateMenuInput) (*Menu,
 		UpdateTime: &now,
 	}
 
-	if component := strings.TrimSpace(pointerValue(input.Component)); component != "" {
-		record.Component = &component
-	}
 	if query := strings.TrimSpace(pointerValue(input.Query)); query != "" {
 		record.Query = &query
 	}
@@ -264,6 +247,35 @@ func (s *Service) UpdateMenu(ctx context.Context, input UpdateMenuInput) (*Menu,
 		return nil, gorm.ErrRecordNotFound
 	}
 
+	var err error
+	if input.ParentID != nil || input.MenuType != nil {
+		current, err := s.repo.GetMenu(ctx, input.ID)
+		if err != nil {
+			return nil, err
+		}
+		targetMenuType := current.MenuType
+		if input.MenuType != nil {
+			targetMenuType = strings.TrimSpace(*input.MenuType)
+		}
+		targetParentID := current.ParentID
+		if input.ParentID != nil {
+			targetParentID = *input.ParentID
+		}
+		var parent *model.SysMenu
+		if targetParentID > 0 {
+			parent, err = s.repo.GetMenu(ctx, targetParentID)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return nil, ErrInvalidParentMenu
+				}
+				return nil, err
+			}
+		}
+		if err := validateParentMenu(targetMenuType, parent, targetParentID); err != nil {
+			return nil, err
+		}
+	}
+
 	updates := make(map[string]interface{})
 
 	if input.MenuName != nil {
@@ -275,17 +287,6 @@ func (s *Service) UpdateMenu(ctx context.Context, input UpdateMenuInput) (*Menu,
 			name = name[:maxMenuNameLength]
 		}
 		updates["menu_name"] = name
-	}
-
-	if input.RouteName != nil {
-		route := strings.TrimSpace(*input.RouteName)
-		if route == "" {
-			return nil, ErrInvalidRouteName
-		}
-		if len(route) > maxRouteNameLength {
-			route = route[:maxRouteNameLength]
-		}
-		updates["route_name"] = route
 	}
 
 	if input.MenuType != nil {
@@ -321,14 +322,6 @@ func (s *Service) UpdateMenu(ctx context.Context, input UpdateMenuInput) (*Menu,
 
 	if input.Path != nil {
 		updates["path"] = truncate(strings.TrimSpace(*input.Path), maxPathLength)
-	}
-	if input.Component != nil {
-		component := strings.TrimSpace(*input.Component)
-		if component == "" {
-			updates["component"] = nil
-		} else {
-			updates["component"] = truncate(component, maxComponentLength)
-		}
 	}
 	if input.Query != nil {
 		query := strings.TrimSpace(*input.Query)
@@ -444,9 +437,7 @@ func menuFromModel(menu *model.SysMenu) *Menu {
 		ParentID:  menu.ParentID,
 		OrderNum:  menu.OrderNum,
 		Path:      menu.Path,
-		Component: menu.Component,
 		Query:     menu.Query,
-		RouteName: menu.RouteName,
 		IsFrame:   menu.IsFrame,
 		IsCache:   menu.IsCache,
 		MenuType:  menu.MenuType,
@@ -481,9 +472,7 @@ func buildMenuTree(menus []model.SysMenu) []*Menu {
 			ParentID:  menu.ParentID,
 			OrderNum:  menu.OrderNum,
 			Path:      menu.Path,
-			Component: menu.Component,
 			Query:     menu.Query,
-			RouteName: menu.RouteName,
 			IsFrame:   menu.IsFrame,
 			IsCache:   menu.IsCache,
 			MenuType:  menu.MenuType,
@@ -517,6 +506,28 @@ func buildMenuTree(menus []model.SysMenu) []*Menu {
 		parent.node.Children = append(parent.node.Children, w.node)
 	}
 	return root.Children
+}
+
+func validateParentMenu(menuType string, parent *model.SysMenu, parentID int64) error {
+	switch menuType {
+	case "F":
+		if parentID == 0 {
+			return ErrInvalidParentMenu
+		}
+		if parent == nil || parent.MenuType != "C" {
+			return ErrInvalidParentMenu
+		}
+	case "C", "M":
+		if parentID == 0 {
+			return nil
+		}
+		if parent == nil || parent.MenuType != "M" {
+			return ErrInvalidParentMenu
+		}
+	default:
+		return ErrInvalidMenuType
+	}
+	return nil
 }
 
 func pointerValue(value *string) string {

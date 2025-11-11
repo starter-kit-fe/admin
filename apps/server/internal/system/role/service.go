@@ -489,11 +489,21 @@ func (s *Service) validateMenuIDs(ctx context.Context, ids []int64) ([]int64, er
 	if err != nil {
 		return nil, err
 	}
-	if len(menuMap) != len(sanitized) {
-		return nil, ErrInvalidMenuSelection
+
+	if len(menuMap) == len(sanitized) {
+		return sanitized, nil
 	}
 
-	return sanitized, nil
+	valid := make([]int64, 0, len(menuMap))
+	for _, id := range sanitized {
+		if _, exists := menuMap[id]; exists {
+			valid = append(valid, id)
+		}
+	}
+	if len(valid) == 0 {
+		return nil, ErrInvalidMenuSelection
+	}
+	return valid, nil
 }
 
 func sanitizeMenuIDs(ids []int64) []int64 {

@@ -43,7 +43,7 @@ export function MenuParentTreeSelect({
   const filteredOptions = useMemo(() => {
     return formattedOptions.filter((option) => {
       if (option.value === '0') {
-        return menuType === 'M';
+        return menuType !== 'F';
       }
       if (option.disabled) {
         return false;
@@ -56,10 +56,10 @@ export function MenuParentTreeSelect({
         return parentType === 'C';
       }
       if (menuType === 'C') {
-        return parentType === 'M' || parentType === 'C';
+        return parentType === 'M';
       }
       if (menuType === 'M') {
-        return parentType === 'M' || parentType === 'C';
+        return parentType === 'M';
       }
       return true;
     });
@@ -75,15 +75,17 @@ export function MenuParentTreeSelect({
 
     const isAllowed = filteredOptions.some((option) => option.value === value);
     if (!isAllowed) {
-      if (value !== '') {
-        onChange('');
+      const rootOption = filteredOptions.find((option) => option.value === '0');
+      if (
+        (menuType === 'M' || menuType === 'C') &&
+        rootOption &&
+        value !== '0'
+      ) {
+        onChange('0');
         return;
       }
-      if (menuType === 'M') {
-        const rootOption = filteredOptions.find((option) => option.value === '0');
-        if (rootOption) {
-          onChange('0');
-        }
+      if (value !== '') {
+        onChange('');
       }
     }
   }, [filteredOptions, menuType, onChange, value]);

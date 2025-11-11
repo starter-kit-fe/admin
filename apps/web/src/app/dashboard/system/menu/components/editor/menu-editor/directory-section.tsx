@@ -1,5 +1,7 @@
+import type { MenuFormValues } from '@/app/dashboard/system/menu/type';
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -13,40 +15,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { MenuFormValues } from '@/app/dashboard/system/menu/type';
+import { MenuIconSelect } from '../menu-icon-select';
 import { SectionHeader } from './section-header';
 
-export function DirectorySection({ form }: { form: UseFormReturn<MenuFormValues> }) {
+export function DirectorySection({
+  form,
+}: {
+  form: UseFormReturn<MenuFormValues>;
+}) {
   const { control } = form;
 
   return (
     <div className="space-y-4">
-      <SectionHeader title="目录配置" description="配置目录的路由地址与展示信息。" />
+      <SectionHeader
+        title="目录配置"
+        description="维护目录的路由地址、图标及状态信息。"
+      />
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={control}
           name="path"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>路由地址</FormLabel>
+              <FormLabel>
+                <span className="mr-1 text-destructive">*</span>
+                路由地址
+              </FormLabel>
               <FormControl>
-                <Input placeholder="例如 system" {...field} />
+                <Input placeholder="例如 system 或 monitor" {...field} />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="routeName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>路由名称</FormLabel>
-              <FormControl>
-                <Input placeholder="用于 keepalive 等场景" {...field} />
-              </FormControl>
+              <FormDescription>填写目录的访问路径，例如 system 或 monitor。</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -58,31 +59,18 @@ export function DirectorySection({ form }: { form: UseFormReturn<MenuFormValues>
           name="icon"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>菜单图标</FormLabel>
+              <FormLabel>
+                <span className="mr-1 text-destructive">*</span>
+                目录图标
+              </FormLabel>
               <FormControl>
-                <Input placeholder="可选，例如 layout" {...field} />
+                <MenuIconSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  allowEmpty={false}
+                  placeholder="选择目录图标"
+                />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="visible"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>显示状态</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="请选择显示状态" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="0">显示</SelectItem>
-                  <SelectItem value="1">隐藏</SelectItem>
-                </SelectContent>
-              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -92,7 +80,7 @@ export function DirectorySection({ form }: { form: UseFormReturn<MenuFormValues>
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>菜单状态</FormLabel>
+              <FormLabel>状态</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
@@ -109,6 +97,23 @@ export function DirectorySection({ form }: { form: UseFormReturn<MenuFormValues>
           )}
         />
       </div>
+      <FormField
+        control={control}
+        name="remark"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>备注</FormLabel>
+            <FormControl>
+              <Textarea
+                className="min-h-[96px] resize-none"
+                placeholder="请输入备注（可选）"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 }

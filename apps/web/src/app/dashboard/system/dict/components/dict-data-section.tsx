@@ -10,6 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import {
   Table,
   TableBody,
   TableCell,
@@ -223,11 +229,20 @@ export function DictDataSection() {
                 <TableRow>
                   <TableCell
                     colSpan={6}
-                    className="py-10 text-center text-sm text-muted-foreground"
+                    className="py-10 text-center align-middle"
                   >
-                    {dataQuery.isLoading
-                      ? '字典数据加载中...'
-                      : '暂无字典项，请先新增。'}
+                    <Empty className="border-0 bg-transparent p-4">
+                      <EmptyHeader>
+                        <EmptyTitle>
+                          {dataQuery.isLoading ? '字典数据加载中' : '暂无字典项'}
+                        </EmptyTitle>
+                        <EmptyDescription>
+                          {dataQuery.isLoading
+                            ? '正在获取字典项，请稍候。'
+                            : '请先新增一条字典项以开始管理。'}
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
                   </TableCell>
                 </TableRow>
               ) : (

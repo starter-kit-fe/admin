@@ -17,6 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -256,9 +262,14 @@ export function PostTable({
             <TableRow>
               <TableCell
                 colSpan={visibleColumnCount}
-                className="h-24 text-center text-sm text-muted-foreground"
+                className="h-48 text-center align-middle"
               >
-                暂无数据
+                <Empty className="border-0 bg-transparent p-4">
+                  <EmptyHeader>
+                    <EmptyTitle>暂无岗位数据</EmptyTitle>
+                    <EmptyDescription>点击“新建岗位”即可开始维护岗位信息。</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               </TableCell>
             </TableRow>
           ) : (

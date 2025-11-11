@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -494,11 +495,35 @@ func transformMenu(menu model.SysMenu) *MenuNode {
 }
 
 func resolveRouteName(menu model.SysMenu) string {
-	name := strings.TrimSpace(menu.RouteName)
-	if name != "" {
-		return name
+	base := strings.TrimSpace(menu.MenuName)
+	if base == "" {
+		base = strings.TrimSpace(menu.Path)
 	}
-	return strings.TrimSpace(menu.MenuName)
+	slug := slugifyRouteName(base)
+	if slug == "" {
+		return "menu"
+	}
+	return slug
+}
+
+func slugifyRouteName(value string) string {
+	if value == "" {
+		return ""
+	}
+	var builder strings.Builder
+	lastDash := false
+	for _, r := range value {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			builder.WriteRune(unicode.ToLower(r))
+			lastDash = false
+			continue
+		}
+		if !lastDash {
+			builder.WriteRune('-')
+			lastDash = true
+		}
+	}
+	return strings.Trim(builder.String(), "-")
 }
 
 func formatMenuPath(menu model.SysMenu) string {
@@ -528,12 +553,6 @@ func resolveMenuComponent(menu model.SysMenu) string {
 		return "InnerLink"
 	}
 
-	if menu.Component != nil {
-		if component := strings.TrimSpace(*menu.Component); component != "" {
-			return component
-		}
-	}
-
 	if strings.EqualFold(menu.MenuType, "M") {
 		if menu.ParentID == 0 {
 			return "Layout"
@@ -541,6 +560,9 @@ func resolveMenuComponent(menu model.SysMenu) string {
 		return "ParentView"
 	}
 
+	if menu.ParentID == 0 {
+		return "Layout"
+	}
 	return "ParentView"
 }
 

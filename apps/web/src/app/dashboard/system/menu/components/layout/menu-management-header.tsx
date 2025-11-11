@@ -36,7 +36,7 @@ export function MenuManagementHeader() {
         className="flex items-center gap-2"
       >
         <Plus className="size-4" />
-        新增顶级菜单
+        新增目录/菜单
       </Button>
     </>
   );

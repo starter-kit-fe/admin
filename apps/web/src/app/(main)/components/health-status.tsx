@@ -10,6 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
@@ -115,9 +121,12 @@ export default function HealthStatusPanel() {
             ) : null}
           </div>
         ) : !data ? (
-          <div className="rounded-lg border border-border/60 px-4 py-4 text-sm text-muted-foreground">
-            暂无健康数据返回。
-          </div>
+          <Empty className="min-h-[160px] border border-border/60 bg-muted/30">
+            <EmptyHeader>
+              <EmptyTitle>暂无健康数据</EmptyTitle>
+              <EmptyDescription>稍后重试或重新探测以刷新状态。</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {Object.entries(data)

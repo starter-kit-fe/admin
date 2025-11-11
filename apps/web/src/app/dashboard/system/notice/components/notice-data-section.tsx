@@ -10,6 +10,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit2, Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
@@ -88,9 +94,12 @@ export function NoticeDataSection() {
             公告加载中...
           </div>
         ) : notices.length === 0 ? (
-          <div className="flex h-40 flex-col items-center justify-center text-sm text-muted-foreground">
-            暂无公告记录。
-          </div>
+          <Empty className="m-4 h-40 border border-dashed border-border/60">
+            <EmptyHeader>
+              <EmptyTitle>暂无公告记录</EmptyTitle>
+              <EmptyDescription>发布公告后即可在此查看与管理。</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           notices.map((item) => (
             <article

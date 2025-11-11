@@ -17,30 +17,44 @@ import { MenuParentTreeSelect } from './menu-parent-tree-select';
 interface BasicInfoSectionProps {
   form: UseFormReturn<MenuFormValues>;
   parentOptions: MenuParentOption[];
-  mode: 'create' | 'edit';
 }
 
 export function BasicInfoSection({
   form,
   parentOptions,
-  mode,
 }: BasicInfoSectionProps) {
-  useEffect(() => {
-    if (mode === 'create') {
-      form.register('orderNum');
-    }
-  }, [form, mode]);
-
   const { control } = form;
   const menuType = useWatch({
     control,
     name: 'menuType',
   });
   const currentMenuType = (menuType ?? 'C') as MenuFormValues['menuType'];
+  const parentId = useWatch({ control, name: 'parentId' });
+  useEffect(() => {
+    if (currentMenuType === 'M' && (!parentId || parentId === '')) {
+      form.setValue('parentId', '0', { shouldDirty: false, shouldValidate: false });
+    }
+  }, [currentMenuType, form, parentId]);
+  const isDirectory = currentMenuType === 'M';
+  const nameLabel =
+    currentMenuType === 'M'
+      ? '目录名称'
+      : currentMenuType === 'F'
+        ? '按钮名称'
+        : '菜单名称';
+  const parentLabel = currentMenuType === 'M' ? '父级目录' : '父级菜单';
+  const orderLabel = currentMenuType === 'M' ? '目录排序' : '显示顺序';
 
   return (
     <div className="space-y-4">
-      <SectionHeader title="基础信息" description="设置菜单的层级、名称与基础类型。" />
+      <SectionHeader
+        title="基础信息"
+        description={
+          currentMenuType === 'M'
+            ? '设置目录的层级与排序，只需维护名称与父级关系。'
+            : '设置菜单或按钮的层级、名称与基础类型。'
+        }
+      />
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={control}
@@ -49,10 +63,10 @@ export function BasicInfoSection({
             <FormItem>
               <FormLabel>
                 <span className="mr-1 text-destructive">*</span>
-                菜单名称
+                {nameLabel}
               </FormLabel>
               <FormControl>
-                <Input placeholder="请输入菜单名称" {...field} />
+                <Input placeholder={`请输入${nameLabel}`} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -63,7 +77,7 @@ export function BasicInfoSection({
           name="parentId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>父级菜单</FormLabel>
+              <FormLabel>{parentLabel}</FormLabel>
               <FormControl>
                 <MenuParentTreeSelect
                   options={parentOptions}
@@ -76,26 +90,27 @@ export function BasicInfoSection({
             </FormItem>
           )}
         />
-        {mode === 'edit' ? (
-          <FormField
-            control={control}
-            name="orderNum"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>显示顺序</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="默认 0"
-                    value={field.value}
-                    onChange={(event) => field.onChange(event.target.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        ) : null}
+        <FormField
+          control={control}
+          name="orderNum"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {isDirectory ? <span className="mr-1 text-destructive">*</span> : null}
+                {orderLabel}
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="请输入排序（0-9999）"
+                  value={field.value}
+                  onChange={(event) => field.onChange(event.target.value)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
     </div>
   );

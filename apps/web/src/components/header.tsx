@@ -1,8 +1,8 @@
 'use client';
 
+import { LogoMark } from '@/components/logo-mark';
 import ThemeToggle from '@/components/theme-toggle';
 import { buttonVariants } from '@/components/ui/button';
-import { LogoMark } from '@/components/logo-mark';
 import {
   Drawer,
   DrawerClose,
@@ -175,7 +175,7 @@ export default function Header() {
   };
 
   const ctaHref = isAuthenticated ? '/dashboard' : '/login';
-  const ctaLabel = isAuthenticated ? '进入控制台' : '登录账户';
+  const ctaLabel = isAuthenticated ? '控制台' : '登录账户';
   const CtaIcon = isAuthenticated ? LayoutDashboard : LogIn;
 
   return (

@@ -10,6 +10,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -134,9 +140,14 @@ export function DictTypeSection() {
                 字典类型加载中...
               </div>
             ) : dictTypes.length === 0 ? (
-              <div className="flex h-[180px] items-center justify-center text-sm text-muted-foreground">
-                暂无字典类型，点击右上角新建。
-              </div>
+              <Empty className="m-4 h-[180px] border border-dashed border-border/60">
+                <EmptyHeader>
+                  <EmptyTitle>暂无字典类型</EmptyTitle>
+                  <EmptyDescription>
+                    点击右上角“新建”快速添加第一条字典。
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               dictTypes.map((dict) => {
                 const isActive = dict.dictId === selectedDictId;
