@@ -1,11 +1,11 @@
 'use client';
 
-import { PostBulkDeleteDialog } from './components/post-bulk-delete-dialog';
-import { PostDataSection } from './components/post-data-section';
-import { PostDeleteDialog } from './components/post-delete-dialog';
-import { PostEditorManager } from './components/post-editor-manager';
-import { PostFiltersSection } from './components/post-filters-section';
-import { PostManagementHeader } from './components/post-management-header';
+import { PostBulkDeleteDialog } from './components/dialogs/post-bulk-delete-dialog';
+import { PostDeleteDialog } from './components/dialogs/post-delete-dialog';
+import { PostEditorManager } from './components/editor/post-editor-manager';
+import { PostManagementHeader } from './components/layout/post-management-header';
+import { PostDataSection } from './components/sections/post-data-section';
+import { PostFiltersSection } from './components/sections/post-filters-section';
 
 export function PostManagement() {
   return (

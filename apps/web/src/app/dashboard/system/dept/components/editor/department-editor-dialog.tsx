@@ -27,7 +27,7 @@ import {
   type DepartmentFormValues,
   type DepartmentParentOption,
   departmentFormSchema,
-} from '../type';
+} from '../../type';
 
 const DEFAULT_VALUES: DepartmentFormValues = {
   deptName: '',

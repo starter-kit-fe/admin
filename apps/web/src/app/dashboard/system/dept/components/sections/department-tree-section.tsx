@@ -10,10 +10,10 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
-import { listDepartmentTree } from '../api';
-import { BASE_QUERY_KEY } from '../constants';
-import type { DepartmentNode } from '../type';
-import { DepartmentTreeView } from './department-tree-view';
+import { listDepartmentTree } from '../../api';
+import { BASE_QUERY_KEY } from '../../constants';
+import type { DepartmentNode } from '../../type';
+import { DepartmentTreeView } from '../tree/department-tree-view';
 
 function useDebouncedValue<T>(value: T, delay: number) {
   const [debounced, setDebounced] = useState(value);

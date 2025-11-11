@@ -3,14 +3,14 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { DeleteConfirmDialog } from '../../user/components/delete-confirm-dialog';
-import { removeDepartment } from '../api';
+import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
+import { removeDepartment } from '../../api';
 import {
   useDepartmentManagementMutationCounter,
   useDepartmentManagementRefresh,
   useDepartmentManagementStore,
 } from '@/app/dashboard/system/dept/store';
-import { resolveErrorMessage } from '../utils';
+import { resolveErrorMessage } from '../../utils';
 
 export function DepartmentDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = useDepartmentManagementStore();

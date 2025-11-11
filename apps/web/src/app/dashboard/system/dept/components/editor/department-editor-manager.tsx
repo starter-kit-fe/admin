@@ -7,13 +7,13 @@ import { toast } from 'sonner';
 import {
   createDepartment,
   updateDepartment,
-} from '../api';
+} from '../../api';
 import {
   useDepartmentManagementMutationCounter,
   useDepartmentManagementRefresh,
   useDepartmentManagementStore,
 } from '@/app/dashboard/system/dept/store';
-import type { DepartmentFormValues } from '../type';
+import type { DepartmentFormValues } from '../../type';
 import {
   buildParentOptions,
   collectDescendantIds,
@@ -21,7 +21,7 @@ import {
   toCreatePayload,
   toFormValues,
   toUpdatePayload,
-} from '../utils';
+} from '../../utils';
 import { DepartmentEditorDialog } from './department-editor-dialog';
 
 export function DepartmentEditorManager() {

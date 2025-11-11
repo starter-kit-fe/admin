@@ -13,15 +13,15 @@ import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
-import { listPosts } from '../api';
+import { listPosts } from '../../api';
 import {
   BASE_QUERY_KEY,
   DEFAULT_PAGINATION,
   PAGE_SIZE_OPTIONS,
   STATUS_TABS,
-} from '../constants';
-import type { Post, PostListResponse } from '../type';
-import { PostTable } from './post-table';
+} from '../../constants';
+import type { Post, PostListResponse } from '../../type';
+import { PostTable } from '../list/post-table';
 
 export function PostDataSection() {
   const {

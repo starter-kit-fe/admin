@@ -92,17 +92,17 @@ function TreeLines({
       {ancestors.map((hasSibling, index) => (
         <span key={index} className="relative w-6">
           {hasSibling ? (
-            <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
+            <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 border-l border-dashed border-border/60 dark:border-border/40" />
           ) : null}
         </span>
       ))}
       {depth > 0 ? (
         <span className="relative w-6">
           <span
-            className="absolute left-1/2 -translate-x-1/2 w-px bg-border/60"
+            className="absolute left-1/2 -translate-x-1/2 w-px border-l border-dashed border-border/60 dark:border-border/40"
             style={verticalLineStyle}
           />
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 h-px w-3 bg-border/60" />
+          <span className="absolute left-1/2 top-1/2 h-px w-3 -translate-x-1/2 border-b border-dashed border-border/60 dark:border-border/40" />
         </span>
       ) : null}
     </div>

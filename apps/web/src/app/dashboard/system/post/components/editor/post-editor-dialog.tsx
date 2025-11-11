@@ -19,7 +19,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-import type { PostFormValues } from '../type';
+import type { PostFormValues } from '../../type';
 
 const postFormSchema = z.object({
   postCode: z

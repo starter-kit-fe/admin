@@ -3,14 +3,14 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { DeleteConfirmDialog } from '../../user/components/delete-confirm-dialog';
-import { removePost } from '../api';
+import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
+import { removePost } from '../../api';
 import {
   usePostManagementMutationCounter,
   usePostManagementRefresh,
   usePostManagementStore,
 } from '@/app/dashboard/system/post/store';
-import { resolveErrorMessage } from '../utils';
+import { resolveErrorMessage } from '../../utils';
 
 export function PostDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = usePostManagementStore();

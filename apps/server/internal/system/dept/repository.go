@@ -3,7 +3,9 @@ package dept
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -12,6 +14,7 @@ import (
 
 var (
 	ErrRepositoryUnavailable = errors.New("department repository is not initialized")
+	ErrInvalidDepartmentData = errors.New("department payload is invalid")
 )
 
 type Repository struct {
@@ -51,4 +54,170 @@ func (r *Repository) ListDepartments(ctx context.Context, opts ListOptions) ([]m
 		return nil, err
 	}
 	return depts, nil
+}
+
+func (r *Repository) GetDepartment(ctx context.Context, id int64) (*model.SysDept, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
+	}
+	if id <= 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var dept model.SysDept
+	if err := r.db.WithContext(ctx).
+		Where("dept_id = ? AND del_flag = ?", id, "0").
+		First(&dept).Error; err != nil {
+		return nil, err
+	}
+	return &dept, nil
+}
+
+func (r *Repository) CreateDepartment(ctx context.Context, dept *model.SysDept) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if dept == nil {
+		return ErrInvalidDepartmentData
+	}
+
+	return r.db.WithContext(ctx).Create(dept).Error
+}
+
+func (r *Repository) UpdateDepartment(ctx context.Context, id int64, updates map[string]interface{}) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if id <= 0 {
+		return gorm.ErrRecordNotFound
+	}
+	if len(updates) == 0 {
+		return nil
+	}
+
+	result := r.db.WithContext(ctx).
+		Model(&model.SysDept{}).
+		Where("dept_id = ? AND del_flag = ?", id, "0").
+		Updates(updates)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *Repository) UpdateDescendantAncestors(
+	ctx context.Context,
+	oldPrefix string,
+	newPrefix string,
+	deptID int64,
+	operator string,
+	ts time.Time,
+) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if deptID <= 0 {
+		return gorm.ErrRecordNotFound
+	}
+	if strings.TrimSpace(oldPrefix) == "" || strings.TrimSpace(newPrefix) == "" || oldPrefix == newPrefix {
+		return nil
+	}
+
+	oldPath := fmt.Sprintf("%s,%d", oldPrefix, deptID)
+	newPath := fmt.Sprintf("%s,%d", newPrefix, deptID)
+
+	result := r.db.WithContext(ctx).
+		Model(&model.SysDept{}).
+		Where("ancestors LIKE ? AND del_flag = ?", oldPath+"%", "0").
+		Updates(map[string]interface{}{
+			"ancestors":   gorm.Expr("REPLACE(ancestors, ?, ?)", oldPath, newPath),
+			"update_by":   operator,
+			"update_time": ts,
+		})
+	return result.Error
+}
+
+func (r *Repository) SoftDeleteDepartment(ctx context.Context, id int64, operator string, ts time.Time) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if id <= 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	result := r.db.WithContext(ctx).
+		Model(&model.SysDept{}).
+		Where("dept_id = ? AND del_flag = ?", id, "0").
+		Updates(map[string]interface{}{
+			"del_flag":    "2",
+			"update_by":   operator,
+			"update_time": ts,
+		})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *Repository) CountChildren(ctx context.Context, parentID int64) (int64, error) {
+	if r == nil || r.db == nil {
+		return 0, ErrRepositoryUnavailable
+	}
+	if parentID <= 0 {
+		return 0, nil
+	}
+
+	var total int64
+	err := r.db.WithContext(ctx).
+		Model(&model.SysDept{}).
+		Where("parent_id = ? AND del_flag = ?", parentID, "0").
+		Count(&total).Error
+	return total, err
+}
+
+func (r *Repository) CountUsersByDept(ctx context.Context, deptID int64) (int64, error) {
+	if r == nil || r.db == nil {
+		return 0, ErrRepositoryUnavailable
+	}
+	if deptID <= 0 {
+		return 0, nil
+	}
+
+	var total int64
+	err := r.db.WithContext(ctx).
+		Model(&model.SysUser{}).
+		Where("dept_id = ?", deptID).
+		Count(&total).Error
+	return total, err
+}
+
+func (r *Repository) ExistsByName(ctx context.Context, parentID int64, name string, excludeID int64) (bool, error) {
+	if r == nil || r.db == nil {
+		return false, ErrRepositoryUnavailable
+	}
+
+	trimmed := strings.TrimSpace(name)
+	if trimmed == "" {
+		return false, nil
+	}
+
+	query := r.db.WithContext(ctx).
+		Model(&model.SysDept{}).
+		Where("dept_name = ? AND parent_id = ? AND del_flag = ?", trimmed, parentID, "0")
+
+	if excludeID > 0 {
+		query = query.Where("dept_id <> ?", excludeID)
+	}
+
+	var count int64
+	if err := query.Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }

@@ -20,6 +20,7 @@ type SysDept struct {
 	Phone      *string    `gorm:"column:phone" json:"phone,omitempty"`
 	Email      *string    `gorm:"column:email" json:"email,omitempty"`
 	Status     string     `gorm:"column:status" json:"status"`
+	Remark     *string    `gorm:"column:remark" json:"remark,omitempty"`
 	DelFlag    string     `gorm:"column:del_flag" json:"del_flag"`
 	CreateBy   string     `gorm:"column:create_by" json:"create_by"`
 	CreateTime *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`

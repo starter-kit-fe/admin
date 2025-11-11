@@ -46,7 +46,7 @@ export function ButtonSection({ form }: { form: UseFormReturn<MenuFormValues> })
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>菜单状态</FormLabel>
+              <FormLabel>按钮状态</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>

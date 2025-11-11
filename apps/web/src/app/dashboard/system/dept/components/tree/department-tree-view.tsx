@@ -32,7 +32,7 @@ import {
   useState,
 } from 'react';
 
-import type { DepartmentNode, DepartmentStatus } from '../type';
+import type { DepartmentNode, DepartmentStatus } from '../../type';
 
 const STATUS_META: Partial<Record<DepartmentStatus, { label: string; className: string }>> = {
   '1': {
@@ -143,7 +143,7 @@ export function DepartmentTreeView({
   const renderNodes = useCallback(
     (
       items: DepartmentNode[],
-      depth = 0,
+      depth = 1,
       ancestors: boolean[] = [],
     ): ReactElement[] => {
       return items.map((item, index) => {

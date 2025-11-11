@@ -7,20 +7,20 @@ import { toast } from 'sonner';
 import {
   createPost,
   updatePost,
-} from '../api';
+} from '../../api';
 import {
   usePostManagementMutationCounter,
   usePostManagementRefresh,
   usePostManagementStore,
 } from '@/app/dashboard/system/post/store';
-import type { PostFormValues } from '../type';
+import type { PostFormValues } from '../../type';
 import {
   computeNextSort,
   resolveErrorMessage,
   toCreatePayload,
   toFormValues,
   toUpdatePayload,
-} from '../utils';
+} from '../../utils';
 import { PostEditorDialog } from './post-editor-dialog';
 
 export function PostEditorManager() {

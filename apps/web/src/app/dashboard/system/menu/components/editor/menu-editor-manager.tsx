@@ -9,6 +9,7 @@ import {
 import type {
   CreateMenuPayload,
   MenuFormValues,
+  MenuType,
 } from '@/app/dashboard/system/menu/type';
 import {
   buildParentOptions,
@@ -24,6 +25,16 @@ import { useMemo } from 'react';
 import { toast } from 'sonner';
 
 import { MenuEditorDialog, type MenuParentOption } from './menu-editor-dialog';
+
+interface CreateParentContext {
+  parentId: number;
+  parentType?: MenuType;
+}
+
+const ROOT_PARENT_CONTEXT: CreateParentContext = {
+  parentId: 0,
+  parentType: 'M',
+};
 
 export function MenuEditorManager() {
   const { editorState, closeEditor, menuTree } = useMenuManagementStore();
@@ -76,26 +87,44 @@ export function MenuEditorManager() {
     },
   });
 
-  const resolvedParentId = useMemo(() => {
-    if (!editorState.open) {
-      return 0;
+  const createParentContext = useMemo<CreateParentContext>(() => {
+    if (!editorState.open || editorState.mode !== 'create') {
+      return ROOT_PARENT_CONTEXT;
     }
-    if (editorState.mode === 'create') {
-      const requested = editorState.parentId ?? 0;
-      if (requested === 0) {
-        return 0;
-      }
-      const parentNode = findMenuNodeById(menuTree, requested);
-      if (!parentNode) {
-        return requested;
-      }
-      if (parentNode.menuType === 'M') {
-        return parentNode.menuId;
-      }
-      return parentNode.parentId ?? 0;
+
+    const requestedParentId = editorState.parentId ?? 0;
+    if (requestedParentId === 0) {
+      return ROOT_PARENT_CONTEXT;
     }
-    return editorState.mode === 'edit' ? editorState.menu.parentId : 0;
+
+    const requestedNode = findMenuNodeById(menuTree, requestedParentId);
+    if (!requestedNode) {
+      return {
+        parentId: requestedParentId,
+        parentType: undefined,
+      };
+    }
+
+    if (requestedNode.menuType === 'F') {
+      const fallbackId = requestedNode.parentId ?? 0;
+      if (fallbackId === 0) {
+        return ROOT_PARENT_CONTEXT;
+      }
+      const fallbackNode = findMenuNodeById(menuTree, fallbackId);
+      return {
+        parentId: fallbackNode ? fallbackNode.menuId : fallbackId,
+        parentType: fallbackNode?.menuType,
+      };
+    }
+
+    return {
+      parentId: requestedNode.menuId,
+      parentType: requestedNode.menuType,
+    };
   }, [editorState, menuTree]);
+
+  const { parentId: createParentId, parentType: createParentType } =
+    createParentContext;
 
   const editorDefaultValues: MenuFormValues | undefined = useMemo(() => {
     if (!editorState.open) {
@@ -105,10 +134,14 @@ export function MenuEditorManager() {
       return toFormValues(editorState.menu);
     }
     const defaultMenuType: MenuFormValues['menuType'] =
-      resolvedParentId === 0 ? 'M' : 'C';
+      createParentType === 'C'
+        ? 'F'
+        : createParentId === 0
+          ? 'M'
+          : 'C';
     return {
       menuName: '',
-      parentId: String(resolvedParentId ?? 0),
+      parentId: String(createParentId ?? 0),
       orderNum: '',
       path: '',
       query: '',
@@ -121,7 +154,7 @@ export function MenuEditorManager() {
       icon: '',
       remark: '',
     };
-  }, [editorState, resolvedParentId]);
+  }, [createParentId, createParentType, editorState]);
 
   const baseParentOptions = useMemo<MenuParentOption[]>(
     () => buildParentOptions(menuTree),

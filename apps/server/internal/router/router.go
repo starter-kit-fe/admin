@@ -227,11 +227,11 @@ func registerSystemRoutes(group *gin.RouterGroup, opts Options) {
 	departments := system.Group("/departments")
 	if opts.DeptHandler != nil {
 		departments.GET("/tree", middleware.RequirePermissions("system:dept:list"), opts.DeptHandler.Tree)
-		departments.GET("", middleware.RequirePermissions("system:dept:list"), notImplemented("list departments"))
-		departments.POST("", middleware.RequirePermissions("system:dept:add"), notImplemented("create department"))
-		departments.GET("/:id", middleware.RequirePermissions("system:dept:query"), notImplemented("get department"))
-		departments.PUT("/:id", middleware.RequirePermissions("system:dept:edit"), notImplemented("update department"))
-		departments.DELETE("/:id", middleware.RequirePermissions("system:dept:remove"), notImplemented("delete department"))
+		departments.GET("", middleware.RequirePermissions("system:dept:list"), opts.DeptHandler.List)
+		departments.POST("", middleware.RequirePermissions("system:dept:add"), opts.DeptHandler.Create)
+		departments.GET("/:id", middleware.RequirePermissions("system:dept:query"), opts.DeptHandler.Get)
+		departments.PUT("/:id", middleware.RequirePermissions("system:dept:edit"), opts.DeptHandler.Update)
+		departments.DELETE("/:id", middleware.RequirePermissions("system:dept:remove"), opts.DeptHandler.Delete)
 	} else {
 		departments.GET("", middleware.RequirePermissions("system:dept:list"), notImplemented("list departments"))
 		departments.POST("", middleware.RequirePermissions("system:dept:add"), notImplemented("create department"))

@@ -10,6 +10,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import {
   Table,
   TableBody,
   TableCell,
@@ -17,12 +23,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -32,7 +32,7 @@ import {
 } from '@tanstack/react-table';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 
-import type { Post } from '../type';
+import type { Post } from '../../type';
 
 interface PostTableProps {
   rows: Post[];
@@ -55,11 +55,11 @@ const STATUS_META: Record<
 > = {
   '0': {
     label: '在岗',
-    badgeClass: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+    badgeClass: 'bg-primary/10 text-primary border-primary/20',
   },
   '1': {
     label: '停用',
-    badgeClass: 'bg-rose-500/10 text-rose-600 border-rose-500/30',
+    badgeClass: 'bg-rose-100 text-rose-700 border-rose-200',
   },
 };
 
@@ -161,34 +161,33 @@ export function PostTable({
       ),
       meta: { headerClassName: 'min-w-[160px]' },
     }),
+    columnHelper.accessor('postCode', {
+      header: '岗位编码',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-muted-foreground">{getValue()}</span>
+      ),
+      meta: { headerClassName: 'min-w-[140px]' },
+    }),
+
+    columnHelper.accessor('postSort', {
+      header: '排序',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-muted-foreground">{getValue()}</span>
+      ),
+      meta: { headerClassName: 'w-[100px]', cellClassName: 'w-[100px]' },
+    }),
     columnHelper.accessor('status', {
       header: '状态',
       cell: ({ getValue }) => {
         const meta = STATUS_META[getValue()] ?? STATUS_META['1'];
         return (
-          <Badge
-            variant="outline"
-            className={cn(
-              'border-transparent px-2.5 py-1 text-xs font-medium',
-              meta.badgeClass,
-            )}
-          >
+          <Badge variant="outline" className={cn(meta.badgeClass)}>
             {meta.label}
           </Badge>
         );
       },
       enableSorting: false,
       meta: { headerClassName: 'w-[120px]', cellClassName: 'w-[120px]' },
-    }),
-    columnHelper.display({
-      id: 'remark',
-      header: '备注',
-      cell: ({ row }) => (
-        <span className="block max-w-[320px] truncate text-sm text-muted-foreground">
-          {row.original.remark ?? '-'}
-        </span>
-      ),
-      meta: { headerClassName: 'min-w-[220px]' },
     }),
     columnHelper.display({
       id: 'actions',
@@ -267,7 +266,9 @@ export function PostTable({
                 <Empty className="border-0 bg-transparent p-4">
                   <EmptyHeader>
                     <EmptyTitle>暂无岗位数据</EmptyTitle>
-                    <EmptyDescription>点击“新建岗位”即可开始维护岗位信息。</EmptyDescription>
+                    <EmptyDescription>
+                      点击“新建岗位”即可开始维护岗位信息。
+                    </EmptyDescription>
                   </EmptyHeader>
                 </Empty>
               </TableCell>

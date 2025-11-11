@@ -1,10 +1,10 @@
 'use client';
 
-import { DepartmentDeleteDialog } from './components/department-delete-dialog';
-import { DepartmentEditorManager } from './components/department-editor-manager';
-import { DepartmentFiltersSection } from './components/department-filters-section';
-import { DepartmentManagementHeader } from './components/department-management-header';
-import { DepartmentTreeSection } from './components/department-tree-section';
+import { DepartmentDeleteDialog } from './components/dialogs/department-delete-dialog';
+import { DepartmentEditorManager } from './components/editor/department-editor-manager';
+import { DepartmentFiltersSection } from './components/sections/department-filters-section';
+import { DepartmentManagementHeader } from './components/layout/department-management-header';
+import { DepartmentTreeSection } from './components/sections/department-tree-section';
 
 export function DeptManagement() {
   return (

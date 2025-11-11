@@ -3,13 +3,13 @@
 import { useEffect, useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { STATUS_TABS } from '../constants';
+import { STATUS_TABS } from '../../constants';
 import {
   usePostManagementStore,
   type StatusValue,
 } from '@/app/dashboard/system/post/store';
-import { AppliedFilters } from './applied-filters';
-import { PostManagementFilters } from './post-management-filters';
+import { AppliedFilters } from '../filters/applied-filters';
+import { PostManagementFilters } from '../filters/post-management-filters';
 
 export function PostFiltersSection() {
   const {
@@ -28,10 +28,9 @@ export function PostFiltersSection() {
       STATUS_TABS.map((tab) => ({
         value: tab.value,
         label: tab.label,
-        count: statusCounts[tab.value as StatusValue] ?? 0,
         activeColor: tab.activeColor,
       })),
-    [statusCounts],
+    [],
   );
 
   const handleStatusChange = (value: string) => {
