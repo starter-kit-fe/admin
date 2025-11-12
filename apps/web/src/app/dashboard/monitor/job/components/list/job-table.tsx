@@ -52,15 +52,6 @@ import {
   resolveStatusLabel,
 } from '../../utils';
 
-function PinnedColumnShade() {
-  return (
-    <span
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-y-0 -left-3 w-3 bg-gradient-to-r from-slate-950/25 via-slate-950/10 to-transparent"
-    />
-  );
-}
-
 interface JobTableProps {
   rows: Job[];
   isLoading: boolean;
@@ -180,8 +171,7 @@ export function JobTable({
       columnHelper.display({
         id: 'actions',
         header: () => (
-          <div className="relative flex justify-end">
-            <PinnedColumnShade />
+          <div className="flex justify-end">
             <span>操作</span>
           </div>
         ),
@@ -193,8 +183,7 @@ export function JobTable({
           const nextStatus = job.status === '0' ? '1' : '0';
 
           return (
-            <div className="relative flex justify-end">
-              <PinnedColumnShade />
+            <div className="flex justify-end">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 px-2">

@@ -4,6 +4,12 @@ export const OPER_LOG_STATUS_OPTIONS = [
   { value: '1', label: '失败' },
 ] as const;
 
+export const OPER_LOG_STATUS_TABS = [
+  { value: 'all', label: '全部', color: 'bg-slate-900 text-white' },
+  { value: '0', label: '成功', color: 'bg-emerald-500 text-white' },
+  { value: '1', label: '失败', color: 'bg-rose-500 text-white' },
+] as const;
+
 export const OPER_LOG_BUSINESS_TYPE_OPTIONS = [
   { value: 'all', label: '全部业务' },
   { value: '0', label: '其它' },

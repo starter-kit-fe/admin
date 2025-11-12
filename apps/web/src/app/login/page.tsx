@@ -275,6 +275,7 @@ export default function Page() {
                       placeholder="输入用户名"
                       title="输入用户名"
                       autoComplete="username"
+                      tabIndex={1}
                       className="pl-9"
                       {...register('username')}
                       aria-invalid={Boolean(errors.username)}
@@ -298,6 +299,7 @@ export default function Page() {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="输入密码"
                       title="输入密码"
+                      tabIndex={2}
                       autoComplete="current-password"
                       className="pl-9 pr-10"
                       {...register('password')}
@@ -354,6 +356,7 @@ export default function Page() {
                       id="captcha"
                       placeholder="输入验证码"
                       title="输入验证码"
+                      tabIndex={3}
                       autoComplete="one-time-code"
                       {...register('captcha')}
                       aria-invalid={Boolean(errors.captcha)}

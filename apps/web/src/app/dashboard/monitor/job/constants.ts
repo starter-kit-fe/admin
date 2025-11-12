@@ -2,14 +2,14 @@ export const BASE_QUERY_KEY = ['monitor', 'jobs'] as const;
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 
-export const STATUS_FILTER_OPTIONS = [
-  { value: 'all', label: '全部状态' },
+export const STATUS_TABS = [
+  { value: 'all', label: '全部' },
   { value: '0', label: '正常' },
   { value: '1', label: '暂停' },
 ] as const;
 
 export type JobStatusFilter =
-  (typeof STATUS_FILTER_OPTIONS)[number]['value'];
+  (typeof STATUS_TABS)[number]['value'];
 
 export type JobFilterState = {
   jobName: string;

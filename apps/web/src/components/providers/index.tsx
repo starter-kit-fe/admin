@@ -1,3 +1,4 @@
+import { AppBootstrapper } from '@/components/app-bootstrapper';
 import BuildInfo from '@/components/build-info';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from 'sonner';
@@ -10,6 +11,7 @@ export function Providers({ children }: React.PropsWithChildren) {
     <QueryProvider>
       <ThemeProvider>
         <TooltipProvider>{children}</TooltipProvider>
+        <AppBootstrapper />
         <BuildInfo />
         <Toaster position="top-right" richColors />
       </ThemeProvider>

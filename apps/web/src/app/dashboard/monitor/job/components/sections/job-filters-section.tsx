@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-import { STATUS_FILTER_OPTIONS, type JobFilterState } from '../../constants';
+import { STATUS_TABS, type JobFilterState } from '../../constants';
 import { useJobManagementStore } from '../../store';
 import { JobManagementFilters } from '../filters/job-management-filters';
 
@@ -65,7 +65,7 @@ export function JobFiltersSection() {
       onJobGroupChange={handleJobGroupChange}
       status={filterForm.status}
       onStatusChange={handleStatusChange}
-      statusOptions={STATUS_FILTER_OPTIONS}
+      statusTabs={STATUS_TABS}
     />
   );
 }

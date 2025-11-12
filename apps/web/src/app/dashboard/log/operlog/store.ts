@@ -17,7 +17,7 @@ export type OperLogBusinessTypeValue =
 export type OperLogRequestMethodValue =
   (typeof OPER_LOG_REQUEST_METHOD_OPTIONS)[number]['value'];
 
-type FilterState = {
+export type OperLogFilterState = {
   title: string;
   operName: string;
   businessType: OperLogBusinessTypeValue;
@@ -34,7 +34,7 @@ type SetStateAction<T> = T | ((prev: T) => T);
 
 const noopRefresh = () => {};
 
-const defaultFilterState: FilterState = {
+const defaultFilterState: OperLogFilterState = {
   title: '',
   operName: '',
   businessType: 'all',
@@ -42,8 +42,10 @@ const defaultFilterState: FilterState = {
   requestMethod: 'all',
 };
 
-const filterFormAtom = atom<FilterState>({ ...defaultFilterState });
-const appliedFiltersAtom = atom<FilterState>({ ...defaultFilterState });
+const filterFormAtom = atom<OperLogFilterState>({ ...defaultFilterState });
+const appliedFiltersAtom = atom<OperLogFilterState>({
+  ...defaultFilterState,
+});
 const paginationAtom = atom<PaginationState>({
   ...DEFAULT_OPER_LOG_PAGINATION,
 });
@@ -60,11 +62,11 @@ const refreshActionAtom = atom<{ current: () => void }>({
 
 const setFilterFormAtom = atom(
   null,
-  (get, set, action: SetStateAction<FilterState>) => {
+  (get, set, action: SetStateAction<OperLogFilterState>) => {
     const current = get(filterFormAtom);
     const next =
       typeof action === 'function'
-        ? (action as (prev: FilterState) => FilterState)(current)
+        ? (action as (prev: OperLogFilterState) => OperLogFilterState)(current)
         : action;
     set(filterFormAtom, { ...next });
   },
@@ -75,7 +77,7 @@ const applyFiltersAtom = atom(
   (
     get,
     set,
-    payload: { filters: FilterState; force?: boolean },
+    payload: { filters: OperLogFilterState; force?: boolean },
   ) => {
     const previous = get(appliedFiltersAtom);
     const hasChanges =
@@ -154,11 +156,11 @@ const setRefreshActionAtom = atom(
 );
 
 export interface OperLogManagementStore {
-  filterForm: FilterState;
-  setFilterForm: (action: SetStateAction<FilterState>) => void;
-  appliedFilters: FilterState;
+  filterForm: OperLogFilterState;
+  setFilterForm: (action: SetStateAction<OperLogFilterState>) => void;
+  appliedFilters: OperLogFilterState;
   applyFilters: (
-    filters: FilterState,
+    filters: OperLogFilterState,
     options?: { force?: boolean },
   ) => void;
   resetFilters: () => void;
@@ -189,7 +191,7 @@ export const useOperLogManagementStore = (): OperLogManagementStore => {
   const setDeleteTarget = useSetAtom(setDeleteTargetAtom);
 
   const applyFilters = (
-    filters: FilterState,
+    filters: OperLogFilterState,
     options?: { force?: boolean },
   ) => {
     applyFiltersSetter({ filters, force: options?.force });
