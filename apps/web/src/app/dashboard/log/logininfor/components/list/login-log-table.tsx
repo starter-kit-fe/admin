@@ -1,9 +1,17 @@
 'use client';
 
+import { useMemo } from 'react';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { Trash2 } from 'lucide-react';
+
 import { InlineLoading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Empty,
   EmptyDescription,
@@ -18,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 import type { LoginLog } from '../../type';
 import {
@@ -37,113 +45,234 @@ interface LoginLogTableProps {
 
 export function LoginLogTable({
   rows,
-  isLoading,
-  isError,
-  unlockPending,
+  isLoading = false,
+  isError = false,
+  unlockPending = false,
   onUnlock,
   onDelete,
 }: LoginLogTableProps) {
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex min-h-[320px] items-center justify-center">
-          <InlineLoading label="加载中" />
-        </div>
-      );
-    }
+  const columnHelper = useMemo(() => createColumnHelper<LoginLog>(), []);
 
-    if (isError) {
-      return (
-        <div className="py-10 text-center text-sm text-destructive">
-          加载登录日志失败，请稍后再试。
-        </div>
-      );
-    }
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('userName', {
+        header: () => '登录账号',
+        cell: ({ row }) => {
+          const log = row.original;
+          return (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">
+                {log.userName || '-'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                地点：{log.loginLocation || '未知地点'}
+              </p>
+            </div>
+          );
+        },
+        meta: {
+          headerClassName: 'min-w-[200px]',
+        },
+      }),
+      columnHelper.accessor('ipaddr', {
+        header: () => '登录 IP',
+        cell: ({ getValue }) => (
+          <span className="text-sm text-foreground">{getValue() || '-'}</span>
+        ),
+        meta: {
+          headerClassName: 'w-[160px]',
+        },
+      }),
+      columnHelper.display({
+        id: 'client',
+        header: () => '客户端',
+        cell: ({ row }) => {
+          const log = row.original;
+          return (
+            <div className="space-y-1">
+              <p className="text-sm text-foreground">{log.browser || '-'}</p>
+              <p className="text-xs text-muted-foreground">{log.os || '-'}</p>
+            </div>
+          );
+        },
+        meta: {
+          headerClassName: 'min-w-[180px]',
+        },
+      }),
+      columnHelper.accessor('status', {
+        header: () => '状态',
+        cell: ({ getValue }) => (
+          <Badge variant={getLoginStatusBadgeVariant(getValue())}>
+            {getLoginStatusLabel(getValue())}
+          </Badge>
+        ),
+        meta: {
+          headerClassName: 'w-[120px]',
+        },
+      }),
+      columnHelper.accessor('msg', {
+        header: () => '提示信息',
+        cell: ({ getValue }) => (
+          <span className="line-clamp-2 text-sm text-muted-foreground">
+            {getValue() || '-'}
+          </span>
+        ),
+        meta: {
+          headerClassName: 'min-w-[220px]',
+          cellClassName: 'max-w-[320px]',
+        },
+      }),
+      columnHelper.accessor('loginTime', {
+        header: () => '登录时间',
+        cell: ({ getValue }) => (
+          <span className="text-sm text-foreground">{getValue() ?? '-'}</span>
+        ),
+        meta: {
+          headerClassName: 'w-[160px]',
+        },
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: () => <div className="text-right">操作</div>,
+        cell: ({ row }) => {
+          const log = row.original;
+          return (
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={unlockPending}
+                onClick={() => onUnlock(log.infoId)}
+              >
+                解除锁定
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => onDelete(log)}
+              >
+                <Trash2 className="size-4" />
+                <span className="sr-only">删除</span>
+              </Button>
+            </div>
+          );
+        },
+        meta: {
+          headerClassName: 'w-[160px]',
+          cellClassName: 'text-right',
+        },
+      }),
+    ],
+    [columnHelper, onDelete, onUnlock, unlockPending],
+  );
 
-    if (rows.length === 0) {
-      return (
-        <Empty className="mx-auto my-6 min-h-[200px] max-w-xl border border-dashed border-border/60">
-          <EmptyHeader>
-            <EmptyTitle>暂无登录日志数据</EmptyTitle>
-            <EmptyDescription>
-              当有新的登录行为时会自动汇总在此。
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      );
-    }
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
-    return (
-      <div className="overflow-x-auto">
+  const visibleColumnCount =
+    table.getVisibleLeafColumns().length || columns.length;
+
+  return (
+    <div className="rounded-xl border border-border/60 bg-card">
+      <div className="w-full overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="min-w-[160px]">登录账号</TableHead>
-              <TableHead className="min-w-[140px]">登录 IP</TableHead>
-              <TableHead className="min-w-[200px]">登录地点</TableHead>
-              <TableHead className="min-w-[160px]">客户端</TableHead>
-              <TableHead className="min-w-[100px]">状态</TableHead>
-              <TableHead className="min-w-[220px]">提示信息</TableHead>
-              <TableHead className="min-w-[160px]">登录时间</TableHead>
-              <TableHead className="min-w-[160px] text-right">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row.infoId}>
-                <TableCell className="font-medium text-foreground">
-                  {row.userName || '-'}
-                </TableCell>
-                <TableCell>{row.ipaddr || '-'}</TableCell>
-                <TableCell>{row.loginLocation || '-'}</TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span>{row.browser || '-'}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {row.os || '-'}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getLoginStatusBadgeVariant(row.status)}>
-                    {getLoginStatusLabel(row.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell>{row.msg || '-'}</TableCell>
-                <TableCell>{row.loginTime ?? '-'}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex flex-wrap justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={unlockPending}
-                      onClick={() => onUnlock(row.infoId)}
-                    >
-                      解除锁定
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(row)}
-                    >
-                      <Trash2 className="size-4" />
-                      <span className="sr-only">删除</span>
-                    </Button>
-                  </div>
-                </TableCell>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className={cn(
+                      header.column.columnDef.meta?.headerClassName as
+                        | string
+                        | undefined,
+                    )}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={visibleColumnCount}
+                  className="h-32 text-center align-middle"
+                >
+                  <InlineLoading label="正在加载登录日志..." />
+                </TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={visibleColumnCount}
+                  className="h-24 text-center text-sm text-destructive"
+                >
+                  加载登录日志失败，请稍后再试。
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={visibleColumnCount}
+                  className="h-48 text-center align-middle"
+                >
+                  <Empty className="border-0 bg-transparent p-4">
+                    <EmptyHeader>
+                      <EmptyTitle>暂无登录日志数据</EmptyTitle>
+                      <EmptyDescription>
+                        当有新的登录行为时会自动汇总在此。
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className="transition-colors hover:bg-muted/60"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        cell.column.columnDef.meta?.cellClassName as
+                          | string
+                          | undefined,
+                      )}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
-    );
-  };
-
-  return (
-    <Card className="border border-border/70 dark:border-border/40">
-      <CardContent className="p-0">{renderContent()}</CardContent>
-    </Card>
+    </div>
   );
+}
+
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData, TValue> {
+    headerClassName?: string;
+    cellClassName?: string;
+  }
 }

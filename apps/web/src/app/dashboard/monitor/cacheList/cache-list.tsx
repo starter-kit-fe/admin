@@ -10,6 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import {
@@ -149,6 +155,10 @@ export function CacheList() {
             </div>
           );
         },
+        meta: {
+          headerClassName: 'min-w-[240px]',
+          cellClassName: 'max-w-[420px]',
+        },
       }),
       columnHelper.accessor('type', {
         header: '类型',
@@ -157,6 +167,9 @@ export function CacheList() {
             {info.getValue() ?? '-'}
           </span>
         ),
+        meta: {
+          headerClassName: 'min-w-[120px]',
+        },
       }),
       columnHelper.accessor('ttlSeconds', {
         header: 'TTL',
@@ -166,20 +179,32 @@ export function CacheList() {
             <span>{formatDuration(info.getValue())}</span>
           </div>
         ),
+        meta: {
+          headerClassName: 'min-w-[140px]',
+        },
       }),
       columnHelper.accessor('idleSeconds', {
         header: '空闲时间',
         cell: (info) => <span>{formatDuration(info.getValue())}</span>,
+        meta: {
+          headerClassName: 'min-w-[140px]',
+        },
       }),
       columnHelper.accessor('sizeBytes', {
         header: '估算大小',
         cell: (info) => <span>{formatBytes(info.getValue())}</span>,
+        meta: {
+          headerClassName: 'min-w-[140px]',
+        },
       }),
       columnHelper.accessor('encoding', {
         header: '编码',
         cell: (info) => (
           <span className="uppercase">{info.getValue() ?? '-'}</span>
         ),
+        meta: {
+          headerClassName: 'min-w-[120px]',
+        },
       }),
     ],
     [columnHelper],
@@ -197,6 +222,10 @@ export function CacheList() {
       },
     },
   });
+
+  const tableRows = table.getRowModel().rows;
+  const visibleColumnCount =
+    table.getVisibleLeafColumns().length || columns.length;
 
   const limitedTip =
     data.limited && data.scanned
@@ -251,85 +280,108 @@ export function CacheList() {
         </CardContent>
       </Card>
 
-      <Card className="border-border/70  dark:border-border/40">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHead>
+      <section className="rounded-xl border border-border/70 bg-card/90 dark:border-border/40">
+        <div className="w-full overflow-x-auto">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className={cn(
+                        header.column.columnDef.meta?.headerClassName as
+                          | string
+                          | undefined,
+                      )}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {query.isLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={visibleColumnCount}
+                    className="h-32 text-center align-middle"
+                  >
+                    <InlineLoading label="正在加载缓存键..." />
+                  </TableCell>
+                </TableRow>
+              ) : query.isError ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={visibleColumnCount}
+                    className="h-24 text-center text-sm text-destructive"
+                  >
+                    加载失败，请稍后重试。
+                  </TableCell>
+                </TableRow>
+              ) : tableRows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={visibleColumnCount}
+                    className="h-48 text-center align-middle"
+                  >
+                    <Empty className="border-0 bg-transparent p-4">
+                      <EmptyHeader>
+                        <EmptyTitle>未找到匹配的缓存键</EmptyTitle>
+                        <EmptyDescription>
+                          {debouncedPattern
+                            ? '尝试调整匹配模式以获取更多结果。'
+                            : '暂时没有可展示的缓存数据。'}
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                tableRows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="text-sm transition-colors hover:bg-muted/60"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          cell.column.columnDef.meta?.cellClassName as
+                            | string
+                            | undefined,
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {query.isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-32">
-                      <div className="flex items-center justify-center">
-                        <InlineLoading label="正在加载缓存键..." />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-32">
-                      <div className="flex flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
-                        <span>未找到匹配的缓存键</span>
-                        {debouncedPattern ? (
-                          <span className="text-xs text-muted-foreground/80">
-                            尝试调整匹配模式
-                          </span>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="text-sm">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell
-                          key={cell.id}
-                          className={cn(
-                            cell.column.id === 'key'
-                              ? 'max-w-[420px]'
-                              : undefined,
-                          )}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="border-t border-border/60 p-4">
-            <PaginationToolbar
-              totalItems={total}
-              currentPage={pageNum}
-              pageSize={pageSize}
-              onPageChange={(nextPage) => setPageNum(nextPage)}
-              onPageSizeChange={(nextSize) => setPageSize(nextSize)}
-              pageSizeOptions={PAGE_SIZE_OPTIONS}
-              disabled={query.isFetching}
-            />
-          </div>
-        </CardContent>
-      </Card>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="border-t border-border/60 bg-card/80 p-4">
+          <PaginationToolbar
+            totalItems={total}
+            currentPage={pageNum}
+            pageSize={pageSize}
+            onPageChange={(nextPage) => setPageNum(nextPage)}
+            onPageSizeChange={(nextSize) => setPageSize(nextSize)}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            disabled={query.isFetching}
+          />
+        </div>
+      </section>
     </div>
   );
 }

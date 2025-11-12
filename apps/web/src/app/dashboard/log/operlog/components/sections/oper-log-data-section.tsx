@@ -1,14 +1,6 @@
 'use client';
 
-import { InlineLoading } from '@/components/loading';
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
-import { Card, CardContent } from '@/components/ui/card';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty';
 import {
   keepPreviousData,
   useQuery,
@@ -107,41 +99,27 @@ export function OperLogDataSection() {
   const loading = logQuery.isLoading && logs.length === 0;
   const error = logQuery.isError && logs.length === 0;
 
+  const showPagination = !loading && !error && total > 0;
+
   return (
-    <Card className="border border-border/70  dark:border-border/40">
-      <CardContent className="p-0">
-        {loading ? (
-          <div className="flex min-h-[320px] items-center justify-center">
-            <InlineLoading label="加载中" />
-          </div>
-        ) : error ? (
-          <div className="py-10 text-center text-sm text-destructive">
-            加载操作日志失败，请稍后再试。
-          </div>
-        ) : logs.length === 0 ? (
-          <Empty className="mx-auto my-6 min-h-[200px] max-w-xl border border-dashed border-border/60">
-            <EmptyHeader>
-              <EmptyTitle>暂无操作日志</EmptyTitle>
-              <EmptyDescription>执行新增、修改或删除后会记录在这里。</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <>
-            <OperLogTable
-              rows={logs}
-              onDelete={(log) => setDeleteTarget(log)}
-            />
-            <PaginationToolbar
-              currentPage={pagination.pageNum}
-              pageSize={pagination.pageSize}
-              totalItems={total}
-              pageSizeOptions={OPER_LOG_PAGE_SIZE_OPTIONS}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-            />
-          </>
-        )}
-      </CardContent>
-    </Card>
+    <div className="flex flex-col gap-4">
+      <OperLogTable
+        rows={logs}
+        isLoading={loading}
+        isError={error}
+        onDelete={(log) => setDeleteTarget(log)}
+      />
+
+      {showPagination ? (
+        <PaginationToolbar
+          currentPage={pagination.pageNum}
+          pageSize={pagination.pageSize}
+          totalItems={total}
+          pageSizeOptions={OPER_LOG_PAGE_SIZE_OPTIONS}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      ) : null}
+    </div>
   );
 }

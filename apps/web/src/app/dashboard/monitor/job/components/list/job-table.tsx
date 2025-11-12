@@ -4,12 +4,6 @@ import { InlineLoading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -36,7 +30,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Clock, MoreHorizontal, Play, Trash2 } from 'lucide-react';
+import { Clock, Play, Trash2 } from 'lucide-react';
 import {
   useCallback,
   useLayoutEffect,
@@ -170,11 +164,7 @@ export function JobTable({
       }),
       columnHelper.display({
         id: 'actions',
-        header: () => (
-          <div className="flex justify-end">
-            <span>操作</span>
-          </div>
-        ),
+        header: () => <span className="block text-right">操作</span>,
         cell: ({ row }) => {
           const job = row.original;
           const jobId = job.jobId;
@@ -183,64 +173,65 @@ export function JobTable({
           const nextStatus = job.status === '0' ? '1' : '0';
 
           return (
-            <div className="flex justify-end">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 px-2">
-                    操作
-                    <MoreHorizontal className="ml-1.5 size-4 opacity-60" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem
-                    disabled={isRunning}
-                    onSelect={() => onRunJob(jobId)}
-                  >
-                    {isRunning ? (
-                      <>
-                        <Spinner className="mr-2 size-4" />
-                        触发中...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="mr-2 size-4" />
-                        触发一次
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    disabled={isUpdatingStatus}
-                    onSelect={() => onToggleStatus(jobId, nextStatus)}
-                  >
-                    {isUpdatingStatus ? (
-                      <>
-                        <Spinner className="mr-2 size-4" />
-                        更新中...
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="mr-2 size-4" />
-                        {nextStatus === '0' ? '恢复任务' : '暂停任务'}
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onSelect={() => onDelete(job)}
-                  >
-                    <Trash2 className="mr-2 size-4" />
-                    删除
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-xs"
+                onClick={() => onRunJob(jobId)}
+                disabled={isRunning}
+              >
+                {isRunning ? (
+                  <>
+                    <Spinner className="size-3.5" />
+                    触发中
+                  </>
+                ) : (
+                  <>
+                    <Play className="size-3.5" />
+                    触发
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-xs"
+                onClick={() => onToggleStatus(jobId, nextStatus)}
+                disabled={isUpdatingStatus}
+              >
+                {isUpdatingStatus ? (
+                  <>
+                    <Spinner className="size-3.5" />
+                    更新中
+                  </>
+                ) : (
+                  <>
+                    <Clock className="size-3.5" />
+                    {nextStatus === '0' ? '恢复' : '暂停'}
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-xs text-destructive hover:text-destructive"
+                onClick={() => onDelete(job)}
+              >
+                <Trash2 className="size-3.5" />
+                删除
+              </Button>
             </div>
           );
         },
         meta: {
           headerClassName:
-            'sticky right-0 z-20 w-[120px] bg-card text-right border-l border-border/60 overflow-visible',
+            'sticky right-0 z-20 w-[260px] bg-card text-right border-l border-border/60',
           cellClassName:
-            'sticky right-0 z-10 w-[120px] bg-card text-right border-l border-border/60 overflow-visible group-hover:bg-muted/60',
+            'sticky right-0 z-10 w-[260px] bg-card text-right border-l border-border/60 group-hover:bg-muted/60',
         },
       }),
     ],
@@ -264,91 +255,95 @@ export function JobTable({
     table.getVisibleLeafColumns().length || columns.length;
 
   return (
-    <Table>
-      <TableHeader>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id} className="bg-muted/40">
-            {headerGroup.headers.map((header) => (
-              <TableHead
-                key={header.id}
-                className={cn(
-                  header.column.columnDef.meta?.headerClassName as
-                    | string
-                    | undefined,
-                )}
-              >
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
+    <div className="rounded-xl border border-border/60">
+      <div className="w-full overflow-x-auto">
+        <Table className="min-w-[960px]">
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id} className="bg-muted/40">
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className={cn(
+                      header.column.columnDef.meta?.headerClassName as
+                        | string
+                        | undefined,
                     )}
-              </TableHead>
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
             ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {isLoading ? (
-          <TableRow>
-            <TableCell
-              colSpan={visibleColumnCount}
-              className="h-32 text-center align-middle"
-            >
-              <InlineLoading label="正在加载任务..." />
-            </TableCell>
-          </TableRow>
-        ) : isError ? (
-          <TableRow>
-            <TableCell
-              colSpan={visibleColumnCount}
-              className="h-24 text-center text-sm text-destructive"
-            >
-              加载失败，请稍后再试。
-            </TableCell>
-          </TableRow>
-        ) : table.getRowModel().rows.length === 0 ? (
-          <TableRow>
-            <TableCell
-              colSpan={visibleColumnCount}
-              className="h-48 text-center align-middle"
-            >
-              <Empty className="border-0 bg-transparent p-4">
-                <EmptyHeader>
-                  <EmptyTitle>暂无任务数据</EmptyTitle>
-                  <EmptyDescription>
-                    配置定时任务后可在此查看与管理。
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            </TableCell>
-          </TableRow>
-        ) : (
-          table.getRowModel().rows.map((row) => (
-            <TableRow
-              key={row.id}
-              className="group transition-colors hover:bg-muted/60"
-            >
-              {row.getVisibleCells().map((cell) => (
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
                 <TableCell
-                  key={cell.id}
-                  className={cn(
-                    cell.column.columnDef.meta?.cellClassName as
-                      | string
-                      | undefined,
-                  )}
+                  colSpan={visibleColumnCount}
+                  className="h-32 text-center align-middle"
                 >
-                  {flexRender(
-                    cell.column.columnDef.cell,
-                    cell.getContext(),
-                  )}
+                  <InlineLoading label="正在加载任务..." />
                 </TableCell>
-              ))}
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={visibleColumnCount}
+                  className="h-24 text-center text-sm text-destructive"
+                >
+                  加载失败，请稍后再试。
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={visibleColumnCount}
+                  className="h-48 text-center align-middle"
+                >
+                  <Empty className="border-0 bg-transparent p-4">
+                    <EmptyHeader>
+                      <EmptyTitle>暂无任务数据</EmptyTitle>
+                      <EmptyDescription>
+                        配置定时任务后可在此查看与管理。
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className="group transition-colors hover:bg-muted/60"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        cell.column.columnDef.meta?.cellClassName as
+                          | string
+                          | undefined,
+                      )}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }
 

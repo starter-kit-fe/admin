@@ -172,8 +172,8 @@ export function JobDataSection() {
     !isTableLoading && !jobListQuery.isError && total > 0;
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl bg-card p-4">
-      <div className="overflow-x-auto">
+    <div className="flex flex-col gap-4">
+      <section className="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card">
         <JobTable
           rows={rows}
           isLoading={isTableLoading}
@@ -184,7 +184,7 @@ export function JobDataSection() {
           onToggleStatus={handleToggleStatus}
           onDelete={handleSelectDelete}
         />
-      </div>
+      </section>
 
       {showPagination ? (
         <PaginationToolbar
@@ -197,6 +197,6 @@ export function JobDataSection() {
           disabled={jobListQuery.isFetching || isMutating}
         />
       ) : null}
-    </section>
+    </div>
   );
 }
