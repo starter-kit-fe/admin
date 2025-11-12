@@ -17,7 +17,7 @@ interface JobManagementFiltersProps {
   onJobGroupChange: (value: string) => void;
   status: JobStatusFilter;
   onStatusChange: (value: JobStatusFilter) => void;
-  statusOptions: { value: JobStatusFilter; label: string }[];
+  statusOptions: ReadonlyArray<{ value: JobStatusFilter; label: string }>;
 }
 
 export function JobManagementFilters({
