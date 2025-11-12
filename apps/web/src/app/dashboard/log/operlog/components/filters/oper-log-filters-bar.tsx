@@ -47,9 +47,9 @@ export function OperLogFiltersBar({
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="oper-log-title-filter">操作标题</Label>
         <Input
           id="oper-log-title-filter"
+          className="bg-muted"
           placeholder="按标题模糊查询"
           value={value.title}
           onChange={(event) => onTitleChange(event.target.value)}
@@ -57,24 +57,26 @@ export function OperLogFiltersBar({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="oper-log-operator-filter">操作人员</Label>
         <Input
           id="oper-log-operator-filter"
           placeholder="输入操作人员"
+          className="bg-muted"
           value={value.operName}
           onChange={(event) => onOperNameChange(event.target.value)}
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="oper-log-business-filter">业务类型</Label>
         <Select
           value={value.businessType}
           onValueChange={(option) =>
             onBusinessTypeChange(option as OperLogBusinessTypeValue)
           }
         >
-          <SelectTrigger id="oper-log-business-filter">
+          <SelectTrigger
+            id="oper-log-business-filter"
+            className="w-full bg-muted"
+          >
             <SelectValue placeholder="全部业务" />
           </SelectTrigger>
           <SelectContent>
@@ -88,14 +90,16 @@ export function OperLogFiltersBar({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="oper-log-request-filter">请求方式</Label>
         <Select
           value={value.requestMethod}
           onValueChange={(option) =>
             onRequestMethodChange(option as OperLogRequestMethodValue)
           }
         >
-          <SelectTrigger id="oper-log-request-filter">
+          <SelectTrigger
+            id="oper-log-request-filter"
+            className="bg-muted w-full"
+          >
             <SelectValue placeholder="全部请求" />
           </SelectTrigger>
           <SelectContent>

@@ -1,14 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { Trash2 } from 'lucide-react';
-
 import { InlineLoading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,12 +18,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
 
 import type { LoginLog } from '../../type';
-import {
-  getLoginStatusBadgeVariant,
-  getLoginStatusLabel,
-} from '../../utils';
+import { getLoginStatusBadgeVariant, getLoginStatusLabel } from '../../utils';
 
 interface LoginLogTableProps {
   rows: LoginLog[];
@@ -183,7 +179,7 @@ export function LoginLogTable({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-muted/40">
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}

@@ -1,14 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { Trash2 } from 'lucide-react';
-
 import { InlineLoading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,6 +18,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
 
 import type { OperLog } from '../../type';
 import {
@@ -111,9 +110,7 @@ export function OperLogTable({
           const log = row.original;
           return (
             <div className="space-y-1">
-              <p className="text-sm text-foreground">
-                {log.operName || '-'}
-              </p>
+              <p className="text-sm text-foreground">{log.operName || '-'}</p>
               {log.operIp ? (
                 <p className="text-xs text-muted-foreground">
                   IP：{log.operIp}
@@ -136,9 +133,7 @@ export function OperLogTable({
                 {getValue() || '-'}
               </p>
               {location ? (
-                <p className="text-xs text-muted-foreground">
-                  {location}
-                </p>
+                <p className="text-xs text-muted-foreground">{location}</p>
               ) : null}
             </div>
           );
@@ -210,7 +205,7 @@ export function OperLogTable({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-muted/40">
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
