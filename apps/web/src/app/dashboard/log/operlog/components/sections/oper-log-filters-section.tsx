@@ -97,25 +97,31 @@ export function OperLogFiltersSection() {
 
   const handleRemoveFilter = (key: string) => {
     if (key === 'title') {
-      const next = { ...filterForm, title: '' };
+      const next: OperLogFilterState = { ...filterForm, title: '' };
       setFilterForm(next);
       applyImmediately(next);
       return;
     }
     if (key === 'operName') {
-      const next = { ...filterForm, operName: '' };
+      const next: OperLogFilterState = { ...filterForm, operName: '' };
       setFilterForm(next);
       applyImmediately(next);
       return;
     }
     if (key === 'businessType') {
-      const next = { ...filterForm, businessType: 'all' };
+      const next: OperLogFilterState = {
+        ...filterForm,
+        businessType: 'all',
+      };
       setFilterForm(next);
       applyImmediately(next);
       return;
     }
     if (key === 'requestMethod') {
-      const next = { ...filterForm, requestMethod: 'all' };
+      const next: OperLogFilterState = {
+        ...filterForm,
+        requestMethod: 'all',
+      };
       setFilterForm(next);
       applyImmediately(next);
     }
