@@ -78,6 +78,25 @@ export default function RootLayout({
         />
         <link rel="icon" href="/favicon.ico" />
         <link rel="manifest" href="/site.webmanifest" />
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof globalThis.__name !== 'function') {
+                Object.defineProperty(globalThis, '__name', {
+                  value: function (target, value) {
+                    try {
+                      Object.defineProperty(target, 'name', { value, configurable: true });
+                    } catch {}
+                    return target;
+                  },
+                  configurable: true,
+                  writable: true,
+                });
+              }
+            `,
+          }}
+        />
 
         {pkg.seo.jsonLd && (
           <Script

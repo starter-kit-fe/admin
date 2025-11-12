@@ -1,9 +1,9 @@
 'use client';
 
-import { OperLogDataSection } from './components/oper-log-data-section';
-import { OperLogDeleteDialog } from './components/oper-log-delete-dialog';
-import { OperLogFiltersSection } from './components/oper-log-filters-section';
-import { OperLogManagementHeader } from './components/oper-log-management-header';
+import { OperLogDeleteDialog } from './components/dialogs/oper-log-delete-dialog';
+import { OperLogManagementHeader } from './components/layout/oper-log-management-header';
+import { OperLogDataSection } from './components/sections/oper-log-data-section';
+import { OperLogFiltersSection } from './components/sections/oper-log-filters-section';
 
 export function OperLogManagement() {
   return (

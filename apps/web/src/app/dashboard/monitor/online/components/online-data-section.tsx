@@ -5,16 +5,23 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
-import { CardContent } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 
 import {
   listOnlineUsers,
   type OnlineUserListParams,
 } from '../api';
 import {
+  ONLINE_PERMISSION_CODES,
   ONLINE_USERS_QUERY_KEY,
   PAGE_SIZE_OPTIONS,
 } from '../constants';
+import { useOnlinePermissionFlags } from '../hooks';
 import {
   useOnlineUserManagementSelectionRevision,
   useOnlineUserManagementSetRefreshHandler,
@@ -44,6 +51,9 @@ export function OnlineUserDataSection() {
   const setRefreshing = useOnlineUserManagementSetRefreshing();
   const setRefreshHandler = useOnlineUserManagementSetRefreshHandler();
   const { isMutating } = useOnlineUserManagementStatus();
+  const { canList, canForceLogout, canBatchLogout } =
+    useOnlinePermissionFlags();
+  const selectedUserCount = selectedUsers.length;
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
@@ -76,22 +86,33 @@ export function OnlineUserDataSection() {
   const query = useQuery({
     queryKey: [...ONLINE_USERS_QUERY_KEY, queryParams],
     queryFn: () => listOnlineUsers(queryParams),
+    enabled: canList,
     placeholderData: keepPreviousData,
   });
 
-  const { rows, total } = useMemo(
-    () => normalizeOnlineUserResponse(query.data, pagination),
-    [pagination, query.data],
-  );
+  const { rows, total } = useMemo(() => {
+    if (!canList) {
+      return { rows: [], total: 0 };
+    }
+    return normalizeOnlineUserResponse(query.data, pagination);
+  }, [canList, pagination, query.data]);
 
-  const isLoading = query.isLoading && rows.length === 0;
-  const isError = query.isError;
+  const isLoading = canList && query.isLoading && rows.length === 0;
+  const isError = canList && query.isError;
 
   useEffect(() => {
+    if (!canList) {
+      setRefreshing(false);
+      return;
+    }
     setRefreshing(query.isFetching);
-  }, [query.isFetching, setRefreshing]);
+  }, [canList, query.isFetching, setRefreshing]);
 
   useEffect(() => {
+    if (!canList) {
+      setRefreshHandler(() => {});
+      return;
+    }
     const refetch = query.refetch;
     setRefreshHandler(() => {
       void refetch();
@@ -99,9 +120,12 @@ export function OnlineUserDataSection() {
     return () => {
       setRefreshHandler(() => {});
     };
-  }, [query.refetch, setRefreshHandler]);
+  }, [canList, query.refetch, setRefreshHandler]);
 
   useEffect(() => {
+    if (!canBatchLogout) {
+      return;
+    }
     const nextSelected = rows.filter((row) =>
       rowSelection[getOnlineUserRowId(row)],
     );
@@ -113,9 +137,25 @@ export function OnlineUserDataSection() {
       nextIds.length !== prevIds.length ||
       nextIds.some((id, index) => id !== prevIds[index]);
     if (hasChanged) {
-      setSelectedUsers(nextSelected);
+    setSelectedUsers(nextSelected);
     }
-  }, [rowSelection, rows, selectedUsers, setSelectedUsers]);
+  }, [
+    canBatchLogout,
+    rowSelection,
+    rows,
+    selectedUsers,
+    setSelectedUsers,
+  ]);
+
+  useEffect(() => {
+    if (canBatchLogout) {
+      return;
+    }
+    if (selectedUserCount > 0) {
+      clearSelectedUsers();
+    }
+    setRowSelection({});
+  }, [canBatchLogout, clearSelectedUsers, selectedUserCount]);
 
   useEffect(() => {
     setRowSelection({});
@@ -140,20 +180,40 @@ export function OnlineUserDataSection() {
     clearSelectedUsers();
   };
 
-  const shouldShowPagination = !isLoading && !isError && total > 0;
+  const shouldShowPagination =
+    canList && !isLoading && !isError && total > 0;
 
   return (
-    <CardContent className="space-y-4">
-      <OnlineUserTable
-        rows={rows}
-        rowSelection={rowSelection}
-        onRowSelectionChange={setRowSelection}
-        onForceLogout={(user) => openForceDialog(user)}
-        pendingForceRowId={pendingForceRowId}
-        isForceMutating={Boolean(pendingForceRowId)}
-        isLoading={isLoading}
-        isError={isError}
-      />
+    <div className="flex flex-col gap-4">
+      <section className="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card">
+        {canList ? (
+          <div className="w-full overflow-x-auto">
+            <OnlineUserTable
+              rows={rows}
+              rowSelection={rowSelection}
+              onRowSelectionChange={setRowSelection}
+              onForceLogout={(user) => openForceDialog(user)}
+              pendingForceRowId={pendingForceRowId}
+              isForceMutating={Boolean(pendingForceRowId)}
+              isLoading={isLoading}
+              isError={isError}
+              canSelectRows={canBatchLogout}
+              canForceLogout={canForceLogout}
+            />
+          </div>
+        ) : (
+          <div className="flex h-48 flex-col items-center justify-center px-4 text-center">
+            <Empty className="border-0 bg-transparent p-4">
+              <EmptyHeader>
+                <EmptyTitle>暂无访问权限</EmptyTitle>
+                <EmptyDescription>
+                  需要 {ONLINE_PERMISSION_CODES.list} 权限才能查看在线用户。
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          </div>
+        )}
+      </section>
       {shouldShowPagination ? (
         <PaginationToolbar
           totalItems={total}
@@ -165,6 +225,6 @@ export function OnlineUserDataSection() {
           disabled={query.isFetching || isMutating}
         />
       ) : null}
-    </CardContent>
+    </div>
   );
 }

@@ -1,0 +1,160 @@
+'use client';
+
+import {
+  type DataStatusValue,
+  useDictManagementSetRefreshing,
+  useDictManagementStore,
+} from '@/app/dashboard/system/dict/store';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo } from 'react';
+
+import { listDictData } from '../../api';
+import { DATA_STATUS_TABS, DEFAULT_DEBOUNCE_MS } from '../../constants';
+import type { DictData, DictType } from '../../type';
+import { emptyDictDataList } from '../../utils';
+import { DictDataFilters } from '../filters/dict-data-filters';
+import { DictDataTable } from '../list/dict-data-table';
+import { DictDataToolbar } from '../toolbars/dict-data-toolbar';
+
+export function DictDataSection() {
+  const {
+    dictTypes,
+    selectedDictId,
+    dataStatus,
+    setDataStatus,
+    dataFilterForm,
+    setDataFilterForm,
+    dataAppliedFilters,
+    applyDataFilters,
+    resetDataFilters,
+    dictData,
+    setDictData,
+    dictDataTotal,
+    setDictDataTotal,
+    openDataCreate,
+    openDataEdit,
+    setDataDeleteTarget,
+  } = useDictManagementStore();
+  const setRefreshing = useDictManagementSetRefreshing();
+
+  const selectedDict: DictType | undefined = useMemo(() => {
+    if (selectedDictId == null) {
+      return undefined;
+    }
+    return dictTypes.find((item) => item.dictId === selectedDictId);
+  }, [dictTypes, selectedDictId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      applyDataFilters({
+        dictLabel: dataFilterForm.dictLabel.trim(),
+        dictValue: dataFilterForm.dictValue.trim(),
+      });
+    }, DEFAULT_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [applyDataFilters, dataFilterForm.dictLabel, dataFilterForm.dictValue]);
+
+  const dataQuery = useQuery({
+    queryKey: [
+      'system',
+      'dicts',
+      'data',
+      selectedDictId,
+      dataStatus,
+      dataAppliedFilters.dictLabel,
+      dataAppliedFilters.dictValue,
+    ],
+    queryFn: async () => {
+      if (!selectedDictId) {
+        return emptyDictDataList;
+      }
+      return listDictData(selectedDictId, {
+        status: dataStatus === 'all' ? undefined : dataStatus,
+        dictLabel: dataAppliedFilters.dictLabel || undefined,
+        dictValue: dataAppliedFilters.dictValue || undefined,
+      });
+    },
+    enabled: Boolean(selectedDictId),
+    placeholderData: keepPreviousData,
+  });
+
+  useEffect(() => {
+    setRefreshing(dataQuery.isFetching);
+  }, [dataQuery.isFetching, setRefreshing]);
+
+  useEffect(() => {
+    if (dataQuery.data) {
+      setDictData(dataQuery.data.items);
+      setDictDataTotal(dataQuery.data.total);
+    } else {
+      setDictData([]);
+      setDictDataTotal(0);
+    }
+  }, [dataQuery.data, setDictData, setDictDataTotal]);
+
+  if (!selectedDict || selectedDictId == null) {
+    return (
+      <Card className="border border-dashed border-border/50 bg-muted/40 py-14 text-center text-sm text-muted-foreground">
+        请选择左侧字典类型以查看字典数据。
+      </Card>
+    );
+  }
+
+  const statusTabs = DATA_STATUS_TABS;
+
+  const handleStatusChange = (value: string) => {
+    setDataStatus(value as DataStatusValue);
+  };
+
+  const handleAdd = () => {
+    openDataCreate(selectedDict);
+  };
+
+  const handleEdit = (item: DictData) => {
+    openDataEdit({ dictType: selectedDict, dictData: item });
+  };
+
+  const handleDelete = (item: DictData) => {
+    setDataDeleteTarget({ dictType: selectedDict, dictData: item });
+  };
+
+  return (
+    <Card className="border border-border/60 dark:border-border/40">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <DictDataToolbar
+          dictType={selectedDict}
+          status={dataStatus}
+          statusTabs={statusTabs}
+          onStatusChange={handleStatusChange}
+          onAdd={handleAdd}
+        />
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <DictDataFilters
+          dictLabel={dataFilterForm.dictLabel}
+          dictValue={dataFilterForm.dictValue}
+          onDictLabelChange={(value) =>
+            setDataFilterForm((prev) => ({ ...prev, dictLabel: value }))
+          }
+          onDictValueChange={(value) =>
+            setDataFilterForm((prev) => ({ ...prev, dictValue: value }))
+          }
+          onReset={() => resetDataFilters()}
+        />
+
+        <DictDataTable
+          rows={dictData}
+          isLoading={dataQuery.isLoading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+
+        <p className="text-xs text-muted-foreground">共 {dictDataTotal} 条字典数据。</p>
+      </CardContent>
+    </Card>
+  );
+}

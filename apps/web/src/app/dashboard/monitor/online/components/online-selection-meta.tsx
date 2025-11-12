@@ -1,11 +1,13 @@
 'use client';
 
+import { useOnlinePermissionFlags } from '../hooks';
 import { useOnlineUserManagementStore } from '../store';
 
 export function OnlineUserSelectionMeta() {
   const { selectedUsers } = useOnlineUserManagementStore();
+  const { canBatchLogout } = useOnlinePermissionFlags();
 
-  if (selectedUsers.length === 0) {
+  if (!canBatchLogout || selectedUsers.length === 0) {
     return null;
   }
 

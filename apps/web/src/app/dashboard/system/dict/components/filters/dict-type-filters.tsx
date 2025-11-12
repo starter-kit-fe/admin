@@ -1,0 +1,92 @@
+'use client';
+
+import { type StatusTabItem, StatusTabs } from '@/components/status-tabs';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group';
+import { Button } from '@/components/ui/button';
+import { BookText, Code2, X } from 'lucide-react';
+
+interface DictTypeFiltersProps {
+  status: string;
+  statusTabs: StatusTabItem[];
+  dictName: string;
+  dictType: string;
+  onStatusChange: (value: string) => void;
+  onDictNameChange: (value: string) => void;
+  onDictTypeChange: (value: string) => void;
+  onReset: () => void;
+}
+
+export function DictTypeFilters({
+  status,
+  statusTabs,
+  dictName,
+  dictType,
+  onStatusChange,
+  onDictNameChange,
+  onDictTypeChange,
+  onReset,
+}: DictTypeFiltersProps) {
+  return (
+    <div className="space-y-4 rounded-xl border border-border/60 bg-card/95 p-4 sm:p-5">
+      <StatusTabs
+        value={status}
+        onValueChange={onStatusChange}
+        tabs={statusTabs}
+      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <InputGroup className="border-muted bg-muted/60">
+          <InputGroupAddon>
+            <BookText className="size-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">字典名称</span>
+          </InputGroupAddon>
+          <InputGroupInput
+            placeholder="输入字典名称"
+            value={dictName}
+            onChange={(event) => onDictNameChange(event.target.value)}
+          />
+          {dictName ? (
+            <InputGroupButton
+              size="icon-sm"
+              variant="ghost"
+              aria-label="清空字典名称"
+              onClick={() => onDictNameChange('')}
+            >
+              <X className="size-3.5" />
+            </InputGroupButton>
+          ) : null}
+        </InputGroup>
+        <InputGroup className="border-muted bg-muted/60">
+          <InputGroupAddon>
+            <Code2 className="size-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">字典类型</span>
+          </InputGroupAddon>
+          <InputGroupInput
+            placeholder="输入字典类型"
+            value={dictType}
+            onChange={(event) => onDictTypeChange(event.target.value)}
+          />
+          {dictType ? (
+            <InputGroupButton
+              size="icon-sm"
+              variant="ghost"
+              aria-label="清空字典类型"
+              onClick={() => onDictTypeChange('')}
+            >
+              <X className="size-3.5" />
+            </InputGroupButton>
+          ) : null}
+        </InputGroup>
+      </div>
+      <div className="flex justify-end">
+        <Button type="button" variant="ghost" size="sm" onClick={onReset}>
+          重置筛选
+        </Button>
+      </div>
+    </div>
+  );
+}

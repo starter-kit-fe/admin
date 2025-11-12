@@ -1,9 +1,9 @@
 'use client';
 
-import { LoginLogDataSection } from './components/login-log-data-section';
-import { LoginLogDeleteDialog } from './components/login-log-delete-dialog';
-import { LoginLogFiltersSection } from './components/login-log-filters-section';
-import { LoginLogManagementHeader } from './components/login-log-management-header';
+import { LoginLogDataSection } from './components/sections/login-log-data-section';
+import { LoginLogDeleteDialog } from './components/dialogs/login-log-delete-dialog';
+import { LoginLogFiltersSection } from './components/sections/login-log-filters-section';
+import { LoginLogManagementHeader } from './components/layout/login-log-management-header';
 
 export function LoginLogManagement() {
   return (

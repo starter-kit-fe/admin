@@ -24,3 +24,10 @@ export const DEFAULT_FILTERS = {
 };
 
 export const ONLINE_USERS_QUERY_KEY = ['monitor', 'online-users'] as const;
+
+export const ONLINE_PERMISSION_CODES = {
+  list: 'monitor:online:list',
+  query: 'monitor:online:query',
+  batchLogout: 'monitor:online:batchLogout',
+  forceLogout: 'monitor:online:forceLogout',
+} as const;

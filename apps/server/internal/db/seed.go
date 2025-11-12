@@ -3,6 +3,7 @@ package db
 import (
 	"bufio"
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -24,6 +25,8 @@ func SeedDefaults(ctx context.Context, db *gorm.DB, logger *slog.Logger) error {
 	}
 
 	prefix := constant.DB_PREFIX
+	seeded := false
+	statementCount := 0
 
 	exists, err := alreadySeeded(ctx, db, prefix)
 	if err != nil {
@@ -33,38 +36,43 @@ func SeedDefaults(ctx context.Context, db *gorm.DB, logger *slog.Logger) error {
 		if logger != nil {
 			logger.Info("skipping default seed; data already present")
 		}
-		return nil
-	}
+	} else {
+		statements := buildSeedStatements(prefix)
+		if len(statements) == 0 {
+			if logger != nil {
+				logger.Warn("no seed statements generated")
+			}
+		} else {
+			tx := db.WithContext(ctx)
+			for _, stmt := range statements {
+				if err := tx.Exec(stmt).Error; err != nil {
+					return fmt.Errorf("execute seed statement: %w", err)
+				}
+			}
 
-	statements := buildSeedStatements(prefix)
-	if len(statements) == 0 {
-		if logger != nil {
-			logger.Warn("no seed statements generated")
+			roleMenuTable := prefix + "sys_role_menu"
+			menuTable := prefix + "sys_menu"
+			if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, menu_id) SELECT 1, menu_id FROM %s ON CONFLICT DO NOTHING;", roleMenuTable, menuTable)).Error; err != nil {
+				return fmt.Errorf("seed role menus: %w", err)
+			}
+
+			roleDeptTable := prefix + "sys_role_dept"
+			deptTable := prefix + "sys_dept"
+			if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, dept_id) SELECT 1, dept_id FROM %s ON CONFLICT DO NOTHING;", roleDeptTable, deptTable)).Error; err != nil {
+				return fmt.Errorf("seed role depts: %w", err)
+			}
+
+			seeded = true
+			statementCount = len(statements)
 		}
-		return nil
 	}
 
-	tx := db.WithContext(ctx)
-	for _, stmt := range statements {
-		if err := tx.Exec(stmt).Error; err != nil {
-			return fmt.Errorf("execute seed statement: %w", err)
-		}
+	if seeded && logger != nil {
+		logger.Info("seeded default data", "statements", statementCount)
 	}
 
-	roleMenuTable := prefix + "sys_role_menu"
-	menuTable := prefix + "sys_menu"
-	if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, menu_id) SELECT 1, menu_id FROM %s ON CONFLICT DO NOTHING;", roleMenuTable, menuTable)).Error; err != nil {
-		return fmt.Errorf("seed role menus: %w", err)
-	}
-
-	roleDeptTable := prefix + "sys_role_dept"
-	deptTable := prefix + "sys_dept"
-	if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, dept_id) SELECT 1, dept_id FROM %s ON CONFLICT DO NOTHING;", roleDeptTable, deptTable)).Error; err != nil {
-		return fmt.Errorf("seed role depts: %w", err)
-	}
-
-	if logger != nil {
-		logger.Info("seeded default data", "statements", len(statements))
+	if err := syncSequences(ctx, db, prefix, logger); err != nil {
+		return fmt.Errorf("sync sequences: %w", err)
 	}
 
 	return nil
@@ -195,10 +203,83 @@ func alreadySeeded(ctx context.Context, db *gorm.DB, prefix string) (bool, error
 	var count int64
 
 	if err := db.WithContext(ctx).Table(table).Count(&count).Error; err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), "does not exist") {
+		if isTableMissingErr(err) {
 			return false, nil
 		}
 		return false, err
 	}
 	return count > 0, nil
+}
+
+func syncSequences(ctx context.Context, db *gorm.DB, prefix string, logger *slog.Logger) error {
+	sequenceTargets := map[string]string{
+		"sys_dept":       "dept_id",
+		"sys_user":       "user_id",
+		"sys_post":       "post_id",
+		"sys_role":       "role_id",
+		"sys_menu":       "menu_id",
+		"sys_dict_type":  "dict_id",
+		"sys_dict_data":  "dict_code",
+		"sys_config":     "config_id",
+		"sys_logininfor": "info_id",
+		"sys_oper_log":   "oper_id",
+		"sys_job":        "job_id",
+		"sys_job_log":    "job_log_id",
+		"sys_notice":     "notice_id",
+	}
+
+	for table, column := range sequenceTargets {
+		fullTable := prefix + table
+		if err := ensureSequenceOffset(ctx, db, fullTable, column); err != nil {
+			if isTableMissingErr(err) {
+				if logger != nil {
+					logger.Warn("skip sequence sync; table missing", "table", fullTable)
+				}
+				continue
+			}
+			return fmt.Errorf("ensure sequence for %s: %w", fullTable, err)
+		}
+	}
+
+	if logger != nil {
+		logger.Info("sequence offsets synchronized", "tables", len(sequenceTargets))
+	}
+	return nil
+}
+
+func ensureSequenceOffset(ctx context.Context, db *gorm.DB, table, column string) error {
+	var seqName sql.NullString
+	if err := db.WithContext(ctx).
+		Raw("SELECT pg_get_serial_sequence(?, ?) AS seq_name", table, column).
+		Scan(&seqName).Error; err != nil {
+		return err
+	}
+
+	if !seqName.Valid || strings.TrimSpace(seqName.String) == "" {
+		return nil
+	}
+
+	maxSQL := fmt.Sprintf("SELECT COALESCE(MAX(%s), 0) AS max_id FROM %s", column, table)
+	var maxValue sql.NullInt64
+	if err := db.WithContext(ctx).Raw(maxSQL).Scan(&maxValue).Error; err != nil {
+		return err
+	}
+
+	target := int64(0)
+	if maxValue.Valid {
+		target = maxValue.Int64
+	}
+
+	if target <= 0 {
+		return db.WithContext(ctx).Exec("SELECT setval(?, 1, false)", seqName.String).Error
+	}
+
+	return db.WithContext(ctx).Exec("SELECT setval(?, ?, true)", seqName.String, target).Error
+}
+
+func isTableMissingErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(err.Error()), "does not exist")
 }

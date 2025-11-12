@@ -50,6 +50,8 @@ interface OnlineUserTableProps {
   isForceMutating: boolean;
   isLoading: boolean;
   isError: boolean;
+  canSelectRows: boolean;
+  canForceLogout: boolean;
 }
 
 export function OnlineUserTable({
@@ -61,48 +63,13 @@ export function OnlineUserTable({
   isForceMutating,
   isLoading,
   isError,
+  canSelectRows,
+  canForceLogout,
 }: OnlineUserTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<OnlineUser>(), []);
 
-  const columns = useMemo(
-    () => [
-      columnHelper.display({
-        id: 'select',
-        header: ({ table }) => {
-          const checkedState = table.getIsAllPageRowsSelected()
-            ? true
-            : table.getIsSomePageRowsSelected()
-              ? 'indeterminate'
-              : false;
-          return (
-            <Checkbox
-              aria-label="选择全部"
-              checked={checkedState}
-              onCheckedChange={(checked) =>
-                table.toggleAllPageRowsSelected(checked === true)
-              }
-            />
-          );
-        },
-        cell: ({ row }) => (
-          <Checkbox
-            aria-label={`选择 ${row.original.userName || '用户'}`}
-            checked={row.getIsSelected()}
-            disabled={!row.getCanSelect()}
-            onCheckedChange={(checked) =>
-              row.toggleSelected(checked === true)
-            }
-            onClick={(event) => event.stopPropagation()}
-            onKeyDown={(event) => event.stopPropagation()}
-          />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-        meta: {
-          headerClassName: 'w-12',
-          cellClassName: 'w-12 align-middle',
-        },
-      }),
+  const columns = useMemo(() => {
+    const baseColumns = [
       columnHelper.accessor('userName', {
         header: () => '登录账号',
         cell: ({ row }) => {
@@ -194,50 +161,106 @@ export function OnlineUserTable({
           headerClassName: 'min-w-[180px]',
         },
       }),
-      columnHelper.display({
-        id: 'actions',
-        header: () => <span className="block text-right">操作</span>,
-        cell: ({ row }) => {
-          const user = row.original;
-          const rowId = row.id;
-          const isPending = isForceMutating && pendingForceRowId === rowId;
+    ];
 
-          return (
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-sm font-medium"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onForceLogout(user);
-                }}
-                disabled={isPending}
-              >
-                {isPending ? (
-                  <>
-                    <Spinner className="mr-1.5 size-4" />
-                    处理中
-                  </>
-                ) : (
-                  <>
-                    <LogOut className="mr-1.5 size-3.5" />
-                    强退
-                  </>
-                )}
-              </Button>
-            </div>
-          );
-        },
-        enableSorting: false,
-        meta: {
-          headerClassName: 'w-[120px] text-right',
-          cellClassName: 'text-right',
-        },
-      }),
-    ],
-    [columnHelper, isForceMutating, onForceLogout, pendingForceRowId],
-  );
+    if (canForceLogout) {
+      baseColumns.push(
+        columnHelper.display({
+          id: 'actions',
+          header: () => <span className="block text-right">操作</span>,
+          cell: ({ row }) => {
+            const user = row.original;
+            const rowId = row.id;
+            const isPending =
+              isForceMutating && pendingForceRowId === rowId;
+
+            return (
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-sm font-medium"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onForceLogout(user);
+                  }}
+                  disabled={isPending}
+                >
+                  {isPending ? (
+                    <>
+                      <Spinner className="mr-1.5 size-4" />
+                      处理中
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="mr-1.5 size-3.5" />
+                      强退
+                    </>
+                  )}
+                </Button>
+              </div>
+            );
+          },
+          enableSorting: false,
+          meta: {
+            headerClassName: 'w-[120px] text-right',
+            cellClassName: 'text-right',
+          },
+        }),
+      );
+    }
+
+    if (canSelectRows) {
+      baseColumns.unshift(
+        columnHelper.display({
+          id: 'select',
+          header: ({ table }) => {
+            const checkedState = table.getIsAllPageRowsSelected()
+              ? true
+              : table.getIsSomePageRowsSelected()
+                ? 'indeterminate'
+                : false;
+            return (
+              <Checkbox
+                aria-label="选择全部"
+                checked={checkedState}
+                onCheckedChange={(checked) =>
+                  table.toggleAllPageRowsSelected(checked === true)
+                }
+              />
+            );
+          },
+          cell: ({ row }) => (
+            <Checkbox
+              aria-label={`选择 ${row.original.userName || '用户'}`}
+              checked={row.getIsSelected()}
+              disabled={!row.getCanSelect()}
+              onCheckedChange={(checked) =>
+                row.toggleSelected(checked === true)
+              }
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+            />
+          ),
+          enableSorting: false,
+          enableHiding: false,
+          meta: {
+            headerClassName: 'w-12',
+            cellClassName: 'w-12 align-middle',
+          },
+        }),
+      );
+    }
+
+    return baseColumns;
+  }, [
+    canForceLogout,
+    canSelectRows,
+    columnHelper,
+    isForceMutating,
+    onForceLogout,
+    pendingForceRowId,
+  ]);
 
   const table = useReactTable({
     data: rows,
@@ -245,7 +268,7 @@ export function OnlineUserTable({
     state: {
       rowSelection,
     },
-    enableRowSelection: true,
+    enableRowSelection: canSelectRows,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => getOnlineUserRowId(row),
     onRowSelectionChange: onRowSelectionChange,

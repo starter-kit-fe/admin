@@ -1,0 +1,56 @@
+'use client';
+
+import { ManagementHeader } from '@/components/dashboard/management-header';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { Megaphone, RefreshCw } from 'lucide-react';
+
+import {
+  useNoticeManagementRefresh,
+  useNoticeManagementStatus,
+  useNoticeManagementStore,
+} from '@/app/dashboard/system/notice/store';
+
+export function NoticeManagementHeader() {
+  const { notices, openCreate } = useNoticeManagementStore();
+  const { isRefreshing, isMutating } = useNoticeManagementStatus();
+  const refresh = useNoticeManagementRefresh();
+  const refreshDisabled = isRefreshing || isMutating;
+
+  return (
+    <section className="flex flex-col gap-2">
+      <ManagementHeader
+        title="通知公告"
+        description="管理系统通知与公告内容，可快速筛选、创建与下线。"
+        actions={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => refresh()}
+              disabled={refreshDisabled}
+            >
+              {isRefreshing ? (
+                <Spinner className="size-4" />
+              ) : (
+                <RefreshCw className="size-4" />
+              )}
+              刷新
+            </Button>
+            <Button
+              type="button"
+              onClick={() => openCreate()}
+              disabled={isMutating}
+            >
+              <Megaphone className="size-4" />
+              新建公告
+            </Button>
+          </>
+        }
+      />
+      <p className="text-xs text-muted-foreground">
+        当前共 {notices.length} 条记录。
+      </p>
+    </section>
+  );
+}
