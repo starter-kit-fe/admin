@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -258,15 +259,68 @@ func copyLegacyData(db *gorm.DB, spec logTableSpec, legacyName string) error {
 }
 
 func applyLogTableStorageSettings(db *gorm.DB, tableName string) error {
-	stmt := fmt.Sprintf(`ALTER TABLE %s SET (
-        autovacuum_vacuum_scale_factor = 0.0,
-        autovacuum_vacuum_threshold = 0,
-        autovacuum_analyze_scale_factor = 0.02,
-        autovacuum_analyze_threshold = 50,
-        toast.autovacuum_vacuum_scale_factor = 0.0,
-        toast.autovacuum_analyze_scale_factor = 0.02
-    )`, quoteIdent(tableName))
-	return db.Exec(stmt).Error
+	params := []storageParameter{
+		{name: "autovacuum_vacuum_scale_factor", value: "0.0"},
+		{name: "autovacuum_vacuum_threshold", value: "0"},
+		{name: "autovacuum_analyze_scale_factor", value: "0.02"},
+		{name: "autovacuum_analyze_threshold", value: "50"},
+		{name: "toast.autovacuum_vacuum_scale_factor", value: "0.0"},
+		{name: "toast.autovacuum_analyze_scale_factor", value: "0.02"},
+	}
+
+	partitioned, err := isPartitionedTable(db, tableName)
+	if err != nil {
+		return err
+	}
+
+	targets := []string{tableName}
+	if partitioned {
+		partitions, err := listTablePartitions(db, tableName)
+		if err != nil {
+			return err
+		}
+		if len(partitions) == 0 {
+			return nil
+		}
+		targets = partitions
+	}
+
+	for _, target := range targets {
+		if err := setTableStorageParameters(db, target, params); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type storageParameter struct {
+	name  string
+	value string
+}
+
+func setTableStorageParameters(db *gorm.DB, tableName string, params []storageParameter) error {
+	for _, param := range params {
+		stmt := fmt.Sprintf(`ALTER TABLE %s SET (%s = %s)`, quoteIdent(tableName), param.name, param.value)
+		if err := db.Exec(stmt).Error; err != nil {
+			if isIgnorableStorageParameterError(err) {
+				log.Printf("db: skipping storage parameter %s for %s: %v", param.name, tableName, err)
+				continue
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+func isIgnorableStorageParameterError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "cannot specify storage parameters for a partitioned table") ||
+		strings.Contains(msg, "unrecognized parameter") ||
+		strings.Contains(msg, "unrecognized storage parameter")
 }
 
 func ensureIndexes(db *gorm.DB, spec logTableSpec) error {
@@ -321,6 +375,10 @@ func ensurePartitions(db *gorm.DB, spec logTableSpec, historyStart, historyEnd *
 		}
 	}
 
+	if err := applyLogTableStorageSettings(db, spec.tableName); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -363,6 +421,29 @@ func isPartitionedTable(db *gorm.DB, tableName string) (bool, error) {
 		return false, err
 	}
 	return relkind == "p", nil
+}
+
+func listTablePartitions(db *gorm.DB, tableName string) ([]string, error) {
+	if strings.TrimSpace(tableName) == "" {
+		return nil, errors.New("table name is required")
+	}
+
+	query := `
+SELECT c.relname
+FROM pg_inherits i
+JOIN pg_class c ON c.oid = i.inhrelid
+JOIN pg_class p ON p.oid = i.inhparent
+JOIN pg_namespace pn ON pn.oid = p.relnamespace
+WHERE p.relname = ?
+  AND pn.nspname = current_schema()
+ORDER BY c.relname`
+
+	var partitions []string
+	if err := db.Raw(query, tableName).Scan(&partitions).Error; err != nil {
+		return nil, err
+	}
+
+	return partitions, nil
 }
 
 func floorMonth(t time.Time) time.Time {

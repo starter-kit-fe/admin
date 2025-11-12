@@ -187,7 +187,6 @@ func registerProtectedAuthRoutes(group *gin.RouterGroup, opts Options) {
 	if opts.AuthHandler == nil {
 		return
 	}
-	group.GET("/getInfo", opts.AuthHandler.GetInfo)
 	group.GET("/auth/me", opts.AuthHandler.GetInfo)
 	group.GET("/auth/menus", opts.AuthHandler.GetMenus)
 	group.POST("/auth/logout", opts.AuthHandler.Logout)

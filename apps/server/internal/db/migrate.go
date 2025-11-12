@@ -30,8 +30,6 @@ func AutoMigrate(db *gorm.DB) error {
 		&model.SysJob{},
 		&model.SysJobLog{},
 		&model.SysNotice{},
-		&model.GenTable{},
-		&model.GenTableColumn{},
 	}
 
 	if err := db.AutoMigrate(models...); err != nil {
