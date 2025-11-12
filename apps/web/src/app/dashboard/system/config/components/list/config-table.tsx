@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Edit2, Trash2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const CONFIG_TYPE_META = CONFIG_TYPE_TABS.reduce<Record<string, string>>(
   (acc, tab) => {
@@ -74,8 +75,10 @@ export function ConfigTable({
               <TableHead className="min-w-[160px]">参数键名</TableHead>
               <TableHead className="min-w-[220px]">参数键值</TableHead>
               <TableHead className="w-[120px]">类型</TableHead>
-              <TableHead className="min-w-[200px]">备注</TableHead>
-              <TableHead className="w-[120px] text-right">操作</TableHead>
+              <TableHead className="w-[200px] max-w-[200px]">备注</TableHead>
+              <TableHead className="sticky right-0 z-20 w-[120px] bg-card text-right">
+                操作
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -100,45 +103,65 @@ export function ConfigTable({
                 </TableCell>
               </TableRow>
             ) : (
-              rows.map((config) => (
-                <TableRow key={config.configId}>
-                  <TableCell>{config.configName}</TableCell>
-                  <TableCell>{config.configKey}</TableCell>
-                  <TableCell>
-                    <code className="rounded bg-muted px-2 py-1 text-xs">
-                      {config.configValue}
-                    </code>
-                  </TableCell>
-                  <TableCell>{renderTypeBadge(config.configType)}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {config.remark ?? '—'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1 text-xs"
-                        onClick={() => onEdit(config)}
-                      >
-                        <Edit2 className="size-3.5" />
-                        编辑
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1 text-xs text-destructive hover:text-destructive"
-                        onClick={() => onDelete(config)}
-                      >
-                        <Trash2 className="size-3.5" />
-                        删除
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+              rows.map((config) => {
+                const remark = config.remark?.trim();
+                return (
+                  <TableRow key={config.configId} className="group">
+                    <TableCell>{config.configName}</TableCell>
+                    <TableCell>{config.configKey}</TableCell>
+                    <TableCell>
+                      <code className="rounded bg-muted px-2 py-1 text-xs">
+                        {config.configValue}
+                      </code>
+                    </TableCell>
+                    <TableCell>{renderTypeBadge(config.configType)}</TableCell>
+                    <TableCell className="w-[200px] text-xs text-muted-foreground">
+                      {remark ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-block max-w-[200px] truncate">
+                              {remark}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            align="end"
+                            className="max-w-xs break-words text-left"
+                          >
+                            {remark}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        '—'
+                      )}
+                    </TableCell>
+                    <TableCell className="sticky right-0 z-10 w-[120px] bg-card text-right group-hover:bg-muted/50">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1 text-xs"
+                          onClick={() => onEdit(config)}
+                        >
+                          <Edit2 className="size-3.5" />
+                          编辑
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1 text-xs text-destructive hover:text-destructive"
+                          onClick={() => onDelete(config)}
+                        >
+                          <Trash2 className="size-3.5" />
+                          删除
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
