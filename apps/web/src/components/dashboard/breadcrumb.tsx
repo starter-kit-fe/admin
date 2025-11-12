@@ -15,6 +15,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Fragment, useMemo, type ReactNode } from 'react';
 
+const SEGMENT_LABEL_MAP: Record<string, string> = {
+  log: '日志管理',
+  operlog: '操作日志',
+  logininfor: '登录日志',
+  monitor: '系统监控',
+  job: '定时任务',
+  server: '服务监控',
+  user: '用户管理',
+  system: '系统设置',
+};
+
 type Crumb = {
   label: string;
   href?: string;
@@ -64,6 +75,11 @@ function normalizeUrl(url?: string | null) {
 function formatSegment(segment: string) {
   if (!segment) {
     return '';
+  }
+
+  const normalized = segment.toLowerCase();
+  if (SEGMENT_LABEL_MAP[normalized]) {
+    return SEGMENT_LABEL_MAP[normalized];
   }
 
   return segment

@@ -1,13 +1,21 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { type SVGProps, useId } from 'react';
+import { type SVGProps } from 'react';
 
-export function LogoMark({ className, ...props }: SVGProps<SVGSVGElement>) {
-  const gradientId = useId();
-  const gradientBase = `${gradientId}-logo-base`;
-  const gradientCore = `${gradientId}-logo-core`;
-  const gradientHighlight = `${gradientId}-logo-highlight`;
+type LogoMarkProps = SVGProps<SVGSVGElement> & {
+  gradientIdPrefix?: string;
+};
+
+export function LogoMark({
+  className,
+  gradientIdPrefix = 'logo-mark',
+  ...props
+}: LogoMarkProps) {
+  // Use stable, deterministic IDs so SSR and CSR render the same markup and avoid hydration mismatches.
+  const gradientBase = `${gradientIdPrefix}-gradient-base`;
+  const gradientCore = `${gradientIdPrefix}-gradient-core`;
+  const gradientHighlight = `${gradientIdPrefix}-gradient-highlight`;
 
   return (
     <svg

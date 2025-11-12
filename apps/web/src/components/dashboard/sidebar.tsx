@@ -94,6 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               'shrink-0',
               isCollapsed ? 'h-7 w-7' : 'h-8 w-8',
             )}
+            gradientIdPrefix="sidebar-logo"
           />
           {!isCollapsed ? (
             <div className="text-left">

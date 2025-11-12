@@ -188,7 +188,10 @@ export default function Header() {
           href="/"
           className="group flex items-center gap-3 text-base font-semibold text-inherit"
         >
-          <LogoMark className="size-[28px] shrink-0" />
+          <LogoMark
+            className="size-[28px] shrink-0"
+            gradientIdPrefix="site-header-logo"
+          />
           <span className="hidden text-xl text-muted-foreground transition-colors group-hover:text-foreground dark:text-white/85 dark:group-hover:text-white sm:inline font-bold">
             {brandName}
           </span>
