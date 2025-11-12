@@ -1,6 +1,14 @@
 'use client';
 
 import type { DictType } from '@/app/dashboard/system/dict/type';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
@@ -8,10 +16,13 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Edit2, Plus, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 
 import { TYPE_STATUS_TABS } from '../../constants';
 
@@ -43,10 +54,10 @@ export function DictTypeList({
       <Badge
         variant="outline"
         className={cn(
-          'border-transparent px-2 py-0 text-[11px] font-medium',
+          'px-2 py-0 text-[11px] font-medium uppercase',
           status === '0'
-            ? 'bg-emerald-500/10 text-emerald-600'
-            : 'bg-rose-500/10 text-rose-600',
+            ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600'
+            : 'border-rose-500/20 bg-rose-500/10 text-rose-600',
         )}
       >
         {meta.label}
@@ -55,8 +66,8 @@ export function DictTypeList({
   };
 
   return (
-    <ScrollArea className="h-[420px]">
-      <div className="flex flex-col divide-y divide-border/60">
+    <ScrollArea className="h-full p-2">
+      <div className="flex flex-col  space-y-1">
         {isLoading && items.length === 0 ? (
           <div className="flex h-[180px] items-center justify-center text-sm text-muted-foreground">
             字典类型加载中...
@@ -73,67 +84,85 @@ export function DictTypeList({
         ) : (
           items.map((dict) => {
             const isActive = dict.dictId === selectedId;
+            const badge =
+              dict.status !== '0' ? renderStatusBadge(dict.status) : null;
+            const remarkContent = dict.remark?.trim() || '暂无备注';
+            const showTooltip = remarkContent.length > 20;
+            const remarkNode = (
+              <span className="max-w-[220px] truncate text-xs text-muted-foreground">
+                {remarkContent}
+              </span>
+            );
+
             return (
               <div
                 key={dict.dictId}
                 className={cn(
-                  'flex flex-col gap-2 px-4 py-3 transition-colors',
-                  isActive
-                    ? 'bg-primary/5 text-primary-foreground'
-                    : 'hover:bg-muted/40',
+                  'group flex flex-col gap-1.5 rounded-lg px-3 py-2 transition-colors',
+                  isActive ? 'bg-primary/10' : 'hover:bg-muted/40',
                 )}
               >
-                <button
-                  type="button"
-                  className="flex w-full flex-col items-start gap-1 text-left"
-                  onClick={() => onSelect(dict)}
-                >
-                  <div className="flex w-full items-center justify-between">
-                    <span className="text-sm font-semibold text-foreground">
-                      {dict.dictName}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {dict.dictType}
-                    </span>
+                <div className="flex items-start gap-2.5">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex h-auto flex-1 flex-col items-start gap-1 bg-transparent px-0 py-0 text-left hover:bg-transparent"
+                    onClick={() => onSelect(dict)}
+                  >
+                    <div className="flex flex-wrap items-baseline gap-2">
+                      <span className="text-sm font-semibold text-foreground">
+                        {dict.dictName}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ({dict.dictType})
+                      </span>
+                    </div>
+                    {showTooltip ? (
+                      <Tooltip delayDuration={150}>
+                        <TooltipTrigger asChild>{remarkNode}</TooltipTrigger>
+                        <TooltipContent side="top" align="start">
+                          <p className="max-w-xs text-sm text-foreground">
+                            {remarkContent}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      remarkNode
+                    )}
+                  </Button>
+                  <div className="flex items-start gap-2">
+                    {badge}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-muted-foreground"
+                          aria-label="更多操作"
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem onSelect={() => onAddData(dict)}>
+                          <Plus className="mr-2 size-3.5" />
+                          新增字典项
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => onEdit(dict)}>
+                          <Pencil className="mr-2 size-3.5" />
+                          编辑字典
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={() => onDelete(dict)}
+                        >
+                          <Trash2 className="mr-2 size-3.5" />
+                          删除
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {renderStatusBadge(dict.status)}
-                    {dict.remark ? (
-                      <span className="line-clamp-1">{dict.remark}</span>
-                    ) : null}
-                  </div>
-                </button>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEdit(dict)}
-                    className="h-7 gap-1 px-2 text-xs"
-                  >
-                    <Edit2 className="size-3.5" />
-                    编辑
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onAddData(dict)}
-                    className="h-7 gap-1 px-2 text-xs"
-                  >
-                    <Plus className="size-3.5" />
-                    新增字典项
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete(dict)}
-                    className="h-7 gap-1 px-2 text-xs text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="size-3.5" />
-                    删除
-                  </Button>
                 </div>
               </div>
             );

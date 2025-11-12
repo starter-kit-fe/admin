@@ -3,6 +3,7 @@
 import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -122,7 +123,12 @@ export function MenuTreeView({
     const walk = (items: MenuTreeNode[]) => {
       items.forEach((item) => {
         if (item.children && item.children.length > 0) {
-          ids.push(item.menuId);
+          const hasNonButtonChild = item.children.some(
+            (child) => child.menuType !== 'F',
+          );
+          if (hasNonButtonChild) {
+            ids.push(item.menuId);
+          }
           walk(item.children);
         }
       });
@@ -435,5 +441,5 @@ export function MenuTreeView({
     );
   }
 
-  return <div className="space-y-1">{renderNodes(nodes)}</div>;
+  return <div>{renderNodes(nodes)}</div>;
 }

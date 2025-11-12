@@ -66,7 +66,7 @@ export function UserManagementFilters({
 }: UserManagementFiltersProps) {
   if (variant === 'mobile') {
     return (
-      <Card className="flex shadow-none flex-col gap-3 rounded-[28px] bg-transparent pb-2 pt-1">
+      <Card className="flex shadow-none flex-col gap-3">
         {titleSlot || refreshSlot ? (
           <div className="flex items-center justify-between gap-3">
             <div className="flex flex-col">

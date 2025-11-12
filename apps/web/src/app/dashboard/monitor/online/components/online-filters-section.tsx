@@ -7,8 +7,14 @@ import {
   type MutableRefObject,
 } from 'react';
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Clock3, Globe, UserRound, X } from 'lucide-react';
+
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group';
 import {
   Select,
   SelectContent,
@@ -71,34 +77,60 @@ export function OnlineUserFiltersSection() {
 
   return (
     <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="online-user-name">登录账号</Label>
-        <Input
-          id="online-user-name"
+      <InputGroup className="border-muted bg-muted/60">
+        <InputGroupAddon>
+          <UserRound className="size-4 text-muted-foreground" />
+        </InputGroupAddon>
+        <InputGroupInput
           placeholder="按登录账号筛选"
           value={filterForm.userName}
           onChange={(event) => handleUserNameChange(event.target.value)}
         />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="online-ip">登录 IP</Label>
-        <Input
-          id="online-ip"
+        {filterForm.userName ? (
+          <InputGroupButton
+            variant="ghost"
+            size="icon-sm"
+            aria-label="清空账号筛选"
+            onClick={() => handleUserNameChange('')}
+          >
+            <X className="size-3.5" />
+          </InputGroupButton>
+        ) : null}
+      </InputGroup>
+
+      <InputGroup className="border-muted bg-muted/60">
+        <InputGroupAddon>
+          <Globe className="size-4 text-muted-foreground" />
+        </InputGroupAddon>
+        <InputGroupInput
           placeholder="按 IP 地址筛选"
           value={filterForm.ipaddr}
           onChange={(event) => handleIpChange(event.target.value)}
         />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="online-time-range">活跃时间</Label>
+        {filterForm.ipaddr ? (
+          <InputGroupButton
+            variant="ghost"
+            size="icon-sm"
+            aria-label="清空 IP 筛选"
+            onClick={() => handleIpChange('')}
+          >
+            <X className="size-3.5" />
+          </InputGroupButton>
+        ) : null}
+      </InputGroup>
+
+      <InputGroup className="border-muted bg-muted/60">
+        <InputGroupAddon>
+          <Clock3 className="size-4 text-muted-foreground" />
+        </InputGroupAddon>
         <Select
           value={filterForm.timeRange}
           onValueChange={handleTimeRangeChange}
         >
-          <SelectTrigger id="online-time-range">
+          <SelectTrigger className="h-9 w-full border-0 bg-transparent px-0 text-sm shadow-none focus:ring-0 focus:ring-offset-0">
             <SelectValue placeholder="全部时间" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent align="end">
             {TIME_RANGE_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
@@ -106,7 +138,7 @@ export function OnlineUserFiltersSection() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </InputGroup>
     </div>
   );
 }

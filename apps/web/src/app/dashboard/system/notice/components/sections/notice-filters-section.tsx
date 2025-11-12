@@ -11,9 +11,12 @@ import {
 import {
   DEFAULT_DEBOUNCE_MS,
   NOTICE_STATUS_TABS,
-  NOTICE_TYPE_TABS,
+  NOTICE_TYPE_OPTIONS,
 } from '../../constants';
-import { NoticeManagementFilters } from '../filters/notice-management-filters';
+import {
+  NoticeManagementFilters,
+  type FilterChip,
+} from '../filters/notice-management-filters';
 
 export function NoticeFiltersSection() {
   const {
@@ -23,6 +26,7 @@ export function NoticeFiltersSection() {
     setNoticeType,
     filterForm,
     setFilterForm,
+    appliedFilters,
     applyFilters,
     resetFilters,
   } = useNoticeManagementStore();
@@ -65,25 +69,72 @@ export function NoticeFiltersSection() {
     scheduleKeywordFilter(value);
   };
 
-  const handleReset = () => {
+  const handleRemoveFilter = (key: string) => {
+    if (key === 'noticeType') {
+      setNoticeType('all');
+      return;
+    }
+
+    if (key === 'noticeTitle') {
+      clearKeywordDebounce();
+      setFilterForm({ noticeTitle: '' });
+      applyFilters({ noticeTitle: '' });
+    }
+  };
+
+  const handleResetFilters = () => {
     clearKeywordDebounce();
+    setNoticeType('all');
     resetFilters();
   };
 
-  const statusTabs = useMemo(() => [...NOTICE_STATUS_TABS], []);
-  const noticeTypeTabs = useMemo(() => [...NOTICE_TYPE_TABS], []);
+  const statusTabs = useMemo(
+    () =>
+      NOTICE_STATUS_TABS.map((tab) => ({
+        value: tab.value,
+        label: tab.label,
+        activeColor: tab.color,
+      })),
+    [],
+  );
+
+  const noticeTypeOptions = useMemo(() => [...NOTICE_TYPE_OPTIONS], []);
+
+  const appliedFilterChips = useMemo<FilterChip[]>(() => {
+    const chips: FilterChip[] = [];
+    if (noticeType !== 'all') {
+      const label =
+        noticeTypeOptions.find((option) => option.value === noticeType)
+          ?.label ?? noticeType;
+      chips.push({
+        key: 'noticeType',
+        label: '类型',
+        value: label,
+      });
+    }
+    if (appliedFilters.noticeTitle) {
+      chips.push({
+        key: 'noticeTitle',
+        label: '标题',
+        value: appliedFilters.noticeTitle,
+      });
+    }
+    return chips;
+  }, [appliedFilters.noticeTitle, noticeType, noticeTypeOptions]);
 
   return (
     <NoticeManagementFilters
       statusTabs={statusTabs}
-      noticeTypeTabs={noticeTypeTabs}
       status={status}
       noticeType={noticeType}
+      noticeTypeOptions={noticeTypeOptions}
       keyword={filterForm.noticeTitle}
+      appliedFilters={appliedFilterChips}
       onStatusChange={handleStatusChange}
       onNoticeTypeChange={handleNoticeTypeChange}
       onKeywordChange={handleKeywordChange}
-      onReset={handleReset}
+      onRemoveFilter={handleRemoveFilter}
+      onResetFilters={handleResetFilters}
     />
   );
 }

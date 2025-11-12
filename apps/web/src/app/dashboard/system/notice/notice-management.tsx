@@ -2,6 +2,7 @@
 
 import { NoticeDataSection } from './components/sections/notice-data-section';
 import { NoticeDeleteDialog } from './components/dialogs/notice-delete-dialog';
+import { NoticeBulkDeleteDialog } from './components/dialogs/notice-bulk-delete-dialog';
 import { NoticeEditorManager } from './components/editor/notice-editor-manager';
 import { NoticeFiltersSection } from './components/sections/notice-filters-section';
 import { NoticeManagementHeader } from './components/layout/notice-management-header';
@@ -14,6 +15,7 @@ export function NoticeManagement() {
       <NoticeDataSection />
       <NoticeEditorManager />
       <NoticeDeleteDialog />
+      <NoticeBulkDeleteDialog />
     </div>
   );
 }

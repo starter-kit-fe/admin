@@ -5,6 +5,7 @@ import {
   useConfigManagementSetRefreshing,
   useConfigManagementStore,
 } from '@/app/dashboard/system/config/store';
+import { SelectionBanner } from '@/components/selection-banner';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
@@ -21,6 +22,10 @@ export function ConfigDataSection() {
     setConfigs,
     openEdit,
     setDeleteTarget,
+    selectedIds,
+    setSelectedIds,
+    clearSelectedIds,
+    setBulkDeleteOpen,
   } = useConfigManagementStore();
   const setRefreshing = useConfigManagementSetRefreshing();
   const setRefreshHandler = useConfigManagementSetRefreshHandler();
@@ -71,12 +76,72 @@ export function ConfigDataSection() {
     setDeleteTarget(config);
   };
 
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const next = new Set<number>();
+      configs.forEach((config) => {
+        if (prev.has(config.configId)) {
+          next.add(config.configId);
+        }
+      });
+      return next;
+    });
+  }, [configs, setSelectedIds]);
+
+  const selectedCount = selectedIds.size;
+  const isAllSelected =
+    configs.length > 0 &&
+    configs.every((config) => selectedIds.has(config.configId));
+  const headerCheckboxState = isAllSelected
+    ? true
+    : selectedCount > 0
+      ? ('indeterminate' as const)
+      : false;
+
+  const handleToggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(configs.map((config) => config.configId)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleToggleSelect = (configId: number, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) {
+        next.add(configId);
+      } else {
+        next.delete(configId);
+      }
+      return next;
+    });
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedCount === 0) {
+      return;
+    }
+    setBulkDeleteOpen(true);
+  };
+
   return (
-    <ConfigTable
-      rows={configs}
-      isLoading={configQuery.isLoading}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-    />
+    <div className="flex flex-col gap-4">
+      <SelectionBanner
+        count={selectedCount}
+        onClear={clearSelectedIds}
+        onBulkDelete={handleBulkDelete}
+      />
+      <ConfigTable
+        rows={configs}
+        isLoading={configQuery.isLoading}
+        selectedIds={selectedIds}
+        headerCheckboxState={headerCheckboxState}
+        onToggleSelectAll={handleToggleSelectAll}
+        onToggleSelect={handleToggleSelect}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+    </div>
   );
 }

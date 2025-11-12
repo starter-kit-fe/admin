@@ -49,6 +49,8 @@ export interface ProcessInfo {
   nextGC: number;
   cpuUsage: number;
   numCgoCall: number;
+  version: string;
+  commit: string;
 }
 
 export interface ServerStatus {

@@ -28,17 +28,35 @@ const LOGIN_ROUTE = '/login';
 
 let hasTriggeredUnauthorizedRedirect = false;
 
-const showSessionExpiredDialog = (message: string, onConfirm: () => void) => {
+const showSessionExpiredDialog = (
+  message: string,
+  onConfirm: () => void,
+  onCancel: () => void,
+) => {
   if (typeof window === 'undefined') {
     return;
   }
-  const confirmed =
-    typeof window.confirm === 'function' ? window.confirm(message) : true;
-  if (confirmed) {
-    onConfirm();
-    return;
-  }
-  hasTriggeredUnauthorizedRedirect = false;
+
+  const openDialog = () =>
+    import('@/components/session-expired-dialog')
+      .then(({ showSessionExpiredDialogUI }) => {
+        showSessionExpiredDialogUI({
+          message,
+          onConfirm,
+          onCancel,
+        });
+      })
+      .catch(() => {
+        const confirmed =
+          typeof window.confirm === 'function' ? window.confirm(message) : true;
+        if (confirmed) {
+          onConfirm();
+        } else {
+          onCancel();
+        }
+      });
+
+  void openDialog();
 };
 
 function isSuccessfulStatus(code?: number) {
@@ -100,9 +118,15 @@ export class HttpClient {
     const redirectParam = encodeURIComponent(currentUrl || '/');
     const target = `${LOGIN_ROUTE}?redirect=${redirectParam}`;
 
-    showSessionExpiredDialog(fallbackMessage, () => {
-      window.location.replace(target);
-    });
+    showSessionExpiredDialog(
+      fallbackMessage,
+      () => {
+        window.location.replace(target);
+      },
+      () => {
+        hasTriggeredUnauthorizedRedirect = false;
+      },
+    );
   }
 
   private unwrapResponse<T>(response: ApiResponse<T>): T {

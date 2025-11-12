@@ -1,10 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-
 import { listMenuTree, reorderMenus } from '@/app/dashboard/system/menu/api';
 import {
   useMenuManagementMutationCounter,
@@ -14,6 +9,12 @@ import {
 } from '@/app/dashboard/system/menu/store';
 import type { MenuOrderUpdate } from '@/app/dashboard/system/menu/type';
 import { reorderTree } from '@/app/dashboard/system/menu/utils';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+
 import { MenuTreeView } from '../tree/menu-tree-view';
 
 function useDebouncedValue<T>(value: T, delay: number) {
@@ -112,7 +113,7 @@ export function MenuTreeSection() {
 
   if (menuQuery.isError) {
     return (
-      <section className="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3  dark:border-border/40">
+      <Card className="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3  dark:border-border/40">
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-sm text-destructive">
           加载菜单失败，请稍后重试。
           <Button
@@ -124,22 +125,20 @@ export function MenuTreeSection() {
             重新加载
           </Button>
         </div>
-      </section>
+      </Card>
     );
   }
 
   return (
-    <section className="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3  dark:border-border/40">
-      <div className="flex-1 overflow-y-auto rounded-lg bg-muted/20 p-3 dark:bg-muted/10">
-        <MenuTreeView
-          nodes={menuTree}
-          loading={menuQuery.isLoading}
-          onAddChild={(parent) => openCreate(parent.menuId)}
-          onEdit={openEdit}
-          onDelete={setDeleteTarget}
-          onReorder={handleReorder}
-        />
-      </div>
-    </section>
+    <Card className="shadow-none p-4 border-none ">
+      <MenuTreeView
+        nodes={menuTree}
+        loading={menuQuery.isLoading}
+        onAddChild={(parent) => openCreate(parent.menuId)}
+        onEdit={openEdit}
+        onDelete={setDeleteTarget}
+        onReorder={handleReorder}
+      />
+    </Card>
   );
 }

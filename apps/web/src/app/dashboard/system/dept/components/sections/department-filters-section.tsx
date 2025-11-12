@@ -33,6 +33,12 @@ export function DepartmentFiltersSection() {
 
   const trimmedKeyword = keyword.trim();
 
+  const handleClearStatus = () => setStatus('all');
+  const handleClearAll = () => {
+    setKeyword('');
+    setStatus('all');
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <DepartmentFilters
@@ -44,8 +50,10 @@ export function DepartmentFiltersSection() {
       />
       <DepartmentAppliedFilters
         keyword={trimmedKeyword}
+        status={status}
         onClearKeyword={() => setKeyword('')}
-        onClearAll={() => setKeyword('')}
+        onClearStatus={handleClearStatus}
+        onClearAll={handleClearAll}
       />
     </div>
   );

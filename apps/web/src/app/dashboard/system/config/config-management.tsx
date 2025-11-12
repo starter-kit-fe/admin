@@ -1,5 +1,6 @@
 'use client';
 
+import { ConfigBulkDeleteDialog } from './components/dialogs/config-bulk-delete-dialog';
 import { ConfigDeleteDialog } from './components/dialogs/config-delete-dialog';
 import { ConfigEditorManager } from './components/editor/config-editor-manager';
 import { ConfigManagementHeader } from './components/layout/config-management-header';
@@ -13,6 +14,7 @@ export function ConfigManagement() {
       <ConfigFiltersSection />
       <ConfigDataSection />
       <ConfigEditorManager />
+      <ConfigBulkDeleteDialog />
       <ConfigDeleteDialog />
     </div>
   );

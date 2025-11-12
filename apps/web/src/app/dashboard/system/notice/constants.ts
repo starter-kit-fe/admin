@@ -1,10 +1,10 @@
 export const NOTICE_STATUS_TABS = [
-  { value: 'all', label: '全部' },
-  { value: '0', label: '正常' },
-  { value: '1', label: '停用' },
+  { value: 'all', label: '全部', color: 'bg-slate-900 text-white' },
+  { value: '0', label: '正常', color: 'bg-emerald-500 text-white' },
+  { value: '1', label: '停用', color: 'bg-rose-500 text-white' },
 ] as const;
 
-export const NOTICE_TYPE_TABS = [
+export const NOTICE_TYPE_OPTIONS = [
   { value: 'all', label: '全部类型' },
   { value: '1', label: '通知' },
   { value: '2', label: '公告' },

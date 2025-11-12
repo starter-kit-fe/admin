@@ -3,41 +3,25 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Trash2, X } from 'lucide-react';
 
-import { STATUS_TABS } from '../../constants';
-
-interface DepartmentAppliedFiltersProps {
-  keyword: string;
-  status: string;
-  onClearKeyword: () => void;
-  onClearStatus: () => void;
-  onClearAll: () => void;
+interface DictTypeAppliedFiltersProps {
+  dictName: string;
+  dictType: string;
+  onRemove: (key: 'dictName' | 'dictType') => void;
+  onClear: () => void;
 }
 
-export function DepartmentAppliedFilters({
-  keyword,
-  status,
-  onClearKeyword,
-  onClearStatus,
-  onClearAll,
-}: DepartmentAppliedFiltersProps) {
-  const chips: Array<{ key: string; label: string; value: string; onRemove: () => void }> = [];
-  const trimmedKeyword = keyword.trim();
-  if (trimmedKeyword) {
-    chips.push({
-      key: 'keyword',
-      label: '关键词',
-      value: trimmedKeyword,
-      onRemove: onClearKeyword,
-    });
+export function DictTypeAppliedFilters({
+  dictName,
+  dictType,
+  onRemove,
+  onClear,
+}: DictTypeAppliedFiltersProps) {
+  const chips = [] as Array<{ key: 'dictName' | 'dictType'; label: string; value: string }>;
+  if (dictName.trim()) {
+    chips.push({ key: 'dictName', label: '字典名称', value: dictName.trim() });
   }
-  if (status !== 'all') {
-    const statusMeta = STATUS_TABS.find((tab) => tab.value === status);
-    chips.push({
-      key: 'status',
-      label: '状态',
-      value: statusMeta?.label ?? status,
-      onRemove: onClearStatus,
-    });
+  if (dictType.trim()) {
+    chips.push({ key: 'dictType', label: '字典类型', value: dictType.trim() });
   }
 
   if (chips.length === 0) {
@@ -58,7 +42,7 @@ export function DepartmentAppliedFilters({
           <span className="text-foreground">{chip.value}</span>
           <button
             type="button"
-            onClick={chip.onRemove}
+            onClick={() => onRemove(chip.key)}
             className={cn('text-muted-foreground/70 transition-colors hover:text-muted-foreground')}
             aria-label={`移除 ${chip.label}`}
           >
@@ -70,7 +54,7 @@ export function DepartmentAppliedFilters({
         type="button"
         variant="link"
         className="inline-flex items-center gap-1 px-0 text-sm text-destructive hover:text-destructive dark:text-destructive dark:hover:text-destructive/80"
-        onClick={onClearAll}
+        onClick={onClear}
       >
         <Trash2 className="size-4" /> 清除
       </Button>

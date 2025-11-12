@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/starter-kit-fe/admin/constant"
 	"golang.org/x/sys/unix"
 )
 
@@ -89,6 +90,8 @@ type ProcessInfo struct {
 	NextGC        uint64  `json:"nextGC"`
 	CPUUsage      float64 `json:"cpuUsage"`
 	NumCgoCall    int64   `json:"numCgoCall"`
+	Version       string  `json:"version"`
+	Commit        string  `json:"commit"`
 }
 
 func (s *Service) GetStatus(ctx context.Context) (*Status, error) {
@@ -302,6 +305,8 @@ func (s *Service) collectProcessInfo() ProcessInfo {
 		NextGC:        memStats.NextGC,
 		CPUUsage:      round(cpuUsage, 2),
 		NumCgoCall:    runtime.NumCgoCall(),
+		Version:       constant.VERSION,
+		Commit:        constant.COMMIT,
 	}
 }
 

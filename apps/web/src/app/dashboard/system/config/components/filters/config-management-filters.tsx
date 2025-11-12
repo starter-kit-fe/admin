@@ -1,7 +1,6 @@
 'use client';
 
 import { type StatusTabItem, StatusTabs } from '@/components/status-tabs';
-import { Button } from '@/components/ui/button';
 import {
   InputGroup,
   InputGroupAddon,
@@ -9,6 +8,12 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group';
 import { KeyRound, Search, X } from 'lucide-react';
+
+import {
+  ConfigAppliedFilters,
+  type ConfigFilterChip,
+  type ConfigFilterKey,
+} from './applied-filters';
 
 interface ConfigManagementFiltersProps {
   configType: string;
@@ -18,7 +23,8 @@ interface ConfigManagementFiltersProps {
   configKey: string;
   onConfigKeyChange: (value: string) => void;
   typeTabs: StatusTabItem[];
-  onReset: () => void;
+  appliedFilters: ConfigFilterChip[];
+  onRemoveFilter: (key: ConfigFilterKey) => void;
 }
 
 export function ConfigManagementFilters({
@@ -29,7 +35,8 @@ export function ConfigManagementFilters({
   configKey,
   onConfigKeyChange,
   typeTabs,
-  onReset,
+  appliedFilters,
+  onRemoveFilter,
 }: ConfigManagementFiltersProps) {
   return (
     <div className="space-y-4 rounded-xl bg-card p-4">
@@ -38,8 +45,8 @@ export function ConfigManagementFilters({
         onValueChange={onConfigTypeChange}
         tabs={typeTabs}
       />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <InputGroup className="border-muted bg-muted/60">
+      <div className="flex flex-col gap-3 lg:flex-row">
+        <InputGroup className="border-muted bg-muted/60 lg:flex-1">
           <InputGroupAddon>
             <Search className="size-4 text-muted-foreground" />
           </InputGroupAddon>
@@ -60,7 +67,7 @@ export function ConfigManagementFilters({
             </InputGroupButton>
           ) : null}
         </InputGroup>
-        <InputGroup className="border-muted bg-muted/60">
+        <InputGroup className="border-muted bg-muted/60 lg:flex-1">
           <InputGroupAddon>
             <KeyRound className="size-4 text-muted-foreground" />
           </InputGroupAddon>
@@ -82,11 +89,10 @@ export function ConfigManagementFilters({
           ) : null}
         </InputGroup>
       </div>
-      <div className="flex justify-end">
-        <Button type="button" variant="ghost" size="sm" onClick={onReset}>
-          重置
-        </Button>
-      </div>
+      <ConfigAppliedFilters
+        items={appliedFilters}
+        onRemove={onRemoveFilter}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Github, Mail, Twitter } from 'lucide-react';
 import Link from 'next/link';
 
+import gpkg from '../../../../package.json';
 import pkg from '../../package.json';
 
 const FOOTER_LINK_GROUPS = [
@@ -123,7 +124,8 @@ export default function Footer() {
         </div>
         <div className="mt-12 flex flex-col gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {year} {pkg.seo.og.title}. 保留所有权利。
+            © 2018 - {year} {pkg.seo.og.title}. 保留所有权利。| &nbsp;v
+            {gpkg.version}
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <span>主题：</span>

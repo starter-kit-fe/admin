@@ -4,9 +4,10 @@ import {
   type TypeStatusValue,
   useDictManagementStore,
 } from '@/app/dashboard/system/dict/store';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { DEFAULT_DEBOUNCE_MS, TYPE_STATUS_TABS } from '../../constants';
+import { DictTypeAppliedFilters } from '../filters/dict-type-applied-filters';
 import { DictTypeFilters } from '../filters/dict-type-filters';
 
 export function DictTypeFiltersSection() {
@@ -15,6 +16,7 @@ export function DictTypeFiltersSection() {
     setTypeStatus,
     typeFilterForm,
     setTypeFilterForm,
+    typeAppliedFilters,
     applyTypeFilters,
     resetTypeFilters,
   } = useDictManagementStore();
@@ -38,20 +40,43 @@ export function DictTypeFiltersSection() {
     };
   }, [applyTypeFilters, typeFilterForm.dictName, typeFilterForm.dictType]);
 
+  const handleRemoveAppliedFilter = useCallback(
+    (key: 'dictName' | 'dictType') => {
+      setTypeFilterForm((prev) => ({ ...prev, [key]: '' }));
+      const nextFilters = {
+        dictName: key === 'dictName' ? '' : typeAppliedFilters.dictName,
+        dictType: key === 'dictType' ? '' : typeAppliedFilters.dictType,
+      };
+      applyTypeFilters(nextFilters, { force: true });
+    },
+    [applyTypeFilters, setTypeFilterForm, typeAppliedFilters.dictName, typeAppliedFilters.dictType],
+  );
+
+  const handleClearFilters = useCallback(() => {
+    resetTypeFilters();
+  }, [resetTypeFilters]);
+
   return (
-    <DictTypeFilters
-      status={typeStatus}
-      statusTabs={statusTabs}
-      dictName={typeFilterForm.dictName}
-      dictType={typeFilterForm.dictType}
-      onStatusChange={handleStatusChange}
-      onDictNameChange={(value) =>
-        setTypeFilterForm((prev) => ({ ...prev, dictName: value }))
-      }
-      onDictTypeChange={(value) =>
-        setTypeFilterForm((prev) => ({ ...prev, dictType: value }))
-      }
-      onReset={() => resetTypeFilters()}
-    />
+    <div className="space-y-3">
+      <DictTypeFilters
+        status={typeStatus}
+        statusTabs={statusTabs}
+        dictName={typeFilterForm.dictName}
+        dictType={typeFilterForm.dictType}
+        onStatusChange={handleStatusChange}
+        onDictNameChange={(value) =>
+          setTypeFilterForm((prev) => ({ ...prev, dictName: value }))
+        }
+        onDictTypeChange={(value) =>
+          setTypeFilterForm((prev) => ({ ...prev, dictType: value }))
+        }
+      />
+      <DictTypeAppliedFilters
+        dictName={typeAppliedFilters.dictName}
+        dictType={typeAppliedFilters.dictType}
+        onRemove={handleRemoveAppliedFilter}
+        onClear={handleClearFilters}
+      />
+    </div>
   );
 }

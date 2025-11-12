@@ -7,6 +7,7 @@ import {
 } from '@/app/dashboard/system/dept/store';
 import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
@@ -82,7 +83,7 @@ export function DepartmentTreeSection() {
   };
 
   return (
-    <section className="flex max-h-[520px] flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3  dark:border-border/40">
+    <Card className="flex max-h-[520px] shadow-none flex-col overflow-hidden rounded-xl border border-border/60 bg-card  py-0  dark:border-border/40">
       {departmentQuery.isLoading && departmentTree.length === 0 ? (
         <div className="flex flex-1 items-center justify-center">
           <InlineLoading label="加载部门数据..." />
@@ -109,6 +110,6 @@ export function DepartmentTreeSection() {
           />
         </div>
       )}
-    </section>
+    </Card>
   );
 }

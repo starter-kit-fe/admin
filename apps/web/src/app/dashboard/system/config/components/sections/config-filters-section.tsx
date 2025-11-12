@@ -4,9 +4,13 @@ import {
   type ConfigTypeValue,
   useConfigManagementStore,
 } from '@/app/dashboard/system/config/store';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { CONFIG_TYPE_TABS } from '../../constants';
+import type {
+  ConfigFilterChip,
+  ConfigFilterKey,
+} from '../filters/applied-filters';
 import { ConfigManagementFilters } from '../filters/config-management-filters';
 
 export function ConfigFiltersSection() {
@@ -15,8 +19,8 @@ export function ConfigFiltersSection() {
     setConfigType,
     filterForm,
     setFilterForm,
+    appliedFilters,
     applyFilters,
-    resetFilters,
   } = useConfigManagementStore();
 
   useEffect(() => {
@@ -39,9 +43,38 @@ export function ConfigFiltersSection() {
     setConfigType(value as ConfigTypeValue);
   };
 
-  const handleReset = () => {
-    resetFilters();
-    applyFilters({ configName: '', configKey: '' }, { force: true });
+  const filterChips = useMemo(() => {
+    const chips: ConfigFilterChip[] = [];
+    if (appliedFilters.configName) {
+      chips.push({
+        key: 'configName',
+        label: '参数名称',
+        value: appliedFilters.configName,
+      });
+    }
+    if (appliedFilters.configKey) {
+      chips.push({
+        key: 'configKey',
+        label: '参数键名',
+        value: appliedFilters.configKey,
+      });
+    }
+    return chips;
+  }, [appliedFilters.configKey, appliedFilters.configName]);
+
+  const handleRemoveFilter = (key: ConfigFilterKey) => {
+    const nextFilters = {
+      configName: key === 'configName' ? '' : filterForm.configName,
+      configKey: key === 'configKey' ? '' : filterForm.configKey,
+    };
+    setFilterForm(nextFilters);
+    applyFilters(
+      {
+        configName: nextFilters.configName.trim(),
+        configKey: nextFilters.configKey.trim(),
+      },
+      { force: true },
+    );
   };
 
   return (
@@ -57,7 +90,8 @@ export function ConfigFiltersSection() {
         setFilterForm((prev) => ({ ...prev, configKey: value }))
       }
       typeTabs={CONFIG_TYPE_TABS}
-      onReset={handleReset}
+      appliedFilters={filterChips}
+      onRemoveFilter={handleRemoveFilter}
     />
   );
 }

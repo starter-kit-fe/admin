@@ -17,6 +17,11 @@ import {
 } from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   Table,
   TableBody,
   TableCell,
@@ -32,7 +37,12 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Clock, MoreHorizontal, Play, Trash2 } from 'lucide-react';
-import { useMemo } from 'react';
+import {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { STATUS_BADGE_VARIANT } from '../../constants';
 import type { Job } from '../../type';
@@ -41,6 +51,15 @@ import {
   resolveMisfireLabel,
   resolveStatusLabel,
 } from '../../utils';
+
+function PinnedColumnShade() {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-y-0 -left-3 w-3 bg-gradient-to-r from-slate-950/25 via-slate-950/10 to-transparent"
+    />
+  );
+}
 
 interface JobTableProps {
   rows: Job[];
@@ -88,13 +107,16 @@ export function JobTable({
       }),
       columnHelper.accessor('invokeTarget', {
         header: () => '调用目标',
-        cell: ({ getValue }) => (
-          <div className="max-w-[320px] truncate font-mono text-xs">
-            {getValue()}
-          </div>
-        ),
+        cell: ({ getValue }) => {
+          const target = getValue();
+          if (!target) {
+            return <span className="text-xs text-muted-foreground">-</span>;
+          }
+          return <InvokeTargetValue value={target} />;
+        },
         meta: {
-          headerClassName: 'min-w-[280px]',
+          headerClassName: 'w-[320px]',
+          cellClassName: 'w-[320px]',
         },
       }),
       columnHelper.accessor('cronExpression', {
@@ -157,7 +179,12 @@ export function JobTable({
       }),
       columnHelper.display({
         id: 'actions',
-        header: () => <span className="block text-right">操作</span>,
+        header: () => (
+          <div className="relative flex justify-end">
+            <PinnedColumnShade />
+            <span>操作</span>
+          </div>
+        ),
         cell: ({ row }) => {
           const job = row.original;
           const jobId = job.jobId;
@@ -166,7 +193,8 @@ export function JobTable({
           const nextStatus = job.status === '0' ? '1' : '0';
 
           return (
-            <div className="flex justify-end">
+            <div className="relative flex justify-end">
+              <PinnedColumnShade />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 px-2">
@@ -220,8 +248,10 @@ export function JobTable({
           );
         },
         meta: {
-          headerClassName: 'w-[120px] text-right',
-          cellClassName: 'text-right',
+          headerClassName:
+            'sticky right-0 z-20 w-[120px] bg-card text-right border-l border-border/60 overflow-visible',
+          cellClassName:
+            'sticky right-0 z-10 w-[120px] bg-card text-right border-l border-border/60 overflow-visible group-hover:bg-muted/60',
         },
       }),
     ],
@@ -308,7 +338,7 @@ export function JobTable({
           table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
-              className="transition-colors hover:bg-muted/60"
+              className="group transition-colors hover:bg-muted/60"
             >
               {row.getVisibleCells().map((cell) => (
                 <TableCell
@@ -330,6 +360,66 @@ export function JobTable({
         )}
       </TableBody>
     </Table>
+  );
+}
+
+function InvokeTargetValue({ value }: { value: string }) {
+  const [node, setNode] = useState<HTMLDivElement | null>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+
+  const handleRef = useCallback((element: HTMLDivElement | null) => {
+    setNode(element);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!node) {
+      setIsOverflowing(false);
+      return;
+    }
+
+    const checkOverflow = () => {
+      const hasOverflow =
+        node.scrollWidth > node.clientWidth ||
+        node.scrollHeight > node.clientHeight;
+      setIsOverflowing((prev) => (prev === hasOverflow ? prev : hasOverflow));
+    };
+
+    checkOverflow();
+
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      checkOverflow();
+    });
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+    };
+  }, [node, value]);
+
+  const content = (
+    <div ref={handleRef} className="w-[320px] truncate font-mono text-xs">
+      {value}
+    </div>
+  );
+
+  if (!isOverflowing) {
+    return content;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{content}</TooltipTrigger>
+      <TooltipContent
+        side="top"
+        align="start"
+        className="max-w-xl break-words font-mono text-xs"
+      >
+        {value}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

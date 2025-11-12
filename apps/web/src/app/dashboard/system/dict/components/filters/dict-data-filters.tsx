@@ -6,7 +6,6 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group';
-import { Button } from '@/components/ui/button';
 import { Tag, Hash, X } from 'lucide-react';
 
 interface DictDataFiltersProps {
@@ -14,7 +13,6 @@ interface DictDataFiltersProps {
   dictValue: string;
   onDictLabelChange: (value: string) => void;
   onDictValueChange: (value: string) => void;
-  onReset: () => void;
 }
 
 export function DictDataFilters({
@@ -22,15 +20,13 @@ export function DictDataFilters({
   dictValue,
   onDictLabelChange,
   onDictValueChange,
-  onReset,
 }: DictDataFiltersProps) {
   return (
     <div className="space-y-3">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <InputGroup className="border-muted bg-muted/60">
+      <div className="flex flex-wrap gap-3">
+        <InputGroup className="w-full border-muted bg-muted/60 sm:w-[200px]">
           <InputGroupAddon>
             <Tag className="size-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">字典标签</span>
           </InputGroupAddon>
           <InputGroupInput
             placeholder="输入字典标签"
@@ -48,10 +44,9 @@ export function DictDataFilters({
             </InputGroupButton>
           ) : null}
         </InputGroup>
-        <InputGroup className="border-muted bg-muted/60">
+        <InputGroup className="w-full border-muted bg-muted/60 sm:w-[200px]">
           <InputGroupAddon>
             <Hash className="size-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">字典键值</span>
           </InputGroupAddon>
           <InputGroupInput
             placeholder="输入字典键值"
@@ -69,11 +64,6 @@ export function DictDataFilters({
             </InputGroupButton>
           ) : null}
         </InputGroup>
-      </div>
-      <div className="flex justify-end">
-        <Button type="button" variant="ghost" size="sm" onClick={onReset}>
-          重置
-        </Button>
       </div>
     </div>
   );

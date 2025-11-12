@@ -27,7 +27,6 @@ export function DictDataSection() {
     setDataFilterForm,
     dataAppliedFilters,
     applyDataFilters,
-    resetDataFilters,
     dictData,
     setDictData,
     dictDataTotal,
@@ -88,12 +87,14 @@ export function DictDataSection() {
 
   useEffect(() => {
     if (dataQuery.data) {
-      setDictData(dataQuery.data.items);
-      setDictDataTotal(dataQuery.data.total);
-    } else {
-      setDictData([]);
-      setDictDataTotal(0);
+      const items = dataQuery.data.items ?? [];
+      setDictData(items);
+      setDictDataTotal(items.length);
+      return;
     }
+
+    setDictData([]);
+    setDictDataTotal(0);
   }, [dataQuery.data, setDictData, setDictDataTotal]);
 
   if (!selectedDict || selectedDictId == null) {
@@ -123,17 +124,16 @@ export function DictDataSection() {
   };
 
   return (
-    <Card className="border border-border/60 dark:border-border/40">
+    <Card className="flex h-[620px] flex-col shadow-none">
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <DictDataToolbar
-          dictType={selectedDict}
           status={dataStatus}
           statusTabs={statusTabs}
           onStatusChange={handleStatusChange}
           onAdd={handleAdd}
         />
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-1 flex-col gap-4 overflow-hidden">
         <DictDataFilters
           dictLabel={dataFilterForm.dictLabel}
           dictValue={dataFilterForm.dictValue}
@@ -143,17 +143,21 @@ export function DictDataSection() {
           onDictValueChange={(value) =>
             setDataFilterForm((prev) => ({ ...prev, dictValue: value }))
           }
-          onReset={() => resetDataFilters()}
         />
 
-        <DictDataTable
-          rows={dictData}
-          isLoading={dataQuery.isLoading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+        <div className="flex-1 overflow-hidden">
+          <DictDataTable
+            rows={dictData}
+            isLoading={dataQuery.isLoading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            className="h-full"
+          />
+        </div>
 
-        <p className="text-xs text-muted-foreground">共 {dictDataTotal} 条字典数据。</p>
+        <p className="text-xs text-muted-foreground">
+          共 {dictDataTotal} 条字典数据。
+        </p>
       </CardContent>
     </Card>
   );

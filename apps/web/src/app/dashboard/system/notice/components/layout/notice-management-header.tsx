@@ -3,7 +3,7 @@
 import { ManagementHeader } from '@/components/dashboard/management-header';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { Megaphone, RefreshCw } from 'lucide-react';
+import { Megaphone, RefreshCw, Trash2 } from 'lucide-react';
 
 import {
   useNoticeManagementRefresh,
@@ -12,10 +12,12 @@ import {
 } from '@/app/dashboard/system/notice/store';
 
 export function NoticeManagementHeader() {
-  const { notices, openCreate } = useNoticeManagementStore();
+  const { notices, openCreate, selectedIds, setBulkDeleteOpen } =
+    useNoticeManagementStore();
   const { isRefreshing, isMutating } = useNoticeManagementStatus();
   const refresh = useNoticeManagementRefresh();
   const refreshDisabled = isRefreshing || isMutating;
+  const selectedCount = selectedIds.size;
 
   return (
     <section className="flex flex-col gap-2">
@@ -24,6 +26,21 @@ export function NoticeManagementHeader() {
         description="管理系统通知与公告内容，可快速筛选、创建与下线。"
         actions={
           <>
+            <Button
+              type="button"
+              variant="outline"
+              className="relative"
+              onClick={() => setBulkDeleteOpen(true)}
+              disabled={selectedCount === 0 || isMutating}
+            >
+              <Trash2 className="size-4" />
+              批量删除
+              {selectedCount > 0 ? (
+                <span className="ml-1 text-xs text-muted-foreground">
+                  ({selectedCount})
+                </span>
+              ) : null}
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -49,7 +66,7 @@ export function NoticeManagementHeader() {
         }
       />
       <p className="text-xs text-muted-foreground">
-        当前共 {notices.length} 条记录。
+        当前共 {notices.length} 条记录，已选择 {selectedCount} 条。
       </p>
     </section>
   );

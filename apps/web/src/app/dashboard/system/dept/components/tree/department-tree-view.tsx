@@ -143,7 +143,7 @@ export function DepartmentTreeView({
   const renderNodes = useCallback(
     (
       items: DepartmentNode[],
-      depth = 1,
+      depth = 0,
       ancestors: boolean[] = [],
     ): ReactElement[] => {
       return items.map((item, index) => {
@@ -154,81 +154,83 @@ export function DepartmentTreeView({
 
         return (
           <div key={item.deptId} className="space-y-1">
-            <div className="flex items-start gap-2 rounded-md px-2 py-2 transition-colors hover:bg-muted/40 dark:hover:bg-muted/20">
+            <div className="flex items-stretch">
               <TreeLines depth={depth} ancestors={ancestors} isLast={isLast} />
-              {hasChildren ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 shrink-0 text-muted-foreground"
-                  onClick={() => toggleNode(item.deptId)}
-                >
-                  {isExpanded ? (
-                    <ChevronDown className="h-4 w-4" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4" />
-                  )}
-                </Button>
-              ) : (
-                <span className="h-6 w-6 shrink-0" />
-              )}
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="truncate text-sm font-medium text-foreground">
-                    {item.deptName}
-                  </span>
-                  {statusMeta ? (
-                    <Badge
-                      className={cn(
-                        'px-2 py-0.5 text-[11px] font-medium',
-                        statusMeta.className,
-                      )}
-                    >
-                      {statusMeta.label}
-                    </Badge>
-                  ) : null}
-                </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                  {item.leader ? <span>负责人：{item.leader}</span> : null}
-                  {item.phone ? <span>电话：{item.phone}</span> : null}
-                  {item.email ? <span>邮箱：{item.email}</span> : null}
-                </div>
-                {item.remark ? (
-                  <div className="text-xs text-muted-foreground/80">
-                    备注：{item.remark}
-                  </div>
-                ) : null}
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              <div className="flex flex-1 items-start gap-2 rounded-md px-2 py-2 transition-colors hover:bg-muted/40 dark:hover:bg-muted/20">
+                {hasChildren ? (
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 shrink-0 text-muted-foreground"
+                    className="h-6 w-6 shrink-0 text-muted-foreground"
+                    onClick={() => toggleNode(item.deptId)}
                   >
-                    <MoreHorizontal className="h-4 w-4" />
+                    {isExpanded ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-36">
-                  <DropdownMenuItem onClick={() => onAddChild(item)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    新增子部门
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onEdit(item)}>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    编辑
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                    onClick={() => onDelete(item)}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    删除
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                ) : (
+                  <span className="h-6 w-6 shrink-0" />
+                )}
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {item.deptName}
+                    </span>
+                    {statusMeta ? (
+                      <Badge
+                        className={cn(
+                          'px-2 py-0.5 text-[11px] font-medium',
+                          statusMeta.className,
+                        )}
+                      >
+                        {statusMeta.label}
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    {item.leader ? <span>负责人：{item.leader}</span> : null}
+                    {item.phone ? <span>电话：{item.phone}</span> : null}
+                    {item.email ? <span>邮箱：{item.email}</span> : null}
+                  </div>
+                  {item.remark ? (
+                    <div className="text-xs text-muted-foreground/80">
+                      备注：{item.remark}
+                    </div>
+                  ) : null}
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 text-muted-foreground"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36">
+                    <DropdownMenuItem onClick={() => onAddChild(item)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      新增子部门
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onEdit(item)}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      编辑
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                      onClick={() => onDelete(item)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      删除
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
             {hasChildren && isExpanded ? (
               <div className="space-y-1">

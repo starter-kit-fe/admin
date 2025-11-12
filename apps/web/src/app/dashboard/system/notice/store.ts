@@ -4,12 +4,12 @@ import { atom, useAtomValue, useSetAtom } from 'jotai';
 
 import {
   NOTICE_STATUS_TABS,
-  NOTICE_TYPE_TABS,
+  NOTICE_TYPE_OPTIONS,
 } from './constants';
 import type { Notice } from './type';
 
 export type NoticeStatusValue = (typeof NOTICE_STATUS_TABS)[number]['value'];
-export type NoticeTypeValue = (typeof NOTICE_TYPE_TABS)[number]['value'];
+export type NoticeTypeValue = (typeof NOTICE_TYPE_OPTIONS)[number]['value'];
 
 type FilterState = {
   noticeTitle: string;
@@ -30,9 +30,11 @@ const filterFormAtom = atom<FilterState>({ noticeTitle: '' });
 const appliedFiltersAtom = atom<FilterState>({ noticeTitle: '' });
 
 const noticesAtom = atom<Notice[]>([]);
+const selectedIdsAtom = atom<Set<number>>(new Set<number>());
 
 const editorStateAtom = atom<EditorState>({ open: false });
 const deleteTargetAtom = atom<Notice | null>(null);
+const bulkDeleteOpenAtom = atom(false);
 
 const refreshingAtom = atom(false);
 const activeMutationsAtom = atom(0);
@@ -43,12 +45,14 @@ const refreshActionAtom = atom<{ current: () => void }>({
 
 const setStatusAtom = atom(null, (_get, set, value: NoticeStatusValue) => {
   set(statusAtom, value);
+  set(selectedIdsAtom, new Set<number>());
 });
 
 const setNoticeTypeAtom = atom(
   null,
   (_get, set, value: NoticeTypeValue) => {
     set(noticeTypeAtom, value);
+    set(selectedIdsAtom, new Set<number>());
   },
 );
 
@@ -67,17 +71,26 @@ const setFilterFormAtom = atom(
 const applyFiltersAtom = atom(
   null,
   (
-    _get,
+    get,
     set,
     payload: { filters: FilterState; force?: boolean },
   ) => {
-    set(appliedFiltersAtom, { ...payload.filters });
+    const { filters, force = false } = payload;
+    const previous = get(appliedFiltersAtom);
+    const hasChanged =
+      force || previous.noticeTitle !== filters.noticeTitle;
+    if (!hasChanged) {
+      return;
+    }
+    set(appliedFiltersAtom, { ...filters });
+    set(selectedIdsAtom, new Set<number>());
   },
 );
 
 const resetFiltersAtom = atom(null, (_get, set) => {
   set(filterFormAtom, { noticeTitle: '' });
   set(appliedFiltersAtom, { noticeTitle: '' });
+  set(selectedIdsAtom, new Set<number>());
 });
 
 const setNoticesAtom = atom(
@@ -86,6 +99,41 @@ const setNoticesAtom = atom(
     set(noticesAtom, notices);
   },
 );
+
+const setSelectedIdsAtom = atom(
+  null,
+  (get, set, action: SetStateAction<Set<number>>) => {
+    const current = get(selectedIdsAtom);
+    const base = new Set(current);
+    const resolved =
+      typeof action === 'function'
+        ? (action as (prev: Set<number>) => Set<number>)(base)
+        : action;
+    const next: Set<number> =
+      resolved instanceof Set
+        ? resolved
+        : new Set<number>(resolved as Iterable<number>);
+    let changed = next.size !== current.size;
+    if (!changed) {
+      next.forEach((id: number) => {
+        if (!current.has(id)) {
+          changed = true;
+        }
+      });
+    }
+    if (!changed) {
+      return;
+    }
+    set(selectedIdsAtom, new Set(next));
+  },
+);
+
+const clearSelectedIdsAtom = atom(null, (get, set) => {
+  if (get(selectedIdsAtom).size === 0) {
+    return;
+  }
+  set(selectedIdsAtom, new Set<number>());
+});
 
 const openCreateAtom = atom(null, (_get, set) => {
   set(editorStateAtom, { open: true, mode: 'create' });
@@ -103,6 +151,13 @@ const setDeleteTargetAtom = atom(
   null,
   (_get, set, notice: Notice | null) => {
     set(deleteTargetAtom, notice);
+  },
+);
+
+const setBulkDeleteOpenAtom = atom(
+  null,
+  (_get, set, open: boolean) => {
+    set(bulkDeleteOpenAtom, open);
   },
 );
 
@@ -140,12 +195,17 @@ export interface NoticeManagementStore {
   resetFilters: () => void;
   notices: Notice[];
   setNotices: (notices: Notice[]) => void;
+  selectedIds: Set<number>;
+  setSelectedIds: (action: SetStateAction<Set<number>>) => void;
+  clearSelectedIds: () => void;
   editorState: EditorState;
   openCreate: () => void;
   openEdit: (notice: Notice) => void;
   closeEditor: () => void;
   deleteTarget: Notice | null;
   setDeleteTarget: (notice: Notice | null) => void;
+  bulkDeleteOpen: boolean;
+  setBulkDeleteOpen: (open: boolean) => void;
 }
 
 export const useNoticeManagementStore = (): NoticeManagementStore => {
@@ -154,8 +214,10 @@ export const useNoticeManagementStore = (): NoticeManagementStore => {
   const filterForm = useAtomValue(filterFormAtom);
   const appliedFilters = useAtomValue(appliedFiltersAtom);
   const notices = useAtomValue(noticesAtom);
+  const selectedIds = useAtomValue(selectedIdsAtom);
   const editorState = useAtomValue(editorStateAtom);
   const deleteTarget = useAtomValue(deleteTargetAtom);
+  const bulkDeleteOpen = useAtomValue(bulkDeleteOpenAtom);
 
   const setStatus = useSetAtom(setStatusAtom);
   const setNoticeType = useSetAtom(setNoticeTypeAtom);
@@ -163,10 +225,13 @@ export const useNoticeManagementStore = (): NoticeManagementStore => {
   const applyFiltersSetter = useSetAtom(applyFiltersAtom);
   const resetFilters = useSetAtom(resetFiltersAtom);
   const setNotices = useSetAtom(setNoticesAtom);
+  const setSelectedIds = useSetAtom(setSelectedIdsAtom);
+  const clearSelectedIds = useSetAtom(clearSelectedIdsAtom);
   const openCreate = useSetAtom(openCreateAtom);
   const openEdit = useSetAtom(openEditAtom);
   const closeEditor = useSetAtom(closeEditorAtom);
   const setDeleteTarget = useSetAtom(setDeleteTargetAtom);
+  const setBulkDeleteOpen = useSetAtom(setBulkDeleteOpenAtom);
 
   const applyFilters = (
     filters: FilterState,
@@ -187,12 +252,17 @@ export const useNoticeManagementStore = (): NoticeManagementStore => {
     resetFilters,
     notices,
     setNotices,
+    selectedIds,
+    setSelectedIds,
+    clearSelectedIds,
     editorState,
     openCreate,
     openEdit,
     closeEditor,
     deleteTarget,
     setDeleteTarget,
+    bulkDeleteOpen,
+    setBulkDeleteOpen,
   };
 };
 

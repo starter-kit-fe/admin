@@ -12,7 +12,7 @@ import {
 import { listNotices } from '../../api';
 import { BASE_NOTICE_QUERY_KEY } from '../../constants';
 import type { Notice } from '../../type';
-import { NoticeList } from '../list/notice-list';
+import { NoticeTable } from '../list/notice-table';
 
 export function NoticeDataSection() {
   const {
@@ -23,6 +23,9 @@ export function NoticeDataSection() {
     setNotices,
     openEdit,
     setDeleteTarget,
+    selectedIds,
+    setSelectedIds,
+    clearSelectedIds,
   } = useNoticeManagementStore();
   const setRefreshing = useNoticeManagementSetRefreshing();
   const setRefreshHandler = useNoticeManagementSetRefreshHandler();
@@ -52,6 +55,32 @@ export function NoticeDataSection() {
   }, [noticeQuery.data, noticeQuery.isLoading, setNotices]);
 
   useEffect(() => {
+    const validIds = new Set(notices.map((notice) => notice.noticeId));
+    if (validIds.size === 0) {
+      clearSelectedIds();
+      return;
+    }
+    setSelectedIds((prev) => {
+      let hasChanges = false;
+      prev.forEach((id) => {
+        if (!validIds.has(id)) {
+          hasChanges = true;
+        }
+      });
+      if (!hasChanges) {
+        return prev;
+      }
+      const next = new Set<number>();
+      prev.forEach((id) => {
+        if (validIds.has(id)) {
+          next.add(id);
+        }
+      });
+      return next;
+    });
+  }, [clearSelectedIds, notices, setSelectedIds]);
+
+  useEffect(() => {
     setRefreshing(noticeQuery.isFetching);
   }, [noticeQuery.isFetching, setRefreshing]);
 
@@ -74,10 +103,46 @@ export function NoticeDataSection() {
 
   const initialLoading = noticeQuery.isLoading && notices.length === 0;
 
+  const totalRecords = notices.length;
+  const selectedCount = selectedIds.size;
+  const headerCheckboxState =
+    totalRecords === 0
+      ? false
+      : selectedCount === totalRecords
+        ? true
+        : selectedCount > 0
+          ? 'indeterminate'
+          : false;
+
+  const handleToggleSelectAll = (checked: boolean) => {
+    if (!checked) {
+      clearSelectedIds();
+      return;
+    }
+    const next = new Set<number>(notices.map((notice) => notice.noticeId));
+    setSelectedIds(next);
+  };
+
+  const handleToggleSelect = (noticeId: number, checked: boolean) => {
+    setSelectedIds((prev) => {
+      if (checked) {
+        prev.add(noticeId);
+      } else {
+        prev.delete(noticeId);
+      }
+      return prev;
+    });
+  };
+
   return (
-    <NoticeList
+    <NoticeTable
       records={notices}
       loading={initialLoading}
+      isError={noticeQuery.isError}
+      headerCheckboxState={headerCheckboxState}
+      onToggleSelectAll={handleToggleSelectAll}
+      selectedIds={selectedIds}
+      onToggleSelect={handleToggleSelect}
       onEdit={handleEdit}
       onDelete={handleDelete}
     />
