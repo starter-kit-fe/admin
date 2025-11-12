@@ -21,6 +21,7 @@ import (
 	"github.com/starter-kit-fe/admin/internal/system/online"
 	"github.com/starter-kit-fe/admin/middleware"
 	jwtpkg "github.com/starter-kit-fe/admin/pkg/jwt"
+	"github.com/starter-kit-fe/admin/pkg/netutil"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 	"github.com/starter-kit-fe/admin/pkg/security"
 )
@@ -684,7 +685,7 @@ func clientIP(ctx *gin.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	return strings.TrimSpace(ctx.ClientIP())
+	return netutil.RealIPFromContext(ctx)
 }
 
 func parseUserAgent(ua string) (string, string) {

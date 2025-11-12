@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/starter-kit-fe/admin/pkg/netutil"
 )
 
 // RequestLogger logs basic request/response metadata with the provided slog logger.
@@ -21,7 +23,7 @@ func RequestLogger(logger *slog.Logger) gin.HandlerFunc {
 			"path", ctx.Request.URL.Path,
 			"status", ctx.Writer.Status(),
 			"duration", time.Since(start).String(),
-			"ip", ctx.ClientIP(),
+			"ip", netutil.RealIPFromContext(ctx),
 		)
 	}
 }

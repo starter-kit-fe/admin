@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/starter-kit-fe/admin/pkg/netutil"
 )
 
 // NewLoginMiddleware builds middleware that records login attempts via provided logger.
@@ -44,7 +46,7 @@ func NewLoginMiddleware(logger LoginLogger, opts LoginOptions) gin.HandlerFunc {
 
 		entry := LoginEntry{
 			UserName:   username,
-			IP:         ctx.ClientIP(),
+			IP:         netutil.RealIPFromContext(ctx),
 			Location:   "",
 			Browser:    browser,
 			OS:         os,

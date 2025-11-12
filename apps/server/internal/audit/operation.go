@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/starter-kit-fe/admin/middleware"
+	"github.com/starter-kit-fe/admin/pkg/netutil"
 )
 
 // NewOperationMiddleware builds a Gin middleware that persists operation logs through the provided logger.
@@ -51,7 +52,7 @@ func NewOperationMiddleware(logger OperationLogger, resolver UserResolver, opts 
 		handlerName := shortHandlerName(ctx.HandlerName())
 		templatePath := ctx.FullPath()
 		rawPath := ctx.Request.URL.Path
-		clientIP := ctx.ClientIP()
+		clientIP := netutil.RealIPFromContext(ctx)
 
 		ctx.Next()
 

@@ -2,13 +2,13 @@ package middleware
 
 import (
 	"log/slog"
-	"net"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
 
+	"github.com/starter-kit-fe/admin/pkg/netutil"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
@@ -51,7 +51,7 @@ func NewThrottleMiddleware(limit rate.Limit, burst int, keyFn KeyFunc, logger *s
 			if v := keyFn(ctx); v != "" {
 				key = v
 			}
-		} else if ip := clientIP(ctx); ip != "" {
+		} else if ip := netutil.RealIPFromContext(ctx); ip != "" {
 			key = ip
 		}
 
@@ -81,17 +81,4 @@ func NewThrottleMiddleware(limit rate.Limit, burst int, keyFn KeyFunc, logger *s
 
 		ctx.Next()
 	}
-}
-
-func clientIP(ctx *gin.Context) string {
-	ip := ctx.ClientIP()
-	if ip != "" {
-		return ip
-	}
-
-	host, _, err := net.SplitHostPort(ctx.Request.RemoteAddr)
-	if err != nil {
-		return ctx.Request.RemoteAddr
-	}
-	return host
 }
