@@ -35,6 +35,22 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
+// List godoc
+// @Summary 获取在线用户
+// @Description 按用户名、IP、上线时间过滤在线会话
+// @Tags Monitor/Online
+// @Security BearerAuth
+// @Produce json
+// @Param pageNum query int false "页码"
+// @Param pageSize query int false "每页数量"
+// @Param userName query string false "用户名"
+// @Param ipaddr query string false "IP地址"
+// @Param since query string false "开始时间(RFC3339)"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/online/users [get]
 func (h *Handler) List(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("online service unavailable"))
@@ -73,6 +89,19 @@ func (h *Handler) List(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(result))
 }
 
+// Get godoc
+// @Summary 获取在线用户详情
+// @Description 根据会话ID查询在线用户
+// @Tags Monitor/Online
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "会话ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/online/users/{id} [get]
 func (h *Handler) Get(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("online service unavailable"))
@@ -101,6 +130,19 @@ func (h *Handler) Get(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(item))
 }
 
+// ForceLogout godoc
+// @Summary 强制下线单个会话
+// @Description 根据会话ID强制注销在线用户
+// @Tags Monitor/Online
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "会话ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/online/users/{id}/force-logout [post]
 func (h *Handler) ForceLogout(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("online service unavailable"))
@@ -128,6 +170,19 @@ func (h *Handler) ForceLogout(ctx *gin.Context) {
 	resp.Success(ctx, true)
 }
 
+// BatchForceLogout godoc
+// @Summary 批量下线会话
+// @Description 批量注销多个在线用户
+// @Tags Monitor/Online
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body batchLogoutRequest true "会话ID集合"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/online/users/batch-logout [post]
 func (h *Handler) BatchForceLogout(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("online service unavailable"))

@@ -3,6 +3,8 @@ package loginlog
 import (
 	"context"
 	"errors"
+	"strings"
+	"time"
 
 	"github.com/starter-kit-fe/admin/internal/model"
 )
@@ -39,6 +41,17 @@ type LoginLog struct {
 	Status        string  `json:"status"`
 	Msg           string  `json:"msg"`
 	LoginTime     *string `json:"loginTime,omitempty"`
+}
+
+type CreateLoginLogInput struct {
+	UserName      string
+	IPAddr        string
+	LoginLocation string
+	Browser       string
+	OS            string
+	Status        string
+	Msg           string
+	LoginTime     *time.Time
 }
 
 func (s *Service) ListLoginLogs(ctx context.Context, opts ListOptions) (*ListResult, error) {
@@ -106,6 +119,27 @@ func (s *Service) UnlockAccount(ctx context.Context, _ int64) error {
 	return nil
 }
 
+func (s *Service) RecordLoginLog(ctx context.Context, input CreateLoginLogInput) error {
+	if s == nil || s.repo == nil {
+		return ErrServiceUnavailable
+	}
+
+	record := &model.SysLogininfor{
+		UserName:      strings.TrimSpace(input.UserName),
+		IPAddr:        strings.TrimSpace(input.IPAddr),
+		LoginLocation: truncateLoginField(input.LoginLocation, 255),
+		Browser:       truncateLoginField(input.Browser, 120),
+		OS:            truncateLoginField(input.OS, 120),
+		Status:        sanitizeLoginStatus(input.Status),
+		Msg:           truncateLoginField(input.Msg, 255),
+	}
+	if input.LoginTime != nil {
+		record.LoginTime = input.LoginTime
+	}
+
+	return s.repo.CreateLoginLog(ctx, record)
+}
+
 func loginLogFromModel(record *model.SysLogininfor) *LoginLog {
 	if record == nil {
 		return nil
@@ -128,4 +162,23 @@ func loginLogFromModel(record *model.SysLogininfor) *LoginLog {
 		Msg:           record.Msg,
 		LoginTime:     loginTime,
 	}
+}
+
+func truncateLoginField(value string, max int) string {
+	value = strings.TrimSpace(value)
+	if max <= 0 || value == "" {
+		return value
+	}
+	if len(value) <= max {
+		return value
+	}
+	return value[:max]
+}
+
+func sanitizeLoginStatus(status string) string {
+	status = strings.TrimSpace(status)
+	if status != "0" && status != "1" {
+		return "0"
+	}
+	return status
 }

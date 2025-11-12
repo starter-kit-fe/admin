@@ -16,10 +16,10 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/starter-kit-fe/admin/constant"
-	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/model"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
 	"github.com/starter-kit-fe/admin/internal/system/online"
+	"github.com/starter-kit-fe/admin/middleware"
 	jwtpkg "github.com/starter-kit-fe/admin/pkg/jwt"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 	"github.com/starter-kit-fe/admin/pkg/security"

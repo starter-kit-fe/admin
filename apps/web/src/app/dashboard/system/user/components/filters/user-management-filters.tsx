@@ -1,4 +1,5 @@
 import { StatusTabs } from '@/components/status-tabs';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -65,7 +66,7 @@ export function UserManagementFilters({
 }: UserManagementFiltersProps) {
   if (variant === 'mobile') {
     return (
-      <div className="flex flex-col gap-3 rounded-[28px] bg-transparent pb-2 pt-1">
+      <Card className="flex shadow-none flex-col gap-3 rounded-[28px] bg-transparent pb-2 pt-1">
         {titleSlot || refreshSlot ? (
           <div className="flex items-center justify-between gap-3">
             <div className="flex flex-col">
@@ -120,12 +121,12 @@ export function UserManagementFilters({
           onRemove={onRemoveFilter}
           onClear={onResetFilters}
         />
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className="rounded-xl border border-border/60 bg-background/80 p-4 sm:p-5">
+    <Card className="rounded-xl border border-border/60 bg-background/80 shadow-none p-4 sm:p-5">
       <div className="flex flex-col gap-4">
         <StatusTabs
           value={status}
@@ -146,6 +147,6 @@ export function UserManagementFilters({
           onClear={onResetFilters}
         />
       </div>
-    </div>
+    </Card>
   );
 }

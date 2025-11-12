@@ -5,7 +5,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/starter-kit-fe/admin/internal/config"
-	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
 	"github.com/starter-kit-fe/admin/internal/system/cache"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
@@ -24,6 +23,7 @@ import (
 	"github.com/starter-kit-fe/admin/internal/system/role"
 	"github.com/starter-kit-fe/admin/internal/system/server"
 	"github.com/starter-kit-fe/admin/internal/system/user"
+	"github.com/starter-kit-fe/admin/middleware"
 )
 
 type moduleSet struct {
@@ -41,6 +41,8 @@ type moduleSet struct {
 	noticeHandler   *notice.Handler
 	operLogHandler  *operlog.Handler
 	loginLogHandler *loginlog.Handler
+	operLogService  *operlog.Service
+	loginLogService *loginlog.Service
 	jobHandler      *job.Handler
 	jobService      *job.Service
 	onlineHandler   *online.Handler
@@ -49,6 +51,7 @@ type moduleSet struct {
 	serverService   *server.Service
 	cacheHandler    *cache.Handler
 	cacheService    *cache.Service
+	userRepo        *user.Repository
 
 	permissionProvider middleware.PermissionProvider
 }
@@ -139,7 +142,9 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 		configHandler:      configHandler,
 		noticeHandler:      noticeHandler,
 		operLogHandler:     operLogHandler,
+		operLogService:     operLogSvc,
 		loginLogHandler:    loginLogHandler,
+		loginLogService:    loginLogSvc,
 		jobHandler:         jobHandler,
 		jobService:         jobSvc,
 		onlineHandler:      onlineHandler,
@@ -148,6 +153,7 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 		serverService:      serverSvc,
 		cacheHandler:       cacheHandler,
 		cacheService:       cacheSvc,
+		userRepo:           userRepo,
 		permissionProvider: authRepo,
 	}
 }

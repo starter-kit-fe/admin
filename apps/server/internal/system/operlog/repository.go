@@ -3,6 +3,7 @@ package operlog
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"gorm.io/gorm"
@@ -13,6 +14,8 @@ import (
 var (
 	ErrRepositoryUnavailable = errors.New("oper log repository is not initialized")
 )
+
+const defaultOperLogWorkMem = "16MB"
 
 type Repository struct {
 	db *gorm.DB
@@ -40,48 +43,54 @@ func (r *Repository) ListOperLogs(ctx context.Context, opts ListOptions) ([]mode
 		return nil, 0, ErrRepositoryUnavailable
 	}
 
-	query := r.db.WithContext(ctx).Model(&model.SysOperLog{})
+	var (
+		records []model.SysOperLog
+		total   int64
+	)
 
-	if title := strings.TrimSpace(opts.Title); title != "" {
-		query = query.Where("title ILIKE ?", "%"+title+"%")
-	}
+	err := r.withLimitedWorkMem(ctx, func(tx *gorm.DB) error {
+		query := tx.Model(&model.SysOperLog{})
 
-	if businessType := strings.TrimSpace(opts.BusinessType); businessType != "" && businessType != "all" {
-		query = query.Where("business_type = ?", businessType)
-	}
+		if title := strings.TrimSpace(opts.Title); title != "" {
+			query = query.Where("title ILIKE ?", "%"+title+"%")
+		}
 
-	if status := strings.TrimSpace(opts.Status); status != "" && status != "all" {
-		query = query.Where("status = ?", status)
-	}
+		if businessType := strings.TrimSpace(opts.BusinessType); businessType != "" && businessType != "all" {
+			query = query.Where("business_type = ?", businessType)
+		}
 
-	if operName := strings.TrimSpace(opts.OperName); operName != "" {
-		query = query.Where("oper_name ILIKE ?", "%"+operName+"%")
-	}
+		if status := strings.TrimSpace(opts.Status); status != "" && status != "all" {
+			query = query.Where("status = ?", status)
+		}
 
-	if method := strings.TrimSpace(opts.RequestMethod); method != "" && method != "all" {
-		query = query.Where("request_method = ?", method)
-	}
+		if operName := strings.TrimSpace(opts.OperName); operName != "" {
+			query = query.Where("oper_name ILIKE ?", "%"+operName+"%")
+		}
 
-	var total int64
-	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
+		if method := strings.TrimSpace(opts.RequestMethod); method != "" && method != "all" {
+			query = query.Where("request_method = ?", method)
+		}
 
-	pageNum := opts.PageNum
-	if pageNum <= 0 {
-		pageNum = 1
-	}
-	pageSize := opts.PageSize
-	if pageSize <= 0 {
-		pageSize = 10
-	}
+		if err := query.Count(&total).Error; err != nil {
+			return err
+		}
 
-	var records []model.SysOperLog
-	if err := query.
-		Order("oper_time DESC").
-		Offset((pageNum - 1) * pageSize).
-		Limit(pageSize).
-		Find(&records).Error; err != nil {
+		pageNum := opts.PageNum
+		if pageNum <= 0 {
+			pageNum = 1
+		}
+		pageSize := opts.PageSize
+		if pageSize <= 0 {
+			pageSize = 10
+		}
+
+		return query.
+			Order("oper_time DESC").
+			Offset((pageNum - 1) * pageSize).
+			Limit(pageSize).
+			Find(&records).Error
+	})
+	if err != nil {
 		return nil, 0, err
 	}
 
@@ -113,4 +122,27 @@ func (r *Repository) DeleteOperLog(ctx context.Context, id int64) error {
 		return gorm.ErrRecordNotFound
 	}
 	return nil
+}
+
+func (r *Repository) CreateOperLog(ctx context.Context, record *model.SysOperLog) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if record == nil {
+		return errors.New("oper log payload is nil")
+	}
+	return r.db.WithContext(ctx).Create(record).Error
+}
+
+func (r *Repository) withLimitedWorkMem(ctx context.Context, fn func(tx *gorm.DB) error) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Exec(fmt.Sprintf("SET LOCAL work_mem = '%s'", defaultOperLogWorkMem)).Error; err != nil {
+			return err
+		}
+		return fn(tx)
+	})
 }

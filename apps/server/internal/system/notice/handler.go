@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"github.com/starter-kit-fe/admin/internal/middleware"
+	"github.com/starter-kit-fe/admin/middleware"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
@@ -44,6 +44,20 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
+// List godoc
+// @Summary 获取通知公告列表
+// @Description 按标题、类型、状态过滤公告
+// @Tags System/Notice
+// @Security BearerAuth
+// @Produce json
+// @Param noticeTitle query string false "公告标题"
+// @Param noticeType query string false "公告类型"
+// @Param status query string false "公告状态"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/notices [get]
 func (h *Handler) List(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("notice service unavailable"))
@@ -69,6 +83,19 @@ func (h *Handler) List(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(items))
 }
 
+// Get godoc
+// @Summary 获取通知公告详情
+// @Description 根据ID查询公告
+// @Tags System/Notice
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "公告ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/notices/{id} [get]
 func (h *Handler) Get(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("notice service unavailable"))
@@ -94,6 +121,19 @@ func (h *Handler) Get(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(item))
 }
 
+// Create godoc
+// @Summary 新增通知公告
+// @Description 发布公告
+// @Tags System/Notice
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body createNoticeRequest true "公告参数"
+// @Success 201 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/notices [post]
 func (h *Handler) Create(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("notice service unavailable"))
@@ -132,6 +172,21 @@ func (h *Handler) Create(ctx *gin.Context) {
 	resp.Created(ctx, resp.WithData(item))
 }
 
+// Update godoc
+// @Summary 修改通知公告
+// @Description 更新公告信息
+// @Tags System/Notice
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "公告ID"
+// @Param request body updateNoticeRequest true "公告参数"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/notices/{id} [put]
 func (h *Handler) Update(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("notice service unavailable"))
@@ -179,6 +234,19 @@ func (h *Handler) Update(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(item))
 }
 
+// Delete godoc
+// @Summary 删除通知公告
+// @Description 根据ID删除公告
+// @Tags System/Notice
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "公告ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/notices/{id} [delete]
 func (h *Handler) Delete(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("notice service unavailable"))

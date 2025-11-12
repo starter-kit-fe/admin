@@ -8,11 +8,47 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/starter-kit-fe/admin/constant"
+	"github.com/starter-kit-fe/admin/internal/audit"
 	"github.com/starter-kit-fe/admin/internal/config"
 	"github.com/starter-kit-fe/admin/internal/router"
 )
 
 func buildRouterEngine(cfg *config.Config, logger *slog.Logger, modules moduleSet, throttle gin.HandlerFunc) *gin.Engine {
+	publicMWs := []gin.HandlerFunc{}
+	protectedMWs := []gin.HandlerFunc{}
+	if throttle != nil {
+		publicMWs = append(publicMWs, throttle)
+		protectedMWs = append(protectedMWs, throttle)
+	}
+
+	var loginMiddlewares []gin.HandlerFunc
+
+	var userResolver audit.UserResolver
+	if modules.userRepo != nil {
+		userResolver = userResolverAdapter{repo: modules.userRepo}
+	}
+
+	if modules.operLogService != nil {
+		opLogger := operationLoggerAdapter{svc: modules.operLogService}
+		if recorder := audit.NewOperationMiddleware(opLogger, userResolver, audit.OperationOptions{
+			Logger:         logger,
+			MaxBodyBytes:   16 * 1024,
+			MaxResultBytes: 8 * 1024,
+		}); recorder != nil {
+			protectedMWs = append(protectedMWs, recorder)
+		}
+	}
+
+	if modules.loginLogService != nil {
+		loginLogger := loginLoggerAdapter{svc: modules.loginLogService}
+		if recorder := audit.NewLoginMiddleware(loginLogger, audit.LoginOptions{
+			Logger:       logger,
+			MaxBodyBytes: 4096,
+		}); recorder != nil {
+			loginMiddlewares = append(loginMiddlewares, recorder)
+		}
+	}
+
 	return router.New(router.Options{
 		Logger:             logger,
 		HealthHandler:      modules.healthHandler,
@@ -37,8 +73,9 @@ func buildRouterEngine(cfg *config.Config, logger *slog.Logger, modules moduleSe
 		AuthCookieName:     cfg.Auth.CookieName,
 		PermissionProvider: modules.permissionProvider,
 		TokenBlocklist:     modules.onlineService,
-		PublicMWs:          []gin.HandlerFunc{throttle},
-		ProtectedMWs:       []gin.HandlerFunc{throttle},
+		PublicMWs:          publicMWs,
+		ProtectedMWs:       protectedMWs,
+		LoginMiddlewares:   loginMiddlewares,
 	})
 }
 

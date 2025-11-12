@@ -4,7 +4,7 @@ import (
 	_ "embed"
 )
 
-//go:generate go run github.com/swaggo/swag/cmd/swag@v1.16.1 init --parseDependency --parseInternal --dir ../handler,../router --generalInfo ../router/router.go --output .
+//go:generate go run github.com/swaggo/swag/cmd/swag@v1.16.1 init --parseDependency --parseInternal --dir ../system,../router --generalInfo ../router/router.go --output .
 
 //go:embed swagger.json
 var openAPISpec []byte

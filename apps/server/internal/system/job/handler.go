@@ -58,6 +58,24 @@ type changeStatusRequest struct {
 	Status string `json:"status" binding:"required"`
 }
 
+// List godoc
+// @Summary 获取定时任务列表
+// @Description 按名称、分组、状态、时间范围过滤任务
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce json
+// @Param pageNum query int false "页码"
+// @Param pageSize query int false "每页数量"
+// @Param jobName query string false "任务名称"
+// @Param jobGroup query string false "任务分组"
+// @Param status query string false "任务状态"
+// @Param startTime query string false "开始时间(YYYY-MM-DD HH:mm:ss)"
+// @Param endTime query string false "结束时间(YYYY-MM-DD HH:mm:ss)"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs [get]
 func (h *Handler) List(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
@@ -87,6 +105,19 @@ func (h *Handler) List(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(result))
 }
 
+// Create godoc
+// @Summary 新增定时任务
+// @Description 创建任务并保存调度规则
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body createJobRequest true "任务参数"
+// @Success 201 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs [post]
 func (h *Handler) Create(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
@@ -118,6 +149,19 @@ func (h *Handler) Create(ctx *gin.Context) {
 	resp.Created(ctx, resp.WithData(job))
 }
 
+// Get godoc
+// @Summary 获取定时任务详情
+// @Description 根据任务ID查询详情
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "任务ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/{id} [get]
 func (h *Handler) Get(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
@@ -143,6 +187,21 @@ func (h *Handler) Get(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(job))
 }
 
+// Update godoc
+// @Summary 修改定时任务
+// @Description 更新任务及调度信息
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "任务ID"
+// @Param request body updateJobRequest true "任务参数"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/{id} [put]
 func (h *Handler) Update(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
@@ -185,6 +244,19 @@ func (h *Handler) Update(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(job))
 }
 
+// Delete godoc
+// @Summary 删除定时任务
+// @Description 根据ID移除任务
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "任务ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/{id} [delete]
 func (h *Handler) Delete(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
@@ -209,6 +281,21 @@ func (h *Handler) Delete(ctx *gin.Context) {
 	resp.NoContent(ctx)
 }
 
+// ChangeStatus godoc
+// @Summary 修改任务状态
+// @Description 启停指定任务
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "任务ID"
+// @Param request body changeStatusRequest true "状态参数"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/{id}/status [patch]
 func (h *Handler) ChangeStatus(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
@@ -239,6 +326,19 @@ func (h *Handler) ChangeStatus(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(true))
 }
 
+// Trigger godoc
+// @Summary 立即执行任务
+// @Description 手动触发一次定时任务
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "任务ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/{id}/run [post]
 func (h *Handler) Trigger(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))

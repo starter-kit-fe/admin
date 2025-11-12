@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"github.com/starter-kit-fe/admin/internal/middleware"
+	"github.com/starter-kit-fe/admin/middleware"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
@@ -44,6 +44,20 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
+// List godoc
+// @Summary 获取参数配置列表
+// @Description 按名称、Key、类型过滤配置
+// @Tags System/Config
+// @Security BearerAuth
+// @Produce json
+// @Param configName query string false "参数名称"
+// @Param configKey query string false "参数Key"
+// @Param configType query string false "参数类型"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/configs [get]
 func (h *Handler) List(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("config service unavailable"))
@@ -69,6 +83,19 @@ func (h *Handler) List(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(items))
 }
 
+// Get godoc
+// @Summary 获取参数配置详情
+// @Description 根据ID查询配置
+// @Tags System/Config
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "配置ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/configs/{id} [get]
 func (h *Handler) Get(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("config service unavailable"))
@@ -94,6 +121,20 @@ func (h *Handler) Get(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(item))
 }
 
+// Create godoc
+// @Summary 新增参数配置
+// @Description 创建一条系统配置
+// @Tags System/Config
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body createConfigRequest true "配置参数"
+// @Success 201 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 409 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/configs [post]
 func (h *Handler) Create(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("config service unavailable"))
@@ -133,6 +174,22 @@ func (h *Handler) Create(ctx *gin.Context) {
 	resp.Created(ctx, resp.WithData(item))
 }
 
+// Update godoc
+// @Summary 修改参数配置
+// @Description 更新配置项
+// @Tags System/Config
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "配置ID"
+// @Param request body updateConfigRequest true "配置参数"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 409 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/configs/{id} [put]
 func (h *Handler) Update(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("config service unavailable"))
@@ -181,6 +238,19 @@ func (h *Handler) Update(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(item))
 }
 
+// Delete godoc
+// @Summary 删除参数配置
+// @Description 根据ID删除配置
+// @Tags System/Config
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "配置ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/configs/{id} [delete]
 func (h *Handler) Delete(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("config service unavailable"))

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"github.com/starter-kit-fe/admin/internal/middleware"
+	"github.com/starter-kit-fe/admin/middleware"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
@@ -31,6 +31,22 @@ type listPostsQuery struct {
 	PostCode string `form:"postCode"`
 }
 
+// List godoc
+// @Summary 获取岗位列表
+// @Description 按状态、岗位名称或岗位编码过滤
+// @Tags System/Post
+// @Security BearerAuth
+// @Produce json
+// @Param pageNum query int false "页码"
+// @Param pageSize query int false "每页数量"
+// @Param status query string false "岗位状态"
+// @Param postName query string false "岗位名称"
+// @Param postCode query string false "岗位编码"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/posts [get]
 func (h *Handler) List(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("post service unavailable"))
@@ -74,6 +90,20 @@ type updatePostRequest struct {
 	Remark   *string `json:"remark"`
 }
 
+// Create godoc
+// @Summary 新增岗位
+// @Description 创建岗位信息
+// @Tags System/Post
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body createPostRequest true "岗位参数"
+// @Success 201 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 409 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/posts [post]
 func (h *Handler) Create(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("post service unavailable"))
@@ -118,6 +148,22 @@ func (h *Handler) Create(ctx *gin.Context) {
 	resp.Created(ctx, resp.WithData(post))
 }
 
+// Update godoc
+// @Summary 修改岗位
+// @Description 更新岗位信息
+// @Tags System/Post
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "岗位ID"
+// @Param request body updatePostRequest true "岗位参数"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 409 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/posts/{id} [put]
 func (h *Handler) Update(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("post service unavailable"))
@@ -166,6 +212,19 @@ func (h *Handler) Update(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(post))
 }
 
+// Delete godoc
+// @Summary 删除岗位
+// @Description 根据ID删除岗位
+// @Tags System/Post
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "岗位ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/posts/{id} [delete]
 func (h *Handler) Delete(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("post service unavailable"))

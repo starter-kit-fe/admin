@@ -6,6 +6,7 @@ import {
   useMenuManagementStore,
 } from '@/app/dashboard/system/menu/store';
 import { StatusTabs } from '@/components/status-tabs';
+import { Card } from '@/components/ui/card';
 import {
   InputGroup,
   InputGroupAddon,
@@ -21,7 +22,7 @@ export function MenuManagementFilters() {
   const statusTabs = useMemo(() => STATUS_TABS, []);
 
   return (
-    <section className="rounded-xl border border-border/60 bg-background/80 p-4 sm:p-5">
+    <Card className="rounded-xl shadow-none sm:p-5">
       <div className="">
         <StatusTabs
           value={status}
@@ -52,6 +53,6 @@ export function MenuManagementFilters() {
           </InputGroup>
         </div>
       </div>
-    </section>
+    </Card>
   );
 }

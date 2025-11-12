@@ -3,6 +3,7 @@ package loginlog
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"gorm.io/gorm"
@@ -13,6 +14,8 @@ import (
 var (
 	ErrRepositoryUnavailable = errors.New("login log repository is not initialized")
 )
+
+const defaultLoginLogWorkMem = "8MB"
 
 type Repository struct {
 	db *gorm.DB
@@ -38,38 +41,44 @@ func (r *Repository) ListLoginLogs(ctx context.Context, opts ListOptions) ([]mod
 		return nil, 0, ErrRepositoryUnavailable
 	}
 
-	query := r.db.WithContext(ctx).Model(&model.SysLogininfor{})
+	var (
+		records []model.SysLogininfor
+		total   int64
+	)
 
-	if user := strings.TrimSpace(opts.UserName); user != "" {
-		query = query.Where("user_name ILIKE ?", "%"+user+"%")
-	}
-	if status := strings.TrimSpace(opts.Status); status != "" && status != "all" {
-		query = query.Where("status = ?", status)
-	}
-	if ip := strings.TrimSpace(opts.IPAddr); ip != "" {
-		query = query.Where("ipaddr ILIKE ?", "%"+ip+"%")
-	}
+	err := r.withLimitedWorkMem(ctx, func(tx *gorm.DB) error {
+		query := tx.Model(&model.SysLogininfor{})
 
-	var total int64
-	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
+		if user := strings.TrimSpace(opts.UserName); user != "" {
+			query = query.Where("user_name ILIKE ?", "%"+user+"%")
+		}
+		if status := strings.TrimSpace(opts.Status); status != "" && status != "all" {
+			query = query.Where("status = ?", status)
+		}
+		if ip := strings.TrimSpace(opts.IPAddr); ip != "" {
+			query = query.Where("ipaddr ILIKE ?", "%"+ip+"%")
+		}
 
-	pageNum := opts.PageNum
-	if pageNum <= 0 {
-		pageNum = 1
-	}
-	pageSize := opts.PageSize
-	if pageSize <= 0 {
-		pageSize = 10
-	}
+		if err := query.Count(&total).Error; err != nil {
+			return err
+		}
 
-	var records []model.SysLogininfor
-	if err := query.
-		Order("login_time DESC").
-		Offset((pageNum - 1) * pageSize).
-		Limit(pageSize).
-		Find(&records).Error; err != nil {
+		pageNum := opts.PageNum
+		if pageNum <= 0 {
+			pageNum = 1
+		}
+		pageSize := opts.PageSize
+		if pageSize <= 0 {
+			pageSize = 10
+		}
+
+		return query.
+			Order("login_time DESC").
+			Offset((pageNum - 1) * pageSize).
+			Limit(pageSize).
+			Find(&records).Error
+	})
+	if err != nil {
 		return nil, 0, err
 	}
 
@@ -99,4 +108,27 @@ func (r *Repository) DeleteLoginLog(ctx context.Context, id int64) error {
 		return gorm.ErrRecordNotFound
 	}
 	return nil
+}
+
+func (r *Repository) CreateLoginLog(ctx context.Context, record *model.SysLogininfor) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if record == nil {
+		return errors.New("login log payload is nil")
+	}
+	return r.db.WithContext(ctx).Create(record).Error
+}
+
+func (r *Repository) withLimitedWorkMem(ctx context.Context, fn func(tx *gorm.DB) error) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Exec(fmt.Sprintf("SET LOCAL work_mem = '%s'", defaultLoginLogWorkMem)).Error; err != nil {
+			return err
+		}
+		return fn(tx)
+	})
 }

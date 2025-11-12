@@ -24,11 +24,9 @@ func AutoMigrate(db *gorm.DB) error {
 		&model.SysRoleMenu{},
 		&model.SysRoleDept{},
 		&model.SysUserPost{},
-		&model.SysOperLog{},
 		&model.SysDictType{},
 		&model.SysDictData{},
 		&model.SysConfig{},
-		&model.SysLogininfor{},
 		&model.SysJob{},
 		&model.SysJobLog{},
 		&model.SysNotice{},
@@ -37,6 +35,10 @@ func AutoMigrate(db *gorm.DB) error {
 	}
 
 	if err := db.AutoMigrate(models...); err != nil {
+		return err
+	}
+
+	if err := ensureLogTables(db); err != nil {
 		return err
 	}
 

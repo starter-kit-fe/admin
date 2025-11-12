@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"github.com/starter-kit-fe/admin/internal/middleware"
+	"github.com/starter-kit-fe/admin/middleware"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
@@ -66,6 +66,21 @@ type resetPasswordRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+// List godoc
+// @Summary 获取用户列表
+// @Description 按条件分页查询系统用户
+// @Tags System/User
+// @Security BearerAuth
+// @Produce json
+// @Param pageNum query int false "页码"
+// @Param pageSize query int false "每页数量"
+// @Param userName query string false "用户名"
+// @Param status query string false "用户状态"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/users [get]
 func (h *Handler) List(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
@@ -92,6 +107,19 @@ func (h *Handler) List(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(result))
 }
 
+// ListDepartmentOptions godoc
+// @Summary 部门选项
+// @Description 查询可用的部门下拉数据
+// @Tags System/User
+// @Security BearerAuth
+// @Produce json
+// @Param keyword query string false "关键字"
+// @Param limit query int false "返回数量"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/users/options/departments [get]
 func (h *Handler) ListDepartmentOptions(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
@@ -113,6 +141,19 @@ func (h *Handler) ListDepartmentOptions(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(options))
 }
 
+// ListRoleOptions godoc
+// @Summary 角色选项
+// @Description 查询可用的角色下拉数据
+// @Tags System/User
+// @Security BearerAuth
+// @Produce json
+// @Param keyword query string false "关键字"
+// @Param limit query int false "返回数量"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/users/options/roles [get]
 func (h *Handler) ListRoleOptions(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
@@ -134,6 +175,19 @@ func (h *Handler) ListRoleOptions(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(options))
 }
 
+// ListPostOptions godoc
+// @Summary 岗位选项
+// @Description 查询可用的岗位下拉数据
+// @Tags System/User
+// @Security BearerAuth
+// @Produce json
+// @Param keyword query string false "关键字"
+// @Param limit query int false "返回数量"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/users/options/posts [get]
 func (h *Handler) ListPostOptions(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
@@ -155,6 +209,19 @@ func (h *Handler) ListPostOptions(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(options))
 }
 
+// Get godoc
+// @Summary 获取用户详情
+// @Description 根据用户ID查询详细信息
+// @Tags System/User
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "用户ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/users/{id} [get]
 func (h *Handler) Get(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
@@ -180,6 +247,20 @@ func (h *Handler) Get(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(user))
 }
 
+// Create godoc
+// @Summary 新增用户
+// @Description 创建系统用户
+// @Tags System/User
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body createUserRequest true "用户参数"
+// @Success 201 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 409 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/users [post]
 func (h *Handler) Create(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
@@ -228,6 +309,22 @@ func (h *Handler) Create(ctx *gin.Context) {
 	resp.Created(ctx, resp.WithData(user))
 }
 
+// Update godoc
+// @Summary 修改用户
+// @Description 根据用户ID更新信息
+// @Tags System/User
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "用户ID"
+// @Param request body updateUserRequest true "用户参数"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 409 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/users/{id} [put]
 func (h *Handler) Update(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
@@ -282,6 +379,19 @@ func (h *Handler) Update(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(user))
 }
 
+// Delete godoc
+// @Summary 删除用户
+// @Description 根据用户ID删除用户
+// @Tags System/User
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "用户ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/users/{id} [delete]
 func (h *Handler) Delete(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
@@ -310,6 +420,21 @@ func (h *Handler) Delete(ctx *gin.Context) {
 	resp.NoContent(ctx)
 }
 
+// ResetPassword godoc
+// @Summary 重置用户密码
+// @Description 为指定用户设置新密码
+// @Tags System/User
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "用户ID"
+// @Param request body resetPasswordRequest true "新密码"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/users/{id}/reset-password [post]
 func (h *Handler) ResetPassword(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))

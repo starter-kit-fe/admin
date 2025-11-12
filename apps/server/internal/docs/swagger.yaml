@@ -1,38 +1,6 @@
 basePath: /
 definitions:
-  handler.CaptchaResponse:
-    properties:
-      code:
-        example: 200
-        type: integer
-      data:
-        $ref: '#/definitions/handler.CaptchaResponseData'
-      msg:
-        example: OK
-        type: string
-    type: object
-  handler.CaptchaResponseData:
-    properties:
-      captcha_id:
-        example: edbf2c533e8e44e4986b98f785bd40a4
-        type: string
-      expires_in:
-        example: 120
-        type: integer
-      image:
-        example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...
-        type: string
-    type: object
-  handler.CaptchaVerifyRequest:
-    properties:
-      answer:
-        example: "8"
-        type: string
-      captcha_id:
-        example: edbf2c533e8e44e4986b98f785bd40a4
-        type: string
-    type: object
-  handler.GetInfoResponse:
+  auth.GetInfoResponse:
     properties:
       code:
         example: 200
@@ -53,9 +21,9 @@ definitions:
           type: string
         type: array
       user:
-        $ref: '#/definitions/handler.UserInfo'
+        $ref: '#/definitions/auth.UserInfo'
     type: object
-  handler.LoginRequest:
+  auth.LoginRequest:
     properties:
       captcha:
         example: "8"
@@ -76,7 +44,7 @@ definitions:
         example: edbf2c533e8e44e4986b98f785bd40a4
         type: string
     type: object
-  handler.LoginResponse:
+  auth.LoginResponse:
     properties:
       code:
         example: 200
@@ -88,7 +56,7 @@ definitions:
         example: <jwt-token>
         type: string
     type: object
-  handler.UserInfo:
+  auth.UserInfo:
     properties:
       avatar:
         example: ""
@@ -120,6 +88,366 @@ definitions:
         example: admin
         type: string
     type: object
+  captcha.CaptchaResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      data:
+        $ref: '#/definitions/captcha.CaptchaResponseData'
+      msg:
+        example: OK
+        type: string
+    type: object
+  captcha.CaptchaResponseData:
+    properties:
+      captcha_id:
+        example: edbf2c533e8e44e4986b98f785bd40a4
+        type: string
+      expires_in:
+        example: 120
+        type: integer
+      image:
+        example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...
+        type: string
+    type: object
+  captcha.CaptchaVerifyRequest:
+    properties:
+      answer:
+        example: "8"
+        type: string
+      captcha_id:
+        example: edbf2c533e8e44e4986b98f785bd40a4
+        type: string
+    type: object
+  config.createConfigRequest:
+    properties:
+      configKey:
+        type: string
+      configName:
+        type: string
+      configType:
+        type: string
+      configValue:
+        type: string
+      remark:
+        type: string
+    required:
+    - configKey
+    - configName
+    - configValue
+    type: object
+  config.updateConfigRequest:
+    properties:
+      configKey:
+        type: string
+      configName:
+        type: string
+      configType:
+        type: string
+      configValue:
+        type: string
+      remark:
+        type: string
+    type: object
+  dept.createDepartmentRequest:
+    properties:
+      deptName:
+        type: string
+      email:
+        type: string
+      leader:
+        type: string
+      orderNum:
+        type: integer
+      parentId:
+        type: integer
+      phone:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+    required:
+    - deptName
+    type: object
+  dept.updateDepartmentRequest:
+    properties:
+      deptName:
+        type: string
+      email:
+        type: string
+      leader:
+        type: string
+      orderNum:
+        type: integer
+      parentId:
+        type: integer
+      phone:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+    type: object
+  dict.createDictDataRequest:
+    properties:
+      cssClass:
+        type: string
+      dictLabel:
+        type: string
+      dictSort:
+        type: integer
+      dictValue:
+        type: string
+      isDefault:
+        type: string
+      listClass:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+    required:
+    - dictLabel
+    - dictValue
+    type: object
+  dict.createDictTypeRequest:
+    properties:
+      dictName:
+        type: string
+      dictType:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+    required:
+    - dictName
+    - dictType
+    type: object
+  dict.updateDictDataRequest:
+    properties:
+      cssClass:
+        type: string
+      dictLabel:
+        type: string
+      dictSort:
+        type: integer
+      dictValue:
+        type: string
+      isDefault:
+        type: string
+      listClass:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+    type: object
+  dict.updateDictTypeRequest:
+    properties:
+      dictName:
+        type: string
+      dictType:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+    type: object
+  job.changeStatusRequest:
+    properties:
+      status:
+        type: string
+    required:
+    - status
+    type: object
+  job.createJobRequest:
+    properties:
+      concurrent:
+        type: string
+      cronExpression:
+        type: string
+      invokeTarget:
+        type: string
+      jobGroup:
+        type: string
+      jobName:
+        type: string
+      misfirePolicy:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+    required:
+    - cronExpression
+    - invokeTarget
+    - jobName
+    type: object
+  job.updateJobRequest:
+    properties:
+      concurrent:
+        type: string
+      cronExpression:
+        type: string
+      invokeTarget:
+        type: string
+      jobGroup:
+        type: string
+      jobName:
+        type: string
+      misfirePolicy:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+    type: object
+  menu.createMenuRequest:
+    properties:
+      icon:
+        type: string
+      isCache:
+        type: boolean
+      isFrame:
+        type: boolean
+      menuName:
+        type: string
+      menuType:
+        type: string
+      orderNum:
+        type: integer
+      parentId:
+        type: integer
+      path:
+        type: string
+      perms:
+        type: string
+      query:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+      visible:
+        type: string
+    required:
+    - menuName
+    - menuType
+    type: object
+  menu.reorderMenuItem:
+    properties:
+      menuId:
+        type: integer
+      orderNum:
+        type: integer
+      parentId:
+        type: integer
+    type: object
+  menu.reorderMenuRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/menu.reorderMenuItem'
+        type: array
+    type: object
+  menu.updateMenuRequest:
+    properties:
+      icon:
+        type: string
+      isCache:
+        type: boolean
+      isFrame:
+        type: boolean
+      menuName:
+        type: string
+      menuType:
+        type: string
+      orderNum:
+        type: integer
+      parentId:
+        type: integer
+      path:
+        type: string
+      perms:
+        type: string
+      query:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+      visible:
+        type: string
+    type: object
+  notice.createNoticeRequest:
+    properties:
+      noticeContent:
+        type: string
+      noticeTitle:
+        type: string
+      noticeType:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+    required:
+    - noticeContent
+    - noticeTitle
+    - noticeType
+    type: object
+  notice.updateNoticeRequest:
+    properties:
+      noticeContent:
+        type: string
+      noticeTitle:
+        type: string
+      noticeType:
+        type: string
+      remark:
+        type: string
+      status:
+        type: string
+    type: object
+  online.batchLogoutRequest:
+    properties:
+      ids:
+        items:
+          type: string
+        type: array
+    type: object
+  post.createPostRequest:
+    properties:
+      postCode:
+        type: string
+      postName:
+        type: string
+      postSort:
+        type: integer
+      remark:
+        type: string
+      status:
+        type: string
+    required:
+    - postCode
+    - postName
+    type: object
+  post.updatePostRequest:
+    properties:
+      postCode:
+        type: string
+      postName:
+        type: string
+      postSort:
+        type: integer
+      remark:
+        type: string
+      status:
+        type: string
+    type: object
   resp.Response:
     properties:
       code:
@@ -127,6 +455,122 @@ definitions:
       data: {}
       error: {}
       msg:
+        type: string
+    type: object
+  role.createRoleRequest:
+    properties:
+      dataScope:
+        type: string
+      deptCheckStrictly:
+        type: boolean
+      menuCheckStrictly:
+        type: boolean
+      menuIds:
+        items:
+          type: integer
+        type: array
+      remark:
+        type: string
+      roleKey:
+        type: string
+      roleName:
+        type: string
+      roleSort:
+        type: integer
+      status:
+        type: string
+    required:
+    - roleKey
+    - roleName
+    type: object
+  role.updateRoleRequest:
+    properties:
+      dataScope:
+        type: string
+      deptCheckStrictly:
+        type: boolean
+      menuCheckStrictly:
+        type: boolean
+      menuIds:
+        items:
+          type: integer
+        type: array
+      remark:
+        type: string
+      roleKey:
+        type: string
+      roleName:
+        type: string
+      roleSort:
+        type: integer
+      status:
+        type: string
+    type: object
+  user.createUserRequest:
+    properties:
+      deptId:
+        type: integer
+      email:
+        type: string
+      nickName:
+        type: string
+      password:
+        type: string
+      phonenumber:
+        type: string
+      postIds:
+        items:
+          type: integer
+        type: array
+      remark:
+        type: string
+      roleIds:
+        items:
+          type: integer
+        type: array
+      sex:
+        type: string
+      status:
+        type: string
+      userName:
+        type: string
+    required:
+    - nickName
+    - password
+    - userName
+    type: object
+  user.resetPasswordRequest:
+    properties:
+      password:
+        type: string
+    required:
+    - password
+    type: object
+  user.updateUserRequest:
+    properties:
+      deptId:
+        type: integer
+      email:
+        type: string
+      nickName:
+        type: string
+      phonenumber:
+        type: string
+      postIds:
+        items:
+          type: integer
+        type: array
+      remark:
+        type: string
+      roleIds:
+        items:
+          type: integer
+        type: array
+      sex:
+        type: string
+      status:
+        type: string
+      userName:
         type: string
     type: object
 info:
@@ -159,7 +603,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.CaptchaResponse'
+            $ref: '#/definitions/captcha.CaptchaResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -182,7 +626,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CaptchaVerifyRequest'
+          $ref: '#/definitions/captcha.CaptchaVerifyRequest'
       produces:
       - application/json
       responses:
@@ -216,14 +660,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.LoginRequest'
+          $ref: '#/definitions/auth.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.LoginResponse'
+            $ref: '#/definitions/auth.LoginResponse'
         "400":
           description: Bad Request
           schema:
@@ -265,7 +709,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.GetInfoResponse'
+            $ref: '#/definitions/auth.GetInfoResponse'
         "401":
           description: Unauthorized
           schema:
@@ -315,7 +759,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.GetInfoResponse'
+            $ref: '#/definitions/auth.GetInfoResponse'
         "401":
           description: Unauthorized
           schema:
@@ -333,6 +777,2761 @@ paths:
       summary: 获取当前用户信息
       tags:
       - Auth
+  /v1/monitor/cache:
+    get:
+      description: 查看 Redis 运行状态与内存信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 缓存概览
+      tags:
+      - Monitor/Cache
+  /v1/monitor/cache/list:
+    get:
+      description: 按库、模式分页查询缓存键
+      parameters:
+      - description: 页码
+        in: query
+        name: pageNum
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: Key 模式
+        in: query
+        name: pattern
+        type: string
+      - description: Redis 库
+        in: query
+        name: db
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 缓存键列表
+      tags:
+      - Monitor/Cache
+  /v1/monitor/jobs:
+    get:
+      description: 按名称、分组、状态、时间范围过滤任务
+      parameters:
+      - description: 页码
+        in: query
+        name: pageNum
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 任务名称
+        in: query
+        name: jobName
+        type: string
+      - description: 任务分组
+        in: query
+        name: jobGroup
+        type: string
+      - description: 任务状态
+        in: query
+        name: status
+        type: string
+      - description: 开始时间(YYYY-MM-DD HH:mm:ss)
+        in: query
+        name: startTime
+        type: string
+      - description: 结束时间(YYYY-MM-DD HH:mm:ss)
+        in: query
+        name: endTime
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取定时任务列表
+      tags:
+      - Monitor/Job
+    post:
+      consumes:
+      - application/json
+      description: 创建任务并保存调度规则
+      parameters:
+      - description: 任务参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/job.createJobRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增定时任务
+      tags:
+      - Monitor/Job
+  /v1/monitor/jobs/{id}:
+    delete:
+      description: 根据ID移除任务
+      parameters:
+      - description: 任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除定时任务
+      tags:
+      - Monitor/Job
+    get:
+      description: 根据任务ID查询详情
+      parameters:
+      - description: 任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取定时任务详情
+      tags:
+      - Monitor/Job
+    put:
+      consumes:
+      - application/json
+      description: 更新任务及调度信息
+      parameters:
+      - description: 任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 任务参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/job.updateJobRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改定时任务
+      tags:
+      - Monitor/Job
+  /v1/monitor/jobs/{id}/run:
+    post:
+      description: 手动触发一次定时任务
+      parameters:
+      - description: 任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 立即执行任务
+      tags:
+      - Monitor/Job
+  /v1/monitor/jobs/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: 启停指定任务
+      parameters:
+      - description: 任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 状态参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/job.changeStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改任务状态
+      tags:
+      - Monitor/Job
+  /v1/monitor/logs/login:
+    get:
+      description: 按用户、状态、IP分页查询登录日志
+      parameters:
+      - description: 页码
+        in: query
+        name: pageNum
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 用户名
+        in: query
+        name: userName
+        type: string
+      - description: 状态
+        in: query
+        name: status
+        type: string
+      - description: IP地址
+        in: query
+        name: ipaddr
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取登录日志
+      tags:
+      - Monitor/LoginLog
+  /v1/monitor/logs/login/{id}:
+    delete:
+      description: 根据ID删除登录日志
+      parameters:
+      - description: 日志ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除登录日志
+      tags:
+      - Monitor/LoginLog
+    get:
+      description: 根据ID查看登录日志
+      parameters:
+      - description: 日志ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取登录日志详情
+      tags:
+      - Monitor/LoginLog
+  /v1/monitor/logs/login/{id}/unlock:
+    post:
+      description: 通过登录日志记录解除账号锁定
+      parameters:
+      - description: 日志ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 解锁账号
+      tags:
+      - Monitor/LoginLog
+  /v1/monitor/logs/operations:
+    get:
+      description: 按标题、业务类型、状态等分页查询
+      parameters:
+      - description: 页码
+        in: query
+        name: pageNum
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 模块标题
+        in: query
+        name: title
+        type: string
+      - description: 业务类型
+        in: query
+        name: businessType
+        type: string
+      - description: 状态
+        in: query
+        name: status
+        type: string
+      - description: 操作人员
+        in: query
+        name: operName
+        type: string
+      - description: 请求方法
+        in: query
+        name: requestMethod
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取操作日志
+      tags:
+      - Monitor/OperLog
+  /v1/monitor/logs/operations/{id}:
+    delete:
+      description: 根据ID删除操作日志
+      parameters:
+      - description: 日志ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除操作日志
+      tags:
+      - Monitor/OperLog
+    get:
+      description: 根据ID查看操作日志
+      parameters:
+      - description: 日志ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取操作日志详情
+      tags:
+      - Monitor/OperLog
+  /v1/monitor/online/users:
+    get:
+      description: 按用户名、IP、上线时间过滤在线会话
+      parameters:
+      - description: 页码
+        in: query
+        name: pageNum
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 用户名
+        in: query
+        name: userName
+        type: string
+      - description: IP地址
+        in: query
+        name: ipaddr
+        type: string
+      - description: 开始时间(RFC3339)
+        in: query
+        name: since
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取在线用户
+      tags:
+      - Monitor/Online
+  /v1/monitor/online/users/{id}:
+    get:
+      description: 根据会话ID查询在线用户
+      parameters:
+      - description: 会话ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取在线用户详情
+      tags:
+      - Monitor/Online
+  /v1/monitor/online/users/{id}/force-logout:
+    post:
+      description: 根据会话ID强制注销在线用户
+      parameters:
+      - description: 会话ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 强制下线单个会话
+      tags:
+      - Monitor/Online
+  /v1/monitor/online/users/batch-logout:
+    post:
+      consumes:
+      - application/json
+      description: 批量注销多个在线用户
+      parameters:
+      - description: 会话ID集合
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/online.batchLogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 批量下线会话
+      tags:
+      - Monitor/Online
+  /v1/monitor/server:
+    get:
+      description: 获取 CPU、内存、磁盘等服务器指标
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 服务器监控
+      tags:
+      - Monitor/Server
+  /v1/system/configs:
+    get:
+      description: 按名称、Key、类型过滤配置
+      parameters:
+      - description: 参数名称
+        in: query
+        name: configName
+        type: string
+      - description: 参数Key
+        in: query
+        name: configKey
+        type: string
+      - description: 参数类型
+        in: query
+        name: configType
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取参数配置列表
+      tags:
+      - System/Config
+    post:
+      consumes:
+      - application/json
+      description: 创建一条系统配置
+      parameters:
+      - description: 配置参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/config.createConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增参数配置
+      tags:
+      - System/Config
+  /v1/system/configs/{id}:
+    delete:
+      description: 根据ID删除配置
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除参数配置
+      tags:
+      - System/Config
+    get:
+      description: 根据ID查询配置
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取参数配置详情
+      tags:
+      - System/Config
+    put:
+      consumes:
+      - application/json
+      description: 更新配置项
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 配置参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/config.updateConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改参数配置
+      tags:
+      - System/Config
+  /v1/system/departments:
+    get:
+      description: 查询部门列表，按名称或状态过滤
+      parameters:
+      - description: 部门状态
+        in: query
+        name: status
+        type: string
+      - description: 部门名称
+        in: query
+        name: deptName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取部门列表
+      tags:
+      - System/Dept
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的部门
+      parameters:
+      - description: 部门参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dept.createDepartmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增部门
+      tags:
+      - System/Dept
+  /v1/system/departments/{id}:
+    delete:
+      description: 根据ID删除部门
+      parameters:
+      - description: 部门ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除部门
+      tags:
+      - System/Dept
+    get:
+      description: 根据ID查询部门
+      parameters:
+      - description: 部门ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取部门详情
+      tags:
+      - System/Dept
+    put:
+      consumes:
+      - application/json
+      description: 根据ID更新部门信息
+      parameters:
+      - description: 部门ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 部门参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dept.updateDepartmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改部门
+      tags:
+      - System/Dept
+  /v1/system/departments/tree:
+    get:
+      description: 查询部门树形结构
+      parameters:
+      - description: 部门状态
+        in: query
+        name: status
+        type: string
+      - description: 部门名称
+        in: query
+        name: deptName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取部门树
+      tags:
+      - System/Dept
+  /v1/system/dicts:
+    get:
+      description: 按状态、名称、类型过滤字典类型
+      parameters:
+      - description: 字典状态
+        in: query
+        name: status
+        type: string
+      - description: 字典名称
+        in: query
+        name: dictName
+        type: string
+      - description: 字典类型
+        in: query
+        name: dictType
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取字典类型列表
+      tags:
+      - System/Dict
+    post:
+      consumes:
+      - application/json
+      description: 创建字典类型
+      parameters:
+      - description: 字典类型参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dict.createDictTypeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增字典类型
+      tags:
+      - System/Dict
+  /v1/system/dicts/{id}:
+    delete:
+      description: 根据ID删除字典类型
+      parameters:
+      - description: 字典ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除字典类型
+      tags:
+      - System/Dict
+    get:
+      description: 根据ID查询字典类型
+      parameters:
+      - description: 字典ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取字典类型详情
+      tags:
+      - System/Dict
+    put:
+      consumes:
+      - application/json
+      description: 更新字典类型信息
+      parameters:
+      - description: 字典ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 字典类型参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dict.updateDictTypeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改字典类型
+      tags:
+      - System/Dict
+  /v1/system/dicts/{id}/data:
+    get:
+      description: 查询指定字典下的数据项
+      parameters:
+      - description: 字典ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 状态
+        in: query
+        name: status
+        type: string
+      - description: 数据标签
+        in: query
+        name: dictLabel
+        type: string
+      - description: 数据值
+        in: query
+        name: dictValue
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取字典数据列表
+      tags:
+      - System/Dict
+    post:
+      consumes:
+      - application/json
+      description: 在字典下新增数据项
+      parameters:
+      - description: 字典ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 字典数据参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dict.createDictDataRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增字典数据
+      tags:
+      - System/Dict
+  /v1/system/dicts/{id}/data/{itemId}:
+    delete:
+      description: 删除指定字典下的数据项
+      parameters:
+      - description: 字典ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 数据ID
+        in: path
+        name: itemId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除字典数据
+      tags:
+      - System/Dict
+    put:
+      consumes:
+      - application/json
+      description: 更新字典数据项
+      parameters:
+      - description: 字典ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 数据ID
+        in: path
+        name: itemId
+        required: true
+        type: integer
+      - description: 字典数据参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dict.updateDictDataRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改字典数据
+      tags:
+      - System/Dict
+  /v1/system/menus:
+    post:
+      consumes:
+      - application/json
+      description: 创建菜单资源
+      parameters:
+      - description: 菜单参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/menu.createMenuRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增菜单
+      tags:
+      - System/Menu
+  /v1/system/menus/{id}:
+    delete:
+      description: 根据ID删除菜单
+      parameters:
+      - description: 菜单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除菜单
+      tags:
+      - System/Menu
+    get:
+      description: 根据ID查询菜单
+      parameters:
+      - description: 菜单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取菜单详情
+      tags:
+      - System/Menu
+    put:
+      consumes:
+      - application/json
+      description: 更新菜单信息
+      parameters:
+      - description: 菜单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 菜单参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/menu.updateMenuRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改菜单
+      tags:
+      - System/Menu
+  /v1/system/menus/reorder:
+    put:
+      consumes:
+      - application/json
+      description: 批量更新菜单顺序
+      parameters:
+      - description: 排序参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/menu.reorderMenuRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 菜单排序
+      tags:
+      - System/Menu
+  /v1/system/menus/tree:
+    get:
+      description: 查询菜单树形结构
+      parameters:
+      - description: 菜单状态
+        in: query
+        name: status
+        type: string
+      - description: 菜单名称
+        in: query
+        name: menuName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取菜单树
+      tags:
+      - System/Menu
+  /v1/system/notices:
+    get:
+      description: 按标题、类型、状态过滤公告
+      parameters:
+      - description: 公告标题
+        in: query
+        name: noticeTitle
+        type: string
+      - description: 公告类型
+        in: query
+        name: noticeType
+        type: string
+      - description: 公告状态
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取通知公告列表
+      tags:
+      - System/Notice
+    post:
+      consumes:
+      - application/json
+      description: 发布公告
+      parameters:
+      - description: 公告参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/notice.createNoticeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增通知公告
+      tags:
+      - System/Notice
+  /v1/system/notices/{id}:
+    delete:
+      description: 根据ID删除公告
+      parameters:
+      - description: 公告ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除通知公告
+      tags:
+      - System/Notice
+    get:
+      description: 根据ID查询公告
+      parameters:
+      - description: 公告ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取通知公告详情
+      tags:
+      - System/Notice
+    put:
+      consumes:
+      - application/json
+      description: 更新公告信息
+      parameters:
+      - description: 公告ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 公告参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/notice.updateNoticeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改通知公告
+      tags:
+      - System/Notice
+  /v1/system/posts:
+    get:
+      description: 按状态、岗位名称或岗位编码过滤
+      parameters:
+      - description: 页码
+        in: query
+        name: pageNum
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 岗位状态
+        in: query
+        name: status
+        type: string
+      - description: 岗位名称
+        in: query
+        name: postName
+        type: string
+      - description: 岗位编码
+        in: query
+        name: postCode
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取岗位列表
+      tags:
+      - System/Post
+    post:
+      consumes:
+      - application/json
+      description: 创建岗位信息
+      parameters:
+      - description: 岗位参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/post.createPostRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增岗位
+      tags:
+      - System/Post
+  /v1/system/posts/{id}:
+    delete:
+      description: 根据ID删除岗位
+      parameters:
+      - description: 岗位ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除岗位
+      tags:
+      - System/Post
+    put:
+      consumes:
+      - application/json
+      description: 更新岗位信息
+      parameters:
+      - description: 岗位ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 岗位参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/post.updatePostRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改岗位
+      tags:
+      - System/Post
+  /v1/system/roles:
+    get:
+      description: 按条件分页查询角色
+      parameters:
+      - description: 页码
+        in: query
+        name: pageNum
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 角色名称
+        in: query
+        name: roleName
+        type: string
+      - description: 角色状态
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取角色列表
+      tags:
+      - System/Role
+    post:
+      consumes:
+      - application/json
+      description: 创建系统角色
+      parameters:
+      - description: 角色参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/role.createRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增角色
+      tags:
+      - System/Role
+  /v1/system/roles/{id}:
+    delete:
+      description: 根据ID删除角色
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除角色
+      tags:
+      - System/Role
+    get:
+      description: 根据ID查询角色信息
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取角色详情
+      tags:
+      - System/Role
+    put:
+      consumes:
+      - application/json
+      description: 更新角色信息
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 角色参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/role.updateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改角色
+      tags:
+      - System/Role
+  /v1/system/users:
+    get:
+      description: 按条件分页查询系统用户
+      parameters:
+      - description: 页码
+        in: query
+        name: pageNum
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 用户名
+        in: query
+        name: userName
+        type: string
+      - description: 用户状态
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取用户列表
+      tags:
+      - System/User
+    post:
+      consumes:
+      - application/json
+      description: 创建系统用户
+      parameters:
+      - description: 用户参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.createUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增用户
+      tags:
+      - System/User
+  /v1/system/users/{id}:
+    delete:
+      description: 根据用户ID删除用户
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除用户
+      tags:
+      - System/User
+    get:
+      description: 根据用户ID查询详细信息
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取用户详情
+      tags:
+      - System/User
+    put:
+      consumes:
+      - application/json
+      description: 根据用户ID更新信息
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 用户参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.updateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 修改用户
+      tags:
+      - System/User
+  /v1/system/users/{id}/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: 为指定用户设置新密码
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 新密码
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.resetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 重置用户密码
+      tags:
+      - System/User
+  /v1/system/users/options/departments:
+    get:
+      description: 查询可用的部门下拉数据
+      parameters:
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - description: 返回数量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 部门选项
+      tags:
+      - System/User
+  /v1/system/users/options/posts:
+    get:
+      description: 查询可用的岗位下拉数据
+      parameters:
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - description: 返回数量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 岗位选项
+      tags:
+      - System/User
+  /v1/system/users/options/roles:
+    get:
+      description: 查询可用的角色下拉数据
+      parameters:
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - description: 返回数量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 角色选项
+      tags:
+      - System/User
 schemes:
 - http
 - https

@@ -7,6 +7,31 @@ services:
       POSTGRES_USER: "${POSTGRES_USER:-postgres}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-Fm4Q8rLBoJf09A}" # ✅ 引号 + 转义$ -> $$
       POSTGRES_DB: "${POSTGRES_DB:-postgres}"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=512MB"
+      - "-c"
+      - "work_mem=8MB"
+      - "-c"
+      - "maintenance_work_mem=256MB"
+      - "-c"
+      - "effective_cache_size=1536MB"
+      - "-c"
+      - "wal_compression=on"
+      - "-c"
+      - "synchronous_commit=off"
+      - "-c"
+      - "max_wal_size=2048MB"
+      - "-c"
+      - "min_wal_size=256MB"
+      - "-c"
+      - "checkpoint_timeout=10min"
+      - "-c"
+      - "default_statistics_target=200"
+      - "-c"
+      - "jit=off"
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -27,6 +52,20 @@ services:
       - redis-server
       - "--appendonly"
       - "yes"
+      - "--appendfsync"
+      - "everysec"
+      - "--save"
+      - "900 1"
+      - "--save"
+      - "300 10"
+      - "--maxmemory"
+      - "${REDIS_MAXMEMORY:-512mb}"
+      - "--maxmemory-policy"
+      - "volatile-ttl"
+      - "--tcp-keepalive"
+      - "60"
+      - "--timeout"
+      - "0"
       - "--requirepass"
       - "${REDIS_PASSWORD:-Fm4Q8rLBoJf09A}" # ✅ 与上保持一致
     ports:

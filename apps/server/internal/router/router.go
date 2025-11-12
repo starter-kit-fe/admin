@@ -17,7 +17,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
 	"github.com/starter-kit-fe/admin/internal/system/cache"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
@@ -36,6 +35,7 @@ import (
 	"github.com/starter-kit-fe/admin/internal/system/role"
 	"github.com/starter-kit-fe/admin/internal/system/server"
 	"github.com/starter-kit-fe/admin/internal/system/user"
+	"github.com/starter-kit-fe/admin/middleware"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
@@ -66,6 +66,7 @@ type Options struct {
 	TokenBlocklist     middleware.TokenBlocklist
 	PublicMWs          []gin.HandlerFunc
 	ProtectedMWs       []gin.HandlerFunc
+	LoginMiddlewares   []gin.HandlerFunc
 }
 
 func New(opts Options) *gin.Engine {
@@ -143,7 +144,14 @@ func registerAuthRoutes(group *gin.RouterGroup, opts Options) {
 	if opts.AuthHandler == nil {
 		return
 	}
-	group.POST("/auth/login", opts.AuthHandler.Login)
+	var handlers []gin.HandlerFunc
+	for _, mw := range opts.LoginMiddlewares {
+		if mw != nil {
+			handlers = append(handlers, mw)
+		}
+	}
+	handlers = append(handlers, opts.AuthHandler.Login)
+	group.POST("/auth/login", handlers...)
 }
 
 func registerCaptchaRoutes(group *gin.RouterGroup, opts Options) {

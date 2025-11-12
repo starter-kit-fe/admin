@@ -3,6 +3,16 @@
 import { logout } from '@/api';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -29,7 +39,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { type ComponentProps, useCallback } from 'react';
+import { type ComponentProps, useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
 type UserInfo = {
@@ -48,14 +58,14 @@ type DropdownContentProps = ComponentProps<typeof DropdownMenuContent>;
 type UserDropdownContentProps = {
   user: UserInfo;
   contentProps?: DropdownContentProps;
-  onLogout: () => void;
+  onRequestLogout: () => void;
   isLoggingOut: boolean;
 };
 
 function UserDropdownContent({
   user,
   contentProps,
-  onLogout,
+  onRequestLogout,
   isLoggingOut,
 }: UserDropdownContentProps) {
   const { className, ...restContentProps } = contentProps ?? {};
@@ -106,7 +116,7 @@ function UserDropdownContent({
       <DropdownMenuItem
         onSelect={() => {
           if (!isLoggingOut) {
-            onLogout();
+            onRequestLogout();
           }
         }}
         disabled={isLoggingOut}
@@ -143,12 +153,22 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
     },
   });
 
-  const handleLogout = useCallback(() => {
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+
+  const handleLogoutRequest = useCallback(() => {
     if (isLoggingOut) {
       return;
     }
+    setIsLogoutDialogOpen(true);
+  }, [isLoggingOut, setIsLogoutDialogOpen]);
+
+  const handleConfirmLogout = useCallback(() => {
+    if (isLoggingOut) {
+      return;
+    }
+    setIsLogoutDialogOpen(false);
     triggerLogout();
-  }, [isLoggingOut, triggerLogout]);
+  }, [isLoggingOut, setIsLogoutDialogOpen, triggerLogout]);
 
   const { isMobile } = useSidebar();
   const sidebarContentProps: DropdownContentProps = {
@@ -163,62 +183,93 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
     sideOffset: 6,
   };
 
+  const logoutConfirmationDialog = (
+    <AlertDialog
+      open={isLogoutDialogOpen}
+      onOpenChange={setIsLogoutDialogOpen}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>确认退出登录？</AlertDialogTitle>
+          <AlertDialogDescription>
+            退出后需要重新登录才能继续使用后台。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isLoggingOut}>取消</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirmLogout}
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? '退出中...' : '确认退出'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   if (variant === 'topbar') {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary dark:bg-muted/60 dark:text-white/85"
-          >
-            <Avatar className="h-7 w-7">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <span className="hidden max-w-[120px] truncate md:block">
-              {user.name}
-            </span>
-            <ChevronsUpDown className="size-4 text-muted-foreground" />
-          </button>
-        </DropdownMenuTrigger>
-        <UserDropdownContent
-          user={user}
-          contentProps={topbarContentProps}
-          onLogout={handleLogout}
-          isLoggingOut={isLoggingOut}
-        />
-      </DropdownMenu>
+      <>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary dark:bg-muted/60 dark:text-white/85"
+            >
+              <Avatar className="h-7 w-7">
+                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <span className="hidden max-w-[120px] truncate md:block">
+                {user.name}
+              </span>
+              <ChevronsUpDown className="size-4 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <UserDropdownContent
+            user={user}
+            contentProps={topbarContentProps}
+            onRequestLogout={handleLogoutRequest}
+            isLoggingOut={isLoggingOut}
+          />
+        </DropdownMenu>
+        {logoutConfirmationDialog}
+      </>
     );
   }
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">用户</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <UserDropdownContent
-            user={user}
-            contentProps={sidebarContentProps}
-            onLogout={handleLogout}
-            isLoggingOut={isLoggingOut}
-          />
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
+    <>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              >
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarFallback className="rounded-lg">用户</AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">{user.name}</span>
+                  <span className="truncate text-xs">{user.email}</span>
+                </div>
+                <ChevronsUpDown className="ml-auto size-4" />
+              </SidebarMenuButton>
+            </DropdownMenuTrigger>
+            <UserDropdownContent
+              user={user}
+              contentProps={sidebarContentProps}
+              onRequestLogout={handleLogoutRequest}
+              isLoggingOut={isLoggingOut}
+            />
+          </DropdownMenu>
+        </SidebarMenuItem>
+      </SidebarMenu>
+      {logoutConfirmationDialog}
+    </>
   );
 }

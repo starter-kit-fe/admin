@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"github.com/starter-kit-fe/admin/internal/middleware"
+	"github.com/starter-kit-fe/admin/middleware"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
@@ -70,6 +70,20 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
+// List godoc
+// @Summary 获取字典类型列表
+// @Description 按状态、名称、类型过滤字典类型
+// @Tags System/Dict
+// @Security BearerAuth
+// @Produce json
+// @Param status query string false "字典状态"
+// @Param dictName query string false "字典名称"
+// @Param dictType query string false "字典类型"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/dicts [get]
 func (h *Handler) List(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("dictionary service unavailable"))
@@ -95,6 +109,19 @@ func (h *Handler) List(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(items))
 }
 
+// Get godoc
+// @Summary 获取字典类型详情
+// @Description 根据ID查询字典类型
+// @Tags System/Dict
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "字典ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/dicts/{id} [get]
 func (h *Handler) Get(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("dictionary service unavailable"))
@@ -120,6 +147,20 @@ func (h *Handler) Get(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(item))
 }
 
+// Create godoc
+// @Summary 新增字典类型
+// @Description 创建字典类型
+// @Tags System/Dict
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body createDictTypeRequest true "字典类型参数"
+// @Success 201 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 409 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/dicts [post]
 func (h *Handler) Create(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("dictionary service unavailable"))
@@ -157,6 +198,22 @@ func (h *Handler) Create(ctx *gin.Context) {
 	resp.Created(ctx, resp.WithData(item))
 }
 
+// Update godoc
+// @Summary 修改字典类型
+// @Description 更新字典类型信息
+// @Tags System/Dict
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "字典ID"
+// @Param request body updateDictTypeRequest true "字典类型参数"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 409 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/dicts/{id} [put]
 func (h *Handler) Update(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("dictionary service unavailable"))
@@ -203,6 +260,19 @@ func (h *Handler) Update(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(item))
 }
 
+// Delete godoc
+// @Summary 删除字典类型
+// @Description 根据ID删除字典类型
+// @Tags System/Dict
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "字典ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/dicts/{id} [delete]
 func (h *Handler) Delete(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("dictionary service unavailable"))
@@ -227,6 +297,22 @@ func (h *Handler) Delete(ctx *gin.Context) {
 	resp.NoContent(ctx)
 }
 
+// ListData godoc
+// @Summary 获取字典数据列表
+// @Description 查询指定字典下的数据项
+// @Tags System/Dict
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "字典ID"
+// @Param status query string false "状态"
+// @Param dictLabel query string false "数据标签"
+// @Param dictValue query string false "数据值"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/dicts/{id}/data [get]
 func (h *Handler) ListData(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("dictionary service unavailable"))
@@ -262,6 +348,22 @@ func (h *Handler) ListData(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(result))
 }
 
+// CreateData godoc
+// @Summary 新增字典数据
+// @Description 在字典下新增数据项
+// @Tags System/Dict
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "字典ID"
+// @Param request body createDictDataRequest true "字典数据参数"
+// @Success 201 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 409 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/dicts/{id}/data [post]
 func (h *Handler) CreateData(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("dictionary service unavailable"))
@@ -320,6 +422,23 @@ func (h *Handler) CreateData(ctx *gin.Context) {
 	resp.Created(ctx, resp.WithData(item))
 }
 
+// UpdateData godoc
+// @Summary 修改字典数据
+// @Description 更新字典数据项
+// @Tags System/Dict
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "字典ID"
+// @Param itemId path int true "数据ID"
+// @Param request body updateDictDataRequest true "字典数据参数"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 409 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/dicts/{id}/data/{itemId} [put]
 func (h *Handler) UpdateData(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("dictionary service unavailable"))
@@ -380,6 +499,20 @@ func (h *Handler) UpdateData(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(item))
 }
 
+// DeleteData godoc
+// @Summary 删除字典数据
+// @Description 删除指定字典下的数据项
+// @Tags System/Dict
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "字典ID"
+// @Param itemId path int true "数据ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/system/dicts/{id}/data/{itemId} [delete]
 func (h *Handler) DeleteData(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("dictionary service unavailable"))

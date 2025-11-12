@@ -1,4 +1,5 @@
 import { type StatusTabItem, StatusTabs } from '@/components/status-tabs';
+import { Card } from '@/components/ui/card';
 import {
   InputGroup,
   InputGroupAddon,
@@ -23,7 +24,7 @@ export function RoleManagementFilters({
   statusTabs,
 }: RoleManagementFiltersProps) {
   return (
-    <div className="space-y-4 rounded-xl   bg-card p-4 ">
+    <Card className="shadow-none rounded-xl sm:p-5">
       <StatusTabs
         value={status}
         onValueChange={onStatusChange}
@@ -52,6 +53,6 @@ export function RoleManagementFilters({
           </InputGroupButton>
         )}
       </InputGroup>
-    </div>
+    </Card>
   );
 }

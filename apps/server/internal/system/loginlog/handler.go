@@ -29,6 +29,22 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
+// List godoc
+// @Summary 获取登录日志
+// @Description 按用户、状态、IP分页查询登录日志
+// @Tags Monitor/LoginLog
+// @Security BearerAuth
+// @Produce json
+// @Param pageNum query int false "页码"
+// @Param pageSize query int false "每页数量"
+// @Param userName query string false "用户名"
+// @Param status query string false "状态"
+// @Param ipaddr query string false "IP地址"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/logs/login [get]
 func (h *Handler) List(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("login log service unavailable"))
@@ -56,6 +72,19 @@ func (h *Handler) List(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(result))
 }
 
+// Get godoc
+// @Summary 获取登录日志详情
+// @Description 根据ID查看登录日志
+// @Tags Monitor/LoginLog
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "日志ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/logs/login/{id} [get]
 func (h *Handler) Get(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("login log service unavailable"))
@@ -81,6 +110,19 @@ func (h *Handler) Get(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(item))
 }
 
+// Delete godoc
+// @Summary 删除登录日志
+// @Description 根据ID删除登录日志
+// @Tags Monitor/LoginLog
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "日志ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/logs/login/{id} [delete]
 func (h *Handler) Delete(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("login log service unavailable"))
@@ -105,6 +147,18 @@ func (h *Handler) Delete(ctx *gin.Context) {
 	resp.NoContent(ctx)
 }
 
+// Unlock godoc
+// @Summary 解锁账号
+// @Description 通过登录日志记录解除账号锁定
+// @Tags Monitor/LoginLog
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "日志ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/logs/login/{id}/unlock [post]
 func (h *Handler) Unlock(ctx *gin.Context) {
 	if h == nil || h.service == nil {
 		resp.ServiceUnavailable(ctx, resp.WithMessage("login log service unavailable"))
