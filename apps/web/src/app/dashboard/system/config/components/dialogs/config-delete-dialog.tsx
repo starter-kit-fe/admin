@@ -6,14 +6,14 @@ import { toast } from 'sonner';
 import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
 import { removeConfig } from '../../api';
 import {
+  useConfigDeleteState,
   useConfigManagementMutationCounter,
   useConfigManagementRefresh,
-  useConfigManagementStore,
 } from '@/app/dashboard/system/config/store';
 import { resolveErrorMessage } from '../../utils';
 
 export function ConfigDeleteDialog() {
-  const { deleteTarget, setDeleteTarget } = useConfigManagementStore();
+  const { deleteTarget, setDeleteTarget } = useConfigDeleteState();
   const refresh = useConfigManagementRefresh();
   const { beginMutation, endMutation } =
     useConfigManagementMutationCounter();

@@ -13,14 +13,16 @@ import {
 import {
   useConfigManagementMutationCounter,
   useConfigManagementRefresh,
-  useConfigManagementStore,
+  useConfigEditorActions,
+  useConfigEditorState,
 } from '@/app/dashboard/system/config/store';
 import { resolveErrorMessage, toFormValues } from '../../utils';
 import type { ConfigFormValues } from '../../type';
 import { ConfigEditorDialog } from './config-editor-dialog';
 
 export function ConfigEditorManager() {
-  const { editorState, closeEditor } = useConfigManagementStore();
+  const editorState = useConfigEditorState();
+  const { closeEditor } = useConfigEditorActions();
   const refresh = useConfigManagementRefresh();
   const { beginMutation, endMutation } =
     useConfigManagementMutationCounter();

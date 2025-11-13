@@ -46,3 +46,38 @@ export const emptyDictDataList: DictDataList = {
   items: [],
   total: 0,
 };
+
+function normalizeField(value: string | null | undefined) {
+  return value ?? '';
+}
+
+export function areDictDataListsEqual(
+  next: DictData[],
+  prev: DictData[],
+): boolean {
+  if (next === prev) {
+    return true;
+  }
+  if (next.length !== prev.length) {
+    return false;
+  }
+  for (let index = 0; index < next.length; index += 1) {
+    const a = next[index];
+    const b = prev[index];
+    if (
+      a.dictCode !== b.dictCode ||
+      a.dictSort !== b.dictSort ||
+      a.dictLabel !== b.dictLabel ||
+      a.dictValue !== b.dictValue ||
+      a.dictType !== b.dictType ||
+      normalizeField(a.status) !== normalizeField(b.status) ||
+      normalizeField(a.isDefault) !== normalizeField(b.isDefault) ||
+      normalizeField(a.remark) !== normalizeField(b.remark) ||
+      normalizeField(a.cssClass) !== normalizeField(b.cssClass) ||
+      normalizeField(a.listClass) !== normalizeField(b.listClass)
+    ) {
+      return false;
+    }
+  }
+  return true;
+}

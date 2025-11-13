@@ -2,7 +2,9 @@
 
 import {
   type TypeStatusValue,
-  useDictManagementStore,
+  useDictTypeAppliedFilters,
+  useDictTypeFilterForm,
+  useDictTypeStatus,
 } from '@/app/dashboard/system/dict/store';
 import { useCallback, useEffect, useMemo } from 'react';
 
@@ -11,15 +13,10 @@ import { DictTypeAppliedFilters } from '../filters/dict-type-applied-filters';
 import { DictTypeFilters } from '../filters/dict-type-filters';
 
 export function DictTypeFiltersSection() {
-  const {
-    typeStatus,
-    setTypeStatus,
-    typeFilterForm,
-    setTypeFilterForm,
-    typeAppliedFilters,
-    applyTypeFilters,
-    resetTypeFilters,
-  } = useDictManagementStore();
+  const { typeStatus, setTypeStatus } = useDictTypeStatus();
+  const { typeFilterForm, setTypeFilterForm } = useDictTypeFilterForm();
+  const { typeAppliedFilters, applyTypeFilters, resetTypeFilters } =
+    useDictTypeAppliedFilters();
 
   const statusTabs = useMemo(() => TYPE_STATUS_TABS, []);
 

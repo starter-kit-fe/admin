@@ -2,8 +2,15 @@
 
 import {
   type DataStatusValue,
+  useDictDataAppliedFilters,
+  useDictDataDeleteState,
+  useDictDataEditorActions,
+  useDictDataFilterForm,
+  useDictDataState,
+  useDictDataStatus,
   useDictManagementSetRefreshing,
-  useDictManagementStore,
+  useDictSelection,
+  useDictTypesState,
 } from '@/app/dashboard/system/dict/store';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
@@ -12,31 +19,22 @@ import { useEffect, useMemo } from 'react';
 import { listDictData } from '../../api';
 import { DATA_STATUS_TABS, DEFAULT_DEBOUNCE_MS } from '../../constants';
 import type { DictData, DictType } from '../../type';
-import { emptyDictDataList } from '../../utils';
+import { areDictDataListsEqual, emptyDictDataList } from '../../utils';
 import { DictDataFilters } from '../filters/dict-data-filters';
 import { DictDataTable } from '../list/dict-data-table';
 import { DictDataToolbar } from '../toolbars/dict-data-toolbar';
 
 export function DictDataSection() {
-  const {
-    dictTypes,
-    selectedDictId,
-    dataStatus,
-    setDataStatus,
-    dataFilterForm,
-    setDataFilterForm,
-    dataAppliedFilters,
-    applyDataFilters,
-    dictData,
-    setDictData,
-    dictDataTotal,
-    setDictDataTotal,
-    openDataCreate,
-    openDataEdit,
-    setDataDeleteTarget,
-  } = useDictManagementStore();
+  const { dictTypes } = useDictTypesState();
+  const { selectedDictId } = useDictSelection();
+  const { dataStatus, setDataStatus } = useDictDataStatus();
+  const { dataFilterForm, setDataFilterForm } = useDictDataFilterForm();
+  const { dataAppliedFilters, applyDataFilters } = useDictDataAppliedFilters();
+  const { dictData, setDictData, dictDataTotal, setDictDataTotal } =
+    useDictDataState();
+  const { openDataCreate, openDataEdit } = useDictDataEditorActions();
+  const { setDataDeleteTarget } = useDictDataDeleteState();
   const setRefreshing = useDictManagementSetRefreshing();
-
   const selectedDict: DictType | undefined = useMemo(() => {
     if (selectedDictId == null) {
       return undefined;
@@ -88,14 +86,22 @@ export function DictDataSection() {
   useEffect(() => {
     if (dataQuery.data) {
       const items = dataQuery.data.items ?? [];
-      setDictData(items);
-      setDictDataTotal(items.length);
+      if (!areDictDataListsEqual(items, dictData)) {
+        setDictData(items);
+      }
+      if (dictDataTotal !== items.length) {
+        setDictDataTotal(items.length);
+      }
       return;
     }
 
-    setDictData([]);
-    setDictDataTotal(0);
-  }, [dataQuery.data, setDictData, setDictDataTotal]);
+    if (dictData.length !== 0) {
+      setDictData([]);
+    }
+    if (dictDataTotal !== 0) {
+      setDictDataTotal(0);
+    }
+  }, [dataQuery.data, dictData, dictDataTotal, setDictData, setDictDataTotal]);
 
   if (!selectedDict || selectedDictId == null) {
     return (

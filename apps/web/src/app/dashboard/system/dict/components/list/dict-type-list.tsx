@@ -45,6 +45,7 @@ export function DictTypeList({
   onAddData,
   onDelete,
 }: DictTypeListProps) {
+  console.log('DictTypeList');
   const renderStatusBadge = (status?: string | null) => {
     const meta = TYPE_STATUS_TABS.find((tab) => tab.value === status);
     if (!meta || meta.value === 'all') {

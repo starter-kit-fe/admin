@@ -5,13 +5,13 @@ import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCcw } from 'lucide-react';
 
 import {
+  useDepartmentEditorActions,
   useDepartmentManagementRefresh,
   useDepartmentManagementStatus,
-  useDepartmentManagementStore,
 } from '@/app/dashboard/system/dept/store';
 
 export function DepartmentManagementHeader() {
-  const { openCreate } = useDepartmentManagementStore();
+  const { openCreate } = useDepartmentEditorActions();
   const { isRefreshing, isMutating } = useDepartmentManagementStatus();
   const refresh = useDepartmentManagementRefresh();
   const refreshDisabled = isRefreshing || isMutating;

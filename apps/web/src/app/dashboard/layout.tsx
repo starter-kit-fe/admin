@@ -12,10 +12,17 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/stores';
-import { type ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 export default function Page({ children }: { children: ReactNode }) {
   const { user } = useAuthStore();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const showNavUser = isHydrated && user;
 
   return (
     <SidebarProvider>
@@ -33,12 +40,12 @@ export default function Page({ children }: { children: ReactNode }) {
           </div>
           <div className="ml-auto flex items-center gap-3 px-4">
             <ThemeToggle />
-            {user ? (
+            {showNavUser ? (
               <NavUser
                 user={{
-                  name: user.nickName || user.userName || '用户',
-                  email: user.email || '未设置邮箱',
-                  avatar: user.avatar || '',
+                  name: user?.nickName || user?.userName || '用户',
+                  email: user?.email || '未设置邮箱',
+                  avatar: user?.avatar || '',
                 }}
                 variant="topbar"
               />

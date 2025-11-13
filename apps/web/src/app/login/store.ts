@@ -26,6 +26,8 @@ const defaultAuthState: StoredAuthState = {
 const authAtom = atomWithStorage<StoredAuthState>(
   'auth-storage',
   defaultAuthState,
+  undefined,
+  { getOnInit: false },
 );
 
 const isAuthenticatedAtom = atom((get) => Boolean(get(authAtom).user));

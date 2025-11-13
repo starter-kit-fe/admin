@@ -13,14 +13,16 @@ import {
 import {
   useDictManagementMutationCounter,
   useDictManagementRefresh,
-  useDictManagementStore,
+  useDictTypeEditorActions,
+  useDictTypeEditorState,
 } from '@/app/dashboard/system/dict/store';
 import { resolveErrorMessage, toDictTypeFormValues } from '../../utils';
 import type { DictTypeFormValues } from '../../type';
 import { DictTypeEditorDialog } from './dict-type-editor-dialog';
 
 export function DictTypeEditorManager() {
-  const { typeEditorState, closeTypeEditor } = useDictManagementStore();
+  const typeEditorState = useDictTypeEditorState();
+  const { closeTypeEditor } = useDictTypeEditorActions();
   const refresh = useDictManagementRefresh();
   const { beginMutation, endMutation } =
     useDictManagementMutationCounter();

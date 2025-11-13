@@ -4,15 +4,14 @@ import { useMemo } from 'react';
 
 import { STATUS_TABS } from '../../constants';
 import {
-  useDepartmentManagementStore,
   type StatusValue,
+  useDepartmentFilters,
 } from '@/app/dashboard/system/dept/store';
 import { DepartmentAppliedFilters } from '../filters/department-applied-filters';
 import { DepartmentFilters } from '../filters/department-filters';
 
 export function DepartmentFiltersSection() {
-  const { status, setStatus, keyword, setKeyword } =
-    useDepartmentManagementStore();
+  const { status, setStatus, keyword, setKeyword } = useDepartmentFilters();
 
   const statusTabs = useMemo(
     () =>

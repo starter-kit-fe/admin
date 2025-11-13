@@ -3,27 +3,29 @@
 import { getMenuTree } from '@/api';
 import { LogoMark } from '@/components/logo-mark';
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty';
+import { resolveLucideIcon } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';
 import { MenuNode } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { type ReactNode, useMemo } from 'react';
+import Link from 'next/link';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
+import gpkg from '../../../../../package.json';
 import pkg from '../../../package.json';
 import { resolveMenuLink } from './menu-routing';
 import { NavMain } from './nav-main';
-import { resolveLucideIcon } from '@/lib/lucide-icons';
 
 export type NavItem = {
   title: string;
@@ -70,6 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     queryKey: ['auth', 'menus'],
     queryFn: getMenuTree,
   });
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const navItems = useMemo(() => buildNavItems(menuTree), [menuTree]);
 
@@ -80,45 +83,55 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const shouldShowLoading = !isHydrated || isLoading;
+  const hasNavItems = navItems.length > 0;
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <div
-          className={cn(
-            'flex items-center px-4 py-3 transition-all duration-200',
-            isCollapsed ? 'justify-center gap-0 px-0 py-4' : 'gap-3',
-          )}
-        >
-          <LogoMark
+        <Link href="/dashboard" className="cursor-pointer">
+          <div
             className={cn(
-              'shrink-0',
-              isCollapsed ? 'h-7 w-7' : 'h-8 w-8',
+              'flex items-center px-4 py-3 transition-all duration-200',
+              isCollapsed ? 'justify-center gap-0 px-0 py-4' : 'gap-3',
             )}
-            gradientIdPrefix="sidebar-logo"
-          />
-          {!isCollapsed ? (
-            <div className="text-left">
-              <p className="text-sm font-semibold text-sidebar-foreground">
-                {brandName}
-              </p>
-              <p className="text-xs text-muted-foreground">根据权限展示模块</p>
-            </div>
-          ) : null}
-        </div>
+          >
+            <LogoMark
+              className={cn('shrink-0', isCollapsed ? 'h-7 w-7' : 'h-8 w-8')}
+              gradientIdPrefix="sidebar-logo"
+            />
+            {!isCollapsed ? (
+              <div className="text-left">
+                <p className="text-sm font-semibold text-sidebar-foreground">
+                  {brandName}
+                </p>
+                <p className="text-[10px] text-muted-foreground opacity-[60%]">
+                  v{gpkg.version}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
-        {isLoading ? (
+        {shouldShowLoading ? (
           <div className="px-4 py-6 text-sm text-muted-foreground">
             菜单加载中...
           </div>
-        ) : navItems.length > 0 ? (
+        ) : hasNavItems ? (
           <NavMain items={navItems} />
         ) : (
           <div className="px-4 py-6">
             <Empty className="border-0 bg-transparent p-2">
               <EmptyHeader>
                 <EmptyTitle>暂无可用菜单</EmptyTitle>
-                <EmptyDescription>联系管理员为你分配系统权限。</EmptyDescription>
+                <EmptyDescription>
+                  联系管理员为你分配系统权限。
+                </EmptyDescription>
               </EmptyHeader>
             </Empty>
           </div>

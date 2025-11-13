@@ -1,15 +1,20 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+
 import {
+  useDepartmentEditorActions,
+  useDepartmentDeleteState,
+  useDepartmentFilters,
   useDepartmentManagementSetRefreshHandler,
   useDepartmentManagementSetRefreshing,
-  useDepartmentManagementStore,
+  useDepartmentTreeState,
 } from '@/app/dashboard/system/dept/store';
 import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { listDepartmentTree } from '../../api';
 import { BASE_QUERY_KEY } from '../../constants';
@@ -28,15 +33,10 @@ function useDebouncedValue<T>(value: T, delay: number) {
 }
 
 export function DepartmentTreeSection() {
-  const {
-    status,
-    keyword,
-    departmentTree,
-    setDepartmentTree,
-    openCreate,
-    openEdit,
-    setDeleteTarget,
-  } = useDepartmentManagementStore();
+  const { status, keyword } = useDepartmentFilters();
+  const { departmentTree, setDepartmentTree } = useDepartmentTreeState();
+  const { openCreate, openEdit } = useDepartmentEditorActions();
+  const { setDeleteTarget } = useDepartmentDeleteState();
   const setRefreshing = useDepartmentManagementSetRefreshing();
   const setRefreshHandler = useDepartmentManagementSetRefreshHandler();
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 400);
@@ -83,7 +83,7 @@ export function DepartmentTreeSection() {
   };
 
   return (
-    <Card className="flex max-h-[520px] shadow-none flex-col overflow-hidden rounded-xl border border-border/60 bg-card  py-0  dark:border-border/40">
+    <Card className="flex h-[calc(100vh-320px)] min-h-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-card py-0 shadow-none dark:border-border/40">
       {departmentQuery.isLoading && departmentTree.length === 0 ? (
         <div className="flex flex-1 items-center justify-center">
           <InlineLoading label="加载部门数据..." />
@@ -101,14 +101,16 @@ export function DepartmentTreeSection() {
           </Button>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto rounded-lg bg-muted/20 p-3 dark:bg-muted/10">
-          <DepartmentTreeView
-            nodes={departmentTree}
-            onAddChild={handleAddChild}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </div>
+        <ScrollArea className="flex-1 min-h-0 rounded-lg bg-muted/20 dark:bg-muted/10">
+          <div className="p-3">
+            <DepartmentTreeView
+              nodes={departmentTree}
+              onAddChild={handleAddChild}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </div>
+        </ScrollArea>
       )}
     </Card>
   );

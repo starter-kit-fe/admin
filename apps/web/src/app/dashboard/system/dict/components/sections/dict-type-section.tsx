@@ -1,9 +1,16 @@
 'use client';
 
 import {
+  useDictDataEditorActions,
+  useDictDataFilterActions,
   useDictManagementSetRefreshHandler,
   useDictManagementSetRefreshing,
-  useDictManagementStore,
+  useDictSelection,
+  useDictTypeAppliedFilters,
+  useDictTypeDeleteState,
+  useDictTypeEditorActions,
+  useDictTypeStatus,
+  useDictTypesState,
 } from '@/app/dashboard/system/dict/store';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -15,19 +22,14 @@ import type { DictType } from '../../type';
 import { DictTypeList } from '../list/dict-type-list';
 
 export function DictTypeSection() {
-  const {
-    typeStatus,
-    typeAppliedFilters,
-    dictTypes,
-    setDictTypes,
-    selectedDictId,
-    setSelectedDictId,
-    openTypeEdit,
-    openDataCreate,
-    setTypeDeleteTarget,
-    applyDataFilters,
-    setDataFilterForm,
-  } = useDictManagementStore();
+  const { typeStatus } = useDictTypeStatus();
+  const { typeAppliedFilters } = useDictTypeAppliedFilters();
+  const { dictTypes, setDictTypes } = useDictTypesState();
+  const { selectedDictId, setSelectedDictId } = useDictSelection();
+  const { openTypeEdit } = useDictTypeEditorActions();
+  const { openDataCreate } = useDictDataEditorActions();
+  const { setTypeDeleteTarget } = useDictTypeDeleteState();
+  const { setDataFilterForm, applyDataFilters } = useDictDataFilterActions();
   const setRefreshing = useDictManagementSetRefreshing();
   const setRefreshHandler = useDictManagementSetRefreshHandler();
   const queryClient = useQueryClient();

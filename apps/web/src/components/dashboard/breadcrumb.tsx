@@ -23,7 +23,7 @@ const SEGMENT_LABEL_MAP: Record<string, string> = {
   job: '定时任务',
   server: '服务监控',
   user: '用户管理',
-  system: '系统设置',
+  system: '系统管理',
 };
 
 type Crumb = {

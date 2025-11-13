@@ -109,52 +109,34 @@ const setRefreshActionAtom = atom(
   },
 );
 
-export interface DepartmentManagementStore {
-  status: StatusValue;
-  setStatus: (value: StatusValue) => void;
-  keyword: string;
-  setKeyword: (value: string) => void;
-  departmentTree: DepartmentNode[];
-  setDepartmentTree: (updater: DepartmentTreeUpdater) => void;
-  editorState: EditorState;
-  openCreate: (parentId: number) => void;
-  openEdit: (node: DepartmentNode) => void;
-  closeEditor: () => void;
-  deleteTarget: DepartmentNode | null;
-  setDeleteTarget: (node: DepartmentNode | null) => void;
-}
+export const useDepartmentFilters = () => {
+  const status = useAtomValue(statusAtom);
+  const keyword = useAtomValue(keywordAtom);
+  const setStatus = useSetAtom(setStatusAtom);
+  const setKeyword = useSetAtom(setKeywordAtom);
+  return { status, setStatus, keyword, setKeyword };
+};
 
-export const useDepartmentManagementStore =
-  (): DepartmentManagementStore => {
-    const status = useAtomValue(statusAtom);
-    const keyword = useAtomValue(keywordAtom);
-    const tree = useAtomValue(treeAtom);
-    const editorState = useAtomValue(editorStateAtom);
-    const deleteTarget = useAtomValue(deleteTargetAtom);
+export const useDepartmentTreeState = () => {
+  const departmentTree = useAtomValue(treeAtom);
+  const setDepartmentTree = useSetAtom(setTreeAtom);
+  return { departmentTree, setDepartmentTree };
+};
 
-    const setStatus = useSetAtom(setStatusAtom);
-    const setKeyword = useSetAtom(setKeywordAtom);
-    const setTree = useSetAtom(setTreeAtom);
-    const openCreate = useSetAtom(openCreateAtom);
-    const openEdit = useSetAtom(openEditAtom);
-    const closeEditor = useSetAtom(closeEditorAtom);
-    const setDeleteTarget = useSetAtom(setDeleteTargetAtom);
+export const useDepartmentEditorState = () => useAtomValue(editorStateAtom);
 
-    return {
-      status,
-      setStatus,
-      keyword,
-      setKeyword,
-      departmentTree: tree,
-      setDepartmentTree: setTree,
-      editorState,
-      openCreate,
-      openEdit,
-      closeEditor,
-      deleteTarget,
-      setDeleteTarget,
-    };
-  };
+export const useDepartmentEditorActions = () => {
+  const openCreate = useSetAtom(openCreateAtom);
+  const openEdit = useSetAtom(openEditAtom);
+  const closeEditor = useSetAtom(closeEditorAtom);
+  return { openCreate, openEdit, closeEditor };
+};
+
+export const useDepartmentDeleteState = () => {
+  const deleteTarget = useAtomValue(deleteTargetAtom);
+  const setDeleteTarget = useSetAtom(setDeleteTargetAtom);
+  return { deleteTarget, setDeleteTarget };
+};
 
 export const useDepartmentManagementStatus = () => {
   const isRefreshing = useAtomValue(refreshingAtom);

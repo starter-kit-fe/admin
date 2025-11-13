@@ -10,6 +10,7 @@ import { DictTypeFiltersSection } from './components/sections/dict-type-filters-
 import { DictTypeSection } from './components/sections/dict-type-section';
 
 export function DictManagement() {
+  console.log('DictManagement');
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
       <DictManagementHeader />

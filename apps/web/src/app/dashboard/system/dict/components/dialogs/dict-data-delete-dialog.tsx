@@ -6,14 +6,14 @@ import { toast } from 'sonner';
 import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
 import { removeDictData } from '../../api';
 import {
+  useDictDataDeleteState,
   useDictManagementMutationCounter,
   useDictManagementRefresh,
-  useDictManagementStore,
 } from '@/app/dashboard/system/dict/store';
 import { resolveErrorMessage } from '../../utils';
 
 export function DictDataDeleteDialog() {
-  const { dataDeleteTarget, setDataDeleteTarget } = useDictManagementStore();
+  const { dataDeleteTarget, setDataDeleteTarget } = useDictDataDeleteState();
   const refresh = useDictManagementRefresh();
   const { beginMutation, endMutation } =
     useDictManagementMutationCounter();

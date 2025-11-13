@@ -8,12 +8,12 @@ import { removeDictType } from '../../api';
 import {
   useDictManagementMutationCounter,
   useDictManagementRefresh,
-  useDictManagementStore,
+  useDictTypeDeleteState,
 } from '@/app/dashboard/system/dict/store';
 import { resolveErrorMessage } from '../../utils';
 
 export function DictTypeDeleteDialog() {
-  const { typeDeleteTarget, setTypeDeleteTarget } = useDictManagementStore();
+  const { typeDeleteTarget, setTypeDeleteTarget } = useDictTypeDeleteState();
   const refresh = useDictManagementRefresh();
   const { beginMutation, endMutation } =
     useDictManagementMutationCounter();

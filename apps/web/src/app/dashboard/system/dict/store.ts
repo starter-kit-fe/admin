@@ -1,12 +1,9 @@
 'use client';
 
+import { useCallback } from 'react';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 
-import {
-  BASE_TYPE_QUERY_KEY,
-  DATA_STATUS_TABS,
-  TYPE_STATUS_TABS,
-} from './constants';
+import { DATA_STATUS_TABS, TYPE_STATUS_TABS } from './constants';
 import type { DictData, DictType } from './type';
 
 export type TypeStatusValue = (typeof TYPE_STATUS_TABS)[number]['value'];
@@ -257,151 +254,119 @@ const setRefreshActionAtom = atom(
   },
 );
 
-export interface DictManagementStore {
-  typeStatus: TypeStatusValue;
-  setTypeStatus: (value: TypeStatusValue) => void;
-  typeFilterForm: TypeFilterState;
-  setTypeFilterForm: (action: SetStateAction<TypeFilterState>) => void;
-  typeAppliedFilters: TypeFilterState;
-  applyTypeFilters: (
-    filters: TypeFilterState,
-    options?: { force?: boolean },
-  ) => void;
-  resetTypeFilters: () => void;
-
-  dataStatus: DataStatusValue;
-  setDataStatus: (value: DataStatusValue) => void;
-  dataFilterForm: DataFilterState;
-  setDataFilterForm: (action: SetStateAction<DataFilterState>) => void;
-  dataAppliedFilters: DataFilterState;
-  applyDataFilters: (
-    filters: DataFilterState,
-    options?: { force?: boolean },
-  ) => void;
-  resetDataFilters: () => void;
-
-  dictTypes: DictType[];
-  setDictTypes: (types: DictType[]) => void;
-  selectedDictId: number | null;
-  setSelectedDictId: (dictId: SetStateAction<number | null>) => void;
-
-  dictData: DictData[];
-  setDictData: (data: DictData[]) => void;
-  dictDataTotal: number;
-  setDictDataTotal: (total: number) => void;
-
-  typeEditorState: TypeEditorState;
-  openTypeCreate: () => void;
-  openTypeEdit: (dictType: DictType) => void;
-  closeTypeEditor: () => void;
-
-  dataEditorState: DataEditorState;
-  openDataCreate: (dictType: DictType) => void;
-  openDataEdit: (payload: { dictType: DictType; dictData: DictData }) => void;
-  closeDataEditor: () => void;
-
-  typeDeleteTarget: DictType | null;
-  setTypeDeleteTarget: (dictType: DictType | null) => void;
-  dataDeleteTarget: DataDeleteTarget;
-  setDataDeleteTarget: (target: DataDeleteTarget) => void;
-}
-
-export const useDictManagementStore = (): DictManagementStore => {
-  const typeStatus = useAtomValue(typeStatusAtom);
-  const typeFilterForm = useAtomValue(typeFilterFormAtom);
-  const typeAppliedFilters = useAtomValue(typeAppliedFiltersAtom);
-
-  const dataStatus = useAtomValue(dataStatusAtom);
-  const dataFilterForm = useAtomValue(dataFilterFormAtom);
-  const dataAppliedFilters = useAtomValue(dataAppliedFiltersAtom);
-
-  const dictTypes = useAtomValue(dictTypesAtom);
-  const selectedDictId = useAtomValue(selectedDictIdAtom);
-  const dictData = useAtomValue(dictDataAtom);
-  const dictDataTotal = useAtomValue(dictDataTotalAtom);
-
-  const typeEditorState = useAtomValue(typeEditorStateAtom);
-  const dataEditorState = useAtomValue(dataEditorStateAtom);
-
-  const typeDeleteTarget = useAtomValue(typeDeleteTargetAtom);
-  const dataDeleteTarget = useAtomValue(dataDeleteTargetAtom);
-
-  const setTypeStatus = useSetAtom(setTypeStatusAtom);
-  const setTypeFilterForm = useSetAtom(setTypeFilterFormAtom);
+const useApplyTypeFiltersHandler = () => {
   const applyTypeFiltersSetter = useSetAtom(applyTypeFiltersAtom);
-  const resetTypeFilters = useSetAtom(resetTypeFiltersAtom);
+  return useCallback(
+    (filters: TypeFilterState, options?: { force?: boolean }) => {
+      applyTypeFiltersSetter({ filters, force: options?.force });
+    },
+    [applyTypeFiltersSetter],
+  );
+};
 
-  const setDataStatus = useSetAtom(setDataStatusAtom);
-  const setDataFilterForm = useSetAtom(setDataFilterFormAtom);
+const useApplyDataFiltersHandler = () => {
   const applyDataFiltersSetter = useSetAtom(applyDataFiltersAtom);
+  return useCallback(
+    (filters: DataFilterState, options?: { force?: boolean }) => {
+      applyDataFiltersSetter({ filters, force: options?.force });
+    },
+    [applyDataFiltersSetter],
+  );
+};
+
+export const useDictTypeStatus = () => {
+  const typeStatus = useAtomValue(typeStatusAtom);
+  const setTypeStatus = useSetAtom(setTypeStatusAtom);
+  return { typeStatus, setTypeStatus };
+};
+
+export const useDictTypeFilterForm = () => {
+  const typeFilterForm = useAtomValue(typeFilterFormAtom);
+  const setTypeFilterForm = useSetAtom(setTypeFilterFormAtom);
+  return { typeFilterForm, setTypeFilterForm };
+};
+
+export const useDictTypeAppliedFilters = () => {
+  const typeAppliedFilters = useAtomValue(typeAppliedFiltersAtom);
+  const applyTypeFilters = useApplyTypeFiltersHandler();
+  const resetTypeFilters = useSetAtom(resetTypeFiltersAtom);
+  return { typeAppliedFilters, applyTypeFilters, resetTypeFilters };
+};
+
+export const useDictDataStatus = () => {
+  const dataStatus = useAtomValue(dataStatusAtom);
+  const setDataStatus = useSetAtom(setDataStatusAtom);
+  return { dataStatus, setDataStatus };
+};
+
+export const useDictDataFilterForm = () => {
+  const dataFilterForm = useAtomValue(dataFilterFormAtom);
+  const setDataFilterForm = useSetAtom(setDataFilterFormAtom);
+  return { dataFilterForm, setDataFilterForm };
+};
+
+export const useDictDataAppliedFilters = () => {
+  const dataAppliedFilters = useAtomValue(dataAppliedFiltersAtom);
+  const applyDataFilters = useApplyDataFiltersHandler();
   const resetDataFilters = useSetAtom(resetDataFiltersAtom);
+  return { dataAppliedFilters, applyDataFilters, resetDataFilters };
+};
 
+export const useDictDataFilterActions = () => {
+  const setDataFilterForm = useSetAtom(setDataFilterFormAtom);
+  const applyDataFilters = useApplyDataFiltersHandler();
+  const resetDataFilters = useSetAtom(resetDataFiltersAtom);
+  return { setDataFilterForm, applyDataFilters, resetDataFilters };
+};
+
+export const useDictTypesState = () => {
+  const dictTypes = useAtomValue(dictTypesAtom);
   const setDictTypes = useSetAtom(setDictTypesAtom);
-  const setSelectedDictId = useSetAtom(setSelectedDictIdAtom);
-  const setDictData = useSetAtom(setDictDataAtom);
-  const setDictDataTotal = useSetAtom(setDictDataTotalAtom);
+  return { dictTypes, setDictTypes };
+};
 
+export const useDictSelection = () => {
+  const selectedDictId = useAtomValue(selectedDictIdAtom);
+  const setSelectedDictId = useSetAtom(setSelectedDictIdAtom);
+  return { selectedDictId, setSelectedDictId };
+};
+
+export const useDictDataState = () => {
+  const dictData = useAtomValue(dictDataAtom);
+  const setDictData = useSetAtom(setDictDataAtom);
+  const dictDataTotal = useAtomValue(dictDataTotalAtom);
+  const setDictDataTotal = useSetAtom(setDictDataTotalAtom);
+  return { dictData, setDictData, dictDataTotal, setDictDataTotal };
+};
+
+export const useDictTypeEditorState = () => useAtomValue(typeEditorStateAtom);
+
+export const useDictTypeEditorActions = () => {
   const openTypeCreate = useSetAtom(openTypeCreateAtom);
   const openTypeEdit = useSetAtom(openTypeEditAtom);
   const closeTypeEditor = useSetAtom(closeTypeEditorAtom);
+  return { openTypeCreate, openTypeEdit, closeTypeEditor };
+};
 
+export const useDictDataEditorState = () => useAtomValue(dataEditorStateAtom);
+
+export const useDictDataEditorActions = () => {
   const openDataCreate = useSetAtom(openDataCreateAtom);
   const openDataEdit = useSetAtom(openDataEditAtom);
   const closeDataEditor = useSetAtom(closeDataEditorAtom);
+  return { openDataCreate, openDataEdit, closeDataEditor };
+};
 
+export const useDictTypeDeleteState = () => {
+  const typeDeleteTarget = useAtomValue(typeDeleteTargetAtom);
   const setTypeDeleteTarget = useSetAtom(setTypeDeleteTargetAtom);
+  return { typeDeleteTarget, setTypeDeleteTarget };
+};
+
+export const useDictDataDeleteState = () => {
+  const dataDeleteTarget = useAtomValue(dataDeleteTargetAtom);
   const setDataDeleteTarget = useSetAtom(setDataDeleteTargetAtom);
-
-  const applyTypeFilters = (
-    filters: TypeFilterState,
-    options?: { force?: boolean },
-  ) => {
-    applyTypeFiltersSetter({ filters, force: options?.force });
-  };
-
-  const applyDataFilters = (
-    filters: DataFilterState,
-    options?: { force?: boolean },
-  ) => {
-    applyDataFiltersSetter({ filters, force: options?.force });
-  };
-
-  return {
-    typeStatus,
-    setTypeStatus,
-    typeFilterForm,
-    setTypeFilterForm,
-    typeAppliedFilters,
-    applyTypeFilters,
-    resetTypeFilters,
-    dataStatus,
-    setDataStatus,
-    dataFilterForm,
-    setDataFilterForm,
-    dataAppliedFilters,
-    applyDataFilters,
-    resetDataFilters,
-    dictTypes,
-    setDictTypes,
-    selectedDictId,
-    setSelectedDictId,
-    dictData,
-    setDictData,
-    dictDataTotal,
-    setDictDataTotal,
-    typeEditorState,
-    openTypeCreate,
-    openTypeEdit,
-    closeTypeEditor,
-    dataEditorState,
-    openDataCreate,
-    openDataEdit,
-    closeDataEditor,
-    typeDeleteTarget,
-    setTypeDeleteTarget,
-    dataDeleteTarget,
-    setDataDeleteTarget,
-  };
+  return { dataDeleteTarget, setDataDeleteTarget };
 };
 
 export const useDictManagementStatus = () => {

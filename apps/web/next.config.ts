@@ -5,7 +5,6 @@ import { NextConfig } from 'next';
 process.env.NEXT_SKIP_TURBOPACK = '1';
 
 const nextConfig: NextConfig = {};
-
 switch (process.env.NODE_ENV) {
   case 'production':
     // nextConfig.output = 'export';

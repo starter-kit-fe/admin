@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 
 import { CONFIG_TYPE_TABS } from './constants';
@@ -129,81 +130,67 @@ const setBulkDeleteOpenAtom = atom(null, (_get, set, open: boolean) => {
   set(bulkDeleteOpenAtom, open);
 });
 
-export interface ConfigManagementStore {
-  configType: ConfigTypeValue;
-  setConfigType: (value: ConfigTypeValue) => void;
-  filterForm: FilterState;
-  setFilterForm: (action: SetStateAction<FilterState>) => void;
-  appliedFilters: FilterState;
-  applyFilters: (filters: FilterState, options?: { force?: boolean }) => void;
-  resetFilters: () => void;
-  selectedIds: Set<number>;
-  setSelectedIds: (action: SetStateAction<Set<number>>) => void;
-  clearSelectedIds: () => void;
-  bulkDeleteOpen: boolean;
-  setBulkDeleteOpen: (open: boolean) => void;
-  configs: SystemConfig[];
-  setConfigs: (configs: SystemConfig[]) => void;
-  editorState: EditorState;
-  openCreate: () => void;
-  openEdit: (config: SystemConfig) => void;
-  closeEditor: () => void;
-  deleteTarget: SystemConfig | null;
-  setDeleteTarget: (config: SystemConfig | null) => void;
-}
-
-export const useConfigManagementStore = (): ConfigManagementStore => {
-  const configType = useAtomValue(configTypeAtom);
-  const filterForm = useAtomValue(filterFormAtom);
-  const appliedFilters = useAtomValue(appliedFiltersAtom);
-  const selectedIds = useAtomValue(selectedIdsAtom);
-  const configs = useAtomValue(configsAtom);
-  const editorState = useAtomValue(editorStateAtom);
-  const deleteTarget = useAtomValue(deleteTargetAtom);
-  const bulkDeleteOpen = useAtomValue(bulkDeleteOpenAtom);
-
-  const setConfigType = useSetAtom(setConfigTypeAtom);
-  const setFilterForm = useSetAtom(setFilterFormAtom);
+const useApplyConfigFiltersHandler = () => {
   const applyFiltersSetter = useSetAtom(applyFiltersAtom);
+  return useCallback(
+    (filters: FilterState, options?: { force?: boolean }) => {
+      applyFiltersSetter({ filters, force: options?.force });
+    },
+    [applyFiltersSetter],
+  );
+};
+
+export const useConfigType = () => {
+  const configType = useAtomValue(configTypeAtom);
+  const setConfigType = useSetAtom(setConfigTypeAtom);
+  return { configType, setConfigType };
+};
+
+export const useConfigFilterForm = () => {
+  const filterForm = useAtomValue(filterFormAtom);
+  const setFilterForm = useSetAtom(setFilterFormAtom);
+  return { filterForm, setFilterForm };
+};
+
+export const useConfigAppliedFilters = () => {
+  const appliedFilters = useAtomValue(appliedFiltersAtom);
+  const applyFilters = useApplyConfigFiltersHandler();
   const resetFilters = useSetAtom(resetFiltersAtom);
+  return { appliedFilters, applyFilters, resetFilters };
+};
+
+export const useConfigSelection = () => {
+  const selectedIds = useAtomValue(selectedIdsAtom);
   const setSelectedIds = useSetAtom(setSelectedIdsAtom);
   const clearSelectedIds = useSetAtom(clearSelectedIdsAtom);
+  return { selectedIds, setSelectedIds, clearSelectedIds };
+};
+
+export const useConfigBulkDeleteState = () => {
+  const bulkDeleteOpen = useAtomValue(bulkDeleteOpenAtom);
+  const setBulkDeleteOpen = useSetAtom(setBulkDeleteOpenAtom);
+  return { bulkDeleteOpen, setBulkDeleteOpen };
+};
+
+export const useConfigsState = () => {
+  const configs = useAtomValue(configsAtom);
   const setConfigs = useSetAtom(setConfigsAtom);
+  return { configs, setConfigs };
+};
+
+export const useConfigEditorState = () => useAtomValue(editorStateAtom);
+
+export const useConfigEditorActions = () => {
   const openCreate = useSetAtom(openCreateAtom);
   const openEdit = useSetAtom(openEditAtom);
   const closeEditor = useSetAtom(closeEditorAtom);
+  return { openCreate, openEdit, closeEditor };
+};
+
+export const useConfigDeleteState = () => {
+  const deleteTarget = useAtomValue(deleteTargetAtom);
   const setDeleteTarget = useSetAtom(setDeleteTargetAtom);
-  const setBulkDeleteOpen = useSetAtom(setBulkDeleteOpenAtom);
-
-  const applyFilters = (
-    filters: FilterState,
-    options?: { force?: boolean },
-  ) => {
-    applyFiltersSetter({ filters, force: options?.force });
-  };
-
-  return {
-    configType,
-    setConfigType,
-    filterForm,
-    setFilterForm,
-    appliedFilters,
-    applyFilters,
-    resetFilters,
-    selectedIds,
-    setSelectedIds,
-    clearSelectedIds,
-    bulkDeleteOpen,
-    setBulkDeleteOpen,
-    configs,
-    setConfigs,
-    editorState,
-    openCreate,
-    openEdit,
-    closeEditor,
-    deleteTarget,
-    setDeleteTarget,
-  };
+  return { deleteTarget, setDeleteTarget };
 };
 
 export const useConfigManagementStatus = () => {

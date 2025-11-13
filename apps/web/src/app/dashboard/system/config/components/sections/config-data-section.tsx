@@ -1,9 +1,15 @@
 'use client';
 
 import {
+  useConfigAppliedFilters,
+  useConfigBulkDeleteState,
+  useConfigDeleteState,
+  useConfigEditorActions,
   useConfigManagementSetRefreshHandler,
   useConfigManagementSetRefreshing,
-  useConfigManagementStore,
+  useConfigSelection,
+  useConfigType,
+  useConfigsState,
 } from '@/app/dashboard/system/config/store';
 import { SelectionBanner } from '@/components/selection-banner';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
@@ -15,18 +21,13 @@ import type { SystemConfig } from '../../type';
 import { ConfigTable } from '../list/config-table';
 
 export function ConfigDataSection() {
-  const {
-    configType,
-    appliedFilters,
-    configs,
-    setConfigs,
-    openEdit,
-    setDeleteTarget,
-    selectedIds,
-    setSelectedIds,
-    clearSelectedIds,
-    setBulkDeleteOpen,
-  } = useConfigManagementStore();
+  const { configType } = useConfigType();
+  const { appliedFilters } = useConfigAppliedFilters();
+  const { configs, setConfigs } = useConfigsState();
+  const { openEdit } = useConfigEditorActions();
+  const { setDeleteTarget } = useConfigDeleteState();
+  const { selectedIds, setSelectedIds, clearSelectedIds } = useConfigSelection();
+  const { setBulkDeleteOpen } = useConfigBulkDeleteState();
   const setRefreshing = useConfigManagementSetRefreshing();
   const setRefreshHandler = useConfigManagementSetRefreshHandler();
 

@@ -3,7 +3,8 @@
 import {
   useDictManagementRefresh,
   useDictManagementStatus,
-  useDictManagementStore,
+  useDictTypeEditorActions,
+  useDictTypesState,
 } from '@/app/dashboard/system/dict/store';
 import { ManagementHeader } from '@/components/dashboard/management-header';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { BookMarked, RefreshCw } from 'lucide-react';
 
 export function DictManagementHeader() {
-  const { dictTypes, openTypeCreate } = useDictManagementStore();
+  const { dictTypes } = useDictTypesState();
+  const { openTypeCreate } = useDictTypeEditorActions();
   const { isRefreshing, isMutating } = useDictManagementStatus();
   const refresh = useDictManagementRefresh();
   const refreshDisabled = isRefreshing || isMutating;

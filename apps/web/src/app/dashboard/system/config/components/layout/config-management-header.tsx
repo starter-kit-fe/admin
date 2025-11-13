@@ -1,9 +1,10 @@
 'use client';
 
 import {
+  useConfigEditorActions,
   useConfigManagementRefresh,
   useConfigManagementStatus,
-  useConfigManagementStore,
+  useConfigsState,
 } from '@/app/dashboard/system/config/store';
 import { ManagementHeader } from '@/components/dashboard/management-header';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCw } from 'lucide-react';
 
 export function ConfigManagementHeader() {
-  const { configs, openCreate } = useConfigManagementStore();
+  const { configs } = useConfigsState();
+  const { openCreate } = useConfigEditorActions();
   const { isRefreshing, isMutating } = useConfigManagementStatus();
   const refresh = useConfigManagementRefresh();
   const refreshDisabled = isRefreshing || isMutating;

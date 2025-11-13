@@ -6,9 +6,10 @@ import { toast } from 'sonner';
 
 import { createDictData, updateDictData } from '../../api';
 import {
+  useDictDataEditorActions,
+  useDictDataEditorState,
   useDictManagementMutationCounter,
   useDictManagementRefresh,
-  useDictManagementStore,
 } from '@/app/dashboard/system/dict/store';
 import {
   normalizeOptional,
@@ -19,7 +20,8 @@ import type { DictDataFormValues } from '../../type';
 import { DictDataEditorDialog } from './dict-data-editor-dialog';
 
 export function DictDataEditorManager() {
-  const { dataEditorState, closeDataEditor } = useDictManagementStore();
+  const dataEditorState = useDictDataEditorState();
+  const { closeDataEditor } = useDictDataEditorActions();
   const refresh = useDictManagementRefresh();
   const { beginMutation, endMutation } =
     useDictManagementMutationCounter();

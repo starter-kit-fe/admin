@@ -6,19 +6,16 @@ import { toast } from 'sonner';
 import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
 import { removeConfig } from '../../api';
 import {
+  useConfigBulkDeleteState,
   useConfigManagementMutationCounter,
   useConfigManagementRefresh,
-  useConfigManagementStore,
+  useConfigSelection,
 } from '@/app/dashboard/system/config/store';
 import { resolveErrorMessage } from '../../utils';
 
 export function ConfigBulkDeleteDialog() {
-  const {
-    bulkDeleteOpen,
-    setBulkDeleteOpen,
-    selectedIds,
-    clearSelectedIds,
-  } = useConfigManagementStore();
+  const { bulkDeleteOpen, setBulkDeleteOpen } = useConfigBulkDeleteState();
+  const { selectedIds, clearSelectedIds } = useConfigSelection();
   const refresh = useConfigManagementRefresh();
   const { beginMutation, endMutation } = useConfigManagementMutationCounter();
 

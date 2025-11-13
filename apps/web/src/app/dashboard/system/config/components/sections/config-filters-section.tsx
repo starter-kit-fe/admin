@@ -2,7 +2,9 @@
 
 import {
   type ConfigTypeValue,
-  useConfigManagementStore,
+  useConfigAppliedFilters,
+  useConfigFilterForm,
+  useConfigType,
 } from '@/app/dashboard/system/config/store';
 import { useEffect, useMemo } from 'react';
 
@@ -14,14 +16,9 @@ import type {
 import { ConfigManagementFilters } from '../filters/config-management-filters';
 
 export function ConfigFiltersSection() {
-  const {
-    configType,
-    setConfigType,
-    filterForm,
-    setFilterForm,
-    appliedFilters,
-    applyFilters,
-  } = useConfigManagementStore();
+  const { configType, setConfigType } = useConfigType();
+  const { filterForm, setFilterForm } = useConfigFilterForm();
+  const { appliedFilters, applyFilters } = useConfigAppliedFilters();
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

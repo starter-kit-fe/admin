@@ -12,6 +12,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import {
   Table,
   TableBody,
   TableCell,
@@ -19,12 +25,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -147,7 +147,6 @@ export function UserTable({
   isError,
 }: UserTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<User>(), []);
-
   const columns = useMemo(
     () => [
       columnHelper.display({
@@ -393,7 +392,9 @@ export function UserTable({
                 <Empty className="border-0 bg-transparent p-4">
                   <EmptyHeader>
                     <EmptyTitle>暂无用户数据</EmptyTitle>
-                    <EmptyDescription>创建用户后可在此管理详情与权限。</EmptyDescription>
+                    <EmptyDescription>
+                      创建用户后可在此管理详情与权限。
+                    </EmptyDescription>
                   </EmptyHeader>
                 </Empty>
               </TableCell>

@@ -6,14 +6,14 @@ import { toast } from 'sonner';
 import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
 import { removeDepartment } from '../../api';
 import {
+  useDepartmentDeleteState,
   useDepartmentManagementMutationCounter,
   useDepartmentManagementRefresh,
-  useDepartmentManagementStore,
 } from '@/app/dashboard/system/dept/store';
 import { resolveErrorMessage } from '../../utils';
 
 export function DepartmentDeleteDialog() {
-  const { deleteTarget, setDeleteTarget } = useDepartmentManagementStore();
+  const { deleteTarget, setDeleteTarget } = useDepartmentDeleteState();
   const refresh = useDepartmentManagementRefresh();
   const { beginMutation, endMutation } =
     useDepartmentManagementMutationCounter();

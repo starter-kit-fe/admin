@@ -9,9 +9,11 @@ import {
   updateDepartment,
 } from '../../api';
 import {
+  useDepartmentEditorActions,
+  useDepartmentEditorState,
   useDepartmentManagementMutationCounter,
   useDepartmentManagementRefresh,
-  useDepartmentManagementStore,
+  useDepartmentTreeState,
 } from '@/app/dashboard/system/dept/store';
 import type { DepartmentFormValues } from '../../type';
 import {
@@ -25,11 +27,9 @@ import {
 import { DepartmentEditorDialog } from './department-editor-dialog';
 
 export function DepartmentEditorManager() {
-  const {
-    editorState,
-    closeEditor,
-    departmentTree,
-  } = useDepartmentManagementStore();
+  const editorState = useDepartmentEditorState();
+  const { closeEditor } = useDepartmentEditorActions();
+  const { departmentTree } = useDepartmentTreeState();
   const refresh = useDepartmentManagementRefresh();
   const { beginMutation, endMutation } =
     useDepartmentManagementMutationCounter();
