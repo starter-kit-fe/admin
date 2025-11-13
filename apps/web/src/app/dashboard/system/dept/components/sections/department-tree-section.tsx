@@ -1,11 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-
 import {
-  useDepartmentEditorActions,
   useDepartmentDeleteState,
+  useDepartmentEditorActions,
   useDepartmentFilters,
   useDepartmentManagementSetRefreshHandler,
   useDepartmentManagementSetRefreshing,
@@ -15,6 +12,8 @@ import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 
 import { listDepartmentTree } from '../../api';
 import { BASE_QUERY_KEY } from '../../constants';
@@ -83,7 +82,7 @@ export function DepartmentTreeSection() {
   };
 
   return (
-    <Card className="flex h-[calc(100vh-320px)] min-h-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-card py-0 shadow-none dark:border-border/40">
+    <Card className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-card py-0 shadow-none dark:border-border/40">
       {departmentQuery.isLoading && departmentTree.length === 0 ? (
         <div className="flex flex-1 items-center justify-center">
           <InlineLoading label="加载部门数据..." />
@@ -101,16 +100,14 @@ export function DepartmentTreeSection() {
           </Button>
         </div>
       ) : (
-        <ScrollArea className="flex-1 min-h-0 rounded-lg bg-muted/20 dark:bg-muted/10">
-          <div className="p-3">
-            <DepartmentTreeView
-              nodes={departmentTree}
-              onAddChild={handleAddChild}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          </div>
-        </ScrollArea>
+        <div className="p-3">
+          <DepartmentTreeView
+            nodes={departmentTree}
+            onAddChild={handleAddChild}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </div>
       )}
     </Card>
   );

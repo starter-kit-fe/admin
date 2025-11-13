@@ -2,10 +2,12 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	jwtv5 "github.com/golang-jwt/jwt/v5"
 
 	jwtpkg "github.com/starter-kit-fe/admin/pkg/jwt"
 	"github.com/starter-kit-fe/admin/pkg/resp"
@@ -20,12 +22,23 @@ type TokenBlocklist interface {
 	IsTokenBlocked(ctx context.Context, tokenHash string) (bool, error)
 }
 
+type SessionValidator interface {
+	GetSession(ctx context.Context, sessionID string) (SessionMetadata, error)
+	UpdateLastSeen(ctx context.Context, sessionID string) error
+}
+
+type SessionMetadata struct {
+	UserID  uint
+	Revoked bool
+}
+
 type JWTAuthOptions struct {
 	Secret     string
 	CookieName string
 	Provider   PermissionProvider
 	Logger     *slog.Logger
 	Blocklist  TokenBlocklist
+	Sessions   SessionValidator
 }
 
 func NewJWTAuthMiddleware(options JWTAuthOptions) gin.HandlerFunc {
@@ -34,6 +47,7 @@ func NewJWTAuthMiddleware(options JWTAuthOptions) gin.HandlerFunc {
 	logger := options.Logger
 	provider := options.Provider
 	blocklist := options.Blocklist
+	sessions := options.Sessions
 
 	jwtMaker := jwtpkg.NewJWTMaker()
 
@@ -56,10 +70,15 @@ func NewJWTAuthMiddleware(options JWTAuthOptions) gin.HandlerFunc {
 
 		claims, err := jwtMaker.VerifyToken(token, secret)
 		if err != nil {
+			expired := errors.Is(err, jwtv5.ErrTokenExpired)
 			if logger != nil {
-				logger.Warn("verify jwt token failed", "error", err)
+				logger.Warn("verify jwt token failed", "error", err, "expired", expired)
 			}
-			resp.Unauthorized(ctx, resp.WithMessage("invalid or expired token"))
+			if expired {
+				resp.PaymentRequired(ctx, resp.WithMessage("access token expired"))
+			} else {
+				resp.Unauthorized(ctx, resp.WithMessage("invalid token"))
+			}
 			ctx.Abort()
 			return
 		}
@@ -84,14 +103,41 @@ func NewJWTAuthMiddleware(options JWTAuthOptions) gin.HandlerFunc {
 			}
 		}
 
-		setClaims(ctx, claims)
-		setUserID(ctx, claims.UserID)
-
-		if provider != nil {
-			perms, err := provider.LoadPermissions(ctx.Request.Context(), claims.UserID)
+		sessionID := strings.TrimSpace(claims.SessionID)
+		if sessionID == "" {
+			resp.Unauthorized(ctx, resp.WithMessage("invalid token"))
+			ctx.Abort()
+			return
+		}
+		if sessions != nil {
+			record, err := sessions.GetSession(ctx.Request.Context(), sessionID)
 			if err != nil {
 				if logger != nil {
-					logger.Error("load permissions failed", "error", err, "user_id", claims.UserID)
+					logger.Warn("session lookup failed", "error", err, "session_id", sessionID)
+				}
+				resp.Unauthorized(ctx, resp.WithMessage("session invalid"))
+				ctx.Abort()
+				return
+			}
+			if record.Revoked || record.UserID != claims.ID {
+				resp.Unauthorized(ctx, resp.WithMessage("session revoked"))
+				ctx.Abort()
+				return
+			}
+			if err := sessions.UpdateLastSeen(ctx.Request.Context(), sessionID); err != nil && logger != nil {
+				logger.Warn("update session last_seen failed", "error", err, "session_id", sessionID)
+			}
+		}
+
+		setClaims(ctx, claims)
+		setUserID(ctx, claims.ID)
+		setSessionID(ctx, sessionID)
+
+		if provider != nil {
+			perms, err := provider.LoadPermissions(ctx.Request.Context(), claims.ID)
+			if err != nil {
+				if logger != nil {
+					logger.Error("load permissions failed", "error", err, "user_id", claims.ID)
 				}
 				resp.InternalServerError(ctx, resp.WithMessage("failed to load permissions"))
 				ctx.Abort()

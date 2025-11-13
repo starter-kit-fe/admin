@@ -4,6 +4,7 @@ package jwt
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,7 +14,8 @@ type JWTMaker struct {
 }
 
 type Claims struct {
-	UserID uint `json:"user_id"`
+	ID        uint   `json:"id"`
+	SessionID string `json:"sid"`
 	jwt.RegisteredClaims
 }
 
@@ -22,9 +24,10 @@ func NewJWTMaker() *JWTMaker {
 }
 
 // CreateToken 使用用户特定的密钥创建token
-func (maker *JWTMaker) CreateToken(userID uint, secretKey string, duration time.Duration) (string, error) {
+func (maker *JWTMaker) CreateToken(userID uint, sessionID string, secretKey string, duration time.Duration) (string, error) {
 	claims := &Claims{
-		UserID: userID,
+		ID:        userID,
+		SessionID: strings.TrimSpace(sessionID),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

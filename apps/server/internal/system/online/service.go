@@ -11,15 +11,20 @@ var (
 	ErrServiceUnavailable = errors.New("online service is not initialized")
 )
 
-type Service struct {
-	repo *Repository
+type SessionManager interface {
+	RevokeSession(ctx context.Context, sessionID string) error
 }
 
-func NewService(repo *Repository) *Service {
+type Service struct {
+	repo           *Repository
+	sessionManager SessionManager
+}
+
+func NewService(repo *Repository, manager SessionManager) *Service {
 	if repo == nil {
 		return nil
 	}
-	return &Service{repo: repo}
+	return &Service{repo: repo, sessionManager: manager}
 }
 
 type ListResult struct {
@@ -102,6 +107,9 @@ func (s *Service) ForceLogout(ctx context.Context, sessionID string) error {
 	if err != nil {
 		return err
 	}
+	if s.sessionManager != nil {
+		_ = s.sessionManager.RevokeSession(ctx, sessionID)
+	}
 
 	s.blockTokenIfNeeded(ctx, session)
 	return nil
@@ -118,6 +126,9 @@ func (s *Service) BatchForceLogout(ctx context.Context, sessionIDs []string) (in
 	}
 
 	for i := range removed {
+		if s.sessionManager != nil {
+			_ = s.sessionManager.RevokeSession(ctx, removed[i].SessionID)
+		}
 		s.blockTokenIfNeeded(ctx, &removed[i])
 	}
 	return len(removed), nil

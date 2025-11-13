@@ -1,7 +1,6 @@
 'use client';
 
 import { InlineLoading } from '@/components/loading';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -10,19 +9,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Spinner } from '@/components/ui/spinner';
 import { useQuery } from '@tanstack/react-query';
+import gsap from 'gsap';
 import {
   Cpu,
-  Database,
   HardDrive,
   MemoryStick,
   MonitorSmartphone,
   RefreshCcw,
   ServerCog,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 
 import { getServerStatus } from './api';
@@ -87,20 +85,69 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
+function QuickStat({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  percent,
+}: {
+  icon: typeof Cpu;
+  label: string;
+  value: string;
+  hint: string;
+  percent: number;
+}) {
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const node = barRef.current;
+    if (!node) {
+      return;
+    }
+    const ctx = gsap.context(() => {
+      gsap.to(node, {
+        width: `${Math.max(0, Math.min(100, percent))}%`,
+        duration: 0.8,
+        ease: 'power2.out',
+      });
+    }, node);
+    return () => {
+      ctx.revert();
+    };
+  }, [percent]);
+
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl border border-border/60 bg-card/80 px-4 py-3 dark:border-border/30">
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 items-center justify-center rounded-xl bg-muted/40 text-muted-foreground">
+          <Icon className="size-5" />
+        </span>
+        <div className="flex flex-1 flex-col">
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            {label}
+          </span>
+          <span className="text-lg font-semibold text-foreground">{value}</span>
+          <span className="text-xs text-muted-foreground/80">{hint}</span>
+        </div>
+      </div>
+      <div className="h-1.5 rounded-full bg-muted/40">
+        <div
+          ref={barRef}
+          className="h-full rounded-full bg-primary"
+          style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function ServerInfoCard({
   host,
-  version,
-  commit,
   lastUpdated,
-  onRefresh,
-  isRefreshing,
 }: {
   host: HostInfo;
-  version: string;
-  commit: string;
   lastUpdated: string;
-  onRefresh: () => void;
-  isRefreshing: boolean;
 }) {
   const rows = [
     { label: '主机名', value: host.hostname || '-' },
@@ -116,61 +163,22 @@ function ServerInfoCard({
     { label: '当前时间', value: host.currentTime || '-' },
   ];
 
-  const versionBadges = [
-    { label: '后端版本', value: version || 'N/A' },
-    { label: 'Commit', value: commit || '-' },
-  ];
-
   return (
     <Card className="h-full border-border/70 dark:border-border/40">
-      <CardHeader className="space-y-1">
+      <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <MonitorSmartphone className="size-5 text-muted-foreground" />
           服务器与版本
         </CardTitle>
-        <CardDescription>主机环境与版本号集中展示</CardDescription>
+        <CardDescription className="text-xs text-muted-foreground">
+          最近更新：{lastUpdated}
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex h-full flex-col gap-4 text-sm text-muted-foreground">
-        <div className="space-y-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {rows.map((row) => (
             <InfoRow key={row.label} label={row.label} value={row.value} />
           ))}
-        </div>
-        <div className="grid gap-3 text-sm sm:grid-cols-2">
-          {versionBadges.map((item) => (
-            <div
-              key={item.label}
-              className="rounded-xl border border-border/60 bg-background/70 p-4 font-mono text-base text-foreground dark:border-border/40 dark:bg-muted/30"
-            >
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                {item.label}
-              </p>
-              <p className="mt-1 break-all">{item.value}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-auto flex flex-col gap-2 text-xs uppercase tracking-wide text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span className="normal-case">最近更新时间：{lastUpdated}</span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className="w-full sm:w-auto"
-          >
-            {isRefreshing ? (
-              <>
-                <Spinner className="mr-2 size-4" />
-                刷新中
-              </>
-            ) : (
-              <>
-                <RefreshCcw className="mr-2 size-4" />
-                刷新
-              </>
-            )}
-          </Button>
         </div>
       </CardContent>
     </Card>
@@ -178,129 +186,73 @@ function ServerInfoCard({
 }
 
 function ProcessInfoCard({ process }: { process: ProcessInfo }) {
-  const rows = [
+  const highlights = [
     {
       label: 'PID',
-      value: <Badge variant="secondary">{process.pid}</Badge>,
+      value: process.pid > 0 ? `#${process.pid}` : '-',
+      hint: process.startTime || '未获取',
     },
-    { label: 'Go 版本', value: process.goVersion || '-' },
-    { label: '启动时间', value: process.startTime || '-' },
+    {
+      label: '后端版本',
+      value: process.version?.trim() || 'N/A',
+      hint: `Commit: ${process.commit?.slice(0, 7) || '-'}`,
+    },
+    {
+      label: 'Go 版本',
+      value: process.goVersion || '-',
+      hint: `下一次 GC：${formatBytes(process.nextGC)}`,
+    },
     {
       label: '运行时长',
       value: process.uptime || formatDuration(process.uptimeSeconds),
+      hint: `最后 GC：${process.lastGC || '-'}`,
     },
+  ];
+
+  const metrics = [
     { label: 'CPU 占用', value: formatPercent(process.cpuUsage) },
     { label: '内存占用', value: formatBytes(process.alloc) },
+    { label: '累计内存', value: formatBytes(process.totalAlloc) },
     { label: 'Goroutines', value: process.numGoroutine.toString() },
     { label: 'GC 次数', value: process.numGC.toString() },
-    { label: '最后 GC', value: process.lastGC || '-' },
-    { label: '下一次 GC 目标', value: formatBytes(process.nextGC) },
     { label: 'Cgo 调用', value: process.numCgoCall.toString() },
   ];
 
   return (
     <Card className="h-full border-border/70 dark:border-border/40">
-      <CardHeader className="space-y-1">
+      <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <ServerCog className="size-5 text-muted-foreground" />
-          后台程序
+          后端进程
         </CardTitle>
-        <CardDescription>运行中的进程核心指标</CardDescription>
+        <CardDescription className="text-sm text-muted-foreground">
+          以 Go 进程为核心，聚焦 CPU、内存与 GC 行为。
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
-        {rows.map((row) => (
-          <InfoRow key={row.label} label={row.label} value={row.value} />
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
-
-function MetricCard({
-  title,
-  icon: Icon,
-  highlight,
-  meta,
-  progress,
-  rows,
-}: {
-  title: string;
-  icon: typeof Cpu;
-  highlight: string;
-  meta: string;
-  progress: number;
-  rows: { label: string; value: ReactNode }[];
-}) {
-  return (
-    <Card className="h-full border-border/70 dark:border-border/40">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <div className="flex items-center gap-2 text-foreground">
-          <span className="flex size-8 items-center justify-center rounded-full bg-muted/40 text-muted-foreground">
-            <Icon className="size-4" />
-          </span>
-          <div className="flex flex-col">
-            <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-            <CardDescription>{meta}</CardDescription>
-          </div>
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {highlights.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-2xl border border-border/60 bg-muted/20 p-4 dark:border-border/30"
+            >
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {item.label}
+              </p>
+              <p className="text-lg font-semibold text-foreground">
+                {item.value}
+              </p>
+              <p className="text-xs text-muted-foreground">{item.hint}</p>
+            </div>
+          ))}
         </div>
-        <span className="text-xl font-semibold text-foreground">
-          {highlight}
-        </span>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm text-muted-foreground">
-        <Progress value={progress} aria-label={`${title} 使用比例`} />
-        <div className="space-y-2">
-          {rows.map((row) => (
+        <div className="grid gap-3 grid-cols-2">
+          {metrics.map((row) => (
             <InfoRow key={row.label} label={row.label} value={row.value} />
           ))}
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function CpuCard({ status }: { status: ServerStatus }) {
-  const { cpu, process } = status;
-  const cpuUsagePercent =
-    typeof process.cpuUsage === 'number' && !Number.isNaN(process.cpuUsage)
-      ? process.cpuUsage
-      : cpu.usagePercent;
-
-  return (
-    <MetricCard
-      title="CPU"
-      icon={Cpu}
-      highlight={formatPercent(cpuUsagePercent)}
-      meta={`${Math.max(cpu.cores, 0)} 核心`}
-      progress={safeNumber(cpuUsagePercent)}
-      rows={[
-        {
-          label: '1/5/15 分钟负载',
-          value: `${formatLoad(cpu.load1)} / ${formatLoad(cpu.load5)} / ${formatLoad(cpu.load15)}`,
-        },
-      ]}
-    />
-  );
-}
-
-function MemoryCard({ status }: { status: ServerStatus }) {
-  const { memory, process } = status;
-  return (
-    <MetricCard
-      title="内存"
-      icon={MemoryStick}
-      highlight={formatPercent(memory.usedPercent)}
-      meta={`总量 ${formatBytes(memory.total)}`}
-      progress={safeNumber(memory.usedPercent)}
-      rows={[
-        { label: '已用', value: formatBytes(memory.used) },
-        { label: '可用', value: formatBytes(memory.free) },
-        {
-          label: '后台程序占用',
-          value: formatBytes(memory.processAlloc || process.alloc),
-        },
-      ]}
-    />
   );
 }
 
@@ -313,77 +265,6 @@ function summarizeDisks(disks: DiskInfo[]) {
   const free = disks.reduce((sum, disk) => sum + (disk.free || 0), 0);
   const usedPercent = total > 0 ? (used / total) * 100 : 0;
   return { total, used, free, usedPercent };
-}
-
-function StorageCard({ disks }: { disks: DiskInfo[] }) {
-  const summary = useMemo(() => summarizeDisks(disks), [disks]);
-
-  return (
-    <Card className="h-full border-border/70 dark:border-border/40">
-      <CardHeader className="space-y-1">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-          <Database className="size-5 text-muted-foreground" />
-          存储
-        </CardTitle>
-        <CardDescription>磁盘容量与占用概览</CardDescription>
-      </CardHeader>
-      <CardContent className="flex h-full flex-col gap-4 text-sm text-muted-foreground">
-        <div>
-          <div className="flex items-center justify-between text-xs uppercase tracking-wide">
-            <span className="text-muted-foreground">整体使用率</span>
-            <span className="text-foreground">
-              {formatPercent(summary.usedPercent)}
-            </span>
-          </div>
-          <Progress
-            value={safeNumber(summary.usedPercent)}
-            aria-label="磁盘整体使用率"
-          />
-          <div className="mt-3 space-y-2 text-sm">
-            <InfoRow label="总量" value={formatBytes(summary.total)} />
-            <InfoRow label="已用" value={formatBytes(summary.used)} />
-            <InfoRow label="剩余" value={formatBytes(summary.free)} />
-          </div>
-        </div>
-        <div className="space-y-2">
-          {disks.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
-              未检测到可用磁盘信息
-            </div>
-          ) : (
-            disks.map((disk) => (
-              <div
-                key={`${disk.mountpoint}-${disk.filesystem}`}
-                className="space-y-2 rounded-2xl border border-border/50 p-3 dark:border-border/40"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 text-foreground">
-                    <HardDrive className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-semibold">
-                      {disk.mountpoint || '/'}
-                    </span>
-                  </div>
-                  <Badge variant="outline">{disk.filesystem || '未知'}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-xs uppercase tracking-wide">
-                  <span className="text-muted-foreground">
-                    {formatBytes(disk.used)} / {formatBytes(disk.total)}
-                  </span>
-                  <span className="text-foreground">
-                    {formatPercent(disk.usedPercent)}
-                  </span>
-                </div>
-                <Progress
-                  value={safeNumber(disk.usedPercent)}
-                  aria-label={`${disk.mountpoint} 使用率`}
-                />
-              </div>
-            ))
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
 }
 
 const DEFAULT_STATUS: ServerStatus = {
@@ -454,7 +335,10 @@ export function ServerMonitor() {
     };
   }, [status]);
 
-  const disks = useMemo(() => normalizedStatus.disks ?? [], [normalizedStatus]);
+  const diskSummary = useMemo(
+    () => summarizeDisks(normalizedStatus.disks ?? []),
+    [normalizedStatus],
+  );
   const lastUpdated = useMemo(() => {
     if (!status) {
       return '尚未获取';
@@ -466,10 +350,40 @@ export function ServerMonitor() {
     }
   }, [status, query.dataUpdatedAt]);
 
-  const backendVersion =
-    normalizedStatus.process.version?.trim() || 'N/A';
-  const backendCommit =
-    normalizedStatus.process.commit?.trim() || '-';
+  const cpuUsagePercent = useMemo(() => {
+    const { cpu, process } = normalizedStatus;
+    if (
+      typeof process.cpuUsage === 'number' &&
+      !Number.isNaN(process.cpuUsage)
+    ) {
+      return process.cpuUsage;
+    }
+    return cpu.usagePercent;
+  }, [normalizedStatus]);
+
+  const quickStats = [
+    {
+      label: 'CPU',
+      icon: Cpu,
+      value: formatPercent(cpuUsagePercent),
+      hint: `Load ${formatLoad(normalizedStatus.cpu.load1)} / ${formatLoad(normalizedStatus.cpu.load5)} / ${formatLoad(normalizedStatus.cpu.load15)}`,
+      percent: safeNumber(cpuUsagePercent),
+    },
+    {
+      label: '内存',
+      icon: MemoryStick,
+      value: formatPercent(normalizedStatus.memory.usedPercent),
+      hint: `进程占用 ${formatBytes(normalizedStatus.memory.processAlloc || normalizedStatus.process.alloc)}`,
+      percent: safeNumber(normalizedStatus.memory.usedPercent),
+    },
+    {
+      label: '存储',
+      icon: HardDrive,
+      value: formatPercent(diskSummary.usedPercent),
+      hint: `${formatBytes(diskSummary.used)} / ${formatBytes(diskSummary.total)}`,
+      percent: safeNumber(diskSummary.usedPercent),
+    },
+  ];
 
   if (query.isLoading) {
     return (
@@ -493,36 +407,55 @@ export function ServerMonitor() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-5 px-3 py-6">
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <MonitorSmartphone className="size-4" />
-          服务监控
+    <div className="mx-auto flex w-full flex-col gap-6 sm:gap-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            后台服务状态
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            聚焦后台服务器程序，CPU / 内存 / 存储。
+          </p>
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          服务监控
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          顶部聚合主机与进程细节，下方单行呈现 CPU、内存与存储指标，保证页面一次看全。
-        </p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => void query.refetch()}
+          disabled={query.isFetching}
+          className="self-start md:self-auto"
+        >
+          {query.isFetching ? (
+            <>
+              <Spinner className="mr-2 size-4" />
+              刷新中
+            </>
+          ) : (
+            <>
+              <RefreshCcw className="mr-2 size-4" />
+              立即刷新
+            </>
+          )}
+        </Button>
       </div>
 
-      <div className="grid flex-1 gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {quickStats.map((stat) => (
+          <QuickStat
+            key={stat.label}
+            icon={stat.icon}
+            label={stat.label}
+            value={stat.value}
+            hint={stat.hint}
+            percent={stat.percent}
+          />
+        ))}
+      </div>
+      <div className="grid flex-1 gap-5 lg:grid-cols-[1fr_1.6fr]">
         <ServerInfoCard
           host={normalizedStatus.host}
-          version={backendVersion}
-          commit={backendCommit}
           lastUpdated={lastUpdated}
-          onRefresh={() => void query.refetch()}
-          isRefreshing={query.isFetching}
         />
         <ProcessInfoCard process={normalizedStatus.process} />
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-3">
-        <CpuCard status={normalizedStatus} />
-        <MemoryCard status={normalizedStatus} />
-        <StorageCard disks={disks} />
       </div>
     </div>
   );

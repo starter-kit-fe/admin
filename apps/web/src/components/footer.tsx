@@ -48,7 +48,7 @@ export default function Footer() {
 
   return (
     <footer className="border-t bg-background/95">
-      <div className="mx-auto max-w-6xl px-6 py-12 md:px-10 lg:px-12">
+      <div className="mx-auto  px-6 py-12 md:px-10 lg:px-12">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
           <div className="space-y-5">
             <Link

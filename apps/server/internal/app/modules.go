@@ -54,6 +54,7 @@ type moduleSet struct {
 	userRepo        *user.Repository
 
 	permissionProvider middleware.PermissionProvider
+	sessionValidator   middleware.SessionValidator
 }
 
 func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client) moduleSet {
@@ -66,8 +67,13 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	captchaHandler := captcha.NewHandler(captchaSvc)
 
 	authRepo := auth.NewRepository(sqlDB)
+	sessionStore := auth.NewSessionStore(redisCache, auth.SessionStoreOptions{
+		KeyPrefix:      "auth",
+		RefreshTTL:     cfg.Auth.RefreshDuration,
+		UpdateInterval: cfg.Auth.SessionUpdate,
+	})
 	onlineRepo := online.NewRepository(sqlDB, redisCache)
-	onlineSvc := online.NewService(onlineRepo)
+	onlineSvc := online.NewService(onlineRepo, newSessionManager(sessionStore))
 	onlineHandler := online.NewHandler(onlineSvc)
 	jobRepo := job.NewRepository(sqlDB)
 	jobSvc := job.NewService(jobRepo)
@@ -78,15 +84,18 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	cacheHandler := cache.NewHandler(cacheSvc)
 
 	authHandler := auth.NewHandler(authRepo, captchaSvc, auth.AuthOptions{
-		Secret:         cfg.Auth.Secret,
-		TokenDuration:  cfg.Auth.TokenDuration,
-		CookieName:     cfg.Auth.CookieName,
-		CookieDomain:   cfg.Auth.CookieDomain,
-		CookiePath:     cfg.Auth.CookiePath,
-		CookieSecure:   cfg.Auth.CookieSecure,
-		CookieHTTPOnly: cfg.Auth.CookieHTTPOnly,
-		CookieSameSite: cfg.Auth.CookieSameSite,
-	}, onlineSvc)
+		Secret:          cfg.Auth.Secret,
+		TokenDuration:   cfg.Auth.TokenDuration,
+		RefreshDuration: cfg.Auth.RefreshDuration,
+		SessionUpdate:   cfg.Auth.SessionUpdate,
+		CookieName:      cfg.Auth.CookieName,
+		RefreshCookie:   cfg.Auth.RefreshCookie,
+		CookieDomain:    cfg.Auth.CookieDomain,
+		CookiePath:      cfg.Auth.CookiePath,
+		CookieSecure:    cfg.Auth.CookieSecure,
+		CookieHTTPOnly:  cfg.Auth.CookieHTTPOnly,
+		CookieSameSite:  cfg.Auth.CookieSameSite,
+	}, onlineSvc, sessionStore)
 
 	userRepo := user.NewRepository(sqlDB)
 	userSvc := user.NewService(userRepo)
@@ -155,5 +164,6 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 		cacheService:       cacheSvc,
 		userRepo:           userRepo,
 		permissionProvider: authRepo,
+		sessionValidator:   newSessionValidator(sessionStore),
 	}
 }

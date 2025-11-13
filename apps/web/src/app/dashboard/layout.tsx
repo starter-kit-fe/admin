@@ -52,7 +52,7 @@ export default function Page({ children }: { children: ReactNode }) {
             ) : null}
           </div>
         </header>
-        <main className="px-4 pb-4 pt-2">{children}</main>
+        <section className="mx-auto  w-full px-6 py-2">{children}</section>
       </SidebarInset>
     </SidebarProvider>
   );

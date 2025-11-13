@@ -12,7 +12,7 @@ export function OnlineUserManagement() {
   const { canBatchLogout, canForceLogout } = useOnlinePermissionFlags();
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
+    <div className="mx-auto flex w-full flex-col gap-6 sm:gap-6">
       <OnlineUserManagementHeader />
       <section className="space-y-4 rounded-xl border border-border/50 bg-card p-4">
         <OnlineUserFiltersSection />

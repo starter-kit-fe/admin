@@ -103,12 +103,9 @@ export function ThemeToggle({ className }: { className?: string }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
-          className={cn(
-            'relative h-10 w-10 rounded-full border border-border/60 hover:border-border hover:bg-muted/50',
-            className,
-          )}
+          className={cn('relative size-10 rounded-full  ', className)}
           aria-label="切换主题"
         >
           <ActiveIcon className="h-[1.1rem] w-[1.1rem] transition-transform duration-200" />

@@ -73,17 +73,7 @@ function PostActions({
   onDelete: (post: Post) => void;
 }) {
   return (
-    <div className="flex justify-end gap-1">
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 px-2.5 text-sm font-medium"
-        onClick={() => onEdit(post)}
-      >
-        <Pencil className="mr-1.5 size-3.5" />
-        编辑
-      </Button>
+    <div className="flex justify-end">
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
@@ -98,7 +88,16 @@ function PostActions({
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              onEdit(post);
+            }}
+          >
+            <Pencil className="mr-2 size-4" />
+            编辑
+          </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"
             onSelect={(event) => {

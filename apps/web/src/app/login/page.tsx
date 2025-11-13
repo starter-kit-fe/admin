@@ -1,47 +1,20 @@
 'use client';
 
-import { InlineLoading } from '@/components/loading';
 import ThemeToggle from '@/components/theme-toggle';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import { useAuthStore } from '@/stores';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import {
-  Eye,
-  EyeOff,
-  Lock,
-  LogIn,
-  RefreshCw,
-  ShieldAlert,
-  User,
-} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
 import pkg from '../../../package.json';
-import { getCaptcha, getUserInfo, login } from './api';
+import { getCaptcha, login } from './api';
+import { LoginAside } from './components/login-aside';
+import { LoginForm } from './components/login-form';
+import { type LoginValues, loginSchema } from './schema';
 import type { LoginRequestPayload } from './type';
-
-const loginSchema = z.object({
-  username: z.string().min(1, '请输入用户名'),
-  password: z.string().min(1, '请输入密码'),
-  captcha: z.string().min(1, '请输入验证码'),
-});
-
-type LoginValues = z.infer<typeof loginSchema>;
 
 const featureHighlights = [
   '支持账号密码快速登录，登录后自动缓存权限配置。',
@@ -62,7 +35,7 @@ export default function Page() {
   const [isCaptchaExpired, setCaptchaExpired] = useState(false);
   const [captchaCountdown, setCaptchaCountdown] = useState<number | null>(null);
   const [loginImage, setLoginImage] = useState<string>(loginImages[0]);
-  const { setUser, user, setPermissions, setRoles } = useAuthStore();
+  const { user } = useAuthStore();
 
   const {
     register,
@@ -86,16 +59,6 @@ export default function Page() {
     refetchOnReconnect: true,
     refetchOnWindowFocus: false,
   });
-  const userInfo = useMutation({
-    mutationFn: getUserInfo,
-    onSuccess: (data) => {
-      setUser(data.user);
-      setPermissions(data.permissions);
-      setRoles(data.roles);
-      toast.success('登录成功，欢迎回来！');
-      router.replace('/dashboard');
-    },
-  });
 
   const loginMutation = useMutation({
     mutationFn: async (values: LoginValues) => {
@@ -105,12 +68,11 @@ export default function Page() {
         captcha: values.captcha,
         captcha_id: captchaData?.captcha_id,
       };
-      const result = await login(payload);
-      handleRefreshCaptcha();
-      return result;
+      return login(payload);
     },
     onSuccess: () => {
-      userInfo.mutate();
+      toast.success('登录成功，欢迎回来！');
+      router.replace('/dashboard');
     },
     onError: (error: unknown) => {
       const message =
@@ -180,250 +142,58 @@ export default function Page() {
         : '验证码已过期'
       : null;
 
+  const description =
+    pkg.seo?.description ??
+    '一套现代化的管理后台模板，集成完善的认证体系与组件库。';
+
+  const handleLoginSubmit = handleSubmit((values) =>
+    loginMutation.mutate(values),
+  );
+
   return (
     <div className="relative flex min-h-dvh flex-col overflow-y-auto bg-border/40 transition-colors md:flex-row md:overflow-hidden">
-      <div className="absolute right-4 top-[calc(env(safe-area-inset-top,0)+1rem)] z-30 md:right-6 md:top-6">
-        <ThemeToggle />
-      </div>
-      <aside className="relative hidden min-h-dvh flex-1 overflow-hidden md:flex">
+      <div className="absolute inset-0 md:hidden">
         <img
           src={loginImage}
           alt="登录背景"
-          className="absolute inset-0 h-full w-full object-cover"
+          className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/80 via-slate-900/70 to-slate-900/60" />
-        <div className="relative z-10 flex flex-1 flex-col justify-between px-10 py-12 text-slate-100">
-          <div className="space-y-4">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-xs uppercase tracking-[0.35em] text-white/70">
-              Welcome Back
-            </span>
-            <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
-              {loginTitle}
-            </h1>
-            <p className="max-w-md text-sm text-white/75 md:text-base">
-              {pkg.seo?.description ??
-                '一套现代化的管理后台模板，集成完善的认证体系与组件库。'}
-            </p>
-          </div>
-          <ul className="space-y-4 text-sm text-white/80 md:text-base">
-            {featureHighlights.map((tip) => (
-              <li
-                key={tip}
-                className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm"
-              >
-                <span className="flex h-2 w-2 rounded-full bg-emerald-300" />
-                <span>{tip}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="text-xs uppercase tracking-[0.35em] text-white/60">
-            Admin Template
-          </p>
-        </div>
-      </aside>
+        <div className="absolute inset-0 bg-slate-950/85" />
+      </div>
+      <div className="absolute right-4 top-[calc(env(safe-area-inset-top,0)+1rem)] z-30 md:right-6 md:top-6">
+        <ThemeToggle />
+      </div>
 
-      <main className="flex min-h-dvh flex-1 items-center justify-center px-5 py-12 transition-colors sm:px-8 md:min-h-full md:px-12">
-        <div className="w-full max-w-md space-y-8 rounded-3xl border border-border/40 bg-background/80 p-6 shadow-2xl backdrop-blur md:border-0 md:bg-transparent md:p-0 md:shadow-none">
-          <div className="space-y-4 text-center md:hidden">
-            <div className="mx-auto h-36 w-full overflow-hidden rounded-3xl bg-muted">
-              <img
-                src={loginImage}
-                alt="登录背景"
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-                {loginTitle}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                登录后体验完整的后台管理能力。
-              </p>
-            </div>
-            <ul className="grid gap-2 text-left text-sm text-muted-foreground">
-              {featureHighlights.map((tip) => (
-                <li key={tip} className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
-                  <span>{tip}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+      <LoginAside
+        image={loginImage}
+        title={loginTitle}
+        description={description}
+        highlights={featureHighlights}
+      />
 
-          <Card className="border-none text-card-foreground shadow-xl transition-colors md:border md:border-border/60">
-            <CardHeader className="space-y-2 text-center">
-              <CardTitle className="text-2xl font-semibold">账号登录</CardTitle>
-              <CardDescription className="text-sm text-muted-foreground">
-                输入账号信息，以便访问仪表盘与更多后台工具。
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form
-                className="space-y-6"
-                onSubmit={handleSubmit((values) =>
-                  loginMutation.mutate(values),
-                )}
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="username">用户名</Label>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      <User className="h-4 w-4" />
-                    </span>
-                    <Input
-                      id="username"
-                      placeholder="输入用户名"
-                      title="输入用户名"
-                      autoComplete="username"
-                      tabIndex={1}
-                      className="pl-9"
-                      {...register('username')}
-                      aria-invalid={Boolean(errors.username)}
-                    />
-                  </div>
-                  {errors.username ? (
-                    <p className="text-xs text-destructive">
-                      {errors.username.message}
-                    </p>
-                  ) : null}
-                </div>
+      <main className="flex min-h-dvh relative flex-1 items-center justify-center transition-colors sm:px-8 md:min-h-full md:px-12">
+        <div className="absolute bg-background/40 inset-0 h-full w-full object-cover md:hidden blur-lg  backdrop-blur"></div>
+        <img
+          src={loginImage}
+          alt="登录背景"
+          className="absolute inset-0 h-full w-full object-cover blur-lg  md:hidden"
+        />
 
-                <div className="space-y-2">
-                  <Label htmlFor="password">密码</Label>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      <Lock className="h-4 w-4" />
-                    </span>
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="输入密码"
-                      title="输入密码"
-                      tabIndex={2}
-                      autoComplete="current-password"
-                      className="pl-9 pr-10"
-                      {...register('password')}
-                      aria-invalid={Boolean(errors.password)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
-                      aria-label={showPassword ? '隐藏密码' : '显示密码'}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.password ? (
-                    <p className="text-xs text-destructive">
-                      {errors.password.message}
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-                    <Label
-                      htmlFor="captcha"
-                      className="text-sm text-foreground"
-                    >
-                      验证码
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      {countdownLabel ? (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                          {countdownLabel}
-                        </span>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 font-medium text-muted-foreground transition-colors hover:text-primary"
-                        onClick={handleRefreshCaptcha}
-                        disabled={captchaFetching}
-                        title="刷新验证码"
-                      >
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        换一张
-                      </button>
-                    </div>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                    <Input
-                      id="captcha"
-                      placeholder="输入验证码"
-                      title="输入验证码"
-                      tabIndex={3}
-                      autoComplete="one-time-code"
-                      {...register('captcha')}
-                      aria-invalid={Boolean(errors.captcha)}
-                    />
-                    <div className="flex h-[36px] w-full items-center justify-center rounded-lg border border-border/60 bg-muted/30 sm:w-35">
-                      {captchaFetching ? (
-                        <Spinner className="h-5 w-5 text-primary" />
-                      ) : captchaError ||
-                        isCaptchaExpired ||
-                        !captchaData?.image ? (
-                        <button
-                          type="button"
-                          className="flex w-full items-center justify-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
-                          onClick={handleRefreshCaptcha}
-                          title="点击刷新验证码"
-                        >
-                          <ShieldAlert className="h-3.5 w-3.5" />
-                          点击刷新
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="h-full w-full overflow-hidden rounded-md"
-                          onClick={handleRefreshCaptcha}
-                          title="点击刷新验证码"
-                        >
-                          <img
-                            src={captchaData.image}
-                            alt="验证码"
-                            className="h-full w-full object-cover"
-                          />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  {errors.captcha ? (
-                    <p className="text-xs text-destructive">
-                      {errors.captcha.message}
-                    </p>
-                  ) : null}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  size="lg"
-                  disabled={
-                    loginMutation.isPending ||
-                    captchaFetching ||
-                    !captchaData?.captcha_id ||
-                    isCaptchaExpired
-                  }
-                >
-                  {loginMutation.isPending ? (
-                    <>
-                      <Spinner /> 登录中...
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="mr-2 h-4 w-4" />
-                      登录
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+        <div className="w-full max-w-md  backdrop-blur md:border-none md:bg-transparent md:p-0 md:shadow-none">
+          <LoginForm
+            register={register}
+            errors={errors}
+            showPassword={showPassword}
+            onTogglePassword={() => setShowPassword((prev) => !prev)}
+            onSubmit={handleLoginSubmit}
+            loginPending={loginMutation.isPending}
+            captchaImage={captchaData?.image}
+            captchaFetching={captchaFetching}
+            captchaError={captchaError}
+            countdownLabel={countdownLabel}
+            onRefreshCaptcha={handleRefreshCaptcha}
+            isCaptchaExpired={isCaptchaExpired}
+          />
         </div>
       </main>
     </div>

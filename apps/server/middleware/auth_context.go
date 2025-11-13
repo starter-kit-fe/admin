@@ -10,6 +10,7 @@ const (
 	ContextKeyUserID  = "auth.user_id"
 	contextKeyClaims  = "auth.claims"
 	contextKeyPermSet = "auth.permissions"
+	ContextKeySession = "auth.session_id"
 )
 
 type permissionSet struct {
@@ -23,6 +24,10 @@ func setClaims(ctx *gin.Context, claims interface{}) {
 
 func setUserID(ctx *gin.Context, userID uint) {
 	ctx.Set(ContextKeyUserID, userID)
+}
+
+func setSessionID(ctx *gin.Context, sessionID string) {
+	ctx.Set(ContextKeySession, strings.TrimSpace(sessionID))
 }
 
 func setPermissions(ctx *gin.Context, permissions []string) {
@@ -92,4 +97,13 @@ func GetUserID(ctx *gin.Context) (uint, bool) {
 
 func GetClaims(ctx *gin.Context) (interface{}, bool) {
 	return ctx.Get(contextKeyClaims)
+}
+
+func GetSessionID(ctx *gin.Context) (string, bool) {
+	value, ok := ctx.Get(ContextKeySession)
+	if !ok {
+		return "", false
+	}
+	sessionID, ok := value.(string)
+	return strings.TrimSpace(sessionID), ok
 }

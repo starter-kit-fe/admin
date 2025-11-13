@@ -8,7 +8,7 @@ import { DepartmentTreeSection } from './components/sections/department-tree-sec
 
 export function DeptManagement() {
   return (
-    <div className="mx-auto flex w-full flex-col gap-4 px-3">
+    <div className="mx-auto flex w-full flex-col gap-6 sm:gap-6">
       <DepartmentManagementHeader />
       <DepartmentFiltersSection />
       <DepartmentTreeSection />

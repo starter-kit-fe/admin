@@ -1,12 +1,9 @@
 package auth
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"errors"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -27,29 +24,36 @@ import (
 )
 
 type Handler struct {
-	repo           *Repository
-	captchaService *captcha.Service
-	jwtMaker       *jwtpkg.JWTMaker
-	secret         string
-	tokenDuration  time.Duration
-	cookieName     string
-	cookieDomain   string
-	cookiePath     string
-	cookieSecure   bool
-	cookieHTTPOnly bool
-	cookieSameSite http.SameSite
-	onlineService  *online.Service
+	repo            *Repository
+	captchaService  *captcha.Service
+	jwtMaker        *jwtpkg.JWTMaker
+	secret          string
+	tokenDuration   time.Duration
+	refreshDuration time.Duration
+	sessionUpdate   time.Duration
+	cookieName      string
+	refreshCookie   string
+	cookieDomain    string
+	cookiePath      string
+	cookieSecure    bool
+	cookieHTTPOnly  bool
+	cookieSameSite  http.SameSite
+	onlineService   *online.Service
+	sessions        *SessionStore
 }
 
 type AuthOptions struct {
-	Secret         string
-	TokenDuration  time.Duration
-	CookieName     string
-	CookieDomain   string
-	CookiePath     string
-	CookieSecure   bool
-	CookieHTTPOnly bool
-	CookieSameSite string
+	Secret          string
+	TokenDuration   time.Duration
+	RefreshDuration time.Duration
+	SessionUpdate   time.Duration
+	CookieName      string
+	RefreshCookie   string
+	CookieDomain    string
+	CookiePath      string
+	CookieSecure    bool
+	CookieHTTPOnly  bool
+	CookieSameSite  string
 }
 
 // LoginRequest 描述登录接口请求体
@@ -62,11 +66,19 @@ type LoginRequest struct {
 	CaptchaID string `json:"captcha_id,omitempty" example:"edbf2c533e8e44e4986b98f785bd40a4"`
 }
 
+type RefreshRequest struct {
+	SessionID    string `json:"session_id" example:"7d1b6ad7"`
+	RefreshToken string `json:"refresh_token" example:"<refresh-token>"`
+}
+
 // LoginResponse 描述登录接口响应体
 type LoginResponse struct {
-	Code  int    `json:"code" example:"200"`
-	Msg   string `json:"msg" example:"操作成功"`
-	Token string `json:"token" example:"<jwt-token>"`
+	Code         int    `json:"code" example:"200"`
+	Msg          string `json:"msg" example:"操作成功"`
+	AccessToken  string `json:"access_token,omitempty" example:"<jwt-token>"`
+	RefreshToken string `json:"refresh_token,omitempty" example:"<refresh-token>"`
+	SessionID    string `json:"session_id,omitempty" example:"d4f3c3a0"`
+	ExpiresAt    int64  `json:"expires_at" example:"1700000000"`
 }
 
 // UserInfo 描述用户信息
@@ -75,7 +87,7 @@ type UserInfo struct {
 	DeptID      *int64  `json:"deptId" example:"103"`
 	UserName    string  `json:"userName" example:"admin"`
 	NickName    string  `json:"nickName" example:"admin"`
-	Email       string  `json:"email" example:"ry@163.com"`
+	Email       string  `json:"email" example:"admin@admin.com"`
 	Phonenumber string  `json:"phonenumber" example:"15888888888"`
 	Sex         string  `json:"sex" example:"1"`
 	Avatar      string  `json:"avatar" example:""`
@@ -110,9 +122,9 @@ type MenuNode struct {
 	Children   []*MenuNode `json:"children,omitempty"`
 }
 
-func NewHandler(repo *Repository, captcha *captcha.Service, opts AuthOptions, onlineSvc *online.Service) *Handler {
+func NewHandler(repo *Repository, captcha *captcha.Service, opts AuthOptions, onlineSvc *online.Service, sessions *SessionStore) *Handler {
 	opts.Secret = strings.TrimSpace(opts.Secret)
-	if repo == nil || opts.Secret == "" {
+	if repo == nil || sessions == nil || opts.Secret == "" {
 		return nil
 	}
 
@@ -120,10 +132,22 @@ func NewHandler(repo *Repository, captcha *captcha.Service, opts AuthOptions, on
 	if duration <= 0 {
 		duration = constant.JWT_EXP
 	}
+	refreshDuration := opts.RefreshDuration
+	if refreshDuration <= 0 {
+		refreshDuration = 30 * 24 * time.Hour
+	}
+	sessionUpdate := opts.SessionUpdate
+	if sessionUpdate <= 0 {
+		sessionUpdate = time.Minute
+	}
 
 	cookieName := strings.TrimSpace(opts.CookieName)
 	if cookieName == "" {
 		cookieName = "token"
+	}
+	refreshCookie := strings.TrimSpace(opts.RefreshCookie)
+	if refreshCookie == "" {
+		refreshCookie = "refresh_token"
 	}
 
 	cookiePath := strings.TrimSpace(opts.CookiePath)
@@ -139,18 +163,22 @@ func NewHandler(repo *Repository, captcha *captcha.Service, opts AuthOptions, on
 	}
 
 	return &Handler{
-		repo:           repo,
-		captchaService: captcha,
-		jwtMaker:       jwtpkg.NewJWTMaker(),
-		secret:         opts.Secret,
-		tokenDuration:  duration,
-		cookieName:     cookieName,
-		cookieDomain:   cookieDomain,
-		cookiePath:     cookiePath,
-		cookieSecure:   opts.CookieSecure,
-		cookieHTTPOnly: cookieHTTPOnly,
-		cookieSameSite: cookieSameSite,
-		onlineService:  onlineSvc,
+		repo:            repo,
+		captchaService:  captcha,
+		jwtMaker:        jwtpkg.NewJWTMaker(),
+		secret:          opts.Secret,
+		tokenDuration:   duration,
+		refreshDuration: refreshDuration,
+		sessionUpdate:   sessionUpdate,
+		cookieName:      cookieName,
+		refreshCookie:   refreshCookie,
+		cookieDomain:    cookieDomain,
+		cookiePath:      cookiePath,
+		cookieSecure:    opts.CookieSecure,
+		cookieHTTPOnly:  cookieHTTPOnly,
+		cookieSameSite:  cookieSameSite,
+		onlineService:   onlineSvc,
+		sessions:        sessions,
 	}
 }
 
@@ -227,18 +255,74 @@ func (h *Handler) Login(ctx *gin.Context) {
 		return
 	}
 
-	token, err := h.jwtMaker.CreateToken(uint(user.UserID), h.secret, h.tokenDuration)
+	session, refreshToken, err := h.sessions.Create(ctx.Request.Context(), uint(user.UserID))
+	if err != nil {
+		resp.InternalServerError(ctx, resp.WithMessage("failed to create session"))
+		return
+	}
+	accessToken, expiresAt, err := h.issueAccessToken(uint(user.UserID), session.SessionID)
 	if err != nil {
 		resp.InternalServerError(ctx, resp.WithMessage("failed to issue token"))
 		return
 	}
-	h.recordOnlineSession(ctx, token, user)
-	maxAge := 0
-	if h.tokenDuration > 0 {
-		maxAge = int(h.tokenDuration / time.Second)
+	h.recordOnlineSession(ctx, accessToken, user, session.SessionID)
+	h.respondWithTokens(ctx, session.SessionID, accessToken, refreshToken, expiresAt)
+}
+
+// Refresh godoc
+// @Summary 刷新访问令牌
+// @Description 使用长期 Refresh Token 续签 Access Token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Success 200 {object} LoginResponse
+// @Failure 400 {object} resp.Response
+// @Failure 401 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Router /v1/auth/refresh [post]
+func (h *Handler) Refresh(ctx *gin.Context) {
+	if h == nil || h.sessions == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("session service unavailable"))
+		return
 	}
-	h.setTokenCookie(ctx, token, maxAge)
-	resp.Success(ctx, true)
+	var payload RefreshRequest
+	_ = ctx.ShouldBindJSON(&payload)
+	sessionID := strings.TrimSpace(payload.SessionID)
+	refreshToken := strings.TrimSpace(payload.RefreshToken)
+	if sessionID == "" {
+		sessionID = strings.TrimSpace(ctx.Query("session_id"))
+	}
+	if sessionID == "" {
+		sessionID = strings.TrimSpace(ctx.PostForm("session_id"))
+	}
+	if refreshToken == "" {
+		refreshToken = strings.TrimSpace(ctx.GetHeader("X-Refresh-Token"))
+	}
+	if refreshToken == "" {
+		refreshToken = strings.TrimSpace(ctx.PostForm("refresh_token"))
+	}
+	if refreshToken == "" {
+		if cookie, err := ctx.Cookie(h.refreshCookie); err == nil {
+			refreshToken = strings.TrimSpace(cookie)
+		}
+	}
+	if refreshToken == "" {
+		resp.BadRequest(ctx, resp.WithMessage("refresh token required"))
+		return
+	}
+	session, err := h.sessions.ValidateRefresh(ctx.Request.Context(), sessionID, refreshToken)
+	if err != nil {
+		resp.Unauthorized(ctx, resp.WithMessage("invalid refresh token"))
+		return
+	}
+	accessToken, expiresAt, err := h.issueAccessToken(session.UserID, session.SessionID)
+	if err != nil {
+		resp.InternalServerError(ctx, resp.WithMessage("failed to issue token"))
+		return
+	}
+	session.LastSeen = time.Now()
+	_ = h.sessions.UpdateLastSeen(ctx.Request.Context(), session)
+	h.respondWithTokens(ctx, session.SessionID, accessToken, refreshToken, expiresAt)
 }
 
 // Logout godoc
@@ -253,13 +337,18 @@ func (h *Handler) Logout(ctx *gin.Context) {
 		resp.Success(ctx, true)
 		return
 	}
+	if sessionID, ok := middleware.GetSessionID(ctx); ok && sessionID != "" && h.sessions != nil {
+		if session, err := h.sessions.Get(ctx.Request.Context(), sessionID); err == nil {
+			_ = h.sessions.Revoke(ctx.Request.Context(), session)
+		}
+	}
 	h.removeOnlineSession(ctx)
-	h.setTokenCookie(ctx, "", -1)
+	h.clearAuthCookies(ctx)
 	resp.Success(ctx, true)
 }
 
-func (h *Handler) setTokenCookie(ctx *gin.Context, value string, maxAge int) {
-	if h == nil || ctx == nil || h.cookieName == "" {
+func (h *Handler) setCookie(ctx *gin.Context, name, value string, maxAge int) {
+	if h == nil || ctx == nil || strings.TrimSpace(name) == "" {
 		return
 	}
 
@@ -273,7 +362,7 @@ func (h *Handler) setTokenCookie(ctx *gin.Context, value string, maxAge int) {
 
 	ctx.SetSameSite(h.cookieSameSite)
 	ctx.SetCookie(
-		h.cookieName,
+		name,
 		value,
 		maxAge,
 		h.cookiePath,
@@ -281,6 +370,14 @@ func (h *Handler) setTokenCookie(ctx *gin.Context, value string, maxAge int) {
 		secure,
 		h.cookieHTTPOnly,
 	)
+}
+
+func (h *Handler) clearAuthCookies(ctx *gin.Context) {
+	if h == nil {
+		return
+	}
+	h.setCookie(ctx, h.cookieName, "", -1)
+	h.setCookie(ctx, h.refreshCookie, "", -1)
 }
 
 // GetInfo godoc
@@ -600,7 +697,46 @@ func stringPtr(value string) *string {
 	return &cp
 }
 
-func (h *Handler) recordOnlineSession(ctx *gin.Context, token string, user *model.SysUser) {
+func (h *Handler) issueAccessToken(userID uint, sessionID string) (string, time.Time, error) {
+	if h == nil || h.jwtMaker == nil {
+		return "", time.Time{}, errors.New("jwt maker unavailable")
+	}
+	dur := h.tokenDuration
+	if dur <= 0 {
+		dur = constant.JWT_EXP
+	}
+	token, err := h.jwtMaker.CreateToken(userID, sessionID, h.secret, dur)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return token, time.Now().Add(dur), nil
+}
+
+func (h *Handler) respondWithTokens(ctx *gin.Context, sessionID, accessToken, refreshToken string, expiresAt time.Time) {
+	if netutil.IsBrowserRequest(ctx.Request) {
+		h.setCookie(ctx, h.cookieName, accessToken, h.cookieMaxAge(h.tokenDuration))
+		h.setCookie(ctx, h.refreshCookie, refreshToken, h.cookieMaxAge(h.refreshDuration))
+		resp.Success(ctx, gin.H{
+			"expires_at": expiresAt.Unix(),
+		})
+		return
+	}
+	resp.Success(ctx, gin.H{
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+		"session_id":    sessionID,
+		"expires_at":    expiresAt.Unix(),
+	})
+}
+
+func (h *Handler) cookieMaxAge(dur time.Duration) int {
+	if dur <= 0 {
+		return 0
+	}
+	return int(dur / time.Second)
+}
+
+func (h *Handler) recordOnlineSession(ctx *gin.Context, token string, user *model.SysUser, sessionID string) {
 	if h == nil || h.onlineService == nil || user == nil {
 		return
 	}
@@ -622,7 +758,7 @@ func (h *Handler) recordOnlineSession(ctx *gin.Context, token string, user *mode
 	browser, os := parseUserAgent(ua)
 
 	session := online.Session{
-		SessionID:      generateSessionID(),
+		SessionID:      sessionID,
 		TokenHash:      tokenHash,
 		UserID:         user.UserID,
 		UserName:       user.UserName,
@@ -740,14 +876,6 @@ func parseBearerToken(header string) string {
 		return ""
 	}
 	return strings.TrimSpace(parts[1])
-}
-
-func generateSessionID() string {
-	buf := make([]byte, 16)
-	if _, err := rand.Read(buf); err == nil {
-		return hex.EncodeToString(buf)
-	}
-	return strconv.FormatInt(time.Now().UnixNano(), 36)
 }
 
 func requestUsesHTTPS(req *http.Request) bool {

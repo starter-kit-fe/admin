@@ -7,7 +7,7 @@ import { OperLogFiltersSection } from './components/sections/oper-log-filters-se
 
 export function OperLogManagement() {
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
+    <div className="mx-auto flex w-full flex-col gap-6 sm:gap-6">
       <OperLogManagementHeader />
       <OperLogFiltersSection />
       <OperLogDataSection />

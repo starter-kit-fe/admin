@@ -183,7 +183,7 @@ export default function Header() {
       ref={navRef}
       className="fixed inset-x-0 top-0 z-50 border-b border-transparent bg-transparent transition-[background-color,backdrop-filter,border-color,box-shadow]"
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 text-foreground dark:text-white sm:px-6 lg:px-10">
+      <div className="mx-auto flex h-16  items-center justify-between gap-4 px-4 text-foreground dark:text-white sm:px-6 lg:px-10">
         <Link
           href="/"
           className="group flex items-center gap-3 text-base font-semibold text-inherit"

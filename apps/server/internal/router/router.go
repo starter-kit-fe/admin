@@ -64,6 +64,7 @@ type Options struct {
 	AuthCookieName     string
 	PermissionProvider middleware.PermissionProvider
 	TokenBlocklist     middleware.TokenBlocklist
+	SessionValidator   middleware.SessionValidator
 	PublicMWs          []gin.HandlerFunc
 	ProtectedMWs       []gin.HandlerFunc
 	LoginMiddlewares   []gin.HandlerFunc
@@ -152,6 +153,7 @@ func registerAuthRoutes(group *gin.RouterGroup, opts Options) {
 	}
 	handlers = append(handlers, opts.AuthHandler.Login)
 	group.POST("/auth/login", handlers...)
+	group.POST("/auth/refresh", opts.AuthHandler.Refresh)
 }
 
 func registerCaptchaRoutes(group *gin.RouterGroup, opts Options) {
@@ -170,6 +172,7 @@ func registerProtectedRoutes(api *gin.RouterGroup, opts Options) {
 		Provider:   opts.PermissionProvider,
 		Logger:     opts.Logger,
 		Blocklist:  opts.TokenBlocklist,
+		Sessions:   opts.SessionValidator,
 	}))
 	for _, mw := range opts.ProtectedMWs {
 		if mw != nil {

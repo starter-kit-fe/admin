@@ -87,16 +87,7 @@ function RoleRowActions({
   onDelete: (role: Role) => void;
 }) {
   return (
-    <div className="flex justify-end gap-1">
-      <Button
-        variant="ghost"
-        size="sm"
-        className=" px-2.5 text-sm font-medium"
-        onClick={() => onEdit(role)}
-      >
-        <Pencil className="size-3.5" />
-        编辑
-      </Button>
+    <div className="flex justify-end">
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
@@ -110,7 +101,16 @@ function RoleRowActions({
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-36">
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              onEdit(role);
+            }}
+          >
+            <Pencil className="mr-2 size-4" />
+            编辑
+          </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"
             onSelect={(event) => {

@@ -12,7 +12,7 @@ import { DictTypeSection } from './components/sections/dict-type-section';
 export function DictManagement() {
   console.log('DictManagement');
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
+    <div className="mx-auto flex w-full flex-col gap-6 sm:gap-6">
       <DictManagementHeader />
       <DictTypeFiltersSection />
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">

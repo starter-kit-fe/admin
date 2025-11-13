@@ -14,7 +14,7 @@ export function UserManagement() {
   const isMobile = useIsMobile();
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-3 pb-10 sm:gap-6">
+    <div className="mx-auto flex w-full flex-col gap-6 sm:gap-6">
       {!isMobile ? <UserManagementHeader /> : null}
       <UserFiltersSection />
       <UserDataSection />

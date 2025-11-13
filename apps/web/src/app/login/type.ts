@@ -12,7 +12,10 @@ export type LoginRequestPayload = {
 };
 
 export type LoginResponseData = {
-  data: boolean;
+	session_id?: string;
+	access_token?: string;
+	refresh_token?: string;
+	expires_at?: number;
 };
 
 /** —— 严格版：权限/角色使用字面量联合，最安全 —— */

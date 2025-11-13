@@ -87,6 +87,10 @@ func MethodNotAllowed(ctx *gin.Context, opts ...Option) {
 	respond(ctx, http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed), opts...)
 }
 
+func PaymentRequired(ctx *gin.Context, opts ...Option) {
+	respond(ctx, http.StatusPaymentRequired, http.StatusText(http.StatusPaymentRequired), opts...)
+}
+
 func UnprocessableEntity(ctx *gin.Context, opts ...Option) {
 	respond(ctx, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity), opts...)
 }

@@ -89,21 +89,12 @@ function RowActions({
 
   return (
     <div className="flex justify-end">
-      <Button
-        variant="ghost"
-        size="sm"
-        className=" gap-0.5 px-2.5 hover:text-primary cursor-pointer"
-        onClick={() => onEdit(user)}
-      >
-        <Pencil className="mr-1.5 size-3" />
-        修改
-      </Button>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="size-8  hover:text-primary  cursor-pointer"
+            className="size-8 hover:text-primary cursor-pointer"
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
             aria-label="更多操作"
@@ -111,7 +102,12 @@ function RowActions({
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onSelect={handleSelect(onEdit)}>
+            <Pencil className="mr-2 size-4" />
+            修改
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             disabled={!onResetPassword}
             onSelect={handleSelect(onResetPassword)}

@@ -161,7 +161,7 @@ func (s *Service) randomString(n int) string {
 func (s *Service) drawCaptcha(answer string) image.Image {
 	img := image.NewRGBA(image.Rect(0, 0, s.opts.Width, s.opts.Height))
 
-	bgColor := color.RGBA{R: 245, G: 247, B: 250, A: 255}
+	bgColor := color.RGBA{R: 0, G: 0, B: 0, A: 0}
 	draw.Draw(img, img.Bounds(), &image.Uniform{C: bgColor}, image.Point{}, draw.Src)
 
 	for i := 0; i < s.opts.NoiseLines; i++ {

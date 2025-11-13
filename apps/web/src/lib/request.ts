@@ -10,6 +10,7 @@ interface RequestConfig {
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean>;
   data?: unknown; // 用于传递请求体
+  skipAuthRefresh?: boolean;
 }
 
 interface ApiResponse<T> {
@@ -27,6 +28,7 @@ const DEFAULT_UNAUTHORIZED_MESSAGE = '登录信息已过期，请重新登录';
 const LOGIN_ROUTE = '/login';
 
 let hasTriggeredUnauthorizedRedirect = false;
+let refreshPromise: Promise<boolean> | null = null;
 
 const showSessionExpiredDialog = (
   message: string,
@@ -155,11 +157,55 @@ export class HttpClient {
     return fullURL;
   }
 
+  private shouldAttemptRefresh(url: string) {
+    const normalized = url.toLowerCase();
+    return (
+      !normalized.includes('/auth/login') &&
+      !normalized.includes('/auth/refresh')
+    );
+  }
+
+  private async tryRefreshToken(): Promise<boolean> {
+    if (refreshPromise) {
+      return refreshPromise;
+    }
+    const refreshURL = this.buildURL('/v1/auth/refresh');
+    refreshPromise = fetch(refreshURL, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          return false;
+        }
+        const payload = await response
+          .json()
+          .catch(() => ({ code: response.status }));
+        if (
+          payload &&
+          typeof payload.code === 'number' &&
+          payload.code !== 200
+        ) {
+          return false;
+        }
+        return true;
+      })
+      .catch(() => false)
+      .finally(() => {
+        refreshPromise = null;
+      });
+    return refreshPromise;
+  }
+
   async request<T>(
     url: string,
     options: RequestOptions = {},
   ): Promise<ApiResponse<T>> {
-    const { params, data, ...fetchOptions } = options;
+    const { params, data, skipAuthRefresh, ...fetchOptions } = options;
 
     const fullURL = this.buildURL(url, params);
 
@@ -184,13 +230,47 @@ export class HttpClient {
         ...fetchOptions,
         headers,
         body,
+        credentials: fetchOptions.credentials ?? 'same-origin',
       });
       const contentType = response.headers.get('content-type');
       if (contentType?.includes('application/json')) {
         const jsonPayload = await response.json();
-        return this.resolveJsonResponse<T>(jsonPayload, response);
+        const apiResponse = this.resolveJsonResponse<T>(jsonPayload, response);
+        const shouldRefresh =
+          response.status === 402 || apiResponse.code === 402;
+        if (shouldRefresh) {
+          if (!skipAuthRefresh && this.shouldAttemptRefresh(fullURL)) {
+            const refreshed = await this.tryRefreshToken();
+            if (refreshed) {
+              return this.request<T>(url, { ...options, skipAuthRefresh: true });
+            }
+          }
+          this.handleUnauthorized(apiResponse.msg ?? undefined);
+          throw new Error(apiResponse.msg ?? DEFAULT_UNAUTHORIZED_MESSAGE);
+        }
+        const isUnauthorized =
+          response.status === 401 || apiResponse.code === 401;
+        if (isUnauthorized) {
+          this.handleUnauthorized(apiResponse.msg ?? undefined);
+          throw new Error(apiResponse.msg ?? DEFAULT_UNAUTHORIZED_MESSAGE);
+        }
+        return apiResponse;
       } else if (contentType?.startsWith('text/')) {
         const textPayload = await response.text();
+        if (response.status === 402) {
+          if (!skipAuthRefresh && this.shouldAttemptRefresh(fullURL)) {
+            const refreshed = await this.tryRefreshToken();
+            if (refreshed) {
+              return this.request<T>(url, { ...options, skipAuthRefresh: true });
+            }
+          }
+          const textMessage =
+            typeof textPayload === 'string' && textPayload.trim().length > 0
+              ? textPayload
+              : undefined;
+          this.handleUnauthorized(textMessage);
+          throw new Error(textMessage ?? DEFAULT_UNAUTHORIZED_MESSAGE);
+        }
         if (response.status === 401) {
           const textMessage =
             typeof textPayload === 'string' && textPayload.trim().length > 0
@@ -213,6 +293,16 @@ export class HttpClient {
         };
       }
 
+      if (response.status === 402) {
+        if (!skipAuthRefresh && this.shouldAttemptRefresh(fullURL)) {
+          const refreshed = await this.tryRefreshToken();
+          if (refreshed) {
+            return this.request<T>(url, { ...options, skipAuthRefresh: true });
+          }
+        }
+        this.handleUnauthorized();
+        throw new Error(DEFAULT_UNAUTHORIZED_MESSAGE);
+      }
       if (response.status === 401) {
         this.handleUnauthorized();
         throw new Error(DEFAULT_UNAUTHORIZED_MESSAGE);
@@ -327,16 +417,6 @@ export class HttpClient {
       record && (typeof record.msg === 'string' || record.msg === null)
         ? ((record.msg ?? null) as string | null)
         : null;
-
-    if (response.status === 401 || businessCode === 401) {
-      this.handleUnauthorized(message ?? undefined);
-      throw new Error(message ?? DEFAULT_UNAUTHORIZED_MESSAGE);
-    }
-
-    if (!isSuccessfulStatus(businessCode)) {
-      throw new Error(message ?? DEFAULT_ERROR_MESSAGE);
-    }
-
     const resolvedData =
       record && Object.prototype.hasOwnProperty.call(record, 'data')
         ? (record.data as T)

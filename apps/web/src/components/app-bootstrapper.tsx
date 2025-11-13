@@ -16,18 +16,12 @@ export function AppBootstrapper() {
   const hasBootstrappedRef = useRef(false);
 
   useEffect(() => {
-    if (hasBootstrappedRef.current) {
-      return;
-    }
-
-    if (typeof window === 'undefined') {
+    if (hasBootstrappedRef.current || typeof window === 'undefined') {
       return;
     }
 
     const inDashboard = window.location.pathname.startsWith('/dashboard');
-
-    // Avoid triggering protected calls on public pages unless the user already has session info.
-    if (!inDashboard && !user) {
+    if (!inDashboard) {
       return;
     }
 
@@ -76,7 +70,7 @@ export function AppBootstrapper() {
     return () => {
       cancelled = true;
     };
-  }, [queryClient, setPermissions, setRoles, setUser, user]);
+  }, [queryClient, setPermissions, setRoles, setUser]);
 
   return null;
 }

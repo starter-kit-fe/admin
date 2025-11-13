@@ -46,14 +46,17 @@ type RedisConfig struct {
 }
 
 type AuthConfig struct {
-	Secret         string
-	TokenDuration  time.Duration
-	CookieName     string
-	CookieDomain   string
-	CookiePath     string
-	CookieSecure   bool
-	CookieHTTPOnly bool
-	CookieSameSite string
+	Secret          string
+	TokenDuration   time.Duration
+	RefreshDuration time.Duration
+	SessionUpdate   time.Duration
+	CookieName      string
+	RefreshCookie   string
+	CookieDomain    string
+	CookiePath      string
+	CookieSecure    bool
+	CookieHTTPOnly  bool
+	CookieSameSite  string
 }
 
 type SecurityConfig struct {
@@ -97,14 +100,17 @@ func Load(envFiles ...string) (*Config, error) {
 			URL: strings.TrimSpace(v.GetString("redis.url")),
 		},
 		Auth: AuthConfig{
-			Secret:         strings.TrimSpace(v.GetString("auth.secret")),
-			TokenDuration:  parseDurationOrDefault(strings.TrimSpace(v.GetString("auth.token_duration")), constant.JWT_EXP),
-			CookieName:     strings.TrimSpace(v.GetString("auth.cookie.name")),
-			CookieDomain:   strings.TrimSpace(v.GetString("auth.cookie.domain")),
-			CookiePath:     strings.TrimSpace(v.GetString("auth.cookie.path")),
-			CookieSecure:   v.GetBool("auth.cookie.secure"),
-			CookieHTTPOnly: v.GetBool("auth.cookie.http_only"),
-			CookieSameSite: strings.TrimSpace(v.GetString("auth.cookie.same_site")),
+			Secret:          strings.TrimSpace(v.GetString("auth.secret")),
+			TokenDuration:   parseDurationOrDefault(strings.TrimSpace(v.GetString("auth.token_duration")), constant.JWT_ACCESS_TTL),
+			RefreshDuration: parseDurationOrDefault(strings.TrimSpace(v.GetString("auth.refresh_token_duration")), constant.JWT_REFRESH_TTL),
+			SessionUpdate:   parseDurationOrDefault(strings.TrimSpace(v.GetString("auth.session_update")), constant.JWT_SESSION_TICK),
+			CookieName:      strings.TrimSpace(v.GetString("auth.cookie.name")),
+			RefreshCookie:   strings.TrimSpace(v.GetString("auth.cookie.refresh_name")),
+			CookieDomain:    strings.TrimSpace(v.GetString("auth.cookie.domain")),
+			CookiePath:      strings.TrimSpace(v.GetString("auth.cookie.path")),
+			CookieSecure:    v.GetBool("auth.cookie.secure"),
+			CookieHTTPOnly:  v.GetBool("auth.cookie.http_only"),
+			CookieSameSite:  strings.TrimSpace(v.GetString("auth.cookie.same_site")),
 		},
 		Security: SecurityConfig{
 			RateLimit: RateLimitConfig{
@@ -184,11 +190,21 @@ func (c *Config) Normalize() {
 	}
 
 	if c.Auth.TokenDuration <= 0 {
-		c.Auth.TokenDuration = constant.JWT_EXP
+		c.Auth.TokenDuration = constant.JWT_ACCESS_TTL
+	}
+	if c.Auth.RefreshDuration <= 0 {
+		c.Auth.RefreshDuration = constant.JWT_REFRESH_TTL
+	}
+	if c.Auth.SessionUpdate <= 0 {
+		c.Auth.SessionUpdate = constant.JWT_SESSION_TICK
 	}
 	c.Auth.CookieName = strings.TrimSpace(c.Auth.CookieName)
 	if c.Auth.CookieName == "" {
 		c.Auth.CookieName = constant.JWT_COOKIE_NAME
+	}
+	c.Auth.RefreshCookie = strings.TrimSpace(c.Auth.RefreshCookie)
+	if c.Auth.RefreshCookie == "" {
+		c.Auth.RefreshCookie = constant.JWT_REFRESH_COOKIE_NAME
 	}
 	c.Auth.CookiePath = strings.TrimSpace(c.Auth.CookiePath)
 	if c.Auth.CookiePath == "" {
@@ -263,8 +279,11 @@ func newViper() *viper.Viper {
 	v.SetDefault("database.dsn", "")
 	v.SetDefault("redis.url", "")
 	v.SetDefault("auth.secret", "")
-	v.SetDefault("auth.token_duration", constant.JWT_EXP.String())
+	v.SetDefault("auth.token_duration", constant.JWT_ACCESS_TTL.String())
+	v.SetDefault("auth.refresh_token_duration", constant.JWT_REFRESH_TTL.String())
+	v.SetDefault("auth.session_update", constant.JWT_SESSION_TICK.String())
 	v.SetDefault("auth.cookie.name", constant.JWT_COOKIE_NAME)
+	v.SetDefault("auth.cookie.refresh_name", constant.JWT_REFRESH_COOKIE_NAME)
 	v.SetDefault("auth.cookie.domain", constant.JWT_COOKIE_DOMAIN)
 	v.SetDefault("auth.cookie.path", constant.JWT_COOKIE_PATH)
 	v.SetDefault("auth.cookie.secure", constant.JWT_COOKIE_SECURE)
@@ -283,7 +302,10 @@ func newViper() *viper.Viper {
 	_ = v.BindEnv("redis.url", "REDIS_URL")
 	_ = v.BindEnv("auth.secret", "AUTH_SECRET")
 	_ = v.BindEnv("auth.token_duration", "AUTH_TOKEN_DURATION")
+	_ = v.BindEnv("auth.refresh_token_duration", "AUTH_REFRESH_TOKEN_DURATION")
+	_ = v.BindEnv("auth.session_update", "AUTH_SESSION_UPDATE")
 	_ = v.BindEnv("auth.cookie.name", "AUTH_COOKIE_NAME")
+	_ = v.BindEnv("auth.cookie.refresh_name", "AUTH_REFRESH_COOKIE_NAME")
 	_ = v.BindEnv("auth.cookie.domain", "AUTH_COOKIE_DOMAIN")
 	_ = v.BindEnv("auth.cookie.path", "AUTH_COOKIE_PATH")
 	_ = v.BindEnv("auth.cookie.secure", "AUTH_COOKIE_SECURE")

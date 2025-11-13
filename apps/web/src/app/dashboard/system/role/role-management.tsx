@@ -4,12 +4,12 @@ import { RoleBulkDeleteDialog } from './components/dialogs/role-bulk-delete-dial
 import { RoleDeleteDialog } from './components/dialogs/role-delete-dialog';
 import { RoleEditorManager } from './components/editor/role-editor-manager';
 import { RoleManagementHeader } from './components/layout/role-management-header';
-import { RoleFiltersSection } from './components/sections/role-filters-section';
 import { RoleDataSection } from './components/sections/role-data-section';
+import { RoleFiltersSection } from './components/sections/role-filters-section';
 
 export function RoleManagement() {
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 pb-10">
+    <div className="mx-auto flex w-full flex-col gap-6 sm:gap-6">
       <RoleManagementHeader />
       <RoleFiltersSection />
       <RoleDataSection />

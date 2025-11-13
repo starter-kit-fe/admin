@@ -73,6 +73,7 @@ func buildRouterEngine(cfg *config.Config, logger *slog.Logger, modules moduleSe
 		AuthCookieName:     cfg.Auth.CookieName,
 		PermissionProvider: modules.permissionProvider,
 		TokenBlocklist:     modules.onlineService,
+		SessionValidator:   modules.sessionValidator,
 		PublicMWs:          publicMWs,
 		ProtectedMWs:       protectedMWs,
 		LoginMiddlewares:   loginMiddlewares,
