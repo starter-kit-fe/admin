@@ -6,6 +6,7 @@ import type { AuthPayloadLoose } from '@/app/login/type';
 import { useAuthStore } from '@/stores';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 
 const AUTH_ME_QUERY_KEY = ['auth', 'me'] as const;
 const AUTH_MENU_QUERY_KEY = ['auth', 'menus'] as const;
@@ -14,14 +15,22 @@ export function AppBootstrapper() {
   const queryClient = useQueryClient();
   const { user, setUser, setPermissions, setRoles } = useAuthStore();
   const hasBootstrappedRef = useRef(false);
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (hasBootstrappedRef.current || typeof window === 'undefined') {
+    if (typeof window === 'undefined') {
       return;
     }
 
-    const inDashboard = window.location.pathname.startsWith('/dashboard');
+    const currentPath = pathname ?? window.location.pathname;
+    const inDashboard = currentPath.startsWith('/dashboard');
+
     if (!inDashboard) {
+      hasBootstrappedRef.current = false;
+      return;
+    }
+
+    if (hasBootstrappedRef.current) {
       return;
     }
 
@@ -70,7 +79,7 @@ export function AppBootstrapper() {
     return () => {
       cancelled = true;
     };
-  }, [queryClient, setPermissions, setRoles, setUser]);
+  }, [pathname, queryClient, setPermissions, setRoles, setUser]);
 
   return null;
 }

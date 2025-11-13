@@ -3,7 +3,7 @@
 import { RefreshCcw } from 'lucide-react';
 
 import { ManagementHeader } from '@/components/dashboard/management-header';
-import { Button } from '@/components/ui/button';
+import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 
 import {
@@ -20,7 +20,8 @@ export function CacheManagementHeader() {
       title="缓存键列表"
       description="检索和定位缓存键，支持按模式过滤与分页查看。"
       actions={
-        <Button
+        <PermissionButton
+          required="monitor:cache:list"
           type="button"
           variant="outline"
           className="gap-2"
@@ -38,7 +39,7 @@ export function CacheManagementHeader() {
               刷新
             </>
           )}
-        </Button>
+        </PermissionButton>
       }
     />
   );

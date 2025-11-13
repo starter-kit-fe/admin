@@ -1,7 +1,7 @@
 'use client';
 
 import { ManagementHeader } from '@/components/dashboard/management-header';
-import { Button } from '@/components/ui/button';
+import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { Megaphone, RefreshCw, Trash2 } from 'lucide-react';
 
@@ -26,7 +26,8 @@ export function NoticeManagementHeader() {
         description="管理系统通知与公告内容，可快速筛选、创建与下线。"
         actions={
           <>
-            <Button
+            <PermissionButton
+              required="system:notice:remove"
               type="button"
               variant="outline"
               className="relative"
@@ -40,8 +41,9 @@ export function NoticeManagementHeader() {
                   ({selectedCount})
                 </span>
               ) : null}
-            </Button>
-            <Button
+            </PermissionButton>
+            <PermissionButton
+              required="system:notice:list"
               type="button"
               variant="outline"
               onClick={() => refresh()}
@@ -53,15 +55,16 @@ export function NoticeManagementHeader() {
                 <RefreshCw className="size-4" />
               )}
               刷新
-            </Button>
-            <Button
+            </PermissionButton>
+            <PermissionButton
+              required="system:notice:add"
               type="button"
               onClick={() => openCreate()}
               disabled={isMutating}
             >
               <Megaphone className="size-4" />
               新建公告
-            </Button>
+            </PermissionButton>
           </>
         }
       />

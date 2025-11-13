@@ -1,7 +1,7 @@
 'use client';
 
 import { ManagementHeader } from '@/components/dashboard/management-header';
-import { Button } from '@/components/ui/button';
+import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCcw } from 'lucide-react';
 
@@ -19,7 +19,8 @@ export function MenuManagementHeader() {
 
   const actions = (
     <>
-      <Button
+      <PermissionButton
+        required="system:menu:list"
         type="button"
         variant="outline"
         onClick={() => refresh()}
@@ -28,8 +29,9 @@ export function MenuManagementHeader() {
       >
         {isRefreshing ? <Spinner className="size-4" /> : <RefreshCcw className="size-4" />}
         刷新
-      </Button>
-      <Button
+      </PermissionButton>
+      <PermissionButton
+        required="system:menu:add"
         type="button"
         onClick={() => openCreate(0)}
         disabled={isMutating}
@@ -37,7 +39,7 @@ export function MenuManagementHeader() {
       >
         <Plus className="size-4" />
         新增目录/菜单
-      </Button>
+      </PermissionButton>
     </>
   );
 

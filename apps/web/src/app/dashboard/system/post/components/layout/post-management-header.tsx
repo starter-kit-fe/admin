@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCcw } from 'lucide-react';
 
@@ -25,7 +25,8 @@ export function PostManagementHeader() {
         </p>
       </div>
       <div className="flex items-center gap-2">
-        <Button
+        <PermissionButton
+          required="system:post:list"
           variant="outline"
           onClick={() => refresh()}
           disabled={refreshDisabled}
@@ -36,11 +37,15 @@ export function PostManagementHeader() {
             <RefreshCcw className="mr-2 size-4" />
           )}
           刷新
-        </Button>
-        <Button onClick={() => openCreate()} disabled={isMutating}>
+        </PermissionButton>
+        <PermissionButton
+          required="system:post:add"
+          onClick={() => openCreate()}
+          disabled={isMutating}
+        >
           <Plus className="mr-2 size-4" />
           新增岗位
-        </Button>
+        </PermissionButton>
       </div>
     </div>
   );

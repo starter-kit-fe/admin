@@ -278,6 +278,7 @@ func (h *Handler) Login(ctx *gin.Context) {
 // @Success 200 {object} LoginResponse
 // @Failure 400 {object} resp.Response
 // @Failure 401 {object} resp.Response
+// @Failure 402 {object} resp.Response
 // @Failure 500 {object} resp.Response
 // @Router /v1/auth/refresh [post]
 func (h *Handler) Refresh(ctx *gin.Context) {
@@ -312,7 +313,16 @@ func (h *Handler) Refresh(ctx *gin.Context) {
 	}
 	session, err := h.sessions.ValidateRefresh(ctx.Request.Context(), sessionID, refreshToken)
 	if err != nil {
-		resp.Unauthorized(ctx, resp.WithMessage("invalid refresh token"))
+		switch {
+		case errors.Is(err, ErrSessionNotFound),
+			errors.Is(err, ErrSessionRevoked),
+			errors.Is(err, ErrRefreshTokenMissing),
+			errors.Is(err, ErrRefreshTokenMismatch),
+			errors.Is(err, ErrInvalidRefreshToken):
+			resp.PaymentRequired(ctx, resp.WithMessage("refresh token expired"))
+		default:
+			resp.InternalServerError(ctx, resp.WithMessage("failed to validate refresh token"))
+		}
 		return
 	}
 	accessToken, expiresAt, err := h.issueAccessToken(session.UserID, session.SessionID)

@@ -7,7 +7,7 @@ import {
   useConfigsState,
 } from '@/app/dashboard/system/config/store';
 import { ManagementHeader } from '@/components/dashboard/management-header';
-import { Button } from '@/components/ui/button';
+import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCw } from 'lucide-react';
 
@@ -25,7 +25,8 @@ export function ConfigManagementHeader() {
         description="管理系统运行时配置，支持按关键字筛选、编辑和同步缓存。"
         actions={
           <>
-            <Button
+            <PermissionButton
+              required="system:config:list"
               type="button"
               variant="outline"
               onClick={() => refresh()}
@@ -38,8 +39,9 @@ export function ConfigManagementHeader() {
                 <RefreshCw className="size-4" />
               )}
               刷新
-            </Button>
-            <Button
+            </PermissionButton>
+            <PermissionButton
+              required="system:config:add"
               type="button"
               onClick={() => openCreate()}
               disabled={isMutating}
@@ -47,7 +49,7 @@ export function ConfigManagementHeader() {
             >
               <Plus className="size-4" />
               新增参数
-            </Button>
+            </PermissionButton>
           </>
         }
       />

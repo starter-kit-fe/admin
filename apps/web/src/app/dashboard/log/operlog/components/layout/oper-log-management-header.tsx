@@ -2,7 +2,7 @@
 
 import { RefreshCcw } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 
 import {
@@ -31,7 +31,8 @@ export function OperLogManagementHeader() {
         </p>
       </div>
       <div>
-        <Button
+        <PermissionButton
+          required="monitor:operlog:list"
           type="button"
           variant="outline"
           className="gap-2"
@@ -44,7 +45,7 @@ export function OperLogManagementHeader() {
             <RefreshCcw className="size-4" />
           )}
           刷新
-        </Button>
+        </PermissionButton>
       </div>
     </section>
   );

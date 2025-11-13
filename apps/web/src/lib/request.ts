@@ -237,45 +237,49 @@ export class HttpClient {
         const jsonPayload = await response.json();
         const apiResponse = this.resolveJsonResponse<T>(jsonPayload, response);
         const shouldRefresh =
-          response.status === 402 || apiResponse.code === 402;
-        if (shouldRefresh) {
-          if (!skipAuthRefresh && this.shouldAttemptRefresh(fullURL)) {
-            const refreshed = await this.tryRefreshToken();
-            if (refreshed) {
-              return this.request<T>(url, { ...options, skipAuthRefresh: true });
-            }
+          response.status === 401 || apiResponse.code === 401;
+        if (
+          shouldRefresh &&
+          !skipAuthRefresh &&
+          this.shouldAttemptRefresh(fullURL)
+        ) {
+          const refreshed = await this.tryRefreshToken();
+          if (refreshed) {
+            return this.request<T>(url, { ...options, skipAuthRefresh: true });
           }
+        }
+        const refreshExpired =
+          response.status === 402 || apiResponse.code === 402;
+        if (refreshExpired) {
           this.handleUnauthorized(apiResponse.msg ?? undefined);
           throw new Error(apiResponse.msg ?? DEFAULT_UNAUTHORIZED_MESSAGE);
         }
-        const isUnauthorized =
-          response.status === 401 || apiResponse.code === 401;
-        if (isUnauthorized) {
+        if (shouldRefresh) {
           this.handleUnauthorized(apiResponse.msg ?? undefined);
           throw new Error(apiResponse.msg ?? DEFAULT_UNAUTHORIZED_MESSAGE);
         }
         return apiResponse;
       } else if (contentType?.startsWith('text/')) {
         const textPayload = await response.text();
-        if (response.status === 402) {
-          if (!skipAuthRefresh && this.shouldAttemptRefresh(fullURL)) {
-            const refreshed = await this.tryRefreshToken();
-            if (refreshed) {
-              return this.request<T>(url, { ...options, skipAuthRefresh: true });
-            }
+        if (
+          response.status === 401 &&
+          !skipAuthRefresh &&
+          this.shouldAttemptRefresh(fullURL)
+        ) {
+          const refreshed = await this.tryRefreshToken();
+          if (refreshed) {
+            return this.request<T>(url, { ...options, skipAuthRefresh: true });
           }
-          const textMessage =
-            typeof textPayload === 'string' && textPayload.trim().length > 0
-              ? textPayload
-              : undefined;
+        }
+        const textMessage =
+          typeof textPayload === 'string' && textPayload.trim().length > 0
+            ? textPayload
+            : undefined;
+        if (response.status === 402) {
           this.handleUnauthorized(textMessage);
           throw new Error(textMessage ?? DEFAULT_UNAUTHORIZED_MESSAGE);
         }
         if (response.status === 401) {
-          const textMessage =
-            typeof textPayload === 'string' && textPayload.trim().length > 0
-              ? textPayload
-              : undefined;
           this.handleUnauthorized(textMessage);
           throw new Error(textMessage ?? DEFAULT_UNAUTHORIZED_MESSAGE);
         }
@@ -293,13 +297,17 @@ export class HttpClient {
         };
       }
 
-      if (response.status === 402) {
-        if (!skipAuthRefresh && this.shouldAttemptRefresh(fullURL)) {
-          const refreshed = await this.tryRefreshToken();
-          if (refreshed) {
-            return this.request<T>(url, { ...options, skipAuthRefresh: true });
-          }
+      if (
+        response.status === 401 &&
+        !skipAuthRefresh &&
+        this.shouldAttemptRefresh(fullURL)
+      ) {
+        const refreshed = await this.tryRefreshToken();
+        if (refreshed) {
+          return this.request<T>(url, { ...options, skipAuthRefresh: true });
         }
+      }
+      if (response.status === 402) {
         this.handleUnauthorized();
         throw new Error(DEFAULT_UNAUTHORIZED_MESSAGE);
       }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCcw } from 'lucide-react';
 
@@ -28,7 +28,8 @@ export function DepartmentManagementHeader() {
         </p>
       </div>
       <div className="flex items-center gap-2">
-        <Button
+        <PermissionButton
+          required="system:dept:list"
           type="button"
           variant="outline"
           onClick={() => refresh()}
@@ -41,8 +42,9 @@ export function DepartmentManagementHeader() {
             <RefreshCcw className="size-4" />
           )}
           刷新
-        </Button>
-        <Button
+        </PermissionButton>
+        <PermissionButton
+          required="system:dept:add"
           type="button"
           onClick={() => openCreate(0)}
           disabled={isMutating}
@@ -50,7 +52,7 @@ export function DepartmentManagementHeader() {
         >
           <Plus className="size-4" />
           新增部门
-        </Button>
+        </PermissionButton>
       </div>
     </section>
   );

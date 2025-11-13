@@ -75,7 +75,7 @@ func NewJWTAuthMiddleware(options JWTAuthOptions) gin.HandlerFunc {
 				logger.Warn("verify jwt token failed", "error", err, "expired", expired)
 			}
 			if expired {
-				resp.PaymentRequired(ctx, resp.WithMessage("access token expired"))
+				resp.Unauthorized(ctx, resp.WithMessage("access token expired"))
 			} else {
 				resp.Unauthorized(ctx, resp.WithMessage("invalid token"))
 			}

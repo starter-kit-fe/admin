@@ -17,6 +17,14 @@ import (
 var (
 	// ErrSessionNotFound indicates the session no longer exists in Redis.
 	ErrSessionNotFound = errors.New("auth session not found")
+	// ErrSessionRevoked signals the session has been revoked manually.
+	ErrSessionRevoked = errors.New("session revoked")
+	// ErrRefreshTokenMissing indicates the session no longer tracks a refresh token.
+	ErrRefreshTokenMissing = errors.New("refresh token missing")
+	// ErrRefreshTokenMismatch indicates the provided refresh token is not valid.
+	ErrRefreshTokenMismatch = errors.New("refresh token mismatch")
+	// ErrInvalidRefreshToken is returned when the supplied refresh token has an invalid format.
+	ErrInvalidRefreshToken = errors.New("invalid refresh token")
 )
 
 // Session models the persisted authentication state for a single device/login.
@@ -125,13 +133,13 @@ func (s *SessionStore) ValidateRefresh(ctx context.Context, sessionID, refreshTo
 		return nil, err
 	}
 	if session.Revoked {
-		return nil, errors.New("session revoked")
+		return nil, ErrSessionRevoked
 	}
 	if session.RefreshTokenHash == "" {
-		return nil, errors.New("refresh token missing")
+		return nil, ErrRefreshTokenMissing
 	}
 	if security.SHA256Hex(refreshToken) != session.RefreshTokenHash {
-		return nil, errors.New("refresh token mismatch")
+		return nil, ErrRefreshTokenMismatch
 	}
 	return session, nil
 }
@@ -256,7 +264,7 @@ func (s *SessionStore) refreshIndexKey(hash string) string {
 func (s *SessionStore) sessionIDByRefresh(ctx context.Context, refreshToken string) (string, error) {
 	hash := security.SHA256Hex(refreshToken)
 	if hash == "" {
-		return "", errors.New("invalid refresh token")
+		return "", ErrInvalidRefreshToken
 	}
 	key := s.refreshIndexKey(hash)
 	id, err := s.cache.Get(ctx, key).Result()

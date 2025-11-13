@@ -1,9 +1,9 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { ManagementHeader } from '@/components/dashboard/management-header';
+import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCcw } from 'lucide-react';
-import { ManagementHeader } from '@/components/dashboard/management-header';
 
 import {
   useUserManagementRefresh,
@@ -23,14 +23,20 @@ export function UserManagementHeader() {
       description="通过状态筛选、批量操作和响应式弹窗管理系统用户。"
       actions={
         <>
-          <Button variant="outline" onClick={() => refresh()} disabled={refreshDisabled} className="flex items-center">
+          <PermissionButton
+            required="system:user:list"
+            variant="outline"
+            onClick={() => refresh()}
+            disabled={refreshDisabled}
+            className="flex items-center"
+          >
             {isRefreshing ? <Spinner className="size-4" /> : <RefreshCcw className=" size-4" />}
             刷新
-          </Button>
-          <Button onClick={() => openCreate()} disabled={isMutating}>
+          </PermissionButton>
+          <PermissionButton required="system:user:add" onClick={() => openCreate()} disabled={isMutating}>
             <Plus className="size-4 " />
             新增用户
-          </Button>
+          </PermissionButton>
         </>
       }
     />

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Plus, RefreshCcw } from 'lucide-react';
@@ -130,7 +130,8 @@ export function UserFiltersSection() {
   ) : undefined;
 
   const mobileActionSlot = isMobile ? (
-    <Button
+    <PermissionButton
+      required="system:user:add"
       type="button"
       size="sm"
       className="shrink-0 rounded-2xl px-3 font-semibold"
@@ -139,11 +140,12 @@ export function UserFiltersSection() {
     >
       <Plus className="mr-1.5 size-4" />
       新增
-    </Button>
+    </PermissionButton>
   ) : undefined;
 
   const mobileRefreshSlot = isMobile ? (
-    <Button
+    <PermissionButton
+      required="system:user:list"
       type="button"
       size="icon"
       variant="ghost"
@@ -153,7 +155,7 @@ export function UserFiltersSection() {
       disabled={refreshDisabled}
     >
       {isRefreshing ? <Spinner className="size-4" /> : <RefreshCcw className="size-4" />}
-    </Button>
+    </PermissionButton>
   ) : undefined;
 
   return (

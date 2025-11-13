@@ -7,7 +7,7 @@ import {
   useDictTypesState,
 } from '@/app/dashboard/system/dict/store';
 import { ManagementHeader } from '@/components/dashboard/management-header';
-import { Button } from '@/components/ui/button';
+import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { BookMarked, RefreshCw } from 'lucide-react';
 
@@ -25,7 +25,8 @@ export function DictManagementHeader() {
       description={`统一维护系统字典类型与字典项，当前共 ${count} 个字典类型。`}
       actions={
         <>
-          <Button
+          <PermissionButton
+            required="system:dict:list"
             type="button"
             variant="outline"
             onClick={() => refresh()}
@@ -37,15 +38,16 @@ export function DictManagementHeader() {
               <RefreshCw className="size-4" />
             )}
             刷新
-          </Button>
-          <Button
+          </PermissionButton>
+          <PermissionButton
+            required="system:dict:add"
             type="button"
             onClick={() => openTypeCreate()}
             disabled={isMutating}
           >
             <BookMarked className="size-4" />
             新建字典
-          </Button>
+          </PermissionButton>
         </>
       }
     />
