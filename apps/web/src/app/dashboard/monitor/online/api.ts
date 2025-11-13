@@ -46,3 +46,8 @@ export function batchForceLogoutOnlineUsers(ids: string[]) {
     ids,
   });
 }
+
+export function getOnlineUserDetail(id: string) {
+  const identifier = encodeURIComponent(id.trim());
+  return get<OnlineUser>(`/v1/monitor/online/users/${identifier}`);
+}

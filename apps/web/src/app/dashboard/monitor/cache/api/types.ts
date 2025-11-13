@@ -1,5 +1,3 @@
-'use client';
-
 export interface CacheServerInfo {
   version?: string;
   mode?: string;

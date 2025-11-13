@@ -3,6 +3,13 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
@@ -23,13 +30,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   createColumnHelper,
   flexRender,
@@ -76,7 +76,7 @@ function renderTypeBadge(type: string) {
       variant="outline"
       className={
         isSystem
-          ? 'border-blue-500/40 bg-blue-500/10 text-blue-600'
+          ? 'border-primary/40 bg-primary/10 text-primary'
           : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600'
       }
     >

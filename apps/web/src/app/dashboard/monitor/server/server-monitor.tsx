@@ -72,13 +72,41 @@ function formatDuration(seconds?: number) {
   return parts.join(' ');
 }
 
-function InfoRow({ label, value }: { label: string; value: ReactNode }) {
+function formatServerSystem(host: HostInfo) {
+  const platformName = host.platform?.trim();
+  const platformVersion = host.platformVersion?.trim();
+  const hasPlatformDetail = Boolean(platformName || platformVersion);
+  const primary = hasPlatformDetail
+    ? [platformName, platformVersion].filter(Boolean).join(' ')
+    : host.os?.trim() || '';
+  const kernel = host.kernelVersion?.trim();
+  const arch = host.arch?.trim();
+  const descriptor = [primary, kernel].filter(Boolean).join(' · ');
+  if (descriptor && arch) {
+    return `${descriptor} (${arch})`;
+  }
+  return descriptor || arch || '-';
+}
+
+function InfoRow({
+  label,
+  value,
+  align = 'right',
+  valueClassName,
+}: {
+  label: string;
+  value: ReactNode;
+  align?: 'left' | 'right';
+  valueClassName?: string;
+}) {
   return (
     <div className="flex items-center justify-between gap-4">
       <span className="text-xs uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
-      <span className="text-right text-sm font-medium text-foreground">
+      <span
+        className={`text-sm font-medium text-foreground ${align === 'left' ? 'text-left' : 'text-right'} ${valueClassName ?? ''}`}
+      >
         {value}
       </span>
     </div>
@@ -99,6 +127,7 @@ function QuickStat({
   percent: number;
 }) {
   const barRef = useRef<HTMLDivElement>(null);
+  const clampedPercent = safeNumber(percent);
 
   useLayoutEffect(() => {
     const node = barRef.current;
@@ -107,7 +136,7 @@ function QuickStat({
     }
     const ctx = gsap.context(() => {
       gsap.to(node, {
-        width: `${Math.max(0, Math.min(100, percent))}%`,
+        width: `${clampedPercent}%`,
         duration: 0.8,
         ease: 'power2.out',
       });
@@ -115,11 +144,17 @@ function QuickStat({
     return () => {
       ctx.revert();
     };
-  }, [percent]);
+  }, [clampedPercent]);
 
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-border/60 bg-card/80 px-4 py-3 dark:border-border/30">
-      <div className="flex items-center gap-3">
+    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 px-4 py-4 dark:border-border/30">
+      <div
+        aria-hidden
+        ref={barRef}
+        className="pointer-events-none absolute inset-y-0 left-0 w-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent transition-[width]"
+        style={{ width: `${clampedPercent}%` }}
+      />
+      <div className="relative flex items-center gap-3">
         <span className="flex size-10 items-center justify-center rounded-xl bg-muted/40 text-muted-foreground">
           <Icon className="size-5" />
         </span>
@@ -130,13 +165,6 @@ function QuickStat({
           <span className="text-lg font-semibold text-foreground">{value}</span>
           <span className="text-xs text-muted-foreground/80">{hint}</span>
         </div>
-      </div>
-      <div className="h-1.5 rounded-full bg-muted/40">
-        <div
-          ref={barRef}
-          className="h-full rounded-full bg-primary"
-          style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
-        />
       </div>
     </div>
   );
@@ -150,32 +178,33 @@ function ServerInfoCard({
   lastUpdated: string;
 }) {
   const rows = [
-    { label: '主机名', value: host.hostname || '-' },
+    { label: '服务器名称', value: host.hostname || '-' },
     {
-      label: '系统',
-      value: [host.os, host.arch].filter(Boolean).join('/') || '-',
+      label: '服务器系统',
+      value: formatServerSystem(host),
     },
-    { label: '内核版本', value: host.kernelVersion || '-' },
     {
-      label: '运行时长',
+      label: '服务器运行时长',
       value: host.uptime || formatDuration(host.uptimeSeconds),
     },
+    { label: 'Go 运行时', value: host.goVersion || '-' },
+    { label: '内核版本', value: host.kernelVersion || '-' },
     { label: '当前时间', value: host.currentTime || '-' },
   ];
 
   return (
-    <Card className="h-full border-border/70 dark:border-border/40">
+    <Card className="h-full border-none shadow-none  dark:border-border/40">
       <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <MonitorSmartphone className="size-5 text-muted-foreground" />
           服务器与版本
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
-          最近更新：{lastUpdated}
+          服务器级别的信息（区别于进程运行时），最近更新：{lastUpdated}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex h-full flex-col gap-4 text-sm text-muted-foreground">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-3">
           {rows.map((row) => (
             <InfoRow key={row.label} label={row.label} value={row.value} />
           ))}
@@ -186,26 +215,34 @@ function ServerInfoCard({
 }
 
 function ProcessInfoCard({ process }: { process: ProcessInfo }) {
-  const highlights = [
+  const processSummary = [
+    {
+      label: '版本号',
+      value: process.version?.trim() || 'N/A',
+      align: 'left' as const,
+      valueClassName: 'font-mono text-sm',
+    },
+    {
+      label: 'Commit',
+      value: process.commit || '-',
+      align: 'left' as const,
+      valueClassName: 'font-mono text-xs leading-tight break-all',
+    },
     {
       label: 'PID',
       value: process.pid > 0 ? `#${process.pid}` : '-',
-      hint: process.startTime || '未获取',
     },
     {
-      label: '后端版本',
-      value: process.version?.trim() || 'N/A',
-      hint: `Commit: ${process.commit?.slice(0, 7) || '-'}`,
+      label: '启动时间',
+      value: process.startTime || '未获取',
+    },
+    {
+      label: '进程运行时长',
+      value: process.uptime || formatDuration(process.uptimeSeconds),
     },
     {
       label: 'Go 版本',
       value: process.goVersion || '-',
-      hint: `下一次 GC：${formatBytes(process.nextGC)}`,
-    },
-    {
-      label: '运行时长',
-      value: process.uptime || formatDuration(process.uptimeSeconds),
-      hint: `最后 GC：${process.lastGC || '-'}`,
     },
   ];
 
@@ -213,43 +250,51 @@ function ProcessInfoCard({ process }: { process: ProcessInfo }) {
     { label: 'CPU 占用', value: formatPercent(process.cpuUsage) },
     { label: '内存占用', value: formatBytes(process.alloc) },
     { label: '累计内存', value: formatBytes(process.totalAlloc) },
+    { label: '系统内存', value: formatBytes(process.sys) },
     { label: 'Goroutines', value: process.numGoroutine.toString() },
     { label: 'GC 次数', value: process.numGC.toString() },
+    { label: '最后 GC', value: process.lastGC || '-' },
+    { label: '下一次 GC', value: formatBytes(process.nextGC) },
     { label: 'Cgo 调用', value: process.numCgoCall.toString() },
   ];
 
   return (
-    <Card className="h-full border-border/70 dark:border-border/40">
+    <Card className="h-full shadow-none border-none dark:border-border/40">
       <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <ServerCog className="size-5 text-muted-foreground" />
           后端进程
         </CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
-          以 Go 进程为核心，聚焦 CPU、内存与 GC 行为。
+          展示部署版本 / Commit 以及 Go 进程的 CPU、内存与 GC 行为。
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {highlights.map((item) => (
-            <div
-              key={item.label}
-              className="rounded-2xl border border-border/60 bg-muted/20 p-4 dark:border-border/30"
-            >
-              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                {item.label}
-              </p>
-              <p className="text-lg font-semibold text-foreground">
-                {item.value}
-              </p>
-              <p className="text-xs text-muted-foreground">{item.hint}</p>
-            </div>
-          ))}
+        <div className="rounded-2xl border border-border/60 bg-muted/10 p-4 dark:border-border/30">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            部署信息
+          </p>
+          <div className="mt-3 space-y-3">
+            {processSummary.map((item) => (
+              <InfoRow
+                key={item.label}
+                label={item.label}
+                value={item.value}
+                align={item.align}
+                valueClassName={item.valueClassName}
+              />
+            ))}
+          </div>
         </div>
-        <div className="grid gap-3 grid-cols-2">
-          {metrics.map((row) => (
-            <InfoRow key={row.label} label={row.label} value={row.value} />
-          ))}
+        <div className="rounded-2xl border border-border/60 p-4 dark:border-border/30">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            运行指标
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {metrics.map((row) => (
+              <InfoRow key={row.label} label={row.label} value={row.value} />
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -272,6 +317,8 @@ const DEFAULT_STATUS: ServerStatus = {
     hostname: '',
     os: '',
     arch: '',
+    platform: '',
+    platformVersion: '',
     uptime: '',
     uptimeSeconds: 0,
     goVersion: '',

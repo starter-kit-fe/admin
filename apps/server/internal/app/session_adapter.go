@@ -9,14 +9,15 @@ import (
 )
 
 type sessionValidatorAdapter struct {
-	store *auth.SessionStore
+	store  *auth.SessionStore
+	online *online.Service
 }
 
-func newSessionValidator(store *auth.SessionStore) middleware.SessionValidator {
+func newSessionValidator(store *auth.SessionStore, onlineSvc *online.Service) middleware.SessionValidator {
 	if store == nil {
 		return nil
 	}
-	return &sessionValidatorAdapter{store: store}
+	return &sessionValidatorAdapter{store: store, online: onlineSvc}
 }
 
 func (a *sessionValidatorAdapter) GetSession(ctx context.Context, sessionID string) (middleware.SessionMetadata, error) {
@@ -38,7 +39,14 @@ func (a *sessionValidatorAdapter) UpdateLastSeen(ctx context.Context, sessionID 
 	if err != nil {
 		return err
 	}
-	return a.store.UpdateLastSeen(ctx, session)
+	prev := session.LastSeen
+	if err := a.store.UpdateLastSeen(ctx, session); err != nil {
+		return err
+	}
+	if a.online != nil && session.LastSeen.After(prev) {
+		_ = a.online.UpdateLastSeen(ctx, sessionID, session.LastSeen)
+	}
+	return nil
 }
 
 type sessionManagerAdapter struct {

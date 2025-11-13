@@ -1,5 +1,15 @@
 'use client';
 
+import { useMemo } from 'react';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { Clipboard, TimerReset } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,17 +27,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { Clipboard, TimerReset } from 'lucide-react';
-import { useMemo } from 'react';
-import { toast } from 'sonner';
 
-import type { CacheKeyItem } from '../../cache/api/types';
+import type { CacheKeyItem } from '../api/types';
 import { formatBytes, formatDuration } from '../utils';
 
 interface CacheKeyTableProps {
@@ -110,7 +111,9 @@ export function CacheKeyTable({
       }),
       columnHelper.accessor('sizeBytes', {
         header: '估算大小',
-        cell: (info) => <span>{formatBytes(info.getValue())}</span>,
+        cell: (info) => (
+          <span>{formatBytes(info.getValue(), { decimals: 2 })}</span>
+        ),
         meta: {
           headerClassName: 'min-w-[140px]',
         },
@@ -142,7 +145,7 @@ export function CacheKeyTable({
     <Table>
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id} className="bg-muted/40">
+          <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => (
               <TableHead
                 key={header.id}
@@ -215,7 +218,10 @@ export function CacheKeyTable({
                       | undefined,
                   )}
                 >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  {flexRender(
+                    cell.column.columnDef.cell,
+                    cell.getContext(),
+                  )}
                 </TableCell>
               ))}
             </TableRow>

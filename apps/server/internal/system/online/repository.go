@@ -256,6 +256,29 @@ func (r *Repository) IsTokenBlocked(ctx context.Context, tokenHash string) (bool
 	return exists > 0, nil
 }
 
+func (r *Repository) UpdateLastSeen(ctx context.Context, sessionID string, lastSeen time.Time) error {
+	if r == nil || r.cache == nil {
+		return ErrRepositoryUnavailable
+	}
+	sessionID = strings.TrimSpace(sessionID)
+	if sessionID == "" {
+		return ErrSessionNotFound
+	}
+
+	session, err := r.GetSession(ctx, sessionID)
+	if err != nil {
+		return err
+	}
+	if session == nil {
+		return ErrSessionNotFound
+	}
+	if lastSeen.IsZero() {
+		lastSeen = time.Now()
+	}
+	session.LastAccessTime = lastSeen
+	return r.SaveSession(ctx, session)
+}
+
 func (r *Repository) ListOnlineUsers(ctx context.Context, opts ListOptions) ([]Session, int, error) {
 	if r == nil {
 		return nil, 0, ErrRepositoryUnavailable

@@ -164,6 +164,6 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 		cacheService:       cacheSvc,
 		userRepo:           userRepo,
 		permissionProvider: authRepo,
-		sessionValidator:   newSessionValidator(sessionStore),
+		sessionValidator:   newSessionValidator(sessionStore, onlineSvc),
 	}
 }

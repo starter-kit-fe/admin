@@ -2,6 +2,8 @@ export interface HostInfo {
   hostname: string;
   os: string;
   arch: string;
+  platform?: string;
+  platformVersion?: string;
   uptime: string;
   uptimeSeconds: number;
   goVersion: string;

@@ -301,7 +301,7 @@ export default function Page() {
       <main ref={containerRef} className="space-y-20 pb-20">
         <section
           id="features"
-          className="mx-auto  px-6 pt-16 md:px-10 lg:px-12"
+          className="mx-auto  px-6 pt-16 md:px-10 lg:px-12 container"
           data-animate-section
         >
           <div className="flex flex-col gap-4">
@@ -365,7 +365,7 @@ export default function Page() {
 
         <section
           id="themes"
-          className="mx-auto  px-6 md:px-10 lg:px-12"
+          className="mx-auto  px-6 md:px-10 lg:px-12 container"
           data-animate-section
         >
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-center">
@@ -424,7 +424,7 @@ export default function Page() {
 
         <section
           id="resources"
-          className="mx-auto  px-6 md:px-10 lg:px-12"
+          className="mx-auto  px-6 md:px-10 lg:px-12 container"
           data-animate-section
         >
           <div className="flex flex-col gap-4">

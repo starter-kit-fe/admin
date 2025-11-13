@@ -3,6 +3,7 @@
 import { User } from '@/types';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import { useEffect, useState } from 'react';
 
 interface StoredAuthState {
   permissions: string[] | null;
@@ -56,18 +57,29 @@ const setPermissionsAtom = atom(
   },
 );
 
+function useHasHydrated() {
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
+
+  return hasHydrated;
+}
+
 export const useAuthStore = (): AuthState => {
   const { user, roles, permissions } = useAtomValue(authAtom);
   const isAuthenticated = useAtomValue(isAuthenticatedAtom);
   const setUser = useSetAtom(setUserAtom);
   const setRoles = useSetAtom(setRolesAtom);
   const setPermissions = useSetAtom(setPermissionsAtom);
+  const hasHydrated = useHasHydrated();
 
   return {
-    user,
-    roles,
-    permissions,
-    isAuthenticated,
+    user: hasHydrated ? user : defaultAuthState.user,
+    roles: hasHydrated ? roles : defaultAuthState.roles,
+    permissions: hasHydrated ? permissions : defaultAuthState.permissions,
+    isAuthenticated: hasHydrated ? isAuthenticated : false,
     setUser,
     setRoles,
     setPermissions,

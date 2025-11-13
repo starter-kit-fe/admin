@@ -185,7 +185,7 @@ export default function HeroSection() {
     <section
       id="hero"
       ref={heroRef}
-      className="relative isolate overflow-hidden border-b bg-background pb-20 pt-28 sm:pt-32"
+      className="relative isolate   overflow-hidden border-b bg-background pb-20 pt-28 sm:pt-32"
     >
       <div className="absolute inset-0 -z-10">
         <div
@@ -197,7 +197,7 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/75 to-background" />
       </div>
 
-      <div className="mx-auto flex  flex-col gap-12 px-6 md:px-10 lg:px-12">
+      <div className="mx-auto flex  flex-col gap-12 px-6 container md:px-10 lg:px-12">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-center">
           <div className="flex flex-col gap-6 text-left">
             {heroTitle.secondary ? (

@@ -1,5 +1,5 @@
-import { CacheMonitor } from './cache-monitor';
+import { CacheDashboard } from './components/cache-dashboard';
 
 export default function Page() {
-  return <CacheMonitor />;
+  return <CacheDashboard />;
 }

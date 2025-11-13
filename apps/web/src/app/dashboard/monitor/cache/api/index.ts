@@ -1,6 +1,9 @@
 import { get } from '@/lib/request';
 
-import type { CacheKeyListResponse, CacheOverview } from './type';
+import type {
+  CacheKeyListResponse,
+  CacheOverview,
+} from './types';
 
 export interface CacheKeyListParams {
   pattern?: string;
@@ -34,5 +37,8 @@ export function getCacheOverview() {
 }
 
 export function listCacheKeys(params: CacheKeyListParams = {}) {
-  return get<CacheKeyListResponse>('/v1/monitor/cache/list', buildQuery(params));
+  return get<CacheKeyListResponse>(
+    '/v1/monitor/cache/list',
+    buildQuery(params),
+  );
 }

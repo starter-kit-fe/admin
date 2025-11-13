@@ -9,7 +9,7 @@ import {
   listCacheKeys,
   type CacheKeyListParams,
 } from '../../cache/api';
-import type { CacheKeyListResponse } from '../../cache/type';
+import type { CacheKeyListResponse } from '../../cache/api/types';
 import {
   CACHE_LIST_PAGE_SIZE_OPTIONS,
   CACHE_LIST_QUERY_KEY,

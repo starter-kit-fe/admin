@@ -159,6 +159,13 @@ func (s *Service) IsTokenBlocked(ctx context.Context, tokenHash string) (bool, e
 	return s.repo.IsTokenBlocked(ctx, tokenHash)
 }
 
+func (s *Service) UpdateLastSeen(ctx context.Context, sessionID string, lastSeen time.Time) error {
+	if s == nil || s.repo == nil {
+		return ErrServiceUnavailable
+	}
+	return s.repo.UpdateLastSeen(ctx, sessionID, lastSeen)
+}
+
 func (s *Service) blockTokenIfNeeded(ctx context.Context, session *Session) {
 	if session == nil || strings.TrimSpace(session.TokenHash) == "" {
 		return

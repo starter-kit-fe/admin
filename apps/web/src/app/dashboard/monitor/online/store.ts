@@ -24,6 +24,13 @@ type ForceDialogState =
       user: OnlineUser;
     };
 
+type DetailDialogState =
+  | { open: false }
+  | {
+      open: true;
+      user: OnlineUser;
+    };
+
 type SetStateAction<T> = T | ((prev: T) => T);
 
 const noopRefresh = () => {};
@@ -34,6 +41,7 @@ const paginationAtom = atom<PaginationState>({ ...DEFAULT_PAGINATION });
 const selectedUsersAtom = atom<OnlineUser[]>([]);
 const selectionRevisionAtom = atom(0);
 const forceDialogAtom = atom<ForceDialogState>({ open: false });
+const detailDialogAtom = atom<DetailDialogState>({ open: false });
 const batchDialogOpenAtom = atom(false);
 const refreshingAtom = atom(false);
 const activeMutationsAtom = atom(0);
@@ -117,6 +125,14 @@ const closeForceDialogAtom = atom(null, (_get, set) => {
   set(forceDialogAtom, { open: false });
 });
 
+const openDetailDialogAtom = atom(null, (_get, set, user: OnlineUser) => {
+  set(detailDialogAtom, { open: true, user });
+});
+
+const closeDetailDialogAtom = atom(null, (_get, set) => {
+  set(detailDialogAtom, { open: false });
+});
+
 const setBatchDialogAtom = atom(
   null,
   (_get, set, open: boolean) => {
@@ -167,6 +183,9 @@ export interface OnlineUserManagementStore {
   forceDialog: ForceDialogState;
   openForceDialog: (user: OnlineUser) => void;
   closeForceDialog: () => void;
+  detailDialog: DetailDialogState;
+  openDetailDialog: (user: OnlineUser) => void;
+  closeDetailDialog: () => void;
   batchDialogOpen: boolean;
   setBatchDialogOpen: (open: boolean) => void;
   pendingForceRowId: string | null;
@@ -180,6 +199,7 @@ export const useOnlineUserManagementStore =
     const pagination = useAtomValue(paginationAtom);
     const selectedUsers = useAtomValue(selectedUsersAtom);
     const forceDialog = useAtomValue(forceDialogAtom);
+    const detailDialog = useAtomValue(detailDialogAtom);
     const batchDialogOpen = useAtomValue(batchDialogOpenAtom);
     const pendingForceRowId = useAtomValue(pendingForceRowIdAtom);
 
@@ -191,6 +211,8 @@ export const useOnlineUserManagementStore =
     const clearSelectedUsers = useSetAtom(clearSelectedUsersAtom);
     const openForceDialog = useSetAtom(openForceDialogAtom);
     const closeForceDialog = useSetAtom(closeForceDialogAtom);
+    const openDetailDialog = useSetAtom(openDetailDialogAtom);
+    const closeDetailDialog = useSetAtom(closeDetailDialogAtom);
     const setBatchDialogOpen = useSetAtom(setBatchDialogAtom);
     const setPendingForceRowId = useSetAtom(setPendingForceRowIdAtom);
 
@@ -215,6 +237,9 @@ export const useOnlineUserManagementStore =
       forceDialog,
       openForceDialog,
       closeForceDialog,
+      detailDialog,
+      openDetailDialog,
+      closeDetailDialog,
       batchDialogOpen,
       setBatchDialogOpen,
       pendingForceRowId,

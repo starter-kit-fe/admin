@@ -13,7 +13,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Fragment, useMemo, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 const SEGMENT_LABEL_MAP: Record<string, string> = {
   log: '日志管理',
@@ -158,10 +158,16 @@ function InternalBreadcrumbLink({
 export function DashboardBreadcrumb() {
   const pathname = usePathname();
   const normalizedPath = normalizePath(pathname);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const { data: menuTree = [] } = useQuery({
     queryKey: ['auth', 'menus'],
     queryFn: getMenuTree,
+    enabled: isMounted,
   });
 
   const navItems = useMemo(() => buildNavItems(menuTree), [menuTree]);
@@ -171,10 +177,13 @@ export function DashboardBreadcrumb() {
     [navItems, normalizedPath],
   );
 
+  const fallbackCrumbs = useMemo(
+    () => generateFallbackCrumbs(normalizedPath),
+    [normalizedPath],
+  );
+
   const crumbs =
-    navCrumbs.length > 0
-      ? navCrumbs
-      : generateFallbackCrumbs(normalizedPath);
+    isMounted && navCrumbs.length > 0 ? navCrumbs : fallbackCrumbs;
 
   const hasExtraCrumbs = crumbs.length > 0;
 

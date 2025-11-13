@@ -45,13 +45,14 @@ export function OnlineUserDataSection() {
     setSelectedUsers,
     clearSelectedUsers,
     openForceDialog,
+    openDetailDialog,
     pendingForceRowId,
   } = useOnlineUserManagementStore();
   const selectionRevision = useOnlineUserManagementSelectionRevision();
   const setRefreshing = useOnlineUserManagementSetRefreshing();
   const setRefreshHandler = useOnlineUserManagementSetRefreshHandler();
   const { isMutating } = useOnlineUserManagementStatus();
-  const { canList, canForceLogout, canBatchLogout } =
+  const { canList, canForceLogout, canBatchLogout, canQuery } =
     useOnlinePermissionFlags();
   const selectedUserCount = selectedUsers.length;
 
@@ -192,13 +193,15 @@ export function OnlineUserDataSection() {
               rows={rows}
               rowSelection={rowSelection}
               onRowSelectionChange={setRowSelection}
-              onForceLogout={(user) => openForceDialog(user)}
+              onForceLogout={openForceDialog}
+              onViewDetail={openDetailDialog}
               pendingForceRowId={pendingForceRowId}
               isForceMutating={Boolean(pendingForceRowId)}
               isLoading={isLoading}
               isError={isError}
               canSelectRows={canBatchLogout}
               canForceLogout={canForceLogout}
+              canViewDetail={canQuery}
             />
           </div>
         ) : (

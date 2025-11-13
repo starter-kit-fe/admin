@@ -8,7 +8,7 @@ import {
   useReactTable,
   type RowSelectionState,
 } from '@tanstack/react-table';
-import { LogOut } from 'lucide-react';
+import { Eye, LogOut } from 'lucide-react';
 
 import { InlineLoading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
@@ -46,12 +46,14 @@ interface OnlineUserTableProps {
       | ((prev: RowSelectionState) => RowSelectionState),
   ) => void;
   onForceLogout: (user: OnlineUser) => void;
+  onViewDetail: (user: OnlineUser) => void;
   pendingForceRowId: string | null;
   isForceMutating: boolean;
   isLoading: boolean;
   isError: boolean;
   canSelectRows: boolean;
   canForceLogout: boolean;
+  canViewDetail: boolean;
 }
 
 export function OnlineUserTable({
@@ -59,12 +61,14 @@ export function OnlineUserTable({
   rowSelection,
   onRowSelectionChange,
   onForceLogout,
+  onViewDetail,
   pendingForceRowId,
   isForceMutating,
   isLoading,
   isError,
   canSelectRows,
   canForceLogout,
+  canViewDetail,
 }: OnlineUserTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<OnlineUser>(), []);
 
@@ -163,7 +167,7 @@ export function OnlineUserTable({
       }),
     ];
 
-    if (canForceLogout) {
+    if (canForceLogout || canViewDetail) {
       baseColumns.push(
         columnHelper.display({
           id: 'actions',
@@ -172,32 +176,50 @@ export function OnlineUserTable({
             const user = row.original;
             const rowId = row.id;
             const isPending =
-              isForceMutating && pendingForceRowId === rowId;
+              canForceLogout &&
+              isForceMutating &&
+              pendingForceRowId === rowId;
 
             return (
               <div className="flex justify-end gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-2 text-sm font-medium"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onForceLogout(user);
-                  }}
-                  disabled={isPending}
-                >
-                  {isPending ? (
-                    <>
-                      <Spinner className="mr-1.5 size-4" />
-                      处理中
-                    </>
-                  ) : (
-                    <>
-                      <LogOut className="mr-1.5 size-3.5" />
-                      强退
-                    </>
-                  )}
-                </Button>
+                {canViewDetail ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-sm font-medium"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onViewDetail(user);
+                    }}
+                  >
+                    <Eye className="mr-1.5 size-3.5" />
+                    查看
+                  </Button>
+                ) : null}
+                {canForceLogout ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-sm font-medium"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onForceLogout(user);
+                    }}
+                    disabled={isPending}
+                  >
+                    {isPending ? (
+                      <>
+                        <Spinner className="mr-1.5 size-4" />
+                        处理中
+                      </>
+                    ) : (
+                      <>
+                        <LogOut className="mr-1.5 size-3.5" />
+                        强退
+                      </>
+                    )}
+                  </Button>
+                ) : null}
               </div>
             );
           },
@@ -255,10 +277,12 @@ export function OnlineUserTable({
     return baseColumns;
   }, [
     canForceLogout,
+    canViewDetail,
     canSelectRows,
     columnHelper,
     isForceMutating,
     onForceLogout,
+    onViewDetail,
     pendingForceRowId,
   ]);
 
