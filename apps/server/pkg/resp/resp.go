@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	serveri18n "github.com/starter-kit-fe/admin/pkg/i18n"
 )
 
 type Response struct {
@@ -120,6 +122,8 @@ func respond(ctx *gin.Context, status int, defaultMessage string, opts ...Option
 	for _, opt := range opts {
 		opt(&response)
 	}
+
+	response.Message = serveri18n.Message(ctx, response.Message)
 
 	ctx.JSON(status, response)
 }

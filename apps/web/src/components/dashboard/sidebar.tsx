@@ -19,7 +19,7 @@ import { resolveLucideIcon } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';
 import { MenuNode } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
+import {Link} from '@/i18n/navigation';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import gpkg from '../../../../../package.json';

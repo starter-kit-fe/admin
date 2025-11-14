@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import {Button} from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -9,10 +9,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useGSAP } from '@gsap/react';
+import {Link} from '@/i18n/navigation';
+import {useTranslations} from 'next-intl';
+import {useGSAP} from '@gsap/react';
 import gsap from 'gsap';
-import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 gsap.registerPlugin(useGSAP);
 
@@ -40,8 +41,17 @@ function getStoredConsent() {
 }
 
 export function CookieConsentBanner() {
+  const t = useTranslations('CookieBanner');
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
+  const requiredItemKeys = ['first', 'second', 'third'] as const;
+  const optionalItemKeys = ['first', 'second', 'third'] as const;
+  const requiredItems = requiredItemKeys.map((key) =>
+    t(`required.items.${key}`),
+  );
+  const optionalItems = optionalItemKeys.map((key) =>
+    t(`optional.items.${key}`),
+  );
 
   // refs for GSAP
   const wrapperRef = useRef<HTMLElement | null>(null);
@@ -146,7 +156,7 @@ export function CookieConsentBanner() {
       ref={wrapperRef}
       role="region"
       aria-live="polite"
-      aria-label="Cookie 同意横幅"
+      aria-label={t('ariaLabel')}
       className={[
         // 移动端：底部居中；桌面端：右下角浮动
         'pointer-events-none fixed inset-x-0 bottom-0 z-[60] min-w-7xl flex justify-center',
@@ -157,42 +167,35 @@ export function CookieConsentBanner() {
       <Card
         ref={cardRef}
         className={[
-          'pointer-events-auto w-full max-w-6xl md:max-w-md',
+          'pointer-events-auto w-full md:max-w-md',
           'border-border/70 bg-background/90 shadow-2xl backdrop-blur',
           'supports-[backdrop-filter]:bg-background/80',
           'rounded-2xl',
         ].join(' ')}
       >
         <CardHeader className="gap-1 pb-2" data-cc-item>
-          <CardTitle className="text-base sm:text-lg">
-            让我们了解你的 Cookie 偏好设置
-          </CardTitle>
+          <CardTitle className="text-base sm:text-lg">{t('title')}</CardTitle>
           <CardDescription className="text-sm leading-relaxed">
-            我们使用必要 Cookie
-            以确保网站正常运行。若选择“全部接受”，我们还会用于个性化与统计分析。
+            {t('description')}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
           <div className="space-y-2" data-cc-item>
-            <p className="text-sm text-muted-foreground">
-              始终启用以保障基础功能：
-            </p>
+            <p className="text-sm text-muted-foreground">{t('required.title')}</p>
             <ul className="list-disc pl-5 text-sm leading-6 marker:text-muted-foreground">
-              <li>确保网站稳定运行</li>
-              <li>防止欺诈与滥用</li>
-              <li>监控性能与错误</li>
+              {requiredItems.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           </div>
 
           <div className="space-y-2" data-cc-item>
-            <p className="text-sm text-muted-foreground">
-              可选（仅在你同意后启用）：
-            </p>
+            <p className="text-sm text-muted-foreground">{t('optional.title')}</p>
             <ul className="list-disc pl-5 text-sm leading-6 marker:text-muted-foreground">
-              <li>个性化推荐与广告</li>
-              <li>衡量广告与内容效果</li>
-              <li>改进新功能与服务</li>
+              {optionalItems.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           </div>
         </CardContent>
@@ -207,18 +210,18 @@ export function CookieConsentBanner() {
             size="sm"
             asChild
             className="w-full sm:w-auto"
-            aria-label="查看隐私与 Cookie 设置"
+            aria-label={t('actions.reject')}
           >
-            <Link href="/cookies">拒绝可选 Cookie</Link>
+            <Link href="/cookies">{t('actions.reject')}</Link>
           </Button>
           <Button
             type="button"
             size="sm"
             className="w-full sm:w-auto"
             onClick={handleAccept}
-            aria-label="接受全部 Cookie"
+            aria-label={t('actions.accept')}
           >
-            全部接受
+            {t('actions.accept')}
           </Button>
         </CardFooter>
       </Card>

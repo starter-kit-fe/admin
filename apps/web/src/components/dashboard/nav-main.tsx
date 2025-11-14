@@ -22,9 +22,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
+import {Link, usePathname} from '@/i18n/navigation';
 import { ChevronRight, ExternalLink } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 import type { NavItem } from './sidebar';
 

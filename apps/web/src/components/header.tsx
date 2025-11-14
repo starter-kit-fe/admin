@@ -1,8 +1,9 @@
 'use client';
 
-import { LogoMark } from '@/components/logo-mark';
+import {LogoMark} from '@/components/logo-mark';
+import {LanguageSwitcher} from '@/components/language-switcher';
 import ThemeToggle from '@/components/theme-toggle';
-import { buttonVariants } from '@/components/ui/button';
+import {buttonVariants} from '@/components/ui/button';
 import {
   Drawer,
   DrawerClose,
@@ -11,14 +12,14 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
-import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/stores';
-import { ArrowRight, LayoutDashboard, LogIn, Menu } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {cn} from '@/lib/utils';
+import {Link, usePathname, useRouter} from '@/i18n/navigation';
+import {useAuthStore} from '@/stores';
+import {ArrowRight, LayoutDashboard, LogIn, Menu} from 'lucide-react';
+import {useTranslations} from 'next-intl';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
-import pkg from '../../package.json';
+import pkg from '@/../package.json';
 
 type StaticNavLink = {
   label: string;
@@ -32,11 +33,8 @@ type RouteNavLink = {
 
 type NavLink = StaticNavLink | RouteNavLink;
 
-const NAV_LINKS: StaticNavLink[] = [
-  { label: '特性', hash: 'features' },
-  { label: '主题', hash: 'themes' },
-  { label: '资源', hash: 'resources' },
-];
+const NAV_SECTIONS = ['features', 'themes', 'resources'] as const;
+type NavSection = (typeof NAV_SECTIONS)[number];
 
 function resolveBrand() {
   const title = pkg.seo?.title ?? 'Admin Template';
@@ -45,6 +43,7 @@ function resolveBrand() {
 
 export default function Header() {
   const { isAuthenticated } = useAuthStore();
+  const t = useTranslations('Header');
 
   const pathname = usePathname();
   const router = useRouter();
@@ -54,7 +53,14 @@ export default function Header() {
 
   const brandName = useMemo(resolveBrand, []);
 
-  const navLinks = useMemo<NavLink[]>(() => [...NAV_LINKS], []);
+  const navLinks = useMemo<NavLink[]>(
+    () =>
+      NAV_SECTIONS.map<StaticNavLink>((section: NavSection) => ({
+        label: t(`nav.${section}`),
+        hash: section,
+      })),
+    [t],
+  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -143,7 +149,7 @@ export default function Header() {
   };
 
   const ctaHref = isAuthenticated ? '/dashboard' : '/login';
-  const ctaLabel = isAuthenticated ? '控制台' : '登录账户';
+  const ctaLabel = isAuthenticated ? t('cta.dashboard') : t('cta.login');
   const CtaIcon = isAuthenticated ? LayoutDashboard : LogIn;
 
   return (
@@ -185,6 +191,7 @@ export default function Header() {
             <CtaIcon className="h-4 w-4" />
             {ctaLabel}
           </Link>
+          <LanguageSwitcher className="hidden md:flex" size="sm" />
           <ThemeToggle className="hidden md:inline-flex" />
           <Drawer
             open={isMobileMenuOpen}
@@ -196,10 +203,10 @@ export default function Header() {
                 buttonVariants({ variant: 'ghost', size: 'icon-sm' }),
                 'md:hidden',
               )}
-              aria-label="打开导航菜单"
+              aria-label={t('drawer.open')}
             >
               <Menu className="h-5 w-5" />
-              <span className="sr-only">打开导航菜单</span>
+              <span className="sr-only">{t('drawer.open')}</span>
             </DrawerTrigger>
             <DrawerContent className="flex max-h-[90vh] flex-col gap-6 px-4 pb-6 pt-[calc(env(safe-area-inset-top,0)+1.5rem)]">
               <DrawerHeader className="text-left">
@@ -224,6 +231,7 @@ export default function Header() {
                   <CtaIcon className="h-4 w-4" />
                   {ctaLabel}
                 </Link>
+                <LanguageSwitcher />
                 <ThemeToggle className="justify-center" />
               </div>
             </DrawerContent>

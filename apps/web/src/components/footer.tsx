@@ -1,55 +1,47 @@
-import { Badge } from '@/components/ui/badge';
-import { Github, Mail, Twitter } from 'lucide-react';
-import Link from 'next/link';
+import {Badge} from '@/components/ui/badge';
+import {Link} from '@/i18n/navigation';
+import {Github, Mail, Twitter} from 'lucide-react';
+import {useTranslations} from 'next-intl';
 
 import gpkg from '../../../../package.json';
-import pkg from '../../package.json';
-
-const FOOTER_LINK_GROUPS = [
-  {
-    heading: '产品',
-    links: [
-      { label: '特性概览', href: { pathname: '/', hash: 'features' } },
-      { label: '主题系统', href: { pathname: '/', hash: 'themes' } },
-      { label: '资源中心', href: { pathname: '/', hash: 'resources' } },
-    ],
-  },
-  {
-    heading: '账号',
-    links: [
-      { label: '登录管理端', href: '/login' },
-      { label: '进入 Dashboard', href: '/dashboard' },
-      { label: '系统日志', href: '/dashboard/system/log' },
-    ],
-  },
-] as const;
+import pkg from '@/../package.json';
 
 const SOCIAL_LINKS = [
   {
-    label: 'GitHub',
+    key: 'github',
     href: 'https://github.com/starter-kit-fe/admin',
     icon: Github,
   },
   {
-    label: 'Twitter',
+    key: 'twitter',
     href: 'https://twitter.com',
     icon: Twitter,
   },
   {
-    label: '邮箱',
+    key: 'mail',
     href: 'mailto:service@h06i.com',
     icon: Mail,
   },
 ] as const;
 
-const LEGAL_LINKS = [
-  { label: '服务条款', href: '/terms' },
-  { label: '隐私政策', href: '/privacy' },
-] as const;
-
 export default function Footer() {
+  const t = useTranslations('Footer');
   const year = new Date().getFullYear();
   const keywords = pkg.seo.keywords.slice(0, 4);
+  const productLinks = [
+    {label: t('product.overview'), href: {pathname: '/', hash: 'features'}},
+    {label: t('product.themes'), href: {pathname: '/', hash: 'themes'}},
+    {label: t('product.resources'), href: {pathname: '/', hash: 'resources'}},
+  ] as const;
+  const accountLinks = [
+    {label: t('account.login'), href: '/login'},
+    {label: t('account.dashboard'), href: '/dashboard'},
+    {label: t('account.logs'), href: '/dashboard/system/log'},
+  ] as const;
+  const legalLinks = [
+    {label: t('legal.terms'), href: '/terms'},
+    {label: t('legal.privacy'), href: '/privacy'},
+  ] as const;
 
   return (
     <footer className="border-t bg-background/95">
@@ -77,52 +69,67 @@ export default function Footer() {
               ))}
             </div>
             <div className="flex items-center gap-3 pt-2">
-              {SOCIAL_LINKS.map(({ label, href, icon: Icon }) => (
+              {SOCIAL_LINKS.map(({ key, href, icon: Icon }) => (
                 <Link
-                  key={label}
+                  key={key}
                   href={href}
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground"
                   target={href.startsWith('http') ? '_blank' : undefined}
                   rel={href.startsWith('http') ? 'noreferrer' : undefined}
                 >
                   <Icon className="h-4 w-4" />
-                  <span className="sr-only">{label}</span>
+                  <span className="sr-only">{t(`social.${key}`)}</span>
                 </Link>
               ))}
             </div>
           </div>
           <div className="grid gap-8 sm:grid-cols-2">
-            {FOOTER_LINK_GROUPS.map((section) => (
-              <div key={section.heading} className="space-y-3">
-                <h3 className="text-sm font-semibold tracking-wide text-foreground/80">
-                  {section.heading}
-                </h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  {section.links.map((link) => (
-                    <li key={`${section.heading}-${link.label}`}>
-                      <Link
-                        href={link.href}
-                        className="transition-colors hover:text-foreground"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
             <div className="space-y-3">
               <h3 className="text-sm font-semibold tracking-wide text-foreground/80">
-                联系我们
+                {t('headingProduct')}
+              </h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {productLinks.map((link) => (
+                  <li key={`product-${link.label}`}>
+                    <Link
+                      href={link.href}
+                      className="transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold tracking-wide text-foreground/80">
+                {t('headingAccount')}
+              </h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {accountLinks.map((link) => (
+                  <li key={`account-${link.label}`}>
+                    <Link
+                      href={link.href}
+                      className="transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold tracking-wide text-foreground/80">
+                {t('headingContact')}
               </h3>
               <p className="text-sm text-muted-foreground">
-                有任何建议或合作意向，欢迎随时与我们联系。
+                {t('contact.body')}
               </p>
               <Link
                 href="mailto:service@h06i.com"
                 className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
               >
-                service@h06i.com
+                {t('contact.email')}
               </Link>
             </div>
           </div>
@@ -130,13 +137,17 @@ export default function Footer() {
         <div className="mt-12 flex flex-col gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-3">
             <p>
-              © 2018 - {year} {pkg.seo.og.title}. 保留所有权利。| &nbsp;v
-              {gpkg.version}
+              {t('meta', {
+                start: 2018,
+                year,
+                title: pkg.seo.og.title,
+                version: gpkg.version,
+              })}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-4 text-sm">
-              {LEGAL_LINKS.map(({ label, href }) => (
+              {legalLinks.map(({ label, href }) => (
                 <Link
                   key={label}
                   href={href}

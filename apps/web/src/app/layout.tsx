@@ -1,9 +1,8 @@
-import { CookieConsentBanner } from '@/components/cookie-consent-banner';
-import { Providers } from '@/components/providers';
-import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
+import type {Metadata} from 'next';
+import {Geist} from 'next/font/google';
 import Script from 'next/script';
 
+import {routing} from '@/i18n/routing';
 import pkg from '../../package.json';
 import './globals.css';
 
@@ -50,13 +49,9 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={routing.defaultLocale} suppressHydrationWarning>
       <head>
         <meta httpEquiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="renderer" content="webkit" />
@@ -123,12 +118,7 @@ export default function RootLayout({
         />
       </head>
       <body className={font.className} suppressHydrationWarning>
-        <Providers>
-          <>
-            {children}
-            <CookieConsentBanner />
-          </>
-        </Providers>
+        {children}
       </body>
     </html>
   );

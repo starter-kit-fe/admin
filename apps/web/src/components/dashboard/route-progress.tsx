@@ -1,7 +1,7 @@
 'use client';
 
 //makes the component client so we can use hooks
-import { usePathname } from 'next/navigation';
+import {usePathname} from '@/i18n/navigation';
 import { useEffect, useState } from 'react';
 
 export const RouteProgressBar = () => {

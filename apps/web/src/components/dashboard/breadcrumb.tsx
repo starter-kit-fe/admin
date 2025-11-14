@@ -10,9 +10,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import {Link, usePathname} from '@/i18n/navigation';
 import { useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 const SEGMENT_LABEL_MAP: Record<string, string> = {

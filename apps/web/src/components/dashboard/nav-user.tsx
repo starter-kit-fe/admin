@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
+import {useRouter} from '@/i18n/navigation';
 import { useMutation } from '@tanstack/react-query';
 import {
   BadgeCheck,
@@ -38,7 +39,6 @@ import {
   LogOut,
   Sparkles,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { type ComponentProps, useCallback, useState } from 'react';
 import { toast } from 'sonner';
 

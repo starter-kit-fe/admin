@@ -1,0 +1,274 @@
+{
+  "LanguageSwitcher": {
+    "label": "Language",
+    "options": {
+      "zh": "中文 (简体)",
+      "en": "English"
+    }
+  },
+  "Header": {
+    "nav": {
+      "features": "Features",
+      "themes": "Themes",
+      "resources": "Resources"
+    },
+    "cta": {
+      "login": "Sign in",
+      "dashboard": "Open dashboard"
+    },
+    "drawer": {
+      "open": "Open navigation menu"
+    }
+  },
+  "Hero": {
+    "primaryCta": {
+      "authenticated": "Enter dashboard",
+      "anonymous": "Get started"
+    },
+    "secondaryCta": "Explore features",
+    "card": {
+      "title": "Adaptive themes, instantly available",
+      "description": "Dark, light and system modes keep the experience consistent on every device.",
+      "badges": {
+        "dark": "Dark mode",
+        "light": "Light mode",
+        "system": "System sync"
+      },
+      "body": "Switch effortlessly via the <code>ThemeToggle</code> component, while <code>@tanstack/react-query</code> and our HTTP client keep auth states synchronized."
+    }
+  },
+  "Home": {
+    "features": {
+      "badge": "Core Features",
+      "title": "From UI to data, everything you need for a modern admin",
+      "description": "Reusable UI, data tooling and security primitives help teams ship dashboards fast.",
+      "cards": {
+        "interface": {
+          "title": "Modern interface system",
+          "description": "Built with shadcn/ui and Tailwind for a cohesive, customizable component library.",
+          "highlights": [
+            "shadcn/ui",
+            "Tailwind CSS",
+            "Responsive layouts"
+          ]
+        },
+        "data": {
+          "title": "Smart data layer",
+          "description": "@tanstack/react-query works with a custom HttpClient to handle caching, retries and auth.",
+          "highlights": [
+            "Data caching",
+            "Auth guard",
+            "Timeout controls"
+          ]
+        },
+        "security": {
+          "title": "Enterprise-grade safety",
+          "description": "Permissions, roles and audit logs pair with the Go backend for full observability.",
+          "highlights": [
+            "Permission checks",
+            "Sign-in logs",
+            "Observability"
+          ]
+        }
+      }
+    },
+    "themes": {
+      "badge": "Theme Modes",
+      "title": "One design language, three visual modes",
+      "description": "Follow the system preference or switch manually; ThemeToggle delivers a smooth transition.",
+      "cards": {
+        "light": {
+          "name": "Light theme",
+          "description": "Bright, airy work surface for everyday tasks and demos.",
+          "badge": "Light"
+        },
+        "dark": {
+          "name": "Dark theme",
+          "description": "Balanced contrast and eye comfort for late-night sessions.",
+          "badge": "Night"
+        },
+        "system": {
+          "name": "System match",
+          "description": "Stay consistent across devices by mirroring the OS preference.",
+          "badge": "System"
+        }
+      }
+    },
+    "resources": {
+      "badge": "Resources & Tools",
+      "title": "Companion resources to speed up delivery",
+      "description": "Ship faster with API docs, system logs and a Turborepo architecture built for collaboration.",
+      "cards": {
+        "api": {
+          "title": "API docs",
+          "description": "Swagger integration helps you inspect backend contracts instantly.",
+          "cta": "View details →"
+        },
+        "logs": {
+          "title": "System logs",
+          "description": "Track sign-ins and operations in real time to troubleshoot quickly.",
+          "cta": "View details →"
+        },
+        "structure": {
+          "title": "Project structure",
+          "description": "Apps + Packages Turborepo ready for reuse and multi-team work.",
+          "cta": "View details →"
+        }
+      }
+    },
+    "callout": {
+      "title": "Frontend and backend foundations are ready—plug in your business next",
+      "description": "React Query, GSAP and Next.js combine to deliver a dynamic, responsive admin surface.",
+      "cta": {
+        "primary": {
+          "authenticated": "Enter dashboard",
+          "anonymous": "Sign in"
+        },
+        "secondary": {
+          "authenticated": "View system logs",
+          "anonymous": "Learn more"
+        }
+      }
+    }
+  },
+  "HealthStatus": {
+    "title": "Service health",
+    "description": "Monitor APIs, the database and cache dependencies in real time.",
+    "actions": {
+      "refresh": "Run check again",
+      "refreshing": "Refreshing"
+    },
+    "messages": {
+      "loading": "Fetching the latest status...",
+      "error": "Unable to load health information.",
+      "errorReason": "Reason: {message}",
+      "emptyTitle": "No health data yet",
+      "emptyDescription": "Try again later or trigger a new probe.",
+      "unknown": "Unknown",
+      "uptimeMissing": "Not provided"
+    },
+    "metrics": {
+      "database": "Database",
+      "cache": "Cache",
+      "uptime": "Last heartbeat"
+    }
+  },
+  "Footer": {
+    "headingProduct": "Product",
+    "headingAccount": "Account",
+    "headingContact": "Contact us",
+    "product": {
+      "overview": "Feature overview",
+      "themes": "Theming system",
+      "resources": "Resource hub"
+    },
+    "account": {
+      "login": "Sign in",
+      "dashboard": "Open dashboard",
+      "logs": "System logs"
+    },
+    "contact": {
+      "body": "We’re happy to hear your ideas or partnership requests.",
+      "email": "Email us"
+    },
+    "social": {
+      "github": "GitHub",
+      "twitter": "Twitter",
+      "mail": "Email"
+    },
+    "legal": {
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy"
+    },
+    "meta": "© {start} - {year} {title}. All rights reserved. | v{version}"
+  },
+  "CookieBanner": {
+    "ariaLabel": "Cookie consent banner",
+    "title": "Tell us about your cookie preferences",
+    "description": "We use essential cookies to keep the site running. Choose “Accept all” to enable personalization and analytics.",
+    "required": {
+      "title": "Always on to guarantee the basics:",
+      "items": {
+        "first": "Keep the site stable",
+        "second": "Prevent fraud and abuse",
+        "third": "Monitor performance and errors"
+      }
+    },
+    "optional": {
+      "title": "Optional (enabled only with consent):",
+      "items": {
+        "first": "Personalized recommendations and ads",
+        "second": "Measure campaign and content performance",
+        "third": "Improve features and services"
+      }
+    },
+    "actions": {
+      "reject": "Reject optional cookies",
+      "accept": "Accept all cookies"
+    }
+  },
+  "Login": {
+    "toast": {
+      "success": "Signed in successfully. Welcome back!",
+      "error": "Sign in failed. Please verify your account details."
+    },
+    "Page": {
+      "highlights": {
+        "first": "Supports password sign-in and caches granted permissions.",
+        "second": "Access the dashboard, system logs and Swagger utilities after authentication.",
+        "third": "React Query keeps auth tokens synchronized across requests."
+      },
+      "description": "A modern admin experience with complete authentication flows.",
+      "badge": "Welcome Back",
+      "backgroundAlt": "Login background illustration",
+      "countdown": "{seconds}s left",
+      "countdownExpired": "Code expired",
+      "homeAria": "Back to home"
+    },
+    "Aside": {
+      "footer": "Admin Template"
+    },
+    "Form": {
+      "title": "Admin sign in",
+      "description": "Enter your account to access the dashboard",
+      "username": {
+        "placeholder": "Username",
+        "aria": "Enter username"
+      },
+      "password": {
+        "placeholder": "Password",
+        "aria": "Enter password",
+        "show": "Show password",
+        "hide": "Hide password"
+      },
+      "captcha": {
+        "placeholder": "Verification code",
+        "aria": "Enter verification code",
+        "refresh": "Refresh code",
+        "tapToRefresh": "Tap to refresh",
+        "expired": "Code expired",
+        "alt": "Captcha"
+      },
+      "submit": {
+        "idle": "Sign in",
+        "pending": "Signing in..."
+      },
+      "agreements": {
+        "text": "By signing in you agree to our",
+        "terms": "Terms",
+        "privacy": "Privacy Policy",
+        "cookies": "Cookie Policy"
+      }
+    }
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "description": "The page you were looking for has moved or no longer exists.",
+    "cta": "Back to home"
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "cta": "Back to home",
+    "retry": "Retry"
+  }
+}

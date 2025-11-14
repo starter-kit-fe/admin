@@ -4,9 +4,9 @@ import { getMenuTree } from '@/app/dashboard/api';
 import { getUserInfo } from '@/app/login/api';
 import type { AuthPayloadLoose } from '@/app/login/type';
 import { useAuthStore } from '@/stores';
+import {usePathname} from '@/i18n/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation';
 
 const AUTH_ME_QUERY_KEY = ['auth', 'me'] as const;
 const AUTH_MENU_QUERY_KEY = ['auth', 'menus'] as const;
