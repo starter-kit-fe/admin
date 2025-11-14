@@ -1,22 +1,15 @@
 'use client';
 
 import { Header } from '@/components/dashboard/header';
-// import { RouteProgressBar } from '@/components/dashboard/route-progress';
+import { RouteProgressBar } from '@/components/dashboard/route-progress';
 import { AppSidebar } from '@/components/dashboard/sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { AppProgressBar as ProgressBar } from 'next-nprogress-bar';
 import { type ReactNode } from 'react';
 
 export default function Page({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
-      {/* <RouteProgressBar /> */}
-      <ProgressBar
-        height="4px"
-        color="var(--primary)" // 直接用你的 OKLCH 主题变量
-        options={{ showSpinner: true, trickleSpeed: 150 }}
-        shallowRouting
-      />
+      <RouteProgressBar />
       <AppSidebar className="bg-border/35" />
       <SidebarInset className="bg-border/35">
         <Header />

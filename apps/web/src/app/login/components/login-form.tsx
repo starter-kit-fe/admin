@@ -23,6 +23,7 @@ import {
   ShieldAlert,
   User,
 } from 'lucide-react';
+import Link from 'next/link';
 import type { BaseSyntheticEvent, FC } from 'react';
 import type { FieldErrors, UseFormRegister } from 'react-hook-form';
 
@@ -230,6 +231,32 @@ export const LoginForm: FC<LoginFormProps> = ({
             )}
           </Button>
         </form>
+      </CardContent>
+      <CardContent className="pt-0">
+        <p className="text-center text-xs leading-relaxed text-muted-foreground">
+          登录即表示你同意{' '}
+          <Link
+            href="/terms"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            服务条款
+          </Link>
+          、{' '}
+          <Link
+            href="/privacy"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            隐私政策
+          </Link>{' '}
+          以及{' '}
+          <Link
+            href="/cookies"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Cookie 政策
+          </Link>
+          。
+        </p>
       </CardContent>
     </Card>
   );

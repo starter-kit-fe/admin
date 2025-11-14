@@ -42,6 +42,11 @@ const SOCIAL_LINKS = [
   },
 ] as const;
 
+const LEGAL_LINKS = [
+  { label: '服务条款', href: '/terms' },
+  { label: '隐私政策', href: '/privacy' },
+] as const;
+
 export default function Footer() {
   const year = new Date().getFullYear();
   const keywords = pkg.seo.keywords.slice(0, 4);
@@ -123,21 +128,24 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-12 flex flex-col gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © 2018 - {year} {pkg.seo.og.title}. 保留所有权利。| &nbsp;v
-            {gpkg.version}
-          </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <span>主题：</span>
-            <Badge variant="outline" className="border-dashed">
-              深色
-            </Badge>
-            <Badge variant="outline" className="border-dashed">
-              亮色
-            </Badge>
-            <Badge variant="outline" className="border-dashed">
-              跟随系统
-            </Badge>
+          <div className="space-y-3">
+            <p>
+              © 2018 - {year} {pkg.seo.og.title}. 保留所有权利。| &nbsp;v
+              {gpkg.version}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              {LEGAL_LINKS.map(({ label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="text-underline-accent  text-muted-foreground transition-colors hover:text-foreground text-[11px]"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>

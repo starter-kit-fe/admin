@@ -187,12 +187,17 @@ export default function Page() {
 
     gsap.registerPlugin(ScrollTrigger);
 
+    const sectionTriggers: ScrollTrigger[] = [];
+    const parallaxTriggers: ScrollTrigger[] = [];
+    const sectionTimelines: gsap.core.Timeline[] = [];
+
     const ctx = gsap.context(() => {
+
       const sections = gsap.utils.toArray<HTMLElement>(
         root.querySelectorAll('[data-animate-section]'),
       );
 
-      sections.forEach((section) => {
+      sections.forEach((section, index) => {
         const introTargets = gsap.utils.toArray<HTMLElement>(
           section.querySelectorAll('[data-animate="intro"]'),
         );
@@ -211,18 +216,12 @@ export default function Page() {
           return;
         }
 
-        const timeline = gsap.timeline({
-          defaults: { ease: 'power2.out' },
-          scrollTrigger: {
-            trigger: section,
-            start: 'top 78%',
-            end: 'bottom 60%',
-            scrub: 0.6,
-          },
+        const sectionTimeline = gsap.timeline({
+          defaults: { ease: 'power2.out', duration: 0.9 },
         });
 
         if (introTargets.length) {
-          timeline.fromTo(
+          sectionTimeline.fromTo(
             introTargets,
             { y: 36, opacity: 0 },
             {
@@ -230,11 +229,13 @@ export default function Page() {
               opacity: 1,
               stagger: { each: 0.08, from: 'start' },
             },
+            0,
           );
         }
 
         if (cardTargets.length) {
-          timeline.fromTo(
+          const cardPosition = introTargets.length ? '-=0.25' : 0;
+          sectionTimeline.fromTo(
             cardTargets,
             { y: 48, opacity: 0 },
             {
@@ -242,12 +243,12 @@ export default function Page() {
               opacity: 1,
               stagger: { each: 0.14, from: 'start' },
             },
-            introTargets.length ? '-=0.25' : 0,
+            cardPosition,
           );
         }
 
         if (highlightTargets.length) {
-          timeline.fromTo(
+          sectionTimeline.fromTo(
             highlightTargets,
             { y: 18, opacity: 0 },
             {
@@ -255,43 +256,54 @@ export default function Page() {
               opacity: 1,
               stagger: { each: 0.06, from: 'center' },
             },
-            '-=0.3',
+            '-=0.25',
           );
         }
+
+        sectionTimelines.push(sectionTimeline);
+
+        sectionTriggers.push(
+          ScrollTrigger.create({
+            trigger: section,
+            animation: sectionTimeline,
+            start: 'top 78%',
+            once: true,
+            id: `section-${index}`,
+          }),
+        );
       });
 
-      gsap.utils
-        .toArray<HTMLElement>(root.querySelectorAll('[data-parallax]'))
-        .forEach((element) => {
-          gsap.fromTo(
-            element,
-            { yPercent: -6 },
-            {
-              yPercent: 6,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: element,
-                scrub: true,
-              },
-            },
-          );
-        });
+      const parallaxElements = gsap.utils.toArray<HTMLElement>(
+        root.querySelectorAll('[data-parallax]'),
+      );
+
+      parallaxElements.forEach((element, index) => {
+        const parallaxTimeline = gsap.timeline();
+        parallaxTimeline.fromTo(
+          element,
+          { yPercent: -6 },
+          { yPercent: 6, ease: 'none' },
+        );
+        sectionTimelines.push(parallaxTimeline);
+
+        parallaxTriggers.push(
+          ScrollTrigger.create({
+            trigger: element,
+            animation: parallaxTimeline,
+            start: 'top 90%',
+            once: true,
+            id: `parallax-${index}`,
+          }),
+        );
+      });
+
     }, root);
 
     return () => {
+      sectionTimelines.forEach((timeline) => timeline.kill());
+      sectionTriggers.forEach((trigger) => trigger.kill());
+      parallaxTriggers.forEach((trigger) => trigger.kill());
       ctx.revert();
-      ScrollTrigger.getAll().forEach((trigger) => {
-        const triggerTarget = trigger.vars.trigger;
-        if (
-          triggerTarget &&
-          typeof triggerTarget !== 'string' &&
-          'closest' in triggerTarget &&
-          typeof triggerTarget.closest === 'function' &&
-          triggerTarget.closest('[data-animate-section]')
-        ) {
-          trigger.kill();
-        }
-      });
     };
   }, []);
 
