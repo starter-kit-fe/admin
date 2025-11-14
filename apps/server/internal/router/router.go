@@ -200,6 +200,21 @@ func registerSystemRoutes(group *gin.RouterGroup, opts Options) {
 
 	registerSystemUserRoutes(system, opts)
 
+	profile := group.Group("/profile")
+	if opts.UserHandler != nil {
+		profile.GET("", opts.UserHandler.GetProfile)
+		profile.PUT("", opts.UserHandler.UpdateProfile)
+		profile.PUT("/password", opts.UserHandler.ChangePassword)
+		profile.GET("/sessions", opts.UserHandler.ListSelfSessions)
+		profile.POST("/sessions/:id/force-logout", opts.UserHandler.ForceLogoutSelfSession)
+	} else {
+		profile.GET("", notImplemented("get profile"))
+		profile.PUT("", notImplemented("update profile"))
+		profile.PUT("/password", notImplemented("change password"))
+		profile.GET("/sessions", notImplemented("list own sessions"))
+		profile.POST("/sessions/:id/force-logout", notImplemented("force logout own session"))
+	}
+
 	roles := system.Group("/roles")
 	if opts.RoleHandler != nil {
 		roles.GET("", middleware.RequirePermissions("system:role:list"), opts.RoleHandler.List)

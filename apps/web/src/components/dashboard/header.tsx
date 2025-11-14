@@ -1,7 +1,5 @@
 import { DashboardBreadcrumb } from '@/components/dashboard/breadcrumb';
 import { NavUser } from '@/components/dashboard/nav-user';
-import { RouteProgressBar } from '@/components/dashboard/route-progress';
-import { AppSidebar } from '@/components/dashboard/sidebar';
 import ThemeToggle from '@/components/theme-toggle';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';

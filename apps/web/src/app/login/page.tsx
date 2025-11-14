@@ -1,9 +1,11 @@
 'use client';
 
+import { LogoMark } from '@/components/logo-mark';
 import ThemeToggle from '@/components/theme-toggle';
 import { useAuthStore } from '@/stores';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -160,7 +162,8 @@ export default function Page() {
         />
         <div className="absolute inset-0 bg-slate-950/85" />
       </div>
-      <div className="absolute right-4 top-[calc(env(safe-area-inset-top,0)+1rem)] z-30 md:right-6 md:top-6">
+
+      <div className="absolute  right-4 top-[calc(env(safe-area-inset-top,0)+1rem)] z-30 flex items-center gap-4 md:right-6 md:top-6">
         <ThemeToggle />
       </div>
 
@@ -178,7 +181,13 @@ export default function Page() {
           alt="登录背景"
           className="absolute inset-0 h-full w-full object-cover blur-lg  md:hidden"
         />
-
+        <Link
+          href="/"
+          aria-label="返回首页"
+          className=" absolute top-2  md:top-4 left-8 p-2 text-foreground  hover:border-primary/50 hover:text-primary"
+        >
+          <LogoMark className="size-14" />
+        </Link>
         <div className="w-full max-w-md  backdrop-blur md:border-none md:bg-transparent md:p-0 md:shadow-none">
           <LoginForm
             register={register}

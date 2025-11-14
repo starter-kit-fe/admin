@@ -24,6 +24,7 @@ const SEGMENT_LABEL_MAP: Record<string, string> = {
   server: '服务监控',
   user: '用户管理',
   system: '系统管理',
+  profile: '账号设置',
 };
 
 type Crumb = {

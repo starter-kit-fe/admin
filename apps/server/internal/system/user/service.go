@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -18,6 +19,7 @@ var (
 	ErrDuplicateUsername    = errors.New("username already exists")
 	ErrPasswordRequired     = errors.New("password is required")
 	ErrPasswordTooShort     = errors.New("password is too short")
+	ErrPasswordMismatch     = errors.New("current password is incorrect")
 	ErrInvalidStatus        = errors.New("invalid user status")
 	ErrInvalidRoleSelection = errors.New("invalid role selection")
 	ErrInvalidPostSelection = errors.New("invalid post selection")
@@ -128,6 +130,21 @@ type ResetPasswordInput struct {
 	UserID   int64
 	Password string
 	Operator string
+}
+
+type UpdateProfileInput struct {
+	UserID      int64
+	NickName    string
+	Email       string
+	Phonenumber string
+	Sex         string
+	Remark      *string
+}
+
+type ChangePasswordInput struct {
+	UserID          int64
+	CurrentPassword string
+	NewPassword     string
 }
 
 func (s *Service) ListUsers(ctx context.Context, opts ListOptions) (*ListResult, error) {
@@ -487,6 +504,93 @@ func (s *Service) ResetPassword(ctx context.Context, input ResetPasswordInput) e
 	operator := sanitizeOperator(input.Operator)
 	now := time.Now()
 
+	return s.repo.UpdateUserPassword(ctx, input.UserID, string(hashedPassword), operator, now)
+}
+
+func (s *Service) UpdateProfile(ctx context.Context, input UpdateProfileInput) (*User, error) {
+	if s == nil || s.repo == nil {
+		return nil, ErrServiceUnavailable
+	}
+	if input.UserID <= 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	existing, err := s.repo.GetUser(ctx, input.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if existing == nil {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	nickname := strings.TrimSpace(input.NickName)
+	if nickname == "" {
+		return nil, errors.New("nickname is required")
+	}
+
+	updates := map[string]interface{}{
+		"nick_name":   nickname,
+		"email":       strings.TrimSpace(input.Email),
+		"phonenumber": strings.TrimSpace(input.Phonenumber),
+		"sex":         normalizeSex(input.Sex),
+	}
+
+	if input.Remark != nil {
+		if trimmed := normalizeRemark(input.Remark); trimmed == nil {
+			updates["remark"] = nil
+		} else {
+			updates["remark"] = *trimmed
+		}
+	}
+
+	operator := sanitizeOperator(strconv.FormatInt(input.UserID, 10))
+	now := time.Now()
+	updates["update_by"] = operator
+	updates["update_time"] = now
+
+	if err := s.repo.UpdateUser(ctx, input.UserID, updates); err != nil {
+		return nil, err
+	}
+	return s.GetUser(ctx, input.UserID)
+}
+
+func (s *Service) ChangePassword(ctx context.Context, input ChangePasswordInput) error {
+	if s == nil || s.repo == nil {
+		return ErrServiceUnavailable
+	}
+	if input.UserID <= 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	current := strings.TrimSpace(input.CurrentPassword)
+	if current == "" {
+		return ErrPasswordRequired
+	}
+
+	newPassword := strings.TrimSpace(input.NewPassword)
+	if newPassword == "" {
+		return ErrPasswordRequired
+	}
+	if utf8.RuneCountInString(newPassword) < 6 {
+		return ErrPasswordTooShort
+	}
+
+	user, err := s.repo.GetUser(ctx, input.UserID)
+	if err != nil {
+		return err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(current)); err != nil {
+		return ErrPasswordMismatch
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	operator := sanitizeOperator(strconv.FormatInt(input.UserID, 10))
+	now := time.Now()
 	return s.repo.UpdateUserPassword(ctx, input.UserID, string(hashedPassword), operator, now)
 }
 

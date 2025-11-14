@@ -1,7 +1,6 @@
 'use client';
 
 import { logout } from '@/api';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,6 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,6 +60,7 @@ type UserDropdownContentProps = {
   contentProps?: DropdownContentProps;
   onRequestLogout: () => void;
   isLoggingOut: boolean;
+  onNavigateProfile: () => void;
 };
 
 function UserDropdownContent({
@@ -67,6 +68,7 @@ function UserDropdownContent({
   contentProps,
   onRequestLogout,
   isLoggingOut,
+  onNavigateProfile,
 }: UserDropdownContentProps) {
   const { className, ...restContentProps } = contentProps ?? {};
 
@@ -90,27 +92,32 @@ function UserDropdownContent({
           </div>
         </div>
       </DropdownMenuLabel>
-      <DropdownMenuSeparator />
+      {/* <DropdownMenuSeparator />
       <DropdownMenuGroup>
         <DropdownMenuItem>
           <Sparkles />
           升级专业版
         </DropdownMenuItem>
-      </DropdownMenuGroup>
+      </DropdownMenuGroup> */}
       <DropdownMenuSeparator />
       <DropdownMenuGroup>
-        <DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={(event) => {
+            event.preventDefault();
+            onNavigateProfile();
+          }}
+        >
           <BadgeCheck />
           账号设置
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        {/* <DropdownMenuItem>
           <CreditCard />
           账单管理
-        </DropdownMenuItem>
-        <DropdownMenuItem>
+        </DropdownMenuItem> */}
+        {/* <DropdownMenuItem>
           <Bell />
           通知设置
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
       <DropdownMenuItem
@@ -184,10 +191,7 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
   };
 
   const logoutConfirmationDialog = (
-    <AlertDialog
-      open={isLogoutDialogOpen}
-      onOpenChange={setIsLogoutDialogOpen}
-    >
+    <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>确认退出登录？</AlertDialogTitle>
@@ -232,6 +236,7 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
             contentProps={topbarContentProps}
             onRequestLogout={handleLogoutRequest}
             isLoggingOut={isLoggingOut}
+            onNavigateProfile={() => router.push('/dashboard/profile')}
           />
         </DropdownMenu>
         {logoutConfirmationDialog}
@@ -265,6 +270,7 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
               contentProps={sidebarContentProps}
               onRequestLogout={handleLogoutRequest}
               isLoggingOut={isLoggingOut}
+              onNavigateProfile={() => router.push('/dashboard/profile')}
             />
           </DropdownMenu>
         </SidebarMenuItem>

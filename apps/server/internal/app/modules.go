@@ -99,7 +99,7 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 
 	userRepo := user.NewRepository(sqlDB)
 	userSvc := user.NewService(userRepo)
-	userHandler := user.NewHandler(userSvc)
+	userHandler := user.NewHandler(userSvc, onlineSvc)
 
 	menuRepo := menu.NewRepository(sqlDB)
 	menuSvc := menu.NewService(menuRepo)

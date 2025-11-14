@@ -8,19 +8,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"github.com/starter-kit-fe/admin/internal/system/online"
 	"github.com/starter-kit-fe/admin/middleware"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
 type Handler struct {
 	service *Service
+	online  *online.Service
 }
 
-func NewHandler(service *Service) *Handler {
+func NewHandler(service *Service, onlineSvc *online.Service) *Handler {
 	if service == nil {
 		return nil
 	}
-	return &Handler{service: service}
+	return &Handler{service: service, online: onlineSvc}
 }
 
 type listUsersQuery struct {
@@ -64,6 +66,19 @@ type listOptionsQuery struct {
 
 type resetPasswordRequest struct {
 	Password string `json:"password" binding:"required"`
+}
+
+type profileUpdateRequest struct {
+	NickName    string  `json:"nickName" binding:"required"`
+	Email       string  `json:"email"`
+	Phonenumber string  `json:"phonenumber"`
+	Sex         string  `json:"sex"`
+	Remark      *string `json:"remark"`
+}
+
+type changePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword" binding:"required"`
+	NewPassword     string `json:"newPassword" binding:"required"`
 }
 
 // List godoc
@@ -473,6 +488,258 @@ func (h *Handler) ResetPassword(ctx *gin.Context) {
 	}
 
 	resp.OK(ctx, resp.WithMessage("password reset"))
+}
+
+// GetProfile godoc
+// @Summary 获取个人资料
+// @Description 获取当前登录用户的基本资料
+// @Tags System/Profile
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} resp.Response
+// @Failure 401 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Router /v1/profile [get]
+func (h *Handler) GetProfile(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
+		return
+	}
+
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		resp.Unauthorized(ctx, resp.WithMessage("invalid token"))
+		return
+	}
+
+	user, err := h.service.GetUser(ctx.Request.Context(), int64(userID))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			resp.NotFound(ctx, resp.WithMessage("user not found"))
+			return
+		}
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load profile"))
+		return
+	}
+
+	resp.OK(ctx, resp.WithData(user))
+}
+
+// UpdateProfile godoc
+// @Summary 更新个人资料
+// @Description 修改当前登录用户的昵称、邮箱、手机号等信息
+// @Tags System/Profile
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body profileUpdateRequest true "个人资料"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 401 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Router /v1/profile [put]
+func (h *Handler) UpdateProfile(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
+		return
+	}
+
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		resp.Unauthorized(ctx, resp.WithMessage("invalid token"))
+		return
+	}
+
+	var payload profileUpdateRequest
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid profile payload"))
+		return
+	}
+
+	user, err := h.service.UpdateProfile(ctx.Request.Context(), UpdateProfileInput{
+		UserID:      int64(userID),
+		NickName:    payload.NickName,
+		Email:       payload.Email,
+		Phonenumber: payload.Phonenumber,
+		Sex:         payload.Sex,
+		Remark:      payload.Remark,
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			resp.NotFound(ctx, resp.WithMessage("user not found"))
+		default:
+			resp.InternalServerError(ctx, resp.WithMessage("failed to update profile"))
+		}
+		return
+	}
+
+	resp.OK(ctx, resp.WithData(user))
+}
+
+// ChangePassword godoc
+// @Summary 修改个人密码
+// @Description 校验旧密码并设置新密码
+// @Tags System/Profile
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body changePasswordRequest true "密码信息"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 401 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Router /v1/profile/password [put]
+func (h *Handler) ChangePassword(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
+		return
+	}
+
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		resp.Unauthorized(ctx, resp.WithMessage("invalid token"))
+		return
+	}
+
+	var payload changePasswordRequest
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid password payload"))
+		return
+	}
+
+	if strings.TrimSpace(payload.NewPassword) == "" {
+		resp.BadRequest(ctx, resp.WithMessage("new password is required"))
+		return
+	}
+
+	if err := h.service.ChangePassword(ctx.Request.Context(), ChangePasswordInput{
+		UserID:          int64(userID),
+		CurrentPassword: payload.CurrentPassword,
+		NewPassword:     payload.NewPassword,
+	}); err != nil {
+		switch {
+		case errors.Is(err, ErrPasswordMismatch):
+			resp.BadRequest(ctx, resp.WithMessage("当前密码不正确"))
+		case errors.Is(err, ErrPasswordTooShort):
+			resp.BadRequest(ctx, resp.WithMessage("新密码至少 6 位"))
+		case errors.Is(err, ErrPasswordRequired):
+			resp.BadRequest(ctx, resp.WithMessage("密码不能为空"))
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			resp.NotFound(ctx, resp.WithMessage("user not found"))
+		default:
+			resp.InternalServerError(ctx, resp.WithMessage("failed to update password"))
+		}
+		return
+	}
+
+	resp.OK(ctx, resp.WithMessage("password updated"))
+}
+
+// ListSelfSessions godoc
+// @Summary 获取当前用户的登录会话
+// @Description 查看当前登录用户的在线会话并支持自助管理
+// @Tags System/Profile
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} resp.Response
+// @Failure 401 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/profile/sessions [get]
+func (h *Handler) ListSelfSessions(ctx *gin.Context) {
+	if h == nil || h.service == nil || h.online == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
+		return
+	}
+
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		resp.Unauthorized(ctx, resp.WithMessage("invalid token"))
+		return
+	}
+
+	user, err := h.service.GetUser(ctx.Request.Context(), int64(userID))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			resp.NotFound(ctx, resp.WithMessage("user not found"))
+			return
+		}
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load profile"))
+		return
+	}
+
+	result, err := h.online.ListOnlineUsers(ctx.Request.Context(), online.ListOptions{
+		PageNum:  1,
+		PageSize: 200,
+		UserName: user.UserName,
+	})
+	if err != nil {
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load sessions"))
+		return
+	}
+
+	resp.OK(ctx, resp.WithData(result))
+}
+
+// ForceLogoutSelfSession godoc
+// @Summary 自助强制下线单个会话
+// @Description 当前用户可在此处注销自己的其他登录会话
+// @Tags System/Profile
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "会话ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 401 {object} resp.Response
+// @Failure 403 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/profile/sessions/{id}/force-logout [post]
+func (h *Handler) ForceLogoutSelfSession(ctx *gin.Context) {
+	if h == nil || h.service == nil || h.online == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("user service unavailable"))
+		return
+	}
+
+	sessionID := strings.TrimSpace(ctx.Param("id"))
+	if sessionID == "" {
+		resp.BadRequest(ctx, resp.WithMessage("invalid session id"))
+		return
+	}
+
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		resp.Unauthorized(ctx, resp.WithMessage("invalid token"))
+		return
+	}
+
+	session, err := h.online.GetOnlineUser(ctx.Request.Context(), sessionID)
+	if err != nil {
+		if errors.Is(err, online.ErrSessionNotFound) {
+			resp.NotFound(ctx, resp.WithMessage("session not found"))
+			return
+		}
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load session"))
+		return
+	}
+
+	if session.UserID != int64(userID) {
+		resp.Forbidden(ctx, resp.WithMessage("cannot manage session"))
+		return
+	}
+
+	if err := h.online.ForceLogout(ctx.Request.Context(), sessionID); err != nil {
+		if errors.Is(err, online.ErrSessionNotFound) {
+			resp.NotFound(ctx, resp.WithMessage("session not found"))
+			return
+		}
+		resp.InternalServerError(ctx, resp.WithMessage("failed to force logout session"))
+		return
+	}
+
+	resp.Success(ctx, true)
 }
 
 func parseUserID(param string) (int64, error) {

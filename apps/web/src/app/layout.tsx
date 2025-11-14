@@ -1,3 +1,4 @@
+import { CookieConsentBanner } from '@/components/cookie-consent-banner';
 import { Providers } from '@/components/providers';
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
@@ -122,7 +123,12 @@ export default function RootLayout({
         />
       </head>
       <body className={font.className} suppressHydrationWarning>
-        <Providers>{children}</Providers>
+        <Providers>
+          <>
+            {children}
+            <CookieConsentBanner />
+          </>
+        </Providers>
       </body>
     </html>
   );
