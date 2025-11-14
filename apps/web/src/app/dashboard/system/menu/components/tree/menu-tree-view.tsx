@@ -69,6 +69,10 @@ interface MenuTreeViewProps {
   onEdit: (node: MenuTreeNode) => void;
   onDelete: (node: MenuTreeNode) => void;
   onReorder: (parentId: number, orderedIds: number[]) => void;
+  canAddChild?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  canReorder?: boolean;
 }
 
 function TreeLines({
@@ -117,6 +121,10 @@ export function MenuTreeView({
   onEdit,
   onDelete,
   onReorder,
+  canAddChild = true,
+  canEdit = true,
+  canDelete = true,
+  canReorder = true,
 }: MenuTreeViewProps) {
   const parentIds = useMemo(() => {
     const ids: number[] = [];
@@ -172,6 +180,9 @@ export function MenuTreeView({
       index: number,
       direction: 'up' | 'down',
     ) => {
+      if (!canReorder) {
+        return;
+      }
       const targetIndex = direction === 'up' ? index - 1 : index + 1;
       if (targetIndex < 0 || targetIndex >= siblings.length) {
         return;
@@ -181,7 +192,7 @@ export function MenuTreeView({
       orderedIds.splice(targetIndex, 0, moved);
       onReorder(parentId, orderedIds);
     },
-    [onReorder],
+    [canReorder, onReorder],
   );
 
   const renderNodes = useCallback(
@@ -325,41 +336,48 @@ export function MenuTreeView({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground"
-                      disabled={!canMoveUp}
-                      onClick={() => handleMove(parentId, items, index, 'up')}
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                      <span className="sr-only">上移</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground"
-                      disabled={!canMoveDown}
-                      onClick={() => handleMove(parentId, items, index, 'down')}
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                      <span className="sr-only">下移</span>
-                    </Button>
-                    {!isButton ? (
+                <div className="flex items-center gap-1">
+                  {canReorder ? (
+                    <>
                       <Button
                         type="button"
-                        variant="secondary"
+                        variant="ghost"
                         size="icon"
-                        className="h-7 w-7"
-                        onClick={() => onAddChild(node)}
+                        className="h-7 w-7 text-muted-foreground"
+                        disabled={!canMoveUp}
+                        onClick={() => handleMove(parentId, items, index, 'up')}
                       >
-                        <Plus className="h-4 w-4" />
-                        <span className="sr-only">新增子菜单</span>
+                        <ArrowUp className="h-4 w-4" />
+                        <span className="sr-only">上移</span>
                       </Button>
-                    ) : null}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground"
+                        disabled={!canMoveDown}
+                        onClick={() =>
+                          handleMove(parentId, items, index, 'down')
+                        }
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                        <span className="sr-only">下移</span>
+                      </Button>
+                    </>
+                  ) : null}
+                  {!isButton && canAddChild ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => onAddChild(node)}
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span className="sr-only">新增子菜单</span>
+                    </Button>
+                  ) : null}
+                  {canEdit ? (
                     <Button
                       type="button"
                       variant="secondary"
@@ -370,6 +388,8 @@ export function MenuTreeView({
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">编辑</span>
                     </Button>
+                  ) : null}
+                  {canEdit || canDelete ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
@@ -382,20 +402,25 @@ export function MenuTreeView({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-36">
-                        <DropdownMenuItem onSelect={() => onEdit(node)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          编辑
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={() => onDelete(node)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          删除
-                        </DropdownMenuItem>
+                        {canEdit ? (
+                          <DropdownMenuItem onSelect={() => onEdit(node)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            编辑
+                          </DropdownMenuItem>
+                        ) : null}
+                        {canDelete ? (
+                          <DropdownMenuItem
+                            onSelect={() => onDelete(node)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            删除
+                          </DropdownMenuItem>
+                        ) : null}
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </div>
+                  ) : null}
+                </div>
                 </div>
                 {node.remark ? (
                   <div className="pl-8 pr-2 text-xs text-muted-foreground">
@@ -417,7 +442,18 @@ export function MenuTreeView({
         );
       });
     },
-    [expanded, handleMove, onAddChild, onDelete, onEdit, toggleNode],
+    [
+      canAddChild,
+      canDelete,
+      canEdit,
+      canReorder,
+      expanded,
+      handleMove,
+      onAddChild,
+      onDelete,
+      onEdit,
+      toggleNode,
+    ],
   );
 
   if (loading) {

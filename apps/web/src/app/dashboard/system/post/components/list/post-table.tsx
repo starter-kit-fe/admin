@@ -32,6 +32,8 @@ import {
 } from '@tanstack/react-table';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 
+import { usePermissions } from '@/hooks/use-permissions';
+
 import type { Post } from '../../type';
 
 interface PostTableProps {
@@ -67,11 +69,18 @@ function PostActions({
   post,
   onEdit,
   onDelete,
+  canEdit,
+  canDelete,
 }: {
   post: Post;
   onEdit: (post: Post) => void;
   onDelete: (post: Post) => void;
+  canEdit: boolean;
+  canDelete: boolean;
 }) {
+  if (!canEdit && !canDelete) {
+    return null;
+  }
   return (
     <div className="flex justify-end">
       <DropdownMenu modal={false}>
@@ -89,24 +98,28 @@ function PostActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem
-            onSelect={(event) => {
-              event.preventDefault();
-              onEdit(post);
-            }}
-          >
-            <Pencil className="mr-2 size-4" />
-            编辑
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onSelect={(event) => {
-              event.preventDefault();
-              onDelete(post);
-            }}
-          >
-            <Trash2 className="mr-2 size-4" /> 删除岗位
-          </DropdownMenuItem>
+          {canEdit ? (
+            <DropdownMenuItem
+              onSelect={(event) => {
+                event.preventDefault();
+                onEdit(post);
+              }}
+            >
+              <Pencil className="mr-2 size-4" />
+              编辑
+            </DropdownMenuItem>
+          ) : null}
+          {canDelete ? (
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onSelect={(event) => {
+                event.preventDefault();
+                onDelete(post);
+              }}
+            >
+              <Trash2 className="mr-2 size-4" /> 删除岗位
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -125,6 +138,10 @@ export function PostTable({
   isError,
 }: PostTableProps) {
   const columnHelper = createColumnHelper<Post>();
+  const { hasPermission } = usePermissions();
+  const canEditPost = hasPermission('system:post:edit');
+  const canDeletePost = hasPermission('system:post:remove');
+  const showActions = canEditPost || canDeletePost;
 
   const columns = [
     columnHelper.display({
@@ -188,18 +205,28 @@ export function PostTable({
       enableSorting: false,
       meta: { headerClassName: 'w-[120px]', cellClassName: 'w-[120px]' },
     }),
-    columnHelper.display({
-      id: 'actions',
-      header: () => <span className="block text-right">操作</span>,
-      cell: ({ row }) => (
-        <PostActions post={row.original} onEdit={onEdit} onDelete={onDelete} />
-      ),
-      enableSorting: false,
-      meta: {
-        headerClassName: 'w-[140px] text-right',
-        cellClassName: 'text-right',
-      },
-    }),
+    ...(showActions
+      ? [
+          columnHelper.display({
+            id: 'actions',
+            header: () => <span className="block text-right">操作</span>,
+            cell: ({ row }) => (
+              <PostActions
+                post={row.original}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                canEdit={canEditPost}
+                canDelete={canDeletePost}
+              />
+            ),
+            enableSorting: false,
+            meta: {
+              headerClassName: 'w-[140px] text-right',
+              cellClassName: 'text-right',
+            },
+          }),
+        ]
+      : []),
   ];
 
   const table = useReactTable({

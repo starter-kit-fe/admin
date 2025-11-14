@@ -1,18 +1,6 @@
 'use client';
 
-import type { TimeRangeValue } from './constants';
-import { TIME_RANGE_OPTIONS } from './constants';
 import type { OnlineUser, OnlineUserListResponse } from './type';
-
-export function resolveSinceValue(timeRange: TimeRangeValue) {
-  const option = TIME_RANGE_OPTIONS.find((item) => item.value === timeRange);
-  if (!option || !option.minutes) {
-    return undefined;
-  }
-  const now = Date.now();
-  const millis = option.minutes * 60 * 1000;
-  return new Date(now - millis).toISOString();
-}
 
 export function resolveOnlineUserIdentifier(user: OnlineUser): string | null {
   if (typeof user.infoId === 'number' && Number.isFinite(user.infoId)) {

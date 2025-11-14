@@ -7,7 +7,7 @@ import {
   type MutableRefObject,
 } from 'react';
 
-import { Clock3, Globe, UserRound, X } from 'lucide-react';
+import { Globe, UserRound, X } from 'lucide-react';
 
 import {
   InputGroup,
@@ -15,15 +15,6 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-
-import { TIME_RANGE_OPTIONS, type TimeRangeValue } from '../constants';
 import { useOnlineUserManagementStore } from '../store';
 
 export function OnlineUserFiltersSection() {
@@ -69,14 +60,8 @@ export function OnlineUserFiltersSection() {
     scheduleApply(ipTimer, next);
   };
 
-  const handleTimeRangeChange = (value: string) => {
-    const next = { ...filterForm, timeRange: value as TimeRangeValue };
-    setFilterForm(next);
-    applyFilters(next, { force: true });
-  };
-
   return (
-    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-3 md:grid-cols-2">
       <InputGroup className="border-muted bg-muted/60">
         <InputGroupAddon>
           <UserRound className="size-4 text-muted-foreground" />
@@ -117,27 +102,6 @@ export function OnlineUserFiltersSection() {
             <X className="size-3.5" />
           </InputGroupButton>
         ) : null}
-      </InputGroup>
-
-      <InputGroup className="border-muted bg-muted/60">
-        <InputGroupAddon>
-          <Clock3 className="size-4 text-muted-foreground" />
-        </InputGroupAddon>
-        <Select
-          value={filterForm.timeRange}
-          onValueChange={handleTimeRangeChange}
-        >
-          <SelectTrigger className="h-9 w-full border-0 bg-transparent px-0 text-sm shadow-none focus:ring-0 focus:ring-offset-0">
-            <SelectValue placeholder="全部时间" />
-          </SelectTrigger>
-          <SelectContent align="end">
-            {TIME_RANGE_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </InputGroup>
     </div>
   );

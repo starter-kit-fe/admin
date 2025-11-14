@@ -65,7 +65,6 @@ type ListOptions struct {
 	PageSize int
 	UserName string
 	IPAddr   string
-	Since    time.Time
 }
 
 type Session struct {
@@ -328,10 +327,6 @@ func (r *Repository) listFromCache(ctx context.Context, opts ListOptions) ([]Ses
 			continue
 		}
 
-		if !opts.Since.IsZero() && session.LoginTime.Before(opts.Since) {
-			continue
-		}
-
 		if user := strings.TrimSpace(opts.UserName); user != "" {
 			if !strings.Contains(strings.ToLower(session.UserName), strings.ToLower(user)) {
 				continue
@@ -380,10 +375,6 @@ func (r *Repository) listFromDatabase(ctx context.Context, opts ListOptions) ([]
 	query := r.db.WithContext(ctx).
 		Model(&model.SysLogininfor{}).
 		Where("status = ?", "0")
-
-	if !opts.Since.IsZero() {
-		query = query.Where("login_time >= ?", opts.Since)
-	}
 
 	if user := strings.TrimSpace(opts.UserName); user != "" {
 		query = query.Where("user_name ILIKE ?", "%"+user+"%")

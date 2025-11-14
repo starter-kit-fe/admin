@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -17,7 +16,6 @@ type listOnlineQuery struct {
 	PageSize int    `form:"pageSize"`
 	UserName string `form:"userName"`
 	IPAddr   string `form:"ipaddr"`
-	Since    string `form:"since"`
 }
 
 type batchLogoutRequest struct {
@@ -37,7 +35,7 @@ func NewHandler(service *Service) *Handler {
 
 // List godoc
 // @Summary 获取在线用户
-// @Description 按用户名、IP、上线时间过滤在线会话
+// @Description 按用户名或 IP 地址筛选在线会话
 // @Tags Monitor/Online
 // @Security BearerAuth
 // @Produce json
@@ -45,7 +43,6 @@ func NewHandler(service *Service) *Handler {
 // @Param pageSize query int false "每页数量"
 // @Param userName query string false "用户名"
 // @Param ipaddr query string false "IP地址"
-// @Param since query string false "开始时间(RFC3339)"
 // @Success 200 {object} resp.Response
 // @Failure 400 {object} resp.Response
 // @Failure 500 {object} resp.Response
@@ -68,12 +65,6 @@ func (h *Handler) List(ctx *gin.Context) {
 		PageSize: query.PageSize,
 		UserName: query.UserName,
 		IPAddr:   query.IPAddr,
-	}
-
-	if since := strings.TrimSpace(query.Since); since != "" {
-		if ts, err := time.Parse(time.RFC3339, since); err == nil {
-			opts.Since = ts
-		}
 	}
 
 	result, err := h.service.ListOnlineUsers(ctx.Request.Context(), opts)

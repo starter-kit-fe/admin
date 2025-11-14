@@ -1,7 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,15 +23,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
-import { format, isValid, parse, parseISO } from 'date-fns';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { format, isValid, parse, parseISO } from 'date-fns';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
 
 import type { Notice } from '../../type';
 
@@ -116,11 +116,18 @@ function NoticeActions({
   notice,
   onEdit,
   onDelete,
+  canEdit,
+  canDelete,
 }: {
   notice: Notice;
   onEdit: (notice: Notice) => void;
   onDelete: (notice: Notice) => void;
+  canEdit: boolean;
+  canDelete: boolean;
 }) {
+  if (!canEdit && !canDelete) {
+    return null;
+  }
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -137,20 +144,24 @@ function NoticeActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-36">
-        <DropdownMenuItem onSelect={() => onEdit(notice)}>
-          <Pencil className="mr-2 size-4" />
-          编辑
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          onSelect={(event) => {
-            event.preventDefault();
-            onDelete(notice);
-          }}
-        >
-          <Trash2 className="mr-2 size-4" />
-          删除
-        </DropdownMenuItem>
+        {canEdit ? (
+          <DropdownMenuItem onSelect={() => onEdit(notice)}>
+            <Pencil className="mr-2 size-4" />
+            编辑
+          </DropdownMenuItem>
+        ) : null}
+        {canDelete ? (
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onSelect={(event) => {
+              event.preventDefault();
+              onDelete(notice);
+            }}
+          >
+            <Trash2 className="mr-2 size-4" />
+            删除
+          </DropdownMenuItem>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -168,9 +179,13 @@ export function NoticeTable({
   onDelete,
 }: NoticeTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<Notice>(), []);
+  const { hasPermission } = usePermissions();
+  const canEditNotice = hasPermission('system:notice:edit');
+  const canDeleteNotice = hasPermission('system:notice:remove');
+  const showActions = canEditNotice || canDeleteNotice;
 
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const baseColumns = [
       columnHelper.display({
         id: 'select',
         header: () => (
@@ -263,34 +278,45 @@ export function NoticeTable({
         },
         meta: { headerClassName: 'w-[160px]', cellClassName: 'w-[160px]' },
       }),
-      columnHelper.display({
-        id: 'actions',
-        header: () => <span className="block text-right">操作</span>,
-        cell: ({ row }) => (
-          <div className="flex justify-end">
-            <NoticeActions
-              notice={row.original}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          </div>
-        ),
-        meta: {
-          headerClassName: 'w-[120px] text-right',
-          cellClassName: 'text-right',
-        },
-      }),
-    ],
-    [
-      columnHelper,
-      headerCheckboxState,
-      onDelete,
-      onEdit,
-      onToggleSelect,
-      onToggleSelectAll,
-      selectedIds,
-    ],
-  );
+    ];
+
+    if (showActions) {
+      baseColumns.push(
+        columnHelper.display({
+          id: 'actions',
+          header: () => <span className="block text-right">操作</span>,
+          cell: ({ row }) => (
+            <div className="flex justify-end">
+              <NoticeActions
+                notice={row.original}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                canEdit={canEditNotice}
+                canDelete={canDeleteNotice}
+              />
+            </div>
+          ),
+          meta: {
+            headerClassName: 'w-[120px] text-right',
+            cellClassName: 'text-right',
+          },
+        }),
+      );
+    }
+
+    return baseColumns;
+  }, [
+    canDeleteNotice,
+    canEditNotice,
+    columnHelper,
+    headerCheckboxState,
+    onDelete,
+    onEdit,
+    onToggleSelect,
+    onToggleSelectAll,
+    selectedIds,
+    showActions,
+  ]);
 
   const table = useReactTable({
     data: records,

@@ -332,6 +332,11 @@ func (h *Handler) Refresh(ctx *gin.Context) {
 	}
 	session.LastSeen = time.Now()
 	_ = h.sessions.UpdateLastSeen(ctx.Request.Context(), session)
+	if h.repo != nil {
+		if user, err := h.repo.GetUserByID(ctx.Request.Context(), session.UserID); err == nil {
+			h.recordOnlineSession(ctx, accessToken, user, session.SessionID)
+		}
+	}
 	h.respondWithTokens(ctx, session.SessionID, accessToken, refreshToken, expiresAt)
 }
 

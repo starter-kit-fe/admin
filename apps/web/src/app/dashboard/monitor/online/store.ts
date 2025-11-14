@@ -3,13 +3,11 @@
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 
 import { DEFAULT_FILTERS, DEFAULT_PAGINATION } from './constants';
-import type { TimeRangeValue } from './constants';
 import type { OnlineUser } from './type';
 
 export type FilterFormState = {
   userName: string;
   ipaddr: string;
-  timeRange: TimeRangeValue;
 };
 
 type PaginationState = {
@@ -75,8 +73,7 @@ const applyFiltersAtom = atom(
     const hasChanged =
       force ||
       previous.userName !== filters.userName ||
-      previous.ipaddr !== filters.ipaddr ||
-      previous.timeRange !== filters.timeRange;
+      previous.ipaddr !== filters.ipaddr;
 
     if (!hasChanged) {
       return;

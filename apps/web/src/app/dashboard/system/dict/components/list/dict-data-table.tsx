@@ -26,6 +26,7 @@ import { Edit2, MoreHorizontal, Trash2 } from 'lucide-react';
 import { memo, useMemo } from 'react';
 
 import { DATA_STATUS_TABS } from '../../constants';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface DictDataTableProps {
   rows: DictData[];
@@ -67,8 +68,13 @@ function DictDataTableComponent({
   onDelete,
   className,
 }: DictDataTableProps) {
-  const columns = useMemo(
-    () => [
+  const { hasPermission } = usePermissions();
+  const canEditDict = hasPermission('system:dict:edit');
+  const canDeleteDict = hasPermission('system:dict:remove');
+  const showActions = canEditDict || canDeleteDict;
+
+  const columns = useMemo(() => {
+    const baseColumns = [
       columnHelper.accessor('dictLabel', {
         header: '标签',
         cell: ({ row }) => {
@@ -119,57 +125,67 @@ function DictDataTableComponent({
         ),
         meta: { headerClassName: 'min-w-[180px]' },
       }),
-      columnHelper.display({
-        id: 'actions',
-        header: () => <span className="block text-right">操作</span>,
-        cell: ({ row }) => {
-          const dict = row.original;
-          return (
-            <div className="flex justify-end">
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-muted-foreground"
-                    aria-label={`更多操作：${dict.dictLabel}`}
-                    onPointerDown={(event) => event.stopPropagation()}
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <MoreHorizontal className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32">
-                  <DropdownMenuItem
-                    onSelect={(event) => {
-                      event.preventDefault();
-                      onEdit(dict);
-                    }}
-                  >
-                    <Edit2 className="mr-2 size-3.5" />
-                    编辑
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onSelect={(event) => {
-                      event.preventDefault();
-                      onDelete(dict);
-                    }}
-                  >
-                    <Trash2 className="mr-2 size-3.5" />
-                    删除
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          );
-        },
-        meta: { headerClassName: 'w-[120px]', cellClassName: 'text-right' },
-      }),
-    ],
-    [onDelete, onEdit],
-  );
+    ];
+
+    if (showActions) {
+      baseColumns.push(
+        columnHelper.display({
+          id: 'actions',
+          header: () => <span className="block text-right">操作</span>,
+          cell: ({ row }) => {
+            const dict = row.original;
+            return (
+              <div className="flex justify-end">
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="text-muted-foreground"
+                      aria-label={`更多操作：${dict.dictLabel}`}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <MoreHorizontal className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-32">
+                    {canEditDict ? (
+                      <DropdownMenuItem
+                        onSelect={(event) => {
+                          event.preventDefault();
+                          onEdit(dict);
+                        }}
+                      >
+                        <Edit2 className="mr-2 size-3.5" />
+                        编辑
+                      </DropdownMenuItem>
+                    ) : null}
+                    {canDeleteDict ? (
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onSelect={(event) => {
+                          event.preventDefault();
+                          onDelete(dict);
+                        }}
+                      >
+                        <Trash2 className="mr-2 size-3.5" />
+                        删除
+                      </DropdownMenuItem>
+                    ) : null}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            );
+          },
+          meta: { headerClassName: 'w-[120px]', cellClassName: 'text-right' },
+        }),
+      );
+    }
+
+    return baseColumns;
+  }, [canDeleteDict, canEditDict, onDelete, onEdit, showActions]);
 
   const table = useReactTable({
     data: rows,

@@ -277,6 +277,53 @@
                 }
             }
         },
+        "/v1/auth/refresh": {
+            "post": {
+                "description": "使用长期 Refresh Token 续签 Access Token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "刷新访问令牌",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "402": {
+                        "description": "Payment Required",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/getInfo": {
             "get": {
                 "security": [
@@ -1055,55 +1102,6 @@
                 }
             }
         },
-        "/v1/monitor/logs/login/{id}/unlock": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "通过登录日志记录解除账号锁定",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Monitor/LoginLog"
-                ],
-                "summary": "解锁账号",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "日志ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/resp.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/resp.Response"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/resp.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/v1/monitor/logs/operations": {
             "get": {
                 "security": [
@@ -1309,7 +1307,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "按用户名、IP、上线时间过滤在线会话",
+                "description": "按用户名或 IP 地址筛选在线会话",
                 "produces": [
                     "application/json"
                 ],
@@ -1340,12 +1338,6 @@
                         "type": "string",
                         "description": "IP地址",
                         "name": "ipaddr",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "开始时间(RFC3339)",
-                        "name": "since",
                         "in": "query"
                     }
                 ],
@@ -4694,17 +4686,29 @@
         "auth.LoginResponse": {
             "type": "object",
             "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "\u003cjwt-token\u003e"
+                },
                 "code": {
                     "type": "integer",
                     "example": 200
+                },
+                "expires_at": {
+                    "type": "integer",
+                    "example": 1700000000
                 },
                 "msg": {
                     "type": "string",
                     "example": "操作成功"
                 },
-                "token": {
+                "refresh_token": {
                     "type": "string",
-                    "example": "\u003cjwt-token\u003e"
+                    "example": "\u003crefresh-token\u003e"
+                },
+                "session_id": {
+                    "type": "string",
+                    "example": "d4f3c3a0"
                 }
             }
         },
@@ -4721,7 +4725,7 @@
                 },
                 "email": {
                     "type": "string",
-                    "example": "ry@163.com"
+                    "example": "admin@admin.com"
                 },
                 "nickName": {
                     "type": "string",

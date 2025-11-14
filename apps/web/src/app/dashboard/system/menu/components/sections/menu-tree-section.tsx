@@ -11,6 +11,7 @@ import type { MenuOrderUpdate } from '@/app/dashboard/system/menu/type';
 import { reorderTree } from '@/app/dashboard/system/menu/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { usePermissions } from '@/hooks/use-permissions';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -38,6 +39,10 @@ export function MenuTreeSection() {
     openEdit,
     setDeleteTarget,
   } = useMenuManagementStore();
+  const { hasPermission } = usePermissions();
+  const canAddMenu = hasPermission('system:menu:add');
+  const canEditMenu = hasPermission('system:menu:edit');
+  const canDeleteMenu = hasPermission('system:menu:remove');
   const setRefreshing = useMenuManagementSetRefreshing();
   const setRefreshHandler = useMenuManagementSetRefreshHandler();
   const { beginMutation, endMutation } = useMenuManagementMutationCounter();
@@ -100,6 +105,9 @@ export function MenuTreeSection() {
 
   const handleReorder = useCallback(
     (parentId: number, orderedIds: number[]) => {
+      if (!canEditMenu) {
+        return;
+      }
       setMenuTree((prev) => reorderTree(prev, parentId, orderedIds));
       const payload: MenuOrderUpdate[] = orderedIds.map((id, index) => ({
         menuId: id,
@@ -108,7 +116,7 @@ export function MenuTreeSection() {
       }));
       reorderMutation.mutate(payload);
     },
-    [reorderMutation, setMenuTree],
+    [canEditMenu, reorderMutation, setMenuTree],
   );
 
   if (menuQuery.isError) {
@@ -138,6 +146,10 @@ export function MenuTreeSection() {
         onEdit={openEdit}
         onDelete={setDeleteTarget}
         onReorder={handleReorder}
+        canAddChild={canAddMenu}
+        canEdit={canEditMenu}
+        canDelete={canDeleteMenu}
+        canReorder={canEditMenu}
       />
     </Card>
   );

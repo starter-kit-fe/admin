@@ -36,6 +36,8 @@ import { KeyRound, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import type { User } from '../../type';
+import { usePermissions } from '@/hooks/use-permissions';
+
 import {
   STATUS_META,
   formatPhoneNumber,
@@ -66,6 +68,9 @@ interface RowActionsProps {
   onResetPassword?: (user: User) => void;
   onDelete: (user: User) => void;
   disableDelete: boolean;
+  canEdit: boolean;
+  canResetPassword: boolean;
+  canDelete: boolean;
 }
 
 function RowActions({
@@ -74,6 +79,9 @@ function RowActions({
   onResetPassword,
   onDelete,
   disableDelete,
+  canEdit,
+  canResetPassword,
+  canDelete,
 }: RowActionsProps) {
   const handleSelect = (callback?: (user: User) => void) => () => {
     if (callback) {
@@ -87,45 +95,65 @@ function RowActions({
     }
   };
 
+  const showDropdown = canResetPassword || canDelete;
+
+  if (!canEdit && !showDropdown) {
+    return null;
+  }
+
   return (
-    <div className="flex justify-end">
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 hover:text-primary cursor-pointer"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => event.stopPropagation()}
-            aria-label="更多操作"
-          >
-            <MoreHorizontal className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onSelect={handleSelect(onEdit)}>
-            <Pencil className="mr-2 size-4" />
-            修改
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            disabled={!onResetPassword}
-            onSelect={handleSelect(onResetPassword)}
-          >
-            <KeyRound className="mr-2 size-4" />
-            重置密码
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            disabled={disableDelete}
-            onSelect={handleDeleteSelect}
-            className="text-destructive focus:text-destructive"
-          >
-            <Trash2 className="mr-2 size-4" />
-            删除
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="flex justify-end gap-1.5">
+      {canEdit ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-0.5 px-2.5 hover:text-primary cursor-pointer"
+          onClick={() => onEdit(user)}
+        >
+          <Pencil className="mr-1.5 size-3" />
+          修改
+        </Button>
+      ) : null}
+      {showDropdown ? (
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 hover:text-primary cursor-pointer"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
+              aria-label="更多操作"
+            >
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            {canResetPassword ? (
+              <>
+                <DropdownMenuItem
+                  disabled={!onResetPassword}
+                  onSelect={handleSelect(onResetPassword)}
+                >
+                  <KeyRound className="mr-2 size-4" />
+                  重置密码
+                </DropdownMenuItem>
+                {canDelete ? <DropdownMenuSeparator /> : null}
+              </>
+            ) : null}
+            {canDelete ? (
+              <DropdownMenuItem
+                disabled={disableDelete}
+                onSelect={handleDeleteSelect}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 size-4" />
+                删除
+              </DropdownMenuItem>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
     </div>
   );
 }
@@ -143,8 +171,14 @@ export function UserTable({
   isError,
 }: UserTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<User>(), []);
-  const columns = useMemo(
-    () => [
+  const { hasPermission } = usePermissions();
+  const canEditUser = hasPermission('system:user:edit');
+  const canResetPassword = hasPermission('system:user:resetPwd');
+  const canDeleteUser = hasPermission('system:user:remove');
+  const showRowActions = canEditUser || canResetPassword || canDeleteUser;
+
+  const columns = useMemo(() => {
+    const baseColumns = [
       columnHelper.display({
         id: 'select',
         header: () => (
@@ -291,40 +325,54 @@ export function UserTable({
           headerClassName: 'w-[120px]',
         },
       }),
-      columnHelper.display({
-        id: 'actions',
-        header: () => <span className="block text-right">操作</span>,
-        cell: ({ row }) => {
-          const user = row.original;
-          const isSuperAdmin = user.userId === 1 || user.userName === 'admin';
-          return (
-            <RowActions
-              user={user}
-              onEdit={onEdit}
-              onResetPassword={onResetPassword}
-              onDelete={onDelete}
-              disableDelete={isSuperAdmin}
-            />
-          );
-        },
-        enableSorting: false,
-        meta: {
-          headerClassName: 'w-[120px] text-right',
-          cellClassName: 'text-right',
-        },
-      }),
-    ],
-    [
-      columnHelper,
-      headerCheckboxState,
-      onDelete,
-      onEdit,
-      onResetPassword,
-      onToggleSelect,
-      onToggleSelectAll,
-      selectedIds,
-    ],
-  );
+    ];
+
+    if (showRowActions) {
+      baseColumns.push(
+        columnHelper.display({
+          id: 'actions',
+          header: () => <span className="block text-right">操作</span>,
+          cell: ({ row }) => {
+            const user = row.original;
+            const isSuperAdmin =
+              user.userId === 1 || user.userName === 'admin';
+            return (
+              <RowActions
+                user={user}
+                onEdit={onEdit}
+                onResetPassword={onResetPassword}
+                onDelete={onDelete}
+                disableDelete={isSuperAdmin}
+                canEdit={canEditUser}
+                canResetPassword={canResetPassword}
+                canDelete={canDeleteUser}
+              />
+            );
+          },
+          enableSorting: false,
+          meta: {
+            headerClassName: 'w-[120px] text-right',
+            cellClassName: 'text-right',
+          },
+        }),
+      );
+    }
+
+    return baseColumns;
+  }, [
+    canDeleteUser,
+    canEditUser,
+    canResetPassword,
+    columnHelper,
+    headerCheckboxState,
+    onDelete,
+    onEdit,
+    onResetPassword,
+    onToggleSelect,
+    onToggleSelectAll,
+    selectedIds,
+    showRowActions,
+  ]);
 
   const table = useReactTable({
     data: rows,

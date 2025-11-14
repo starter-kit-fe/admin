@@ -430,13 +430,11 @@ func registerMonitorRoutes(group *gin.RouterGroup, opts Options) {
 		loginLog.GET("/export", middleware.RequirePermissions("monitor:logininfor:export"), notImplemented("export login logs"))
 		loginLog.GET("/:id", middleware.RequirePermissions("monitor:logininfor:query"), opts.LoginLogHandler.Get)
 		loginLog.DELETE("/:id", middleware.RequirePermissions("monitor:logininfor:remove"), opts.LoginLogHandler.Delete)
-		loginLog.POST("/:id/unlock", middleware.RequirePermissions("monitor:logininfor:unlock"), opts.LoginLogHandler.Unlock)
 	} else {
 		loginLog.GET("", middleware.RequirePermissions("monitor:logininfor:list"), notImplemented("list login logs"))
 		loginLog.GET("/export", middleware.RequirePermissions("monitor:logininfor:export"), notImplemented("export login logs"))
 		loginLog.GET("/:id", middleware.RequirePermissions("monitor:logininfor:query"), notImplemented("get login log"))
 		loginLog.DELETE("/:id", middleware.RequirePermissions("monitor:logininfor:remove"), notImplemented("delete login log"))
-		loginLog.POST("/:id/unlock", middleware.RequirePermissions("monitor:logininfor:unlock"), notImplemented("unlock account from login log"))
 	}
 }
 

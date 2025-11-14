@@ -32,7 +32,6 @@ import {
 import {
   getOnlineUserRowId,
   normalizeOnlineUserResponse,
-  resolveSinceValue,
 } from '../utils';
 import { OnlineUserTable } from './online-user-table';
 
@@ -71,14 +70,9 @@ export function OnlineUserDataSection() {
     if (trimmedIp) {
       params.ipaddr = trimmedIp;
     }
-    const since = resolveSinceValue(appliedFilters.timeRange);
-    if (since) {
-      params.since = since;
-    }
     return params;
   }, [
     appliedFilters.ipaddr,
-    appliedFilters.timeRange,
     appliedFilters.userName,
     pagination.pageNum,
     pagination.pageSize,
@@ -164,12 +158,7 @@ export function OnlineUserDataSection() {
 
   useEffect(() => {
     clearSelectedUsers();
-  }, [
-    appliedFilters.ipaddr,
-    appliedFilters.timeRange,
-    appliedFilters.userName,
-    clearSelectedUsers,
-  ]);
+  }, [appliedFilters.ipaddr, appliedFilters.userName, clearSelectedUsers]);
 
   const handlePageChange = (nextPage: number) => {
     setPagination((prev) => ({ ...prev, pageNum: nextPage }));

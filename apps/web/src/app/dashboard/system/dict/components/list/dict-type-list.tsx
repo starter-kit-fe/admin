@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 
 import { TYPE_STATUS_TABS } from '../../constants';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface DictTypeListProps {
   items: DictType[];
@@ -46,6 +47,11 @@ export function DictTypeList({
   onDelete,
 }: DictTypeListProps) {
   console.log('DictTypeList');
+  const { hasPermission } = usePermissions();
+  const canAddData = hasPermission('system:dict:add');
+  const canEditType = hasPermission('system:dict:edit');
+  const canDeleteType = hasPermission('system:dict:remove');
+  const showActions = canAddData || canEditType || canDeleteType;
   const renderStatusBadge = (status?: string | null) => {
     const meta = TYPE_STATUS_TABS.find((tab) => tab.value === status);
     if (!meta || meta.value === 'all') {
@@ -133,36 +139,44 @@ export function DictTypeList({
                   </Button>
                   <div className="flex items-start gap-2">
                     {badge}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className="text-muted-foreground"
-                          aria-label="更多操作"
-                        >
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem onSelect={() => onAddData(dict)}>
-                          <Plus className="mr-2 size-3.5" />
-                          新增字典项
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => onEdit(dict)}>
-                          <Pencil className="mr-2 size-3.5" />
-                          编辑字典
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onSelect={() => onDelete(dict)}
-                        >
-                          <Trash2 className="mr-2 size-3.5" />
-                          删除
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {showActions ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="text-muted-foreground"
+                            aria-label="更多操作"
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          {canAddData ? (
+                            <DropdownMenuItem onSelect={() => onAddData(dict)}>
+                              <Plus className="mr-2 size-3.5" />
+                              新增字典项
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canEditType ? (
+                            <DropdownMenuItem onSelect={() => onEdit(dict)}>
+                              <Pencil className="mr-2 size-3.5" />
+                              编辑字典
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canDeleteType ? (
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onSelect={() => onDelete(dict)}
+                            >
+                              <Trash2 className="mr-2 size-3.5" />
+                              删除
+                            </DropdownMenuItem>
+                          ) : null}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : null}
                   </div>
                 </div>
               </div>

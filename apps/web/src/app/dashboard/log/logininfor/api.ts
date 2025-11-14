@@ -1,4 +1,4 @@
-import { del, get, post } from '@/lib/request';
+import { del, get } from '@/lib/request';
 
 import type { LoginLogListResponse } from './type';
 
@@ -36,8 +36,4 @@ export function listLoginLogs(params: LoginLogListParams = {}) {
 
 export function removeLoginLog(id: number) {
   return del(`/v1/monitor/logs/login/${id}`);
-}
-
-export function unlockLogin(id: number) {
-  return post(`/v1/monitor/logs/login/${id}/unlock`);
 }

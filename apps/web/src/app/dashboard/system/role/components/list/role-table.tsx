@@ -33,6 +33,8 @@ import {
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
+import { usePermissions } from '@/hooks/use-permissions';
+
 import type { Role } from '../../type';
 
 interface RoleTableProps {
@@ -81,11 +83,18 @@ function RoleRowActions({
   role,
   onEdit,
   onDelete,
+  canEdit,
+  canDelete,
 }: {
   role: Role;
   onEdit: (role: Role) => void;
   onDelete: (role: Role) => void;
+  canEdit: boolean;
+  canDelete: boolean;
 }) {
+  if (!canEdit && !canDelete) {
+    return null;
+  }
   return (
     <div className="flex justify-end">
       <DropdownMenu modal={false}>
@@ -97,29 +106,34 @@ function RoleRowActions({
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
             aria-label="更多操作"
+            disabled={!canEdit && !canDelete}
           >
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem
-            onSelect={(event) => {
-              event.preventDefault();
-              onEdit(role);
-            }}
-          >
-            <Pencil className="mr-2 size-4" />
-            编辑
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onSelect={(event) => {
-              event.preventDefault();
-              onDelete(role);
-            }}
-          >
-            <Trash2 className="mr-2 size-4" /> 删除角色
-          </DropdownMenuItem>
+          {canEdit ? (
+            <DropdownMenuItem
+              onSelect={(event) => {
+                event.preventDefault();
+                onEdit(role);
+              }}
+            >
+              <Pencil className="mr-2 size-4" />
+              编辑
+            </DropdownMenuItem>
+          ) : null}
+          {canDelete ? (
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onSelect={(event) => {
+                event.preventDefault();
+                onDelete(role);
+              }}
+            >
+              <Trash2 className="mr-2 size-4" /> 删除角色
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -138,9 +152,13 @@ export function RoleTable({
   isError,
 }: RoleTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<Role>(), []);
+  const { hasPermission } = usePermissions();
+  const canEditRole = hasPermission('system:role:edit');
+  const canDeleteRole = hasPermission('system:role:remove');
+  const showRowActions = canEditRole || canDeleteRole;
 
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const baseColumns = [
       columnHelper.display({
         id: 'select',
         header: () => (
@@ -216,33 +234,44 @@ export function RoleTable({
         ),
         meta: { headerClassName: 'min-w-[180px]' },
       }),
-      columnHelper.display({
-        id: 'actions',
-        header: () => <span className="block text-right">操作</span>,
-        cell: ({ row }) => (
-          <RoleRowActions
-            role={row.original}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ),
-        enableSorting: false,
-        meta: {
-          headerClassName: 'w-[140px] text-right',
-          cellClassName: 'text-right',
-        },
-      }),
-    ],
-    [
-      columnHelper,
-      headerCheckboxState,
-      onDelete,
-      onEdit,
-      onToggleSelect,
-      onToggleSelectAll,
-      selectedIds,
-    ],
-  );
+    ];
+
+    if (showRowActions) {
+      baseColumns.push(
+        columnHelper.display({
+          id: 'actions',
+          header: () => <span className="block text-right">操作</span>,
+          cell: ({ row }) => (
+            <RoleRowActions
+              role={row.original}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              canEdit={canEditRole}
+              canDelete={canDeleteRole}
+            />
+          ),
+          enableSorting: false,
+          meta: {
+            headerClassName: 'w-[140px] text-right',
+            cellClassName: 'text-right',
+          },
+        }),
+      );
+    }
+
+    return baseColumns;
+  }, [
+    canDeleteRole,
+    canEditRole,
+    columnHelper,
+    headerCheckboxState,
+    onDelete,
+    onEdit,
+    onToggleSelect,
+    onToggleSelectAll,
+    selectedIds,
+    showRowActions,
+  ]);
 
   const table = useReactTable({
     data: rows,

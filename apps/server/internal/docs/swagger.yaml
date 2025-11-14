@@ -46,14 +46,23 @@ definitions:
     type: object
   auth.LoginResponse:
     properties:
+      access_token:
+        example: <jwt-token>
+        type: string
       code:
         example: 200
+        type: integer
+      expires_at:
+        example: 1700000000
         type: integer
       msg:
         example: 操作成功
         type: string
-      token:
-        example: <jwt-token>
+      refresh_token:
+        example: <refresh-token>
+        type: string
+      session_id:
+        example: d4f3c3a0
         type: string
     type: object
   auth.UserInfo:
@@ -65,7 +74,7 @@ definitions:
         example: 103
         type: integer
       email:
-        example: ry@163.com
+        example: admin@admin.com
         type: string
       nickName:
         example: admin
@@ -750,6 +759,37 @@ paths:
       summary: 获取当前用户可访问的菜单树
       tags:
       - Auth
+  /v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用长期 Refresh Token 续签 Access Token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "402":
+          description: Payment Required
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+      summary: 刷新访问令牌
+      tags:
+      - Auth
   /v1/getInfo:
     get:
       description: 通过 JWT Token 获取当前用户详情、角色、权限
@@ -1247,37 +1287,6 @@ paths:
       summary: 获取登录日志详情
       tags:
       - Monitor/LoginLog
-  /v1/monitor/logs/login/{id}/unlock:
-    post:
-      description: 通过登录日志记录解除账号锁定
-      parameters:
-      - description: 日志ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/resp.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/resp.Response'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/resp.Response'
-      security:
-      - BearerAuth: []
-      summary: 解锁账号
-      tags:
-      - Monitor/LoginLog
   /v1/monitor/logs/operations:
     get:
       description: 按标题、业务类型、状态等分页查询
@@ -1407,7 +1416,7 @@ paths:
       - Monitor/OperLog
   /v1/monitor/online/users:
     get:
-      description: 按用户名、IP、上线时间过滤在线会话
+      description: 按用户名或 IP 地址筛选在线会话
       parameters:
       - description: 页码
         in: query
@@ -1424,10 +1433,6 @@ paths:
       - description: IP地址
         in: query
         name: ipaddr
-        type: string
-      - description: 开始时间(RFC3339)
-        in: query
-        name: since
         type: string
       produces:
       - application/json

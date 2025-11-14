@@ -45,6 +45,7 @@ import {
   resolveMisfireLabel,
   resolveStatusLabel,
 } from '../../utils';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface JobTableProps {
   rows: Job[];
@@ -68,6 +69,11 @@ export function JobTable({
   onDelete,
 }: JobTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<Job>(), []);
+  const { hasPermission } = usePermissions();
+  const canRunJob = hasPermission('monitor:job:run');
+  const canChangeStatus = hasPermission('monitor:job:changeStatus');
+  const canDeleteJob = hasPermission('monitor:job:remove');
+  const showActions = canRunJob || canChangeStatus || canDeleteJob;
 
   const columns = useMemo(
     () => [
@@ -162,86 +168,100 @@ export function JobTable({
           headerClassName: 'min-w-[200px]',
         },
       }),
-      columnHelper.display({
-        id: 'actions',
-        header: () => <span className="block text-right">操作</span>,
-        cell: ({ row }) => {
-          const job = row.original;
-          const jobId = job.jobId;
-          const isRunning = pendingRunId === jobId;
-          const isUpdatingStatus = pendingStatusId === jobId;
-          const nextStatus = job.status === '0' ? '1' : '0';
+      ...(showActions
+        ? [
+            columnHelper.display({
+              id: 'actions',
+              header: () => <span className="block text-right">操作</span>,
+              cell: ({ row }) => {
+                const job = row.original;
+                const jobId = job.jobId;
+                const isRunning = pendingRunId === jobId;
+                const isUpdatingStatus = pendingStatusId === jobId;
+                const nextStatus = job.status === '0' ? '1' : '0';
 
-          return (
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-xs"
-                onClick={() => onRunJob(jobId)}
-                disabled={isRunning}
-              >
-                {isRunning ? (
-                  <>
-                    <Spinner className="size-3.5" />
-                    触发中
-                  </>
-                ) : (
-                  <>
-                    <Play className="size-3.5" />
-                    触发
-                  </>
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-xs"
-                onClick={() => onToggleStatus(jobId, nextStatus)}
-                disabled={isUpdatingStatus}
-              >
-                {isUpdatingStatus ? (
-                  <>
-                    <Spinner className="size-3.5" />
-                    更新中
-                  </>
-                ) : (
-                  <>
-                    <Clock className="size-3.5" />
-                    {nextStatus === '0' ? '恢复' : '暂停'}
-                  </>
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-xs text-destructive hover:text-destructive"
-                onClick={() => onDelete(job)}
-              >
-                <Trash2 className="size-3.5" />
-                删除
-              </Button>
-            </div>
-          );
-        },
-        meta: {
-          headerClassName:
-            'sticky right-0 z-20 w-[260px] bg-card text-right border-l border-border/60',
-          cellClassName:
-            'sticky right-0 z-10 w-[260px] bg-card text-right border-l border-border/60 group-hover:bg-muted/60',
-        },
-      }),
+                return (
+                  <div className="flex justify-end gap-2">
+                    {canRunJob ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-xs"
+                        onClick={() => onRunJob(jobId)}
+                        disabled={isRunning}
+                      >
+                        {isRunning ? (
+                          <>
+                            <Spinner className="size-3.5" />
+                            触发中
+                          </>
+                        ) : (
+                          <>
+                            <Play className="size-3.5" />
+                            触发
+                          </>
+                        )}
+                      </Button>
+                    ) : null}
+                    {canChangeStatus ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-xs"
+                        onClick={() => onToggleStatus(jobId, nextStatus)}
+                        disabled={isUpdatingStatus}
+                      >
+                        {isUpdatingStatus ? (
+                          <>
+                            <Spinner className="size-3.5" />
+                            更新中
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="size-3.5" />
+                            {nextStatus === '0' ? '恢复' : '暂停'}
+                          </>
+                        )}
+                      </Button>
+                    ) : null}
+                    {canDeleteJob ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-xs text-destructive hover:text-destructive"
+                        onClick={() => onDelete(job)}
+                      >
+                        <Trash2 className="size-3.5" />
+                        删除
+                      </Button>
+                    ) : null}
+                  </div>
+                );
+              },
+              meta: {
+                headerClassName:
+                  'sticky right-0 z-20 w-[260px] bg-card text-right border-l border-border/60',
+                cellClassName:
+                  'sticky right-0 z-10 w-[260px] bg-card text-right border-l border-border/60 group-hover:bg-muted/60',
+              },
+            }),
+          ]
+        : []),
     ],
     [
+      canChangeStatus,
+      canDeleteJob,
+      canRunJob,
       columnHelper,
       pendingRunId,
       pendingStatusId,
       onRunJob,
       onToggleStatus,
       onDelete,
+      showActions,
     ],
   );
 

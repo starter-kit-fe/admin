@@ -33,6 +33,7 @@ import {
   getOperLogStatusBadgeVariant,
   getOperLogStatusLabel,
 } from '../../utils';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface OperLogTableProps {
   rows: OperLog[];
@@ -48,6 +49,8 @@ export function OperLogTable({
   isError,
 }: OperLogTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<OperLog>(), []);
+  const { hasPermission } = usePermissions();
+  const canDeleteOperLog = hasPermission('monitor:operlog:remove');
 
   const columns = useMemo(
     () => [
@@ -162,32 +165,36 @@ export function OperLogTable({
           headerClassName: 'min-w-[160px]',
         },
       }),
-      columnHelper.display({
-        id: 'actions',
-        header: () => <div className="text-right">操作</div>,
-        cell: ({ row }) => {
-          const log = row.original;
-          return (
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(log)}
-              >
-                <Trash2 className="size-4" />
-                <span className="sr-only">删除</span>
-              </Button>
-            </div>
-          );
-        },
-        meta: {
-          headerClassName: 'w-[120px]',
-          cellClassName: 'text-right',
-        },
-      }),
+      ...(canDeleteOperLog
+        ? [
+            columnHelper.display({
+              id: 'actions',
+              header: () => <div className="text-right">操作</div>,
+              cell: ({ row }) => {
+                const log = row.original;
+                return (
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(log)}
+                    >
+                      <Trash2 className="size-4" />
+                      <span className="sr-only">删除</span>
+                    </Button>
+                  </div>
+                );
+              },
+              meta: {
+                headerClassName: 'w-[120px]',
+                cellClassName: 'text-right',
+              },
+            }),
+          ]
+        : []),
     ],
-    [columnHelper, onDelete],
+    [canDeleteOperLog, columnHelper, onDelete],
   );
 
   const table = useReactTable({

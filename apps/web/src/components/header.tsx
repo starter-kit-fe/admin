@@ -13,10 +13,7 @@ import {
 } from '@/components/ui/drawer';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, LayoutDashboard, LogIn, Menu } from 'lucide-react';
-import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -51,51 +48,22 @@ export default function Header() {
 
   const pathname = usePathname();
   const router = useRouter();
-  const navRef = useRef<HTMLElement>(null);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { resolvedTheme } = useTheme();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const headerRef = useRef<HTMLElement | null>(null);
 
   const brandName = useMemo(resolveBrand, []);
 
   const navLinks = useMemo<NavLink[]>(() => [...NAV_LINKS], []);
 
   useEffect(() => {
-    const element = navRef.current;
-    if (!element) {
-      return;
-    }
-
-    gsap.registerPlugin(ScrollTrigger);
-    gsap.killTweensOf(element);
-
-    const show = () => {
-      gsap.to(element, {
-        backgroundColor: `rgba(255, 255, 255, 0.9)`,
-        duration: 0.35,
-        ease: 'power2.out',
-      });
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 64);
     };
-
-    const hide = () => {
-      gsap.to(element, {
-        backgroundColor: 'transparent',
-        duration: 0.35,
-        ease: 'power2.out',
-      });
-    };
-
-    const trigger = ScrollTrigger.create({
-      start: 80,
-      end: 99999,
-      onEnter: show,
-      onLeaveBack: hide,
-    });
-
-    return () => {
-      trigger.kill();
-      gsap.killTweensOf(element);
-    };
-  }, [resolvedTheme]);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleStaticNav = useCallback(
     (hash: string) => {
@@ -109,7 +77,7 @@ export default function Header() {
         return;
       }
 
-      const headerHeight = navRef.current?.offsetHeight ?? 72;
+      const headerHeight = headerRef.current?.clientHeight ?? 72;
       const top =
         target.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
       window.scrollTo({ top, behavior: 'smooth' });
@@ -180,8 +148,13 @@ export default function Header() {
 
   return (
     <header
-      ref={navRef}
-      className="fixed inset-x-0 top-0 z-50 border-b border-transparent bg-transparent transition-[background-color,backdrop-filter,border-color,box-shadow]"
+      ref={headerRef}
+      className={cn(
+        'fixed inset-x-0 top-0 z-50 transition-[background-color,backdrop-filter,border-color,box-shadow]',
+        isScrolled
+          ? 'backdrop-blur supports-[backdrop-filter]:bg-background/60'
+          : 'bg-transparent',
+      )}
     >
       <div className="mx-auto container flex h-16  items-center justify-between gap-4 px-4 text-foreground dark:text-white sm:px-6 lg:px-10">
         <Link

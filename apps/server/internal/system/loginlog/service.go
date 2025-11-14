@@ -111,14 +111,6 @@ func (s *Service) DeleteLoginLog(ctx context.Context, id int64) error {
 	return s.repo.DeleteLoginLog(ctx, id)
 }
 
-func (s *Service) UnlockAccount(ctx context.Context, _ int64) error {
-	if s == nil || s.repo == nil {
-		return ErrServiceUnavailable
-	}
-	// 暂无锁定机制，直接返回成功
-	return nil
-}
-
 func (s *Service) RecordLoginLog(ctx context.Context, input CreateLoginLogInput) error {
 	if s == nil || s.repo == nil {
 		return ErrServiceUnavailable

@@ -147,38 +147,6 @@ func (h *Handler) Delete(ctx *gin.Context) {
 	resp.NoContent(ctx)
 }
 
-// Unlock godoc
-// @Summary 解锁账号
-// @Description 通过登录日志记录解除账号锁定
-// @Tags Monitor/LoginLog
-// @Security BearerAuth
-// @Produce json
-// @Param id path int true "日志ID"
-// @Success 204 {object} nil
-// @Failure 400 {object} resp.Response
-// @Failure 500 {object} resp.Response
-// @Failure 503 {object} resp.Response
-// @Router /v1/monitor/logs/login/{id}/unlock [post]
-func (h *Handler) Unlock(ctx *gin.Context) {
-	if h == nil || h.service == nil {
-		resp.ServiceUnavailable(ctx, resp.WithMessage("login log service unavailable"))
-		return
-	}
-
-	id, err := parseLoginLogID(ctx.Param("id"))
-	if err != nil {
-		resp.BadRequest(ctx, resp.WithMessage("invalid login log id"))
-		return
-	}
-
-	if err := h.service.UnlockAccount(ctx.Request.Context(), id); err != nil {
-		resp.InternalServerError(ctx, resp.WithMessage("failed to unlock account"))
-		return
-	}
-
-	resp.NoContent(ctx)
-}
-
 func parseLoginLogID(value string) (int64, error) {
 	return strconv.ParseInt(value, 10, 64)
 }

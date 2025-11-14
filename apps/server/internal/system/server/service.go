@@ -117,7 +117,7 @@ func (s *Service) GetStatus(ctx context.Context) (*Status, error) {
 func collectHostInfo(startTime time.Time) HostInfo {
 	hostname, _ := os.Hostname()
 	now := time.Now()
-	uptime := now.Sub(startTime)
+	uptime := resolveSystemUptime(startTime)
 
 	kernelVersion := readKernelVersion()
 
@@ -131,6 +131,32 @@ func collectHostInfo(startTime time.Time) HostInfo {
 		Uptime:        formatDuration(uptime),
 		Clock:         now.Format("2006-01-02 15:04:05"),
 	}
+}
+
+func resolveSystemUptime(startTime time.Time) time.Duration {
+	if runtime.GOOS == "linux" {
+		if uptime, err := readProcUptime(); err == nil && uptime > 0 {
+			return uptime
+		}
+	}
+	// fallback to process lifetime when platform-specific uptime is unavailable
+	return time.Since(startTime)
+}
+
+func readProcUptime() (time.Duration, error) {
+	data, err := os.ReadFile("/proc/uptime")
+	if err != nil {
+		return 0, err
+	}
+	fields := strings.Fields(string(data))
+	if len(fields) == 0 {
+		return 0, errors.New("malformed /proc/uptime")
+	}
+	seconds, err := strconv.ParseFloat(fields[0], 64)
+	if err != nil {
+		return 0, err
+	}
+	return time.Duration(seconds * float64(time.Second)), nil
 }
 
 func (s *Service) collectCPUInfo() CPUInfo {

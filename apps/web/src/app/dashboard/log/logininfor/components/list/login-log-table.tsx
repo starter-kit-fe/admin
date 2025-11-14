@@ -29,13 +29,12 @@ import { useMemo } from 'react';
 
 import type { LoginLog } from '../../type';
 import { getLoginStatusBadgeVariant, getLoginStatusLabel } from '../../utils';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface LoginLogTableProps {
   rows: LoginLog[];
   isLoading?: boolean;
   isError?: boolean;
-  unlockPending?: boolean;
-  onUnlock: (id: number) => void;
   onDelete: (log: LoginLog) => void;
 }
 
@@ -43,11 +42,11 @@ export function LoginLogTable({
   rows,
   isLoading = false,
   isError = false,
-  unlockPending = false,
-  onUnlock,
   onDelete,
 }: LoginLogTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<LoginLog>(), []);
+  const { hasPermission } = usePermissions();
+  const canDeleteLog = hasPermission('monitor:logininfor:remove');
 
   const columns = useMemo(
     () => [
@@ -127,41 +126,36 @@ export function LoginLogTable({
           headerClassName: 'w-[160px]',
         },
       }),
-      columnHelper.display({
-        id: 'actions',
-        header: () => <div className="text-right">操作</div>,
-        cell: ({ row }) => {
-          const log = row.original;
-          return (
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={unlockPending}
-                onClick={() => onUnlock(log.infoId)}
-              >
-                解除锁定
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(log)}
-              >
-                <Trash2 className="size-4" />
-                <span className="sr-only">删除</span>
-              </Button>
-            </div>
-          );
-        },
-        meta: {
-          headerClassName: 'w-[160px]',
-          cellClassName: 'text-right',
-        },
-      }),
+      ...(canDeleteLog
+        ? [
+            columnHelper.display({
+              id: 'actions',
+              header: () => <div className="text-right">操作</div>,
+              cell: ({ row }) => {
+                const log = row.original;
+                return (
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(log)}
+                    >
+                      <Trash2 className="size-4" />
+                      <span className="sr-only">删除</span>
+                    </Button>
+                  </div>
+                );
+              },
+              meta: {
+                headerClassName: 'w-[120px]',
+                cellClassName: 'text-right',
+              },
+            }),
+          ]
+        : []),
     ],
-    [columnHelper, onDelete, onUnlock, unlockPending],
+    [canDeleteLog, columnHelper, onDelete],
   );
 
   const table = useReactTable({

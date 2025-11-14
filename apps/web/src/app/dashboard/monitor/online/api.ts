@@ -5,7 +5,6 @@ import type { OnlineUser, OnlineUserListResponse } from './type';
 export interface OnlineUserListParams {
   userName?: string;
   ipaddr?: string;
-  since?: string;
   pageNum?: number;
   pageSize?: number;
 }
@@ -25,9 +24,6 @@ function buildQuery(params: OnlineUserListParams = {}) {
   }
   if (params.ipaddr && params.ipaddr.trim()) {
     query.ipaddr = params.ipaddr.trim();
-  }
-  if (params.since && params.since.trim()) {
-    query.since = params.since.trim();
   }
   return query;
 }

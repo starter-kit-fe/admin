@@ -39,6 +39,8 @@ import {
 import { Edit2, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
+import { usePermissions } from '@/hooks/use-permissions';
+
 import { CONFIG_TYPE_TABS } from '../../constants';
 import type { SystemConfig } from '../../type';
 
@@ -95,8 +97,13 @@ export function ConfigTable({
   onToggleSelectAll,
   onToggleSelect,
 }: ConfigTableProps) {
-  const columns = useMemo(
-    () => [
+  const { hasPermission } = usePermissions();
+  const canEditConfig = hasPermission('system:config:edit');
+  const canDeleteConfig = hasPermission('system:config:remove');
+  const showActions = canEditConfig || canDeleteConfig;
+
+  const columns = useMemo(() => {
+    const baseColumns = [
       columnHelper.display({
         id: 'select',
         header: () => (
@@ -185,67 +192,81 @@ export function ConfigTable({
           cellClassName: 'w-[220px]',
         },
       }),
-      columnHelper.display({
-        id: 'actions',
-        header: () => <span className="block text-right">操作</span>,
-        cell: ({ row }) => {
-          const config = row.original;
-          return (
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-8"
-                  onPointerDown={(event) => event.stopPropagation()}
-                  onClick={(event) => event.stopPropagation()}
-                  aria-label={`更多操作：${config.configName}`}
-                >
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36">
-                <DropdownMenuItem
-                  onSelect={(event) => {
-                    event.preventDefault();
-                    onEdit(config);
-                  }}
-                >
-                  <Edit2 className="mr-2 size-4" />
-                  编辑参数
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onSelect={(event) => {
-                    event.preventDefault();
-                    onDelete(config);
-                  }}
-                >
-                  <Trash2 className="mr-2 size-4" />
-                  删除参数
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        },
-        enableSorting: false,
-        meta: {
-          headerClassName: 'sticky right-0 z-20 w-[140px] bg-card text-right',
-          cellClassName:
-            'sticky right-0 z-10 w-[140px] bg-card text-right group-hover:bg-muted/50',
-        },
-      }),
-    ],
-    [
-      headerCheckboxState,
-      onDelete,
-      onEdit,
-      onToggleSelect,
-      onToggleSelectAll,
-      selectedIds,
-    ],
-  );
+    ];
+
+    if (showActions) {
+      baseColumns.push(
+        columnHelper.display({
+          id: 'actions',
+          header: () => <span className="block text-right">操作</span>,
+          cell: ({ row }) => {
+            const config = row.original;
+            return (
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={(event) => event.stopPropagation()}
+                    aria-label={`更多操作：${config.configName}`}
+                  >
+                    <MoreHorizontal className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-36">
+                  {canEditConfig ? (
+                    <DropdownMenuItem
+                      onSelect={(event) => {
+                        event.preventDefault();
+                        onEdit(config);
+                      }}
+                    >
+                      <Edit2 className="mr-2 size-4" />
+                      编辑参数
+                    </DropdownMenuItem>
+                  ) : null}
+                  {canDeleteConfig ? (
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onSelect={(event) => {
+                        event.preventDefault();
+                        onDelete(config);
+                      }}
+                    >
+                      <Trash2 className="mr-2 size-4" />
+                      删除参数
+                    </DropdownMenuItem>
+                  ) : null}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          },
+          enableSorting: false,
+          meta: {
+            headerClassName:
+              'sticky right-0 z-20 w-[140px] bg-card text-right',
+            cellClassName:
+              'sticky right-0 z-10 w-[140px] bg-card text-right group-hover:bg-muted/50',
+          },
+        }),
+      );
+    }
+
+    return baseColumns;
+  }, [
+    canDeleteConfig,
+    canEditConfig,
+    headerCheckboxState,
+    onDelete,
+    onEdit,
+    onToggleSelect,
+    onToggleSelectAll,
+    selectedIds,
+    showActions,
+  ]);
 
   const table = useReactTable({
     data: rows,
