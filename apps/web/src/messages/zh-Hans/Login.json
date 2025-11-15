@@ -46,7 +46,7 @@
       "pending": "登录中..."
     },
     "agreements": {
-      "notice": "登录即表示你同意{terms}、{privacy}以及{cookies}。",
+      "notice": "登录即表示你同意<terms>服务条款</terms>、<privacy>隐私政策</privacy>以及<cookies>Cookie 政策</cookies>。",
       "terms": "服务条款",
       "privacy": "隐私政策",
       "cookies": "Cookie 政策"

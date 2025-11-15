@@ -29,6 +29,15 @@ export const metadata: Metadata = {
 
 export default function Page() {
   const t = useTranslations('Cookies');
+  const toArray = <T,>(value: unknown): T[] => {
+    if (Array.isArray(value)) {
+      return value as T[];
+    }
+    if (value && typeof value === 'object') {
+      return Object.values(value as Record<string, T>);
+    }
+    return [];
+  };
   const summary = t.rich('intro.description', {
     siteName,
     terms: (chunks) => (
@@ -48,10 +57,10 @@ export default function Page() {
       </Link>
     ),
   });
-  const tableHeaders = t.raw('cookieTypes.tableHeaders') as string[];
-  const cookieMatrix = t.raw('cookieTypes.rows') as CookieRow[];
-  const optionalPractices = t.raw('optional.items') as string[];
-  const managementItems = t.raw('management.items') as ManagementItem[];
+  const tableHeaders = toArray<string>(t.raw('cookieTypes.tableHeaders'));
+  const cookieMatrix = toArray<CookieRow>(t.raw('cookieTypes.rows'));
+  const optionalPractices = toArray<string>(t.raw('optional.items'));
+  const managementItems = toArray<ManagementItem>(t.raw('management.items'));
 
   return (
     <div className="bg-background text-foreground">

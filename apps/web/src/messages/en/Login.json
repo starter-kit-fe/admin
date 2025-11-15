@@ -46,7 +46,7 @@
       "pending": "Signing in..."
     },
     "agreements": {
-      "notice": "By signing in you agree to our {terms}, {privacy} and {cookies}.",
+      "notice": "By signing in you agree to our <terms>Terms</terms>, <privacy>Privacy Policy</privacy> and <cookies>Cookie Policy</cookies>.",
       "terms": "Terms",
       "privacy": "Privacy Policy",
       "cookies": "Cookie Policy"
