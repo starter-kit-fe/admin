@@ -23,7 +23,259 @@
       "10. How to contact us"
     ]
   },
-  "body": {
-    "placeholder": "Detailed sections describing data collection and protection measures will appear here."
-  }
+  "sections": [
+    {
+      "title": "1. Scope of this policy",
+      "blocks": [
+        {
+          "paragraphs": [
+            "This policy applies to every service provided through the Admin Template platform, including content browsing and technical capabilities.",
+            "Services delivered to you by third parties are governed by their own privacy policies.",
+            "If you rely on Admin Template to provide services to your own users, you remain the owner of that business data and must negotiate privacy rules with your users separately."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "2. How we collect and use your information",
+      "blocks": [
+        {
+          "paragraphs": [
+            "Under the Personal Information Protection Law of the People's Republic of China, personal information refers to data related to an identified or identifiable natural person and excludes anonymized information.",
+            "Sensitive personal information includes biometric identifiers, religious beliefs, specific identities, medical and health records, financial accounts, location data, and information about minors under the age of fourteen.",
+            "Once you provide explicit consent, we process that information for the purposes and by the methods described in this policy."
+          ]
+        },
+        {
+          "title": "1. Situations requiring your authorization",
+          "paragraphs": [
+            "We only collect the following information after receiving your explicit authorization."
+          ]
+        },
+        {
+          "title": "1.1 Account registration",
+          "paragraphs": [
+            "To register an account we collect your mobile number, SMS verification code, username, password, and any optional details such as an email address that you choose to provide."
+          ]
+        },
+        {
+          "title": "1.2 Real-name verification",
+          "paragraphs": [
+            "To comply with regulations and keep transactions secure, you may need to complete real-name verification before purchasing or using our products. Individual users may be asked to provide their full name, national ID number, mobile number, email address, and similar information. Enterprise users may need to provide the organization name, legal representative, Unified Social Credit Code, department, copy of the business license, and related materials."
+          ]
+        },
+        {
+          "title": "1.3 Other information",
+          "paragraphs": [
+            "Depending on specific services, we may request additional information to complete invoicing, notifications, or communication."
+          ],
+          "list": [
+            "Mainland China mobile numbers for login, identity verification, service notifications, customer research, and business outreach.",
+            "Email addresses for the same purposes, including receiving verification codes, notifications, or contracts.",
+            "Invoice mailing information such as the recipient name, address, postal code, and mobile number."
+          ]
+        },
+        {
+          "paragraphs": [
+            "If a particular service requires more information, we will describe the collection scenario separately and seek your authorization in advance."
+          ]
+        },
+        {
+          "title": "2. Information we collect automatically",
+          "paragraphs": [
+            "To optimize your experience and secure your account, we automatically collect network logs such as login time, status, method, IP address, browser type, and operation records so we can verify business information and protect your account."
+          ]
+        },
+        {
+          "title": "3. Circumstances where consent is not required",
+          "paragraphs": [
+            "We may handle your information without requesting consent when required by law, including the following scenarios:"
+          ],
+          "list": [
+            "Matters related to national security, national defense, public safety, public health, or major public interests.",
+            "Criminal investigations, prosecutions, trials, or enforcement activities.",
+            "Safeguarding your or another person's life, property, or other significant lawful rights when it is difficult to obtain consent.",
+            "Information you disclose yourself or information collected from legitimate, public channels.",
+            "Where necessary to enter into or perform a contract at your request.",
+            "Where necessary to maintain the safe and stable operation of products or services.",
+            "Public-interest academic research in which the results are de-identified.",
+            "Other circumstances prescribed by laws and regulations."
+          ]
+        },
+        {
+          "title": "4. How we use the information",
+          "paragraphs": [
+            "We only use the collected information to deliver product or service functions and may design, develop, or promote new products and services based on statistical insights.",
+            "Statistical information does not contain data that can identify you and may be shared publicly or with third parties within a reasonable scope."
+          ]
+        },
+        {
+          "title": "5. Necessary permissions and third-party SDKs",
+          "paragraphs": [
+            "To provide stable functionality we may ask for permissions such as camera access, network access, local storage, and camera roll access so that you can scan QR codes for fast login or upload profile photos.",
+            "We also integrate third-party SDKs and perform security assessments to ensure your data remains protected."
+          ],
+          "table": {
+            "headers": [
+              "SDK Name",
+              "Information collected",
+              "Purpose"
+            ],
+            "rows": [
+              [
+                "Umeng Analytics (including base components)",
+                "MAC address, unique device identifiers (IMEI / Android ID / IDFA / OPENUDID / GUID, SIM IMSI)",
+                "Provides analytics services, calibrates accuracy with location data, and offers basic anti-fraud capabilities."
+              ],
+              [
+                "Jiguang Push",
+                "Location data, device identifiers (IMEI, IDFA, Android ID, MAC, OAID, etc.), app information, device parameters, system information, IP address, Wi-Fi or base-station data",
+                "Delivers push notifications to users."
+              ],
+              [
+                "GeYan One-click Login",
+                "Locally stored files, device and network state, mobile number, SIM serial number, ICCID, IMSI, carrier, IDFA, IMEI, MAC, ANDROID_ID, IP address, Wi-Fi information, OpenUDID / GUID, BSSID, installed apps, clipboard content, and network access status",
+                "Enables one-click login and account verification."
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "3. How we entrust processing, share, transfer, or disclose information",
+      "blocks": [
+        {
+          "paragraphs": [
+            "Some product modules are supplied by external vendors. We provide them with the minimum data necessary only after you grant separate consent, sign entrustment or confidentiality agreements with them, and supervise how they handle your information."
+          ]
+        },
+        {
+          "paragraphs": [
+            "We will not share your personal information with companies, organizations, or individuals outside VOH Technology Co., Ltd. unless one of the following applies:"
+          ],
+          "list": [
+            "We obtained your explicit authorization.",
+            "It is required by laws, regulations, or regulators.",
+            "It is necessary to deliver core product functionality.",
+            "It complies with signed policies or legal documents.",
+            "Sharing with a controlling affiliate is required and limited to necessary information.",
+            "Authorized partners need the information to provide services.",
+            "It is necessary to ensure security, identify account risks, or prevent fraud."
+          ]
+        },
+        {
+          "paragraphs": [
+            "We will not transfer your personal information without your explicit consent.",
+            "If a merger, acquisition, or bankruptcy requires transferring information, we will require the new entity to continue to comply with this policy or will request your authorization again.",
+            "We do not publicly disclose personal information unless we have obtained your prior consent or are required to do so by law.",
+            "In situations involving national security, public safety, criminal investigations, life or property protection, information you made public yourself, or legally obtained public information, we may share, transfer, or disclose the data without separately obtaining authorization."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "4. How we protect, store, and delete your information",
+      "blocks": [
+        {
+          "paragraphs": [
+            "We implement strict access controls, multi-factor authentication, and security technologies so that only authorized personnel can access your data. If a security incident occurs, we will notify you and report it to regulators in accordance with applicable laws.",
+            "Information collected in the course of our operations in mainland China is stored domestically unless cross-border transfers are required by law or we have completed mandatory security assessments with your authorization.",
+            "You may request deletion of your personal information at any time. After verifying your identity we will delete or anonymize the information. Once an account is closed we will also delete or anonymize related personal information unless otherwise required by law."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "5. Use of cookies and similar technologies",
+      "blocks": [
+        {
+          "paragraphs": [
+            "To improve your experience we use cookies so you do not need to re-enter information and so we can remember your browser state.",
+            "You may refuse cookies through your browser settings, but doing so may affect the availability of certain features."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "6. Your rights",
+      "blocks": [
+        {
+          "paragraphs": [
+            "You can sign in to manage your information. Any operations performed after login are deemed to be carried out by you or an authorized party, and you bear the legal consequences. Please contact us immediately if your account is stolen or behaves abnormally.",
+            "You have the right to access, correct, or delete your personal information. Contact customer support or email us and we will respond within seven days.",
+            "If we process personal information illegally, without consent, in serious breach of contract, you stop using our services, or we cease service provision, you may request deletion of the relevant information.",
+            "You may withdraw consent for the collection or use of additional information at any time. Once withdrawn, we will stop processing, but the withdrawal does not affect any processing that has already occurred.",
+            "We may send you product updates or commercial information, and you can opt out at any time by contacting customer support. We may decline malicious, repetitive, or abusive requests."
+          ]
+        },
+        {
+          "paragraphs": [
+            "We cannot respond to requests under the following circumstances:"
+          ],
+          "list": [
+            "Fulfilling legal obligations.",
+            "Matters related to national security.",
+            "Public interest requirements.",
+            "Criminal investigations or proceedings.",
+            "Evidence shows the request is malicious or abusive.",
+            "Responding would harm other people's lawful rights and interests.",
+            "Requests involve state secrets or trade secrets."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "7. Disclaimers",
+      "blocks": [
+        {
+          "paragraphs": [
+            "We are not responsible for any information leakage caused by you disclosing your account or password to others, sharing an account, or any reason not attributable to this platform."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "8. Updates to this policy",
+      "blocks": [
+        {
+          "paragraphs": [
+            "We may update this policy from time to time and will notify you through version updates or similar methods. Please review the changes carefully, and your continued use of the platform means you consent to how we process information under the updated policy."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "9. Governing law and dispute resolution",
+      "blocks": [
+        {
+          "paragraphs": [
+            "This policy is governed by the laws of mainland China (excluding conflict-of-law provisions).",
+            "If a dispute arises, the parties should attempt amicable negotiation. If no agreement is reached within 30 days, the dispute shall be submitted to the people's court with jurisdiction where VOH Technology Co., Ltd. is located."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "10. How to contact us",
+      "blocks": [
+        {
+          "paragraphs": [
+            "If you have questions or need assistance, please reach out through the following channels:"
+          ],
+          "list": [
+            "Company name: VOH Technology Co., Ltd.",
+            "Website: https://admin.com",
+            "Email: support@admin.com"
+          ]
+        },
+        {
+          "paragraphs": [
+            "We will reply within 30 days after reasonably confirming your identity.",
+            "If you are unsatisfied with our response, you may contact regulators such as the Cyberspace Administration, telecommunications, public security, or market supervision authorities."
+          ]
+        }
+      ]
+    }
+  ]
 }

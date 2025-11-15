@@ -131,9 +131,13 @@ export default function Page() {
   };
 
   const loginTitle = useMemo(() => {
-    const title = pkg.seo?.title ?? 'Admin Template';
-    return title.split('—')[0]?.trim() ?? title;
-  }, []);
+    const translated = t('Page.title');
+    if (translated && typeof translated === 'string') {
+      return translated;
+    }
+    const fallback = pkg.seo?.title ?? 'Admin Template';
+    return fallback.split('—')[0]?.trim() ?? fallback;
+  }, [t]);
 
   const countdownLabel = useMemo(() => {
     if (captchaCountdown === null) {

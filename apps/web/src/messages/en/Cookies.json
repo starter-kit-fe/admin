@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "title": "{siteName} Cookie Policy",
+    "description": "Learn how {siteName} uses cookies, local storage, and how you can control them.",
+    "updated": "Last updated: November 20, 2024"
+  },
+  "intro": {
+    "heading": "{siteName} Cookie Policy",
+    "description": "This policy explains how we use cookies, localStorage, and similar technologies inside {siteName}, and how you can manage them. It forms part of the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
+  },
+  "cookieTypes": {
+    "title": "Cookies we use",
+    "description": "We follow a \"necessity-first\" approach: we only write cookies to maintain login sessions or remember interface preferences. Any analytics or experiment script requires your explicit consent through the banner.",
+    "tableHeaders": [
+      "Cookie Name",
+      "Category",
+      "Storage method",
+      "Retention",
+      "Purpose"
+    ],
+    "rows": [
+      {
+        "name": "access_token",
+        "category": "Necessary",
+        "storage": "HTTPOnly cookie set by the Go API",
+        "duration": "Session or up to 2 hours",
+        "purpose": "Keeps you signed in so the dashboard and API requests can securely recognize your account. It clears when the browser closes or the session expires."
+      },
+      {
+        "name": "refresh_token",
+        "category": "Necessary",
+        "storage": "HTTPOnly cookie set by the Go API",
+        "duration": "Up to 7 days",
+        "purpose": "Silently refreshes access tokens when they expire, reducing the need to log in again. We send it over HTTPS and restrict access to backend services only."
+      },
+      {
+        "name": "sidebar_state",
+        "category": "Preference",
+        "storage": "Regular cookie",
+        "duration": "7 days",
+        "purpose": "Remembers whether the dashboard sidebar is collapsed or expanded so the layout stays consistent on your next visit."
+      },
+      {
+        "name": "admin_cookie_consent",
+        "category": "Necessary",
+        "storage": "Cookie + localStorage",
+        "duration": "365 days",
+        "purpose": "Stores the privacy preference you set within the footer banner so we respect your accept or reject choice. The value updates immediately when you change the selection."
+      }
+    ]
+  },
+  "optional": {
+    "title": "Optional cookie scenarios",
+    "description": "We only enable the following practices after you choose \"Accept all\" on the banner:",
+    "items": [
+      "To evaluate whether new components or animations improve usability, we only collect aggregated metrics (such as dwell time or load duration) and write them to the browser after consent.",
+      "We may temporarily enable error-monitoring scripts to capture anonymous console stack traces solely for debugging without linking to personal identities.",
+      "If you reject optional cookies, those scripts stay disabled and we avoid creating any new third-party tracking identifiers."
+    ]
+  },
+  "management": {
+    "title": "Manage cookies",
+    "items": [
+      {
+        "label": "Via banner: ",
+        "description": "Use the login or home page cookie banner any time to reject optional cookies or accept them again."
+      },
+      {
+        "label": "Browser settings: ",
+        "description": "Clear cookies or block third-party cookies inside your browser's privacy or security settings."
+      },
+      {
+        "label": "Withdraw consent: ",
+        "description": "If you've accepted optional cookies, clear admin_cookie_consent or choose \"Reject\" on the banner to disable related scripts immediately."
+      },
+      {
+        "label": "Contact us: ",
+        "description": "Still have questions? Email ",
+        "email": "support@admin.com",
+        "trailing": " and we'll help adjust your cookie preferences."
+      }
+    ]
+  }
+}

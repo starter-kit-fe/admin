@@ -4,6 +4,7 @@
     "error": "Sign in failed. Please verify your account details."
   },
   "Page": {
+    "title": "Admin Template Platform",
     "highlights": {
       "first": "Supports password sign-in and caches granted permissions.",
       "second": "Access the dashboard, system logs and Swagger utilities after authentication.",
@@ -45,7 +46,7 @@
       "pending": "Signing in..."
     },
     "agreements": {
-      "text": "By signing in you agree to our",
+      "notice": "By signing in you agree to our {terms}, {privacy} and {cookies}.",
       "terms": "Terms",
       "privacy": "Privacy Policy",
       "cookies": "Cookie Policy"

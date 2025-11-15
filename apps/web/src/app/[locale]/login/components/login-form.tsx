@@ -172,7 +172,7 @@ export const LoginForm: FC<LoginFormProps> = ({
               </InputGroupAddon>
               <InputGroupInput
                 id="captcha"
-                placeholder="输入验证码"
+                placeholder={t('captcha.placeholder')}
                 title={t('captcha.aria')}
                 tabIndex={3}
                 autoComplete="one-time-code"
@@ -241,28 +241,32 @@ export const LoginForm: FC<LoginFormProps> = ({
       </CardContent>
       <CardContent className="pt-0">
         <p className="text-center text-xs leading-relaxed text-muted-foreground">
-          {t('agreements.text')}{' '}
-          <Link
-            href="/terms"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {t('agreements.terms')}
-          </Link>
-          、{' '}
-          <Link
-            href="/privacy"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {t('agreements.privacy')}
-          </Link>{' '}
-          以及{' '}
-          <Link
-            href="/cookies"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {t('agreements.cookies')}
-          </Link>
-          。
+          {t.rich('agreements.notice', {
+            terms: (chunks) => (
+              <Link
+                href="/terms"
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {chunks}
+              </Link>
+            ),
+            privacy: (chunks) => (
+              <Link
+                href="/privacy"
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {chunks}
+              </Link>
+            ),
+            cookies: (chunks) => (
+              <Link
+                href="/cookies"
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {chunks}
+              </Link>
+            ),
+          })}
         </p>
       </CardContent>
     </Card>

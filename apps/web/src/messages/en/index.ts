@@ -1,4 +1,5 @@
 import CookieBanner from './CookieBanner.json';
+import Cookies from './Cookies.json';
 import ErrorMessages from './Error.json';
 import Footer from './Footer.json';
 import Header from './Header.json';
@@ -13,6 +14,7 @@ import Terms from './Terms.json';
 
 const messages = {
   CookieBanner,
+  Cookies,
   Error: ErrorMessages,
   Footer,
   Header,

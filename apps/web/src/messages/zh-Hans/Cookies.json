@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "title": "{siteName} Cookie 政策",
+    "description": "了解 {siteName} 如何使用 Cookie、localStorage 以及你的控制方式。",
+    "updated": "最后更新：2024 年 11 月 20 日"
+  },
+  "intro": {
+    "heading": "{siteName} Cookie 政策",
+    "description": "本政策解释我们在 {siteName} 中如何使用 Cookie、localStorage 与类似技术，以及你可以如何管理它们。它是 <terms>服务条款</terms> 与 <privacy>隐私政策</privacy> 的组成部分。"
+  },
+  "cookieTypes": {
+    "title": "我们使用的 Cookie 类型",
+    "description": "我们遵循“必要优先”的设计：仅在维持登录或记住界面设置时写入 Cookie。任何用于分析或实验的脚本都需要你通过横幅明确同意。",
+    "tableHeaders": [
+      "Cookie 名称",
+      "类别",
+      "存储方式",
+      "保留时间",
+      "用途"
+    ],
+    "rows": [
+      {
+        "name": "access_token",
+        "category": "必要",
+        "storage": "HTTPOnly Cookie（由 Go API 设置）",
+        "duration": "会话期或最长 2 小时",
+        "purpose": "保存你的登录状态，让仪表盘与 API 请求能够安全识别账号；关闭浏览器或会话超时后会被清除。"
+      },
+      {
+        "name": "refresh_token",
+        "category": "必要",
+        "storage": "HTTPOnly Cookie（由 Go API 设置）",
+        "duration": "最长 7 天",
+        "purpose": "在访问令牌过期时静默刷新，避免频繁重新登录；我们同样通过 HTTPS 传输并限制仅后端可访问。"
+      },
+      {
+        "name": "sidebar_state",
+        "category": "偏好",
+        "storage": "普通 Cookie",
+        "duration": "7 天",
+        "purpose": "记住你在 Dashboard 内侧边栏的展开/折叠状态，提升再次访问时的界面一致性。"
+      },
+      {
+        "name": "admin_cookie_consent",
+        "category": "必要",
+        "storage": "Cookie + localStorage",
+        "duration": "365 天",
+        "purpose": "记录你在页面底部横幅中的隐私偏好，以便我们尊重你的同意或拒绝。当你改变选择时会立即更新。"
+      }
+    ]
+  },
+  "optional": {
+    "title": "可选 Cookie 的场景",
+    "description": "仅当你在横幅中选择“全部接受”时，我们才会启用以下实践：",
+    "items": [
+      "用于衡量新组件或动效是否提升可用性，我们仅会收集聚合指标（如停留时长、加载耗时）且在获得同意后才会写入浏览器。",
+      "我们可能暂时启用错误监控脚本，以捕获匿名的控制台报错堆栈。该数据仅用于排查问题，不会关联个人身份。",
+      "若你拒绝可选 Cookie，上述脚本会保持禁用状态，同时我们不会创建任何新的第三方追踪标识。"
+    ]
+  },
+  "management": {
+    "title": "如何管理 Cookie",
+    "items": [
+      {
+        "label": "通过横幅：",
+        "description": "点击登录或首页底部的 Cookie 横幅，可随时拒绝可选 Cookie 或重新接受。"
+      },
+      {
+        "label": "浏览器设置：",
+        "description": "在浏览器的“隐私/安全”设置中清理 Cookie 或启用禁止第三方 Cookie。"
+      },
+      {
+        "label": "撤回同意：",
+        "description": "若你已接受可选 Cookie，可直接清除 admin_cookie_consent 或通过横幅选择“拒绝”以立即停用相关脚本。"
+      },
+      {
+        "label": "联系我们：",
+        "description": "仍有疑问？请发送邮件至",
+        "email": "support@admin.com",
+        "trailing": "，我们会协助你完成 Cookie 偏好管理。"
+      }
+    ]
+  }
+}

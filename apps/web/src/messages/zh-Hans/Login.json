@@ -4,6 +4,7 @@
     "error": "登录失败，请检查账号信息。"
   },
   "Page": {
+    "title": "Admin Template 平台",
     "highlights": {
       "first": "支持账号密码快速登录，登录后自动缓存权限配置。",
       "second": "登录后可访问 Dashboard、系统日志、Swagger 等后台工具。",
@@ -45,7 +46,7 @@
       "pending": "登录中..."
     },
     "agreements": {
-      "text": "登录即表示你同意",
+      "notice": "登录即表示你同意{terms}、{privacy}以及{cookies}。",
       "terms": "服务条款",
       "privacy": "隐私政策",
       "cookies": "Cookie 政策"

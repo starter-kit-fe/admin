@@ -54,7 +54,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  console.log(routing);
   return (
     <html lang={routing.defaultLocale} suppressHydrationWarning>
       <head>
