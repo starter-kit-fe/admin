@@ -1,5 +1,6 @@
 "use client";
 
+import {LanguageSwitcher} from '@/components/language-switcher';
 import {LogoMark} from '@/components/logo-mark';
 import ThemeToggle from '@/components/theme-toggle';
 import {Link, useRouter} from '@/i18n/navigation';
@@ -165,6 +166,7 @@ export default function Page() {
       </div>
 
       <div className="absolute  right-4 top-[calc(env(safe-area-inset-top,0)+1rem)] z-30 flex items-center gap-4 md:right-6 md:top-6">
+        <LanguageSwitcher />
         <ThemeToggle />
       </div>
 

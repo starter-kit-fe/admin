@@ -1,0 +1,25 @@
+{
+  "ariaLabel": "Cookie consent banner",
+  "title": "Tell us about your cookie preferences",
+  "description": "We use essential cookies to keep the site running. Choose “Accept all” to enable personalization and analytics.",
+  "required": {
+    "title": "Always on to guarantee the basics:",
+    "items": {
+      "first": "Keep the site stable",
+      "second": "Prevent fraud and abuse",
+      "third": "Monitor performance and errors"
+    }
+  },
+  "optional": {
+    "title": "Optional (enabled only with consent):",
+    "items": {
+      "first": "Personalized recommendations and ads",
+      "second": "Measure campaign and content performance",
+      "third": "Improve features and services"
+    }
+  },
+  "actions": {
+    "reject": "Reject optional cookies",
+    "accept": "Accept all cookies"
+  }
+}

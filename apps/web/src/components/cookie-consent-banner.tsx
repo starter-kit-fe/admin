@@ -158,45 +158,61 @@ export function CookieConsentBanner() {
       aria-live="polite"
       aria-label={t('ariaLabel')}
       className={[
-        // 移动端：底部居中；桌面端：右下角浮动
-        'pointer-events-none fixed inset-x-0 bottom-0 z-[60] min-w-7xl flex justify-center',
-        'px-4 pb-4 sm:px-6 sm:pb-6',
+        'pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-center',
+        'px-3 pb-3 sm:px-4 sm:pb-6',
         'md:inset-x-auto md:right-6 md:bottom-6 md:justify-end',
       ].join(' ')}
+      style={{
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)',
+      }}
     >
       <Card
         ref={cardRef}
         className={[
-          'pointer-events-auto w-full md:max-w-md',
-          'border-border/70 bg-background/90 shadow-2xl backdrop-blur',
+          'pointer-events-auto w-full max-w-none',
+          'sm:w-[min(92vw,640px)]',
+          'md:w-[min(88vw,760px)]',
+          'lg:w-[min(82vw,900px)]',
+          'xl:w-[min(70vw,960px)] 2xl:w-[960px]',
+          'border-border/70 bg-background/95 shadow-2xl backdrop-blur',
           'supports-[backdrop-filter]:bg-background/80',
-          'rounded-2xl',
+          'rounded-t-3xl border-t border-border/60 md:rounded-2xl md:border',
+          'max-h-[80vh] overflow-y-auto overscroll-contain pr-1 sm:pr-0 md:max-h-[70vh]',
         ].join(' ')}
       >
-        <CardHeader className="gap-1 pb-2" data-cc-item>
+        <CardHeader
+          className="gap-1 pb-2 sm:pb-3 [&>*]:text-balance"
+          data-cc-item
+        >
           <CardTitle className="text-base sm:text-lg">{t('title')}</CardTitle>
           <CardDescription className="text-sm leading-relaxed">
             {t('description')}
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          <div className="space-y-2" data-cc-item>
-            <p className="text-sm text-muted-foreground">{t('required.title')}</p>
-            <ul className="list-disc pl-5 text-sm leading-6 marker:text-muted-foreground">
-              {requiredItems.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
+        <CardContent className="space-y-4 sm:space-y-6">
+          <div className="space-y-6 md:grid md:grid-cols-2 md:gap-6">
+            <div className="space-y-2" data-cc-item>
+              <p className="text-sm text-muted-foreground">
+                {t('required.title')}
+              </p>
+              <ul className="list-disc pl-5 text-sm leading-6 marker:text-muted-foreground [&>li]:text-pretty">
+                {requiredItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
 
-          <div className="space-y-2" data-cc-item>
-            <p className="text-sm text-muted-foreground">{t('optional.title')}</p>
-            <ul className="list-disc pl-5 text-sm leading-6 marker:text-muted-foreground">
-              {optionalItems.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+            <div className="space-y-2" data-cc-item>
+              <p className="text-sm text-muted-foreground">
+                {t('optional.title')}
+              </p>
+              <ul className="list-disc pl-5 text-sm leading-6 marker:text-muted-foreground [&>li]:text-pretty">
+                {optionalItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
           </div>
         </CardContent>
 

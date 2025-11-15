@@ -1,0 +1,27 @@
+{
+  "heading": {
+    "badge": "现代化开发者后台",
+    "title": "Admin Template · 现代化管理后台",
+    "description": "为现代 Web 应用打造的响应式后台模板，包含可复用组件、图表、表格与认证流程。"
+  },
+  "keywords": [
+    "后台模板",
+    "多主题体验",
+    "React Query"
+  ],
+  "primaryCta": {
+    "authenticated": "进入 Dashboard",
+    "anonymous": "开始使用"
+  },
+  "secondaryCta": "了解特性",
+  "card": {
+    "title": "自适应外观 · 即刻切换",
+    "description": "黑暗、亮色、跟随系统三种主题模式，在任何设备上都保持一致体验。",
+    "badges": {
+      "dark": "暗夜模式",
+      "light": "亮色模式",
+      "system": "系统同步"
+    },
+    "body": "支持通过 <code>ThemeToggle</code> 组件一键切换，基于 <code>@tanstack/react-query</code> 与自定义请求库保持登录态。"
+  }
+}

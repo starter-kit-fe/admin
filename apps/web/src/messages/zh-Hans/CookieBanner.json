@@ -1,0 +1,25 @@
+{
+  "ariaLabel": "Cookie 同意横幅",
+  "title": "让我们了解你的 Cookie 偏好",
+  "description": "我们使用必要 Cookie 以确保网站正常运行。若选择“全部接受”，我们还会启用个性化与统计分析。",
+  "required": {
+    "title": "始终启用以保障基础功能：",
+    "items": {
+      "first": "确保网站稳定运行",
+      "second": "防止欺诈与滥用",
+      "third": "监控性能与错误"
+    }
+  },
+  "optional": {
+    "title": "可选（仅在你同意后启用）：",
+    "items": {
+      "first": "个性化推荐与广告",
+      "second": "衡量广告与内容效果",
+      "third": "改进新功能与服务"
+    }
+  },
+  "actions": {
+    "reject": "拒绝可选 Cookie",
+    "accept": "全部接受"
+  }
+}

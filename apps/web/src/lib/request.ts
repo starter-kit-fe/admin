@@ -79,12 +79,26 @@ export class HttpClient {
       ...config.headers,
     };
   }
+
   updateToken(token?: string | null) {
     if (!token) {
       Reflect.deleteProperty(this.defaultHeaders, 'Authorization');
       return;
     }
     this.defaultHeaders['Authorization'] = `Bearer ${token}`;
+  }
+
+  updateLocale(locale?: string | null) {
+    if (typeof locale !== 'string') {
+      Reflect.deleteProperty(this.defaultHeaders, 'Accept-Language');
+      return;
+    }
+    const trimmed = locale.trim();
+    if (!trimmed) {
+      Reflect.deleteProperty(this.defaultHeaders, 'Accept-Language');
+      return;
+    }
+    this.defaultHeaders['Accept-Language'] = trimmed;
   }
 
   private handleUnauthorized(message?: string) {

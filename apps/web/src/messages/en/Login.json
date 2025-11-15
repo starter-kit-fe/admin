@@ -1,0 +1,54 @@
+{
+  "toast": {
+    "success": "Signed in successfully. Welcome back!",
+    "error": "Sign in failed. Please verify your account details."
+  },
+  "Page": {
+    "highlights": {
+      "first": "Supports password sign-in and caches granted permissions.",
+      "second": "Access the dashboard, system logs and Swagger utilities after authentication.",
+      "third": "React Query keeps auth tokens synchronized across requests."
+    },
+    "description": "A modern admin experience with complete authentication flows.",
+    "badge": "Welcome Back",
+    "backgroundAlt": "Login background illustration",
+    "countdown": "{seconds}s left",
+    "countdownExpired": "Code expired",
+    "homeAria": "Back to home"
+  },
+  "Aside": {
+    "footer": "Admin Template"
+  },
+  "Form": {
+    "title": "Admin sign in",
+    "description": "Enter your account to access the dashboard",
+    "username": {
+      "placeholder": "Username",
+      "aria": "Enter username"
+    },
+    "password": {
+      "placeholder": "Password",
+      "aria": "Enter password",
+      "show": "Show password",
+      "hide": "Hide password"
+    },
+    "captcha": {
+      "placeholder": "Verification code",
+      "aria": "Enter verification code",
+      "refresh": "Refresh code",
+      "tapToRefresh": "Tap to refresh",
+      "expired": "Code expired",
+      "alt": "Captcha"
+    },
+    "submit": {
+      "idle": "Sign in",
+      "pending": "Signing in..."
+    },
+    "agreements": {
+      "text": "By signing in you agree to our",
+      "terms": "Terms",
+      "privacy": "Privacy Policy",
+      "cookies": "Cookie Policy"
+    }
+  }
+}

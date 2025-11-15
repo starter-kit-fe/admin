@@ -191,7 +191,7 @@ export default function Header() {
             <CtaIcon className="h-4 w-4" />
             {ctaLabel}
           </Link>
-          <LanguageSwitcher className="hidden md:flex" size="sm" />
+          <LanguageSwitcher className="hidden md:inline-flex" />
           <ThemeToggle className="hidden md:inline-flex" />
           <Drawer
             open={isMobileMenuOpen}
@@ -231,7 +231,7 @@ export default function Header() {
                   <CtaIcon className="h-4 w-4" />
                   {ctaLabel}
                 </Link>
-                <LanguageSwitcher />
+                <LanguageSwitcher className="justify-center" />
                 <ThemeToggle className="justify-center" />
               </div>
             </DrawerContent>

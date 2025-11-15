@@ -1,38 +1,43 @@
 import { CookieConsentBanner } from '@/components/cookie-consent-banner';
 import { Providers } from '@/components/providers';
+import { loadMessages } from '@/i18n/request';
 import type { AppLocale } from '@/i18n/routing';
 import { routing } from '@/i18n/routing';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
+import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export default async function LocaleLayout({
-  children,
-  params,
-}: {
+interface LocaleLayoutProps {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
-}) {
-  const resolvedParams = await params;
+}
+
+export default async function LocaleLayout(props: LocaleLayoutProps) {
+  const { children } = props;
+  const resolvedParams = await props.params;
+
   const rawLocale = resolvedParams?.locale;
   const locale = routing.locales.find(
     (candidate) => candidate === rawLocale,
   ) as AppLocale | undefined;
-  console.log(locale);
   if (!locale) {
     notFound();
   }
 
   setRequestLocale(locale);
 
-  const messages = await getMessages();
+  const messages = loadMessages(locale);
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
+    <NextIntlClientProvider
+      key={locale}
+      locale={locale}
+      messages={messages}
+    >
       <Providers>
         <>
           {children}

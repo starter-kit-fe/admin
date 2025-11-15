@@ -1,0 +1,22 @@
+{
+  "title": "Service health",
+  "description": "Monitor APIs, the database and cache dependencies in real time.",
+  "actions": {
+    "refresh": "Run check again",
+    "refreshing": "Refreshing"
+  },
+  "messages": {
+    "loading": "Fetching the latest status...",
+    "error": "Unable to load health information.",
+    "errorReason": "Reason: {message}",
+    "emptyTitle": "No health data yet",
+    "emptyDescription": "Try again later or trigger a new probe.",
+    "unknown": "Unknown",
+    "uptimeMissing": "Not provided"
+  },
+  "metrics": {
+    "database": "Database",
+    "cache": "Cache",
+    "uptime": "Last heartbeat"
+  }
+}

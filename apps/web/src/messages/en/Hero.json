@@ -1,0 +1,27 @@
+{
+  "heading": {
+    "badge": "Modern dashboard UI for developers",
+    "title": "Admin Template | Modern Dashboard for Web Apps",
+    "description": "A clean and responsive admin dashboard template built for modern web apps. Includes reusable UI components, charts, tables, and authentication pages."
+  },
+  "keywords": [
+    "Dashboard UI",
+    "React admin",
+    "Next.js"
+  ],
+  "primaryCta": {
+    "authenticated": "Enter dashboard",
+    "anonymous": "Get started"
+  },
+  "secondaryCta": "Explore features",
+  "card": {
+    "title": "Adaptive themes, instantly available",
+    "description": "Dark, light and system modes keep the experience consistent on every device.",
+    "badges": {
+      "dark": "Dark mode",
+      "light": "Light mode",
+      "system": "System sync"
+    },
+    "body": "Switch effortlessly via the <code>ThemeToggle</code> component, while <code>@tanstack/react-query</code> and our HTTP client keep auth states synchronized."
+  }
+}

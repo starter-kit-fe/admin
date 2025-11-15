@@ -21,11 +21,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 
 import { TYPE_STATUS_TABS } from '../../constants';
-import { usePermissions } from '@/hooks/use-permissions';
 
 interface DictTypeListProps {
   items: DictType[];
@@ -46,7 +46,6 @@ export function DictTypeList({
   onAddData,
   onDelete,
 }: DictTypeListProps) {
-  console.log('DictTypeList');
   const { hasPermission } = usePermissions();
   const canAddData = hasPermission('system:dict:add');
   const canEditType = hasPermission('system:dict:edit');

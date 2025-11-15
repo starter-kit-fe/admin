@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "title": "Terms of Service",
+    "updated": "July 6, 2022",
+    "effective": "July 6, 2022"
+  },
+  "introduction": [
+    "Welcome to Admin Template. By using our products you agree to these terms.",
+    "We provide market information services but do not execute trades or guarantee returns.",
+    "Please evaluate your risk tolerance before using any insights from this platform."
+  ],
+  "sections": [
+    {
+      "title": "1. Services",
+      "blocks": [
+        {
+          "title": "1.1 Content",
+          "paragraphs": [
+            "The platform offers dashboards, screeners, alerts, and research content to help you understand market trends.",
+            "All information is for reference only and should not be treated as personalized investment advice."
+          ],
+          "list": [
+            "We reserve the right to adjust or discontinue specific modules at any time.",
+            "We are not responsible for profits or losses that result from decisions made with our data."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "2. Accounts",
+      "blocks": [
+        {
+          "title": "2.1 Registration",
+          "paragraphs": [
+            "You must provide accurate contact information and keep it up to date.",
+            "If you register on behalf of an organization you confirm you have authority to bind that entity."
+          ]
+        },
+        {
+          "title": "2.2 Security",
+          "list": [
+            "Keep credentials confidential.",
+            "Notify us immediately if you suspect unauthorized access.",
+            "Inactive accounts may be recycled after 3 months of inactivity."
+          ]
+        }
+      ]
+    }
+  ]
+}

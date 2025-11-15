@@ -24,8 +24,6 @@ import {
   useState,
 } from 'react';
 
-import pkg from '@/../package.json';
-
 const HERO_IMAGES = [
   'https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1600&q=80',
   'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80',
@@ -34,6 +32,21 @@ const HERO_IMAGES = [
 ] as const;
 
 const BACKDROP_SWITCH_DELAY = 1300;
+
+type HeroHeadingCopy = {
+  badge?: string;
+  title: string;
+  description: string;
+};
+
+const DEFAULT_HEADING_COPY: HeroHeadingCopy = {
+  badge: 'Modern dashboard UI for developers',
+  title: 'Admin Template | Modern Dashboard for Web Apps',
+  description:
+    'A clean and responsive admin dashboard template built for modern web apps.',
+};
+
+const DEFAULT_KEYWORDS = ['Dashboard UI', 'React admin', 'Next.js'];
 
 const pickRandomHeroImage = (exclude?: string) => {
   const pool = exclude
@@ -51,17 +64,19 @@ export default function HeroSection() {
   const backdropRef = useRef<HTMLDivElement>(null);
   const crossfadeTimelineRef = useRef<gsap.core.Timeline | null>(null);
   const hasAnimatedBackdropRef = useRef(false);
-  const heroTitle = useMemo(() => {
-    const [main, ...rest] = (pkg.seo?.title)
-      .split('—')
-      .map((item) => item.trim());
-    return {
-      main,
-      secondary: rest.join(' — '),
-    };
-  }, []);
-
-  const keywords = useMemo(() => pkg.seo.keywords.slice(0, 3), []);
+  const headingCopy = useMemo<HeroHeadingCopy>(() => {
+    const rawHeading = t.raw('heading');
+    if (rawHeading && typeof rawHeading === 'object') {
+      return rawHeading as HeroHeadingCopy;
+    }
+    return DEFAULT_HEADING_COPY;
+  }, [t]);
+  const keywords = useMemo(() => {
+    const rawKeywords = t.raw('keywords');
+    return Array.isArray(rawKeywords)
+      ? (rawKeywords as string[])
+      : DEFAULT_KEYWORDS;
+  }, [t]);
 
   const [heroImage, setHeroImage] = useState<string>(HERO_IMAGES[0]);
   const currentHeroImageRef = useRef(heroImage);
@@ -213,19 +228,19 @@ export default function HeroSection() {
       <div className="mx-auto flex  flex-col gap-12 px-6 container md:px-10 lg:px-12">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-center">
           <div className="flex flex-col gap-6 text-left">
-            {heroTitle.secondary ? (
+            {headingCopy.badge ? (
               <Badge
                 variant="outline"
                 className="hero-animate w-fit border-primary/40 bg-background/80 text-primary backdrop-blur"
               >
-                {heroTitle.secondary}
+                {headingCopy.badge}
               </Badge>
             ) : null}
             <h1 className="hero-animate text-3xl font-semibold leading-tight text-foreground sm:text-4xl lg:text-5xl">
-              {pkg.seo.og.title}
+              {headingCopy.title}
             </h1>
             <p className="hero-animate max-w-2xl text-base text-muted-foreground sm:text-lg">
-              {pkg.seo.description}
+              {headingCopy.description}
             </p>
             <div className="hero-animate flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <Link

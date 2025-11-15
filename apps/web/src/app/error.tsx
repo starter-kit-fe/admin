@@ -3,14 +3,13 @@
 import ErrorPage from '@/components/error-page';
 import {routing} from '@/i18n/routing';
 import type {AppLocale} from '@/i18n/routing';
-import enMessages from '@/messages/en.json';
-import zhMessages from '@/messages/zh.json';
+import {messages as localeMessages} from '@/messages';
 import {NextIntlClientProvider} from 'next-intl';
 
-const STATIC_MESSAGES = {
-  en: enMessages,
-  zh: zhMessages,
-} satisfies Record<AppLocale, Record<string, unknown>>;
+const STATIC_MESSAGES = localeMessages satisfies Record<
+  AppLocale,
+  Record<string, unknown>
+>;
 
 export default function RootError(props: {error: Error; reset: () => void}) {
   const locale = routing.defaultLocale;

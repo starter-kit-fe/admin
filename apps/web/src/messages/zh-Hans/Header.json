@@ -1,0 +1,14 @@
+{
+  "nav": {
+    "features": "特性",
+    "themes": "主题",
+    "resources": "资源"
+  },
+  "cta": {
+    "login": "登录账户",
+    "dashboard": "进入 Dashboard"
+  },
+  "drawer": {
+    "open": "打开导航菜单"
+  }
+}

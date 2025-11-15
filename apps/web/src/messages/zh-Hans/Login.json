@@ -1,0 +1,54 @@
+{
+  "toast": {
+    "success": "登录成功，欢迎回来！",
+    "error": "登录失败，请检查账号信息。"
+  },
+  "Page": {
+    "highlights": {
+      "first": "支持账号密码快速登录，登录后自动缓存权限配置。",
+      "second": "登录后可访问 Dashboard、系统日志、Swagger 等后台工具。",
+      "third": "React Query 管理鉴权状态，确保请求自动携带 Token。"
+    },
+    "description": "为现代管理后台打造的完整认证体验。",
+    "badge": "欢迎回来",
+    "backgroundAlt": "登录背景",
+    "countdown": "{seconds}s 后过期",
+    "countdownExpired": "验证码已过期",
+    "homeAria": "返回首页"
+  },
+  "Aside": {
+    "footer": "Admin Template"
+  },
+  "Form": {
+    "title": "账号登录",
+    "description": "输入账号信息，以便访问仪表盘",
+    "username": {
+      "placeholder": "输入用户名",
+      "aria": "输入用户名"
+    },
+    "password": {
+      "placeholder": "输入密码",
+      "aria": "输入密码",
+      "show": "显示密码",
+      "hide": "隐藏密码"
+    },
+    "captcha": {
+      "placeholder": "输入验证码",
+      "aria": "输入验证码",
+      "refresh": "刷新验证码",
+      "tapToRefresh": "点击刷新",
+      "expired": "验证码已过期",
+      "alt": "验证码"
+    },
+    "submit": {
+      "idle": "登录",
+      "pending": "登录中..."
+    },
+    "agreements": {
+      "text": "登录即表示你同意",
+      "terms": "服务条款",
+      "privacy": "隐私政策",
+      "cookies": "Cookie 政策"
+    }
+  }
+}

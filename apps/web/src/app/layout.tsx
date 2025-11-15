@@ -1,8 +1,8 @@
-import type {Metadata} from 'next';
-import {Geist} from 'next/font/google';
+import { routing } from '@/i18n/routing';
+import type { Metadata } from 'next';
+import { Geist } from 'next/font/google';
 import Script from 'next/script';
 
-import {routing} from '@/i18n/routing';
 import pkg from '../../package.json';
 import './globals.css';
 
@@ -49,7 +49,12 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
 };
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  console.log(routing);
   return (
     <html lang={routing.defaultLocale} suppressHydrationWarning>
       <head>

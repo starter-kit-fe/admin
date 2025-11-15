@@ -1,0 +1,94 @@
+{
+  "features": {
+    "badge": "核心特性",
+    "title": "从界面到数据，一条龙打造现代化管理后台",
+    "description": "基于可复用组件、数据层与安全机制，帮助团队迅速落地后台产品。",
+    "cards": {
+      "interface": {
+        "title": "现代化界面体系",
+        "description": "基于 shadcn/ui 与 Tailwind 的设计体系，提供高度一致、可定制的组件库。",
+        "highlights": [
+          "shadcn/ui",
+          "Tailwind CSS",
+          "响应式体验"
+        ]
+      },
+      "data": {
+        "title": "智能数据层",
+        "description": "@tanstack/react-query 与自定义 HttpClient 协作，提供缓存、重试与登录态管理。",
+        "highlights": [
+          "数据缓存",
+          "鉴权守护",
+          "请求超时控制"
+        ]
+      },
+      "security": {
+        "title": "企业级安全守护",
+        "description": "内置权限、角色、日志体系，配合 Go 服务保障可观测性。",
+        "highlights": [
+          "权限校验",
+          "登录日志",
+          "可观测性"
+        ]
+      }
+    }
+  },
+  "themes": {
+    "badge": "多主题模式",
+    "title": "一套设计语言，三种主题体验",
+    "description": "默认跟随系统偏好，也可手动切换亮/暗主题，ThemeToggle 带来顺滑动效。",
+    "cards": {
+      "light": {
+        "name": "亮色主题",
+        "description": "干净明亮的工作台体验，适合日常办公与展示场景。",
+        "badge": "亮色"
+      },
+      "dark": {
+        "name": "暗色主题",
+        "description": "柔和对比与护眼配色，让夜间使用更加舒适。",
+        "badge": "暗夜"
+      },
+      "system": {
+        "name": "跟随系统",
+        "description": "自动识别系统配色偏好，在不同设备间保持一致。",
+        "badge": "系统"
+      }
+    }
+  },
+  "resources": {
+    "badge": "资源 & 工具",
+    "title": "配套资源加速你的交付",
+    "description": "提供 API 文档、系统日志与 Turborepo 架构支撑，协助团队协作与排障。",
+    "cards": {
+      "api": {
+        "title": "API 文档",
+        "description": "Swagger 集成，快速了解后端接口定义与示例。",
+        "cta": "查看详情 →"
+      },
+      "logs": {
+        "title": "系统日志",
+        "description": "实时追踪登录与操作日志，助力排查定位。",
+        "cta": "查看详情 →"
+      },
+      "structure": {
+        "title": "项目结构",
+        "description": "Apps + Packages 的 Turborepo 架构，支持多人协作与复用。",
+        "cta": "查看详情 →"
+      }
+    }
+  },
+  "callout": {
+    "title": "已搭建完备的前后端体系，下一步就是交付你的业务",
+    "description": "使用 React Query + GSAP + Next.js 的组合，打造动态、顺滑并可扩展的管理后台。",
+    "cta": {
+      "primary": {
+        "authenticated": "进入 Dashboard",
+        "anonymous": "登录账户"
+      },
+      "secondary": {
+        "authenticated": "查看系统日志",
+        "anonymous": "了解项目"
+      }
+    }
+  }
+}

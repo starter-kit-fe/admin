@@ -1,0 +1,22 @@
+{
+  "title": "服务健康状态",
+  "description": "实时探测 API、数据库、缓存等依赖的运行情况。",
+  "actions": {
+    "refresh": "重新检测",
+    "refreshing": "刷新中"
+  },
+  "messages": {
+    "loading": "正在获取最新状态...",
+    "error": "无法获取健康状态。",
+    "errorReason": "原因：{message}",
+    "emptyTitle": "暂无健康数据",
+    "emptyDescription": "稍后重试或重新探测以刷新状态。",
+    "unknown": "未知",
+    "uptimeMissing": "未提供"
+  },
+  "metrics": {
+    "database": "数据库",
+    "cache": "缓存",
+    "uptime": "最近探活"
+  }
+}

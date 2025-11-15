@@ -1,0 +1,14 @@
+{
+  "nav": {
+    "features": "Features",
+    "themes": "Themes",
+    "resources": "Resources"
+  },
+  "cta": {
+    "login": "Sign in",
+    "dashboard": "Open dashboard"
+  },
+  "drawer": {
+    "open": "Open navigation menu"
+  }
+}

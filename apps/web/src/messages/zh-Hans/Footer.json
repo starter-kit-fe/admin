@@ -1,0 +1,29 @@
+{
+  "headingProduct": "产品",
+  "headingAccount": "账号",
+  "headingContact": "联系我们",
+  "product": {
+    "overview": "特性概览",
+    "themes": "主题系统",
+    "resources": "资源中心"
+  },
+  "account": {
+    "login": "登录管理端",
+    "dashboard": "进入 Dashboard",
+    "logs": "系统日志"
+  },
+  "contact": {
+    "body": "如有任何建议或合作意向，欢迎随时联系我们。",
+    "email": "发送邮件"
+  },
+  "social": {
+    "github": "GitHub",
+    "twitter": "Twitter",
+    "mail": "邮箱"
+  },
+  "legal": {
+    "terms": "服务条款",
+    "privacy": "隐私政策"
+  },
+  "meta": "© {start} - {year} {title}。保留所有权利。| v{version}"
+}

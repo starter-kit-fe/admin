@@ -1,0 +1,94 @@
+{
+  "features": {
+    "badge": "Core Features",
+    "title": "From UI to data, everything you need for a modern admin",
+    "description": "Reusable UI, data tooling and security primitives help teams ship dashboards fast.",
+    "cards": {
+      "interface": {
+        "title": "Modern interface system",
+        "description": "Built with shadcn/ui and Tailwind for a cohesive, customizable component library.",
+        "highlights": [
+          "shadcn/ui",
+          "Tailwind CSS",
+          "Responsive layouts"
+        ]
+      },
+      "data": {
+        "title": "Smart data layer",
+        "description": "@tanstack/react-query works with a custom HttpClient to handle caching, retries and auth.",
+        "highlights": [
+          "Data caching",
+          "Auth guard",
+          "Timeout controls"
+        ]
+      },
+      "security": {
+        "title": "Enterprise-grade safety",
+        "description": "Permissions, roles and audit logs pair with the Go backend for full observability.",
+        "highlights": [
+          "Permission checks",
+          "Sign-in logs",
+          "Observability"
+        ]
+      }
+    }
+  },
+  "themes": {
+    "badge": "Theme Modes",
+    "title": "One design language, three visual modes",
+    "description": "Follow the system preference or switch manually; ThemeToggle delivers a smooth transition.",
+    "cards": {
+      "light": {
+        "name": "Light theme",
+        "description": "Bright, airy work surface for everyday tasks and demos.",
+        "badge": "Light"
+      },
+      "dark": {
+        "name": "Dark theme",
+        "description": "Balanced contrast and eye comfort for late-night sessions.",
+        "badge": "Night"
+      },
+      "system": {
+        "name": "System match",
+        "description": "Stay consistent across devices by mirroring the OS preference.",
+        "badge": "System"
+      }
+    }
+  },
+  "resources": {
+    "badge": "Resources & Tools",
+    "title": "Companion resources to speed up delivery",
+    "description": "Ship faster with API docs, system logs and a Turborepo architecture built for collaboration.",
+    "cards": {
+      "api": {
+        "title": "API docs",
+        "description": "Swagger integration helps you inspect backend contracts instantly.",
+        "cta": "View details →"
+      },
+      "logs": {
+        "title": "System logs",
+        "description": "Track sign-ins and operations in real time to troubleshoot quickly.",
+        "cta": "View details →"
+      },
+      "structure": {
+        "title": "Project structure",
+        "description": "Apps + Packages Turborepo ready for reuse and multi-team work.",
+        "cta": "View details →"
+      }
+    }
+  },
+  "callout": {
+    "title": "Frontend and backend foundations are ready—plug in your business next",
+    "description": "React Query, GSAP and Next.js combine to deliver a dynamic, responsive admin surface.",
+    "cta": {
+      "primary": {
+        "authenticated": "Enter dashboard",
+        "anonymous": "Sign in"
+      },
+      "secondary": {
+        "authenticated": "View system logs",
+        "anonymous": "Learn more"
+      }
+    }
+  }
+}

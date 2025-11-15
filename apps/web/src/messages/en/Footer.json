@@ -1,0 +1,29 @@
+{
+  "headingProduct": "Product",
+  "headingAccount": "Account",
+  "headingContact": "Contact us",
+  "product": {
+    "overview": "Feature overview",
+    "themes": "Theming system",
+    "resources": "Resource hub"
+  },
+  "account": {
+    "login": "Sign in",
+    "dashboard": "Open dashboard",
+    "logs": "System logs"
+  },
+  "contact": {
+    "body": "We’re happy to hear your ideas or partnership requests.",
+    "email": "Email us"
+  },
+  "social": {
+    "github": "GitHub",
+    "twitter": "Twitter",
+    "mail": "Email"
+  },
+  "legal": {
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy"
+  },
+  "meta": "© {start} - {year} {title}. All rights reserved. | v{version}"
+}

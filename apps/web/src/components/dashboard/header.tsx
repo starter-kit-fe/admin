@@ -1,5 +1,6 @@
 import { DashboardBreadcrumb } from '@/components/dashboard/breadcrumb';
 import { NavUser } from '@/components/dashboard/nav-user';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import ThemeToggle from '@/components/theme-toggle';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,7 @@ export function Header() {
         <DashboardBreadcrumb />
       </div>
       <div className="ml-auto flex items-center gap-3 px-4">
+        <LanguageSwitcher />
         <ThemeToggle />
         {showNavUser ? (
           <NavUser

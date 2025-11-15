@@ -1,9 +1,9 @@
-import {defineRouting} from 'next-intl/routing';
+import { defineRouting } from 'next-intl/routing';
 
 export const routing = defineRouting({
-  defaultLocale: 'zh',
+  defaultLocale: 'en',
   localePrefix: 'always',
-  locales: ['zh', 'en'],
+  locales: ['zh-Hans', 'en'],
 });
 
 export type AppLocale = (typeof routing.locales)[number];
