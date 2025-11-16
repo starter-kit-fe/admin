@@ -15,7 +15,7 @@ import {
 import {cn} from '@/lib/utils';
 import {Link, usePathname, useRouter} from '@/i18n/navigation';
 import {useAuthStore} from '@/stores';
-import {ArrowRight, LayoutDashboard, LogIn, Menu} from 'lucide-react';
+import {ArrowRight, LayoutDashboard, LogIn, Menu, X} from 'lucide-react';
 import {useTranslations} from 'next-intl';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
@@ -208,31 +208,55 @@ export default function Header() {
               <Menu className="h-5 w-5" />
               <span className="sr-only">{t('drawer.open')}</span>
             </DrawerTrigger>
-            <DrawerContent className="flex max-h-[90vh] flex-col gap-6 px-4 pb-6 pt-[calc(env(safe-area-inset-top,0)+1.5rem)]">
-              <DrawerHeader className="text-left">
-                <DrawerTitle className="flex items-center gap-3 text-lg">
-                  <span className="flex size-10 items-center justify-center rounded-full bg-primary/15 text-base font-semibold text-primary">
-                    VOH
-                  </span>
-                  {brandName}
+            <DrawerContent className="mx-auto flex max-h-[90vh] w-full max-w-2xl flex-col gap-4 px-4 pb-6 pt-[calc(env(safe-area-inset-top,0)+1rem)]">
+              <DrawerHeader className="flex items-center justify-between gap-3 px-0 pb-1">
+                <DrawerTitle className="flex items-center gap-3 text-left text-lg">
+                  <LogoMark
+                    className="size-10 shrink-0"
+                    gradientIdPrefix="site-header-drawer-logo"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-base font-semibold text-foreground dark:text-white">
+                      {brandName}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {t('drawer.subtitle')}
+                    </span>
+                  </div>
                 </DrawerTitle>
-              </DrawerHeader>
-              <nav className="grid gap-3 text-sm font-medium text-foreground/90">
-                {navLinks.map((link) => renderNavLink(link, 'mobile'))}
-              </nav>
-              <div className="grid gap-3">
-                <Link
-                  href={ctaHref}
+                <DrawerClose
                   className={cn(
-                    buttonVariants({ size: 'lg' }),
-                    'inline-flex items-center justify-center gap-2',
+                    buttonVariants({ variant: 'ghost', size: 'icon' }),
+                    'rounded-full border border-border/60 bg-background/90 hover:border-primary/40',
                   )}
+                  aria-label={t('drawer.close')}
                 >
-                  <CtaIcon className="h-4 w-4" />
-                  {ctaLabel}
-                </Link>
-                <LanguageSwitcher className="justify-center" />
-                <ThemeToggle className="justify-center" />
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">{t('drawer.close')}</span>
+                </DrawerClose>
+              </DrawerHeader>
+              <div className="flex flex-1 flex-col gap-4 overflow-y-auto">
+                <nav className="grid gap-3 text-sm font-medium text-foreground/90">
+                  {navLinks.map((link) => renderNavLink(link, 'mobile'))}
+                </nav>
+                <div className="rounded-2xl border border-border/60 bg-muted/40 p-4 shadow-sm backdrop-blur">
+                  <DrawerClose asChild>
+                    <Link
+                      href={ctaHref}
+                      className={cn(
+                        buttonVariants({ size: 'lg' }),
+                        'inline-flex w-full items-center justify-center gap-2',
+                      )}
+                    >
+                      <CtaIcon className="h-4 w-4" />
+                      {ctaLabel}
+                    </Link>
+                  </DrawerClose>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <LanguageSwitcher className="w-full justify-center" />
+                    <ThemeToggle className="w-full justify-center" />
+                  </div>
+                </div>
               </div>
             </DrawerContent>
           </Drawer>

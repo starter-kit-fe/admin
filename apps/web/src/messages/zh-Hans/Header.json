@@ -9,6 +9,8 @@
     "dashboard": "进入 Dashboard"
   },
   "drawer": {
-    "open": "打开导航菜单"
+    "open": "打开导航菜单",
+    "close": "关闭导航菜单",
+    "subtitle": "快速导航与偏好设置"
   }
 }

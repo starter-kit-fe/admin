@@ -9,6 +9,8 @@
     "dashboard": "Open dashboard"
   },
   "drawer": {
-    "open": "Open navigation menu"
+    "open": "Open navigation menu",
+    "close": "Close navigation menu",
+    "subtitle": "Navigate and switch preferences"
   }
 }

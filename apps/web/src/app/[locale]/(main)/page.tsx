@@ -2,8 +2,8 @@
 
 import HealthStatusPanel from '@/app/(main)/components/health-status';
 import HeroSection from '@/app/(main)/components/hero';
-import {Badge} from '@/components/ui/badge';
-import {Button} from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -11,10 +11,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {Link} from '@/i18n/navigation';
-import {useAuthStore} from '@/stores';
+import { Link } from '@/i18n/navigation';
+import { useAuthStore } from '@/stores';
 import gsap from 'gsap';
-import {ScrollTrigger} from 'gsap/ScrollTrigger';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   Activity,
   Languages,
@@ -24,14 +24,14 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react';
-import {useTranslations} from 'next-intl';
-import {useCallback, useEffect, useMemo, useRef} from 'react';
+import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 const FEATURE_CARD_BLUEPRINT = [
-  {key: 'interface', icon: Layers},
-  {key: 'data', icon: Activity},
-  {key: 'security', icon: ShieldCheck},
-  {key: 'multilingual', icon: Languages},
+  { key: 'interface', icon: Layers },
+  { key: 'data', icon: Activity },
+  { key: 'security', icon: ShieldCheck },
+  { key: 'multilingual', icon: Languages },
 ] as const;
 
 const THEME_CARD_BLUEPRINT = [
@@ -144,16 +144,28 @@ type CalloutCopy = {
 export default function Page() {
   const t = useTranslations('Home');
   const containerRef = useRef<HTMLElement | null>(null);
-  const {user: isAuthenticated} = useAuthStore();
+  const { user: isAuthenticated } = useAuthStore();
 
-  const featuresCopy = useMemo<FeaturesCopy>(() => t.raw('features') as FeaturesCopy, [t]);
-  const themesCopy = useMemo<ThemesCopy>(() => t.raw('themes') as ThemesCopy, [t]);
-  const resourcesCopy = useMemo<ResourcesCopy>(() => t.raw('resources') as ResourcesCopy, [t]);
-  const calloutCopy = useMemo<CalloutCopy>(() => t.raw('callout') as CalloutCopy, [t]);
+  const featuresCopy = useMemo<FeaturesCopy>(
+    () => t.raw('features') as FeaturesCopy,
+    [t],
+  );
+  const themesCopy = useMemo<ThemesCopy>(
+    () => t.raw('themes') as ThemesCopy,
+    [t],
+  );
+  const resourcesCopy = useMemo<ResourcesCopy>(
+    () => t.raw('resources') as ResourcesCopy,
+    [t],
+  );
+  const calloutCopy = useMemo<CalloutCopy>(
+    () => t.raw('callout') as CalloutCopy,
+    [t],
+  );
 
   const featureCards = useMemo(
     () =>
-      FEATURE_CARD_BLUEPRINT.map(({key, icon}) => {
+      FEATURE_CARD_BLUEPRINT.map(({ key, icon }) => {
         const copy = featuresCopy.cards[key];
         return {
           key,
@@ -168,7 +180,7 @@ export default function Page() {
 
   const themeCards = useMemo(
     () =>
-      THEME_CARD_BLUEPRINT.map(({key, accent}) => {
+      THEME_CARD_BLUEPRINT.map(({ key, accent }) => {
         const copy = themesCopy.cards[key];
         return {
           key,
@@ -183,7 +195,7 @@ export default function Page() {
 
   const resourceCards = useMemo(
     () =>
-      RESOURCE_CARD_BLUEPRINT.map(({key, href, icon}) => {
+      RESOURCE_CARD_BLUEPRINT.map(({ key, href, icon }) => {
         const copy = resourcesCopy.cards[key];
         return {
           key,
@@ -278,7 +290,6 @@ export default function Page() {
     const sectionTimelines: gsap.core.Timeline[] = [];
 
     const ctx = gsap.context(() => {
-
       const sections = gsap.utils.toArray<HTMLElement>(
         root.querySelectorAll('[data-animate-section]'),
       );
@@ -382,7 +393,6 @@ export default function Page() {
           }),
         );
       });
-
     }, root);
 
     return () => {

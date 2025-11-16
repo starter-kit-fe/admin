@@ -1,0 +1,10 @@
+{
+  "ariaLabel": "Loading page",
+  "title": "Loading",
+  "subtitle": "Preparing your dashboard experience",
+  "steps": [
+    "Syncing preferences",
+    "Fetching latest data",
+    "Warming up UI"
+  ]
+}
