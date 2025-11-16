@@ -4,12 +4,12 @@ import { atom, useAtomValue, useSetAtom } from 'jotai';
 
 import {
   DEFAULT_LOGIN_LOG_PAGINATION,
-  LOGIN_LOG_STATUS_TABS,
+  LOGIN_LOG_STATUS_VALUES,
 } from './constants';
 import type { LoginLog } from './type';
 
 export type LoginLogStatusValue =
-  (typeof LOGIN_LOG_STATUS_TABS)[number]['value'];
+  (typeof LOGIN_LOG_STATUS_VALUES)[number];
 
 type FilterState = {
   userName: string;

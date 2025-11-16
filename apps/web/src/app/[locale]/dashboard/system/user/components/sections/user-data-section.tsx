@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-query';
 import { useInView } from 'framer-motion';
 import { useEffect, useMemo, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { listUsers } from '../../api';
 import { DEFAULT_PAGINATION, PAGE_SIZE_OPTIONS } from '../../constants';
@@ -26,6 +27,7 @@ import { UserTable } from '../list/user-table';
 import { DEFAULT_ROLE_VALUE, getRoleLabel } from '../utils';
 
 export function UserDataSection() {
+  const tTable = useTranslations('UserManagement.table');
   const {
     status,
     appliedFilters,
@@ -165,16 +167,13 @@ export function UserDataSection() {
   const computedRoleOptions = useMemo(() => {
     const labels = new Set<string>();
     rows.forEach((user) => {
-      const roleLabel = getRoleLabel(user);
+      const roleLabel = getRoleLabel(user, tTable('defaultRole'));
       if (roleLabel) {
         labels.add(roleLabel);
       }
     });
-    return [
-      { label: '全部角色', value: DEFAULT_ROLE_VALUE },
-      ...Array.from(labels).map((label) => ({ label, value: label })),
-    ];
-  }, [rows]);
+    return Array.from(labels).map((label) => ({ label, value: label }));
+  }, [rows, tTable]);
 
   useEffect(() => {
     const sameLength = roleOptions.length === computedRoleOptions.length;
@@ -291,15 +290,15 @@ export function UserDataSection() {
               {listIsLoading &&
               filteredRows.length === 0 ? null : mobileHasNextPage ? (
                 isFetchingNextPage ? (
-                  <span className="flex items-center gap-2">
-                    <Spinner className="size-4" />
-                    正在加载更多...
-                  </span>
-                ) : (
-                  '上拉加载更多'
-                )
+                    <span className="flex items-center gap-2">
+                      <Spinner className="size-4" />
+                      {tTable('state.loadingMore')}
+                    </span>
+                  ) : (
+                    tTable('state.loadMoreHint')
+                  )
               ) : (
-                '没有更多了'
+                tTable('state.noMore')
               )}
             </div>
           </div>

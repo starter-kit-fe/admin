@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 
 export type PostFilterChip = {
   key: string;
@@ -16,6 +17,10 @@ interface AppliedFiltersProps {
 }
 
 export function AppliedFilters({ items, onRemove }: AppliedFiltersProps) {
+  const locale = useLocale();
+  const t = useTranslations('PostManagement.filters');
+  const separator = locale === 'zh-Hans' ? '：' : ': ';
+
   if (items.length === 0) {
     return null;
   }
@@ -29,7 +34,8 @@ export function AppliedFilters({ items, onRemove }: AppliedFiltersProps) {
           className="flex items-center gap-2 rounded-full px-3 py-1 text-sm "
         >
           <span className="font-medium text-muted-foreground">
-            {item.label}：
+            {item.label}
+            {separator}
           </span>
           <span className="text-foreground">{item.value}</span>
           <button
@@ -38,7 +44,7 @@ export function AppliedFilters({ items, onRemove }: AppliedFiltersProps) {
             className={cn(
               'text-muted-foreground/70 transition-colors hover:text-muted-foreground',
             )}
-            aria-label={`移除 ${item.label}`}
+            aria-label={t('chips.remove', { target: item.label })}
           >
             <X className="size-3.5" />
           </button>

@@ -30,43 +30,62 @@ export interface DictDataList {
   total: number;
 }
 
-export const dictTypeFormSchema = z.object({
-  dictName: z
-    .string()
-    .trim()
-    .min(1, '请输入字典名称')
-    .max(100, '字典名称不能超过 100 个字符'),
-  dictType: z
-    .string()
-    .trim()
-    .min(1, '请输入字典类型')
-    .max(100, '字典类型不能超过 100 个字符'),
-  status: z.enum(['0', '1']),
-  remark: z.string().trim().max(255, '备注不能超过 255 个字符'),
-});
+export const buildDictTypeFormSchema = (
+  t: (path: string) => string,
+) =>
+  z.object({
+    dictName: z
+      .string()
+      .trim()
+      .min(1, t('validation.dictName.required'))
+      .max(100, t('validation.dictName.max')),
+    dictType: z
+      .string()
+      .trim()
+      .min(1, t('validation.dictType.required'))
+      .max(100, t('validation.dictType.max')),
+    status: z.enum(['0', '1']),
+    remark: z.string().trim().max(255, t('validation.remark.max')),
+  });
 
-export const dictDataFormSchema = z.object({
-  dictLabel: z
-    .string()
-    .trim()
-    .min(1, '请输入字典标签')
-    .max(100, '字典标签不能超过 100 个字符'),
-  dictValue: z
-    .string()
-    .trim()
-    .min(1, '请输入字典键值')
-    .max(100, '字典键值不能超过 100 个字符'),
-  dictSort: z
-    .string()
-    .trim()
-    .refine(
-      (value) => value === '' || /^\d+$/.test(value),
-      '排序需为非负整数',
-    ),
-  status: z.enum(['0', '1']),
-  isDefault: z.enum(['Y', 'N']),
-  remark: z.string().trim().max(255, '备注不能超过 255 个字符'),
-});
+export const buildDictDataFormSchema = (
+  t: (path: string) => string,
+) =>
+  z.object({
+    dictLabel: z
+      .string()
+      .trim()
+      .min(1, t('validation.dictLabel.required'))
+      .max(100, t('validation.dictLabel.max')),
+    dictValue: z
+      .string()
+      .trim()
+      .min(1, t('validation.dictValue.required'))
+      .max(100, t('validation.dictValue.max')),
+    dictSort: z
+      .string()
+      .trim()
+      .refine(
+        (value) => value === '' || /^\d+$/.test(value),
+        t('validation.dictSort.invalid'),
+      ),
+    status: z.enum(['0', '1']),
+    isDefault: z.enum(['Y', 'N']),
+    remark: z.string().trim().max(255, t('validation.remark.max')),
+  });
 
-export type DictTypeFormValues = z.infer<typeof dictTypeFormSchema>;
-export type DictDataFormValues = z.infer<typeof dictDataFormSchema>;
+export interface DictTypeFormValues {
+  dictName: string;
+  dictType: string;
+  status: DictStatus;
+  remark: string;
+}
+
+export interface DictDataFormValues {
+  dictLabel: string;
+  dictValue: string;
+  dictSort: string;
+  status: DictStatus;
+  isDefault: DictDefaultFlag;
+  remark: string;
+}

@@ -1,5 +1,8 @@
+"use client";
+
 import { Button } from '@/components/ui/button';
 import { Trash2, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type SelectionBannerProps = {
   count: number;
@@ -12,6 +15,8 @@ export function SelectionBanner({
   onClear,
   onBulkDelete,
 }: SelectionBannerProps) {
+  const t = useTranslations('SelectionBanner');
+
   if (count <= 0) {
     return null;
   }
@@ -19,7 +24,7 @@ export function SelectionBanner({
   return (
     <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-100/70 px-4 py-3 text-sm text-emerald-900  dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-100">
       <div className="flex items-center gap-2 font-medium">
-        <span>{count} 个已选择</span>
+        <span>{t('count', { count })}</span>
       </div>
       <div className="flex items-center gap-2">
         <Button
@@ -30,7 +35,7 @@ export function SelectionBanner({
           onClick={onClear}
         >
           <X className="size-4" />
-          取消选择
+          {t('clear')}
         </Button>
         <Button
           type="button"
@@ -40,7 +45,7 @@ export function SelectionBanner({
           onClick={onBulkDelete}
         >
           <Trash2 className="size-4" />
-          批量删除
+          {t('bulkDelete')}
         </Button>
       </div>
     </div>

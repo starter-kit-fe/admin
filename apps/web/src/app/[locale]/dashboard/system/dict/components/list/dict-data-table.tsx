@@ -24,8 +24,8 @@ import {
 } from '@tanstack/react-table';
 import { Edit2, MoreHorizontal, Trash2 } from 'lucide-react';
 import { memo, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
-import { DATA_STATUS_TABS } from '../../constants';
 import { usePermissions } from '@/hooks/use-permissions';
 
 interface DictDataTableProps {
@@ -38,29 +38,6 @@ interface DictDataTableProps {
 
 const columnHelper = createColumnHelper<DictData>();
 
-function renderStatusBadge(status?: string | null) {
-  const meta = DATA_STATUS_TABS.find((tab) => tab.value === status);
-  if (!meta || meta.value === 'all') {
-    return null;
-  }
-  const tone =
-    status === '0'
-      ? 'bg-primary/10 text-primary'
-      : 'bg-destructive/10 text-destructive';
-
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        'border-transparent px-2 py-0 text-[11px] font-medium',
-        tone,
-      )}
-    >
-      {meta.label}
-    </Badge>
-  );
-}
-
 function DictDataTableComponent({
   rows,
   isLoading,
@@ -72,15 +49,36 @@ function DictDataTableComponent({
   const canEditDict = hasPermission('system:dict:edit');
   const canDeleteDict = hasPermission('system:dict:remove');
   const showActions = canEditDict || canDeleteDict;
+  const tTable = useTranslations('DictManagement.data.table');
+  const tStatus = useTranslations('DictManagement.status');
+
+  const renderStatusBadge = (status?: string | null) => {
+    if (status !== '0' && status !== '1') {
+      return null;
+    }
+    const tone =
+      status === '0'
+        ? 'bg-primary/10 text-primary'
+        : 'bg-destructive/10 text-destructive';
+
+    return (
+      <Badge
+        variant='outline'
+        className={cn('border-transparent px-2 py-0 text-[11px] font-medium', tone)}
+      >
+        {tStatus(status)}
+      </Badge>
+    );
+  };
 
   const columns = useMemo(() => {
     const baseColumns = [
       columnHelper.accessor('dictLabel', {
-        header: '标签',
+        header: tTable('columns.label'),
         cell: ({ row }) => {
           const dict = row.original;
           return (
-            <div className="flex items-center gap-2">
+            <div className='flex items-center gap-2'>
               <span>{dict.dictLabel}</span>
               {renderStatusBadge(dict.status)}
             </div>
@@ -89,37 +87,39 @@ function DictDataTableComponent({
         meta: { headerClassName: 'w-[160px]' },
       }),
       columnHelper.accessor('dictValue', {
-        header: '键值',
+        header: tTable('columns.value'),
         cell: ({ getValue }) => <span>{getValue()}</span>,
         meta: { headerClassName: 'w-[140px]' },
       }),
       columnHelper.display({
         id: 'dictSort',
-        header: '排序',
+        header: tTable('columns.sort'),
         cell: ({ row }) => <span>{row.original.dictSort ?? 0}</span>,
         meta: { headerClassName: 'w-[100px]' },
       }),
       columnHelper.display({
         id: 'isDefault',
-        header: '是否默认',
+        header: tTable('columns.default'),
         cell: ({ row }) =>
           row.original.isDefault === 'Y' ? (
             <Badge
-              variant="outline"
-              className="border-transparent bg-primary/10 px-2 py-0 text-xs text-primary"
+              variant='outline'
+              className='border-transparent bg-primary/10 px-2 py-0 text-xs text-primary'
             >
-              默认
+              {tTable('badges.default')}
             </Badge>
           ) : (
-            <span className="text-xs text-muted-foreground">否</span>
+            <span className='text-xs text-muted-foreground'>
+              {tTable('badges.no')}
+            </span>
           ),
         meta: { headerClassName: 'w-[120px]' },
       }),
       columnHelper.display({
         id: 'remark',
-        header: '备注',
+        header: tTable('columns.remark'),
         cell: ({ row }) => (
-          <span className="text-xs text-muted-foreground">
+          <span className='text-xs text-muted-foreground'>
             {row.original.remark ?? '—'}
           </span>
         ),
@@ -131,26 +131,28 @@ function DictDataTableComponent({
       baseColumns.push(
         columnHelper.display({
           id: 'actions',
-          header: () => <span className="block text-right">操作</span>,
+          header: () => (
+            <span className='block text-right'>{tTable('columns.actions')}</span>
+          ),
           cell: ({ row }) => {
             const dict = row.original;
             return (
-              <div className="flex justify-end">
+              <div className='flex justify-end'>
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      className="text-muted-foreground"
-                      aria-label={`更多操作：${dict.dictLabel}`}
+                      type='button'
+                      variant='ghost'
+                      size='icon-sm'
+                      className='text-muted-foreground'
+                      aria-label={tTable('moreAria', { name: dict.dictLabel })}
                       onPointerDown={(event) => event.stopPropagation()}
                       onClick={(event) => event.stopPropagation()}
                     >
-                      <MoreHorizontal className="size-4" />
+                      <MoreHorizontal className='size-4' />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-32">
+                  <DropdownMenuContent align='end' className='w-32'>
                     {canEditDict ? (
                       <DropdownMenuItem
                         onSelect={(event) => {
@@ -158,20 +160,20 @@ function DictDataTableComponent({
                           onEdit(dict);
                         }}
                       >
-                        <Edit2 className="mr-2 size-3.5" />
-                        编辑
+                        <Edit2 className='mr-2 size-3.5' />
+                        {tTable('actions.edit')}
                       </DropdownMenuItem>
                     ) : null}
                     {canDeleteDict ? (
                       <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
+                        className='text-destructive focus:text-destructive'
                         onSelect={(event) => {
                           event.preventDefault();
                           onDelete(dict);
                         }}
                       >
-                        <Trash2 className="mr-2 size-3.5" />
-                        删除
+                        <Trash2 className='mr-2 size-3.5' />
+                        {tTable('actions.delete')}
                       </DropdownMenuItem>
                     ) : null}
                   </DropdownMenuContent>
@@ -185,7 +187,7 @@ function DictDataTableComponent({
     }
 
     return baseColumns;
-  }, [canDeleteDict, canEditDict, onDelete, onEdit, showActions]);
+  }, [canDeleteDict, canEditDict, onDelete, onEdit, showActions, tTable]);
 
   const table = useReactTable({
     data: rows,
@@ -204,6 +206,13 @@ function DictDataTableComponent({
   const baseRowClasses =
     'border-b transition-colors  data-[state=selected]:bg-muted';
 
+  const emptyTitle = isLoading
+    ? tTable('empty.loadingTitle')
+    : tTable('empty.idleTitle');
+  const emptyDescription = isLoading
+    ? tTable('empty.loadingDescription')
+    : tTable('empty.idleDescription');
+
   return (
     <div
       className={cn(
@@ -211,12 +220,12 @@ function DictDataTableComponent({
         className,
       )}
     >
-      <div className="h-full overflow-auto">
-        <div className="min-w-[720px]">
+      <div className='h-full overflow-auto'>
+        <div className='min-w-[720px]'>
           <table className={baseTableClasses}>
-            <thead className="sticky top-0 z-10 bg-card shadow-sm">
+            <thead className='sticky top-0 z-10 bg-card shadow-sm'>
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="bg-muted/40">
+                <tr key={headerGroup.id} className='bg-muted/40'>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
@@ -245,16 +254,10 @@ function DictDataTableComponent({
                     colSpan={visibleColumnCount}
                     className={cn(baseCellClasses, 'py-10 text-center')}
                   >
-                    <Empty className="border-0 bg-transparent p-4">
+                    <Empty className='border-0 bg-transparent p-4'>
                       <EmptyHeader>
-                        <EmptyTitle>
-                          {isLoading ? '字典数据加载中' : '暂无字典项'}
-                        </EmptyTitle>
-                        <EmptyDescription>
-                          {isLoading
-                            ? '正在获取字典项，请稍候。'
-                            : '请先新增一条字典项以开始管理。'}
-                        </EmptyDescription>
+                        <EmptyTitle>{emptyTitle}</EmptyTitle>
+                        <EmptyDescription>{emptyDescription}</EmptyDescription>
                       </EmptyHeader>
                     </Empty>
                   </td>

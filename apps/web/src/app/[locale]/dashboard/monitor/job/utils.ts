@@ -1,19 +1,31 @@
-import { CONCURRENT_LABELS, MISFIRE_POLICY_LABELS } from './constants';
-
-export function resolveStatusLabel(status?: string | null) {
-  return status === '0' ? '正常' : '暂停';
+export function resolveStatusLabel(
+  status: string | null | undefined,
+  labels: Record<string, string>,
+) {
+  if (status === '0') {
+    return labels['0'] ?? '';
+  }
+  return labels['1'] ?? '';
 }
 
-export function resolveMisfireLabel(policy?: string | null) {
+export function resolveMisfireLabel(
+  policy: string | null | undefined,
+  labels: Record<string, string>,
+) {
+  const fallback = labels['3'] ?? '';
   if (!policy) {
-    return MISFIRE_POLICY_LABELS['3'];
+    return fallback;
   }
-  return MISFIRE_POLICY_LABELS[policy] ?? MISFIRE_POLICY_LABELS['3'];
+  return labels[policy] ?? fallback;
 }
 
-export function resolveConcurrentLabel(flag?: string | null) {
+export function resolveConcurrentLabel(
+  flag: string | null | undefined,
+  labels: Record<string, string>,
+) {
+  const fallback = labels['1'] ?? '';
   if (!flag) {
-    return CONCURRENT_LABELS['1'];
+    return fallback;
   }
-  return CONCURRENT_LABELS[flag] ?? CONCURRENT_LABELS['1'];
+  return labels[flag] ?? fallback;
 }

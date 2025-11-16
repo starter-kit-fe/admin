@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { MonitorSmartphone } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import type { HostInfo } from '../type';
 import { formatDuration, formatServerSystem } from '../lib/format';
@@ -19,19 +20,20 @@ interface ServerInfoCardProps {
 }
 
 export function ServerInfoCard({ host, lastUpdated }: ServerInfoCardProps) {
+  const tServerInfo = useTranslations('ServerMonitor.serverInfo');
   const rows = [
-    { label: '服务器名称', value: host.hostname || '-' },
+    { label: tServerInfo('rows.name'), value: host.hostname || '-' },
     {
-      label: '服务器系统',
+      label: tServerInfo('rows.system'),
       value: formatServerSystem(host),
     },
     {
-      label: '服务器运行时长',
+      label: tServerInfo('rows.uptime'),
       value: host.uptime || formatDuration(host.uptimeSeconds),
     },
-    { label: 'Go 运行时', value: host.goVersion || '-' },
-    { label: '内核版本', value: host.kernelVersion || '-' },
-    { label: '当前时间', value: host.currentTime || '-' },
+    { label: tServerInfo('rows.goRuntime'), value: host.goVersion || '-' },
+    { label: tServerInfo('rows.kernel'), value: host.kernelVersion || '-' },
+    { label: tServerInfo('rows.currentTime'), value: host.currentTime || '-' },
   ];
 
   return (
@@ -39,10 +41,10 @@ export function ServerInfoCard({ host, lastUpdated }: ServerInfoCardProps) {
       <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <MonitorSmartphone className="size-5 text-muted-foreground" />
-          服务器与版本
+          {tServerInfo('title')}
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
-          服务器级别的信息（区别于进程运行时），最近更新：{lastUpdated}
+          {tServerInfo('description', { time: lastUpdated })}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex h-full flex-col gap-4 text-sm text-muted-foreground">

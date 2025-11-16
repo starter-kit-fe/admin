@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ServerCog } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { InfoRow } from './info-row';
 import type { ProcessInfo } from '../type';
@@ -18,47 +19,61 @@ interface ProcessInfoCardProps {
 }
 
 export function ProcessInfoCard({ process }: ProcessInfoCardProps) {
+  const tProcess = useTranslations('ServerMonitor.process');
+  const tStatus = useTranslations('ServerMonitor.status');
   const processSummary = [
     {
-      label: '版本号',
+      label: tProcess('summary.version'),
       value: process.version?.trim() || 'N/A',
       align: 'left' as const,
       valueClassName: 'font-mono text-sm',
     },
     {
-      label: 'Commit',
+      label: tProcess('summary.commit'),
       value: process.commit || '-',
       align: 'left' as const,
       valueClassName: 'font-mono text-xs leading-tight break-all',
     },
     {
-      label: 'PID',
+      label: tProcess('summary.pid'),
       value: process.pid > 0 ? `#${process.pid}` : '-',
     },
     {
-      label: '启动时间',
-      value: process.startTime || '未获取',
+      label: tProcess('summary.startTime'),
+      value: process.startTime || tStatus('never'),
     },
     {
-      label: '进程运行时长',
+      label: tProcess('summary.uptime'),
       value: process.uptime || formatDuration(process.uptimeSeconds),
     },
     {
-      label: 'Go 版本',
+      label: tProcess('summary.goVersion'),
       value: process.goVersion || '-',
     },
   ];
 
   const metrics = [
-    { label: 'CPU 占用', value: formatPercent(process.cpuUsage) },
-    { label: '内存占用', value: formatBytes(process.alloc) },
-    { label: '累计内存', value: formatBytes(process.totalAlloc) },
-    { label: '系统内存', value: formatBytes(process.sys) },
-    { label: 'Goroutines', value: process.numGoroutine.toString() },
-    { label: 'GC 次数', value: process.numGC.toString() },
-    { label: '最后 GC', value: process.lastGC || '-' },
-    { label: '下一次 GC', value: formatBytes(process.nextGC) },
-    { label: 'Cgo 调用', value: process.numCgoCall.toString() },
+    { label: tProcess('metrics.cpu'), value: formatPercent(process.cpuUsage) },
+    { label: tProcess('metrics.memory'), value: formatBytes(process.alloc) },
+    {
+      label: tProcess('metrics.totalMemory'),
+      value: formatBytes(process.totalAlloc),
+    },
+    {
+      label: tProcess('metrics.systemMemory'),
+      value: formatBytes(process.sys),
+    },
+    {
+      label: tProcess('metrics.goroutines'),
+      value: process.numGoroutine.toString(),
+    },
+    { label: tProcess('metrics.gcCount'), value: process.numGC.toString() },
+    { label: tProcess('metrics.lastGC'), value: process.lastGC || '-' },
+    {
+      label: tProcess('metrics.nextGC'),
+      value: formatBytes(process.nextGC),
+    },
+    { label: tProcess('metrics.cgo'), value: process.numCgoCall.toString() },
   ];
 
   return (
@@ -66,16 +81,16 @@ export function ProcessInfoCard({ process }: ProcessInfoCardProps) {
       <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <ServerCog className="size-5 text-muted-foreground" />
-          后端进程
+          {tProcess('title')}
         </CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
-          展示部署版本 / Commit 以及 Go 进程的 CPU、内存与 GC 行为。
+          {tProcess('description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-2xl border border-border/60 bg-muted/10 p-4 dark:border-border/30">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            部署信息
+            {tProcess('sections.deployment')}
           </p>
           <div className="mt-3 space-y-3">
             {processSummary.map((item) => (
@@ -91,7 +106,7 @@ export function ProcessInfoCard({ process }: ProcessInfoCardProps) {
         </div>
         <div className="rounded-2xl border border-border/60 p-4 dark:border-border/30">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            运行指标
+            {tProcess('sections.metrics')}
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {metrics.map((row) => (

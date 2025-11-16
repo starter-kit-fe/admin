@@ -1,6 +1,9 @@
+"use client";
+
 import { useEffect, useState } from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import type { UseFormReturn } from 'react-hook-form';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -85,15 +88,17 @@ export function UserEditorForm({
   onCancel,
   onSubmit,
 }: UserEditorFormProps) {
+  const tForm = useTranslations('UserManagement.form');
+  const tGender = useTranslations('UserManagement.gender');
+  const tStatus = useTranslations('UserManagement.status');
+  const tCommonDialogs = useTranslations('Common.dialogs');
+  const submitText = submitting
+    ? tForm('submit.creating')
+    : mode === 'create'
+      ? tForm('submit.create')
+      : tForm('submit.save');
   const cancelButtonClasses = cn(isMobile && 'flex-1 basis-2/5');
   const submitButtonClasses = cn(isMobile && 'flex-1 basis-3/5');
-
-  const submitText =
-    submitting && (mode === 'create' || mode === 'edit')
-      ? '提交中...'
-      : mode === 'create'
-        ? '创建'
-        : '保存';
 
   const passwordField =
     mode === 'create' ? (
@@ -103,12 +108,12 @@ export function UserEditorForm({
         render={({ field }) => (
           <FormItem className="md:col-span-2">
             <FormLabel className="flex items-center">
-              <RequiredMark /> 初始密码
+              <RequiredMark /> {tForm('initialPassword')}
             </FormLabel>
             <FormControl>
               <Input
                 type="password"
-                placeholder="至少 6 位"
+                placeholder={tForm('initialPasswordPlaceholder')}
                 autoComplete="new-password"
                 {...field}
               />
@@ -129,10 +134,14 @@ export function UserEditorForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="flex items-center">
-                  <RequiredMark /> 登录账号
+                  <RequiredMark /> {tForm('account')}
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="请输入登录账号" autoComplete="username" {...field} />
+                  <Input
+                    placeholder={tForm('accountPlaceholder')}
+                    autoComplete="username"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -144,10 +153,10 @@ export function UserEditorForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="flex items-center">
-                  <RequiredMark /> 用户昵称
+                  <RequiredMark /> {tForm('nickname')}
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="请输入用户昵称" {...field} />
+                  <Input placeholder={tForm('nicknamePlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -158,9 +167,9 @@ export function UserEditorForm({
             name="phonenumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>手机号</FormLabel>
+                <FormLabel>{tForm('phone')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="可选" inputMode="numeric" {...field} />
+                  <Input placeholder={tForm('phonePlaceholder')} inputMode="numeric" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -171,9 +180,14 @@ export function UserEditorForm({
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>邮箱</FormLabel>
+                <FormLabel>{tForm('email')}</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="可选" autoComplete="email" {...field} />
+                  <Input
+                    type="email"
+                    placeholder={tForm('emailPlaceholder')}
+                    autoComplete="email"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -184,10 +198,10 @@ export function UserEditorForm({
             name="deptId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>归属部门</FormLabel>
+                <FormLabel>{tForm('dept')}</FormLabel>
                 <FormControl>
                   <SearchableCombobox
-                    placeholder="请选择归属部门"
+                    placeholder={tForm('deptPlaceholder')}
                     value={field.value}
                     options={deptOptions}
                     loading={deptLoading}
@@ -206,11 +220,11 @@ export function UserEditorForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="flex items-center">
-                  <RequiredMark /> 角色
+                  <RequiredMark /> {tForm('roles')}
                 </FormLabel>
                 <FormControl>
                   <SearchableMultiSelect
-                    placeholder="请选择角色"
+                    placeholder={tForm('rolesPlaceholder')}
                     value={field.value}
                     options={roleOptions}
                     loading={roleLoading}
@@ -229,10 +243,10 @@ export function UserEditorForm({
             name="postIds"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>岗位</FormLabel>
+                <FormLabel>{tForm('posts')}</FormLabel>
                 <FormControl>
                   <SearchableMultiSelect
-                    placeholder="可选"
+                    placeholder={tForm('postsPlaceholder')}
                     value={field.value}
                     options={postOptions}
                     loading={postLoading}
@@ -251,7 +265,7 @@ export function UserEditorForm({
             name="sex"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>用户性别</FormLabel>
+                <FormLabel>{tForm('sex')}</FormLabel>
                 <Select
                   value={field.value}
                   onValueChange={(value: '0' | '1' | '2') => field.onChange(value)}
@@ -259,13 +273,13 @@ export function UserEditorForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="选择性别" />
+                      <SelectValue placeholder={tForm('sexPlaceholder')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="0">男</SelectItem>
-                    <SelectItem value="1">女</SelectItem>
-                    <SelectItem value="2">未知</SelectItem>
+                    <SelectItem value="0">{tGender('male')}</SelectItem>
+                    <SelectItem value="1">{tGender('female')}</SelectItem>
+                    <SelectItem value="2">{tGender('unknown')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -278,7 +292,7 @@ export function UserEditorForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="flex items-center">
-                  <RequiredMark /> 账号状态
+                  <RequiredMark /> {tForm('status')}
                 </FormLabel>
                 <FormControl>
                   <RadioGroup
@@ -291,13 +305,13 @@ export function UserEditorForm({
                       <FormControl>
                         <RadioGroupItem value="0" />
                       </FormControl>
-                      <FormLabel className="font-normal">正常</FormLabel>
+                      <FormLabel className="font-normal">{tStatus('enabled')}</FormLabel>
                     </FormItem>
                     <FormItem className="flex items-center gap-2 space-y-0">
                       <FormControl>
                         <RadioGroupItem value="1" />
                       </FormControl>
-                      <FormLabel className="font-normal">停用</FormLabel>
+                      <FormLabel className="font-normal">{tStatus('disabled')}</FormLabel>
                     </FormItem>
                   </RadioGroup>
                 </FormControl>
@@ -313,9 +327,13 @@ export function UserEditorForm({
           name="remark"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>备注</FormLabel>
+              <FormLabel>{tForm('description')}</FormLabel>
               <FormControl>
-                <Textarea className="min-h-[96px] resize-none" placeholder="可选" {...field} />
+                <Textarea
+                  className="min-h-[96px] resize-none"
+                  placeholder={tForm('optional')}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -336,7 +354,7 @@ export function UserEditorForm({
             disabled={submitting}
             className={cancelButtonClasses}
           >
-            取消
+            {tCommonDialogs('cancel')}
           </Button>
           <Button type="submit" disabled={submitting} className={submitButtonClasses}>
             {submitText}
@@ -372,6 +390,7 @@ function SearchableCombobox({
   disabled,
   allowClear = true,
 }: SearchableComboboxProps) {
+  const tForm = useTranslations('UserManagement.form');
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
@@ -408,15 +427,19 @@ function SearchableCombobox({
               setInputValue(next);
               onSearch(next);
             }}
-            placeholder="搜索选项"
+            placeholder={tForm('searchPlaceholder')}
           />
           <CommandList>
             <CommandEmpty>
               <Empty className="border-0 bg-transparent p-2">
                 <EmptyHeader>
-                  <EmptyTitle>{loading ? '正在加载' : '暂无匹配结果'}</EmptyTitle>
+                  <EmptyTitle>
+                    {loading ? tForm('searchLoadingTitle') : tForm('searchEmptyTitle')}
+                  </EmptyTitle>
                   <EmptyDescription>
-                    {loading ? '请稍候...' : '尝试调整关键字继续搜索。'}
+                    {loading
+                      ? tForm('searchLoadingDescription')
+                      : tForm('searchEmptyDescription')}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -434,7 +457,7 @@ function SearchableCombobox({
                   <Check
                     className={cn('mr-2 size-4', value === '' ? 'opacity-100' : 'opacity-0')}
                   />
-                  暂不选择
+                  {tForm('searchNone')}
                 </CommandItem>
               ) : null}
               {options.map((option) => (
@@ -486,6 +509,8 @@ function SearchableMultiSelect({
   allowClear = true,
   maxPreview = 2,
 }: SearchableMultiSelectProps) {
+  const tForm = useTranslations('UserManagement.form');
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const normalizedValue = Array.isArray(value) ? value : [];
@@ -498,15 +523,20 @@ function SearchableMultiSelect({
   }, [open, onSearch]);
 
   const selectedOptions = options.filter((option) => normalizedValue.includes(option.value));
+  const separator = locale.startsWith('zh') ? '、' : ', ';
+  const previewText = selectedOptions
+    .slice(0, maxPreview)
+    .map((option) => option.label)
+    .join(separator);
   const displayLabel =
     selectedOptions.length === 0
       ? placeholder
       : selectedOptions.length <= maxPreview
-        ? selectedOptions.map((option) => option.label).join('、')
-        : `${selectedOptions
-            .slice(0, maxPreview)
-            .map((option) => option.label)
-            .join('、')} 等${selectedOptions.length}项`;
+        ? previewText
+        : tForm('multiSelectPreview', {
+            preview: previewText,
+            count: selectedOptions.length,
+          });
 
   const toggleValue = (itemValue: string) => {
     const set = new Set(normalizedValue);
@@ -544,15 +574,19 @@ function SearchableMultiSelect({
               setInputValue(next);
               onSearch(next);
             }}
-            placeholder="搜索选项"
+            placeholder={tForm('searchPlaceholder')}
           />
           <CommandList>
             <CommandEmpty>
               <Empty className="border-0 bg-transparent p-2">
                 <EmptyHeader>
-                  <EmptyTitle>{loading ? '正在加载' : '暂无匹配结果'}</EmptyTitle>
+                  <EmptyTitle>
+                    {loading ? tForm('searchLoadingTitle') : tForm('searchEmptyTitle')}
+                  </EmptyTitle>
                   <EmptyDescription>
-                    {loading ? '请稍候...' : '尝试调整关键字继续搜索。'}
+                    {loading
+                      ? tForm('searchLoadingDescription')
+                      : tForm('searchEmptyDescription')}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -573,7 +607,7 @@ function SearchableMultiSelect({
                       normalizedValue.length === 0 ? 'opacity-100' : 'opacity-0',
                     )}
                   />
-                  清空选择
+                  {tForm('searchClear')}
                 </CommandItem>
               ) : null}
               {options.map((option) => (

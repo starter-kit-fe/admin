@@ -17,102 +17,76 @@ import { MenuForm } from './forms/menu-form';
 import { ButtonForm } from './forms/button-form';
 import type { MenuParentOption } from './menu-editor/types';
 export type { MenuParentOption } from './menu-editor/types';
+import { useTranslations } from 'next-intl';
 
-const TYPE_LABELS: Record<MenuType, string> = {
-  M: '目录',
-  C: '菜单',
-  F: '按钮',
-};
+type TranslationFn = ReturnType<typeof useTranslations>;
 
-const CREATE_DESCRIPTIONS: Record<MenuType, string> = {
-  M: '创建新的目录，用于组织子菜单。',
-  C: '创建新的菜单，并配置路由与权限。',
-  F: '创建新的按钮权限，用于控制页面操作。',
-};
-
-const UPDATE_DESCRIPTIONS: Record<MenuType, string> = {
-  M: '更新目录信息，调整层级或显示状态。',
-  C: '更新菜单的路由、图标及权限配置。',
-  F: '更新按钮权限，控制页面内操作。',
-};
-
-const menuFormSchema = z
-  .object({
-    menuName: z
-      .string()
-      .trim()
-      .min(1, '请输入菜单名称')
-      .max(50, '菜单名称不能超过 50 个字符'),
-    parentId: z.string().min(1),
-    orderNum: z
-      .string()
-      .trim()
-      .refine((value) => {
-        if (value === '') return true;
-        const parsed = Number(value);
-        return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999;
-      }, '显示顺序需为 0 到 9999 的整数'),
-    path: z.string().trim().max(200, '路由地址不超过 200 个字符'),
-    query: z
-      .string()
-      .trim()
-      .max(255, '路由参数不超过 255 个字符'),
-    isFrame: z.boolean(),
-    isCache: z.boolean(),
-    menuType: z.enum(['M', 'C', 'F']),
-    visible: z.enum(['0', '1']),
-    status: z.enum(['0', '1']),
-    perms: z
-      .string()
-      .trim()
-      .max(100, '权限标识不超过 100 个字符'),
-    icon: z
-      .string()
-      .trim()
-      .max(100, '图标标识不超过 100 个字符'),
-    remark: z
-      .string()
-      .trim()
-      .max(500, '备注最长 500 个字符'),
-  })
-  .superRefine((data, ctx) => {
-    if (data.menuType === 'C' || data.menuType === 'M') {
-      if (!data.path || data.path.trim().length === 0) {
-        ctx.addIssue({
-          path: ['path'],
-          code: z.ZodIssueCode.custom,
-          message: '请输入路由地址',
-        });
+const buildMenuFormSchema = (t: TranslationFn) =>
+  z
+    .object({
+      menuName: z
+        .string()
+        .trim()
+        .min(1, t('validation.name.required'))
+        .max(50, t('validation.name.max')),
+      parentId: z.string().min(1),
+      orderNum: z
+        .string()
+        .trim()
+        .refine((value) => {
+          if (value === '') return true;
+          const parsed = Number(value);
+          return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999;
+        }, t('validation.order.range')),
+      path: z.string().trim().max(200, t('validation.path.max')),
+      query: z.string().trim().max(255, t('validation.query.max')),
+      isFrame: z.boolean(),
+      isCache: z.boolean(),
+      menuType: z.enum(['M', 'C', 'F']),
+      visible: z.enum(['0', '1']),
+      status: z.enum(['0', '1']),
+      perms: z.string().trim().max(100, t('validation.perms.max')),
+      icon: z.string().trim().max(100, t('validation.icon.max')),
+      remark: z.string().trim().max(500, t('validation.remark.max')),
+    })
+    .superRefine((data, ctx) => {
+      if (data.menuType === 'C' || data.menuType === 'M') {
+        if (!data.path || data.path.trim().length === 0) {
+          ctx.addIssue({
+            path: ['path'],
+            code: z.ZodIssueCode.custom,
+            message: t('validation.path.required'),
+          });
+        }
       }
-    }
 
-    if (data.menuType === 'M') {
-      if (!data.orderNum || data.orderNum.trim().length === 0) {
-        ctx.addIssue({
-          path: ['orderNum'],
-          code: z.ZodIssueCode.custom,
-          message: '请输入目录排序',
-        });
+      if (data.menuType === 'M') {
+        if (!data.orderNum || data.orderNum.trim().length === 0) {
+          ctx.addIssue({
+            path: ['orderNum'],
+            code: z.ZodIssueCode.custom,
+            message: t('validation.order.required'),
+          });
+        }
+        if (!data.icon || data.icon.trim().length === 0 || data.icon.trim() === '#') {
+          ctx.addIssue({
+            path: ['icon'],
+            code: z.ZodIssueCode.custom,
+            message: t('validation.icon.required'),
+          });
+        }
       }
-      if (!data.icon || data.icon.trim().length === 0 || data.icon.trim() === '#') {
-        ctx.addIssue({
-          path: ['icon'],
-          code: z.ZodIssueCode.custom,
-          message: '请填写目录图标',
-        });
-      }
-    }
 
-    if (data.menuType === 'F') {
-      if (!data.perms || data.perms.trim().length === 0) {
-        ctx.addIssue({
-          path: ['perms'],
-          code: z.ZodIssueCode.custom,
-          message: '请输入权限标识',
-        });
+      if (data.menuType === 'F') {
+        if (!data.perms || data.perms.trim().length === 0) {
+          ctx.addIssue({
+            path: ['perms'],
+            code: z.ZodIssueCode.custom,
+            message: t('validation.perms.required'),
+          });
+        }
       }
-    }
-  });
+    });
 
 const DEFAULT_VALUES: MenuFormValues = {
   menuName: '',
@@ -149,8 +123,11 @@ export function MenuEditorDialog({
   onOpenChange,
   onSubmit,
 }: MenuEditorDialogProps) {
+  const tForm = useTranslations('MenuManagement.form');
+  const tCommon = useTranslations('Common.dialogs');
+  const formSchema = useMemo(() => buildMenuFormSchema(tForm), [tForm]);
   const form = useForm<MenuFormValues>({
-    resolver: zodResolver(menuFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -193,13 +170,14 @@ export function MenuEditorDialog({
     }
   }, [defaultValues, form, open]);
 
-  const formTitleLabel = TYPE_LABELS[menuType] ?? '菜单';
   const dialogTitle =
-    mode === 'create' ? `新增${formTitleLabel}` : `编辑${formTitleLabel}`;
+    mode === 'create'
+      ? tForm(`createTitle.${menuType}`)
+      : tForm(`editTitle.${menuType}`);
   const dialogDescription =
     mode === 'create'
-      ? CREATE_DESCRIPTIONS[menuType] ?? CREATE_DESCRIPTIONS.C
-      : UPDATE_DESCRIPTIONS[menuType] ?? UPDATE_DESCRIPTIONS.C;
+      ? tForm(`createDescription.${menuType}`)
+      : tForm(`editDescription.${menuType}`);
 
   const handleSubmit = form.handleSubmit((values) => {
     const payload: MenuFormValues = {
@@ -235,7 +213,11 @@ export function MenuEditorDialog({
     onSubmit(payload);
   });
 
-  const submitText = submitting ? '提交中...' : mode === 'create' ? '创建' : '保存';
+  const submitText = submitting
+    ? tForm('submit.creating')
+    : mode === 'create'
+      ? tForm('submit.create')
+      : tForm('submit.save');
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
@@ -274,7 +256,7 @@ export function MenuEditorDialog({
                   onClick={() => onOpenChange(false)}
                   disabled={submitting}
                 >
-                  取消
+                  {tCommon('cancel')}
                 </Button>
                 <Button type="submit" disabled={submitting}>
                   {submitText}

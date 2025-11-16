@@ -38,21 +38,11 @@ import {
 } from '@tanstack/react-table';
 import { Edit2, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { usePermissions } from '@/hooks/use-permissions';
 
-import { CONFIG_TYPE_TABS } from '../../constants';
-import type { SystemConfig } from '../../type';
-
-const CONFIG_TYPE_META = CONFIG_TYPE_TABS.reduce<Record<string, string>>(
-  (acc, tab) => {
-    if (tab.value !== 'all') {
-      acc[tab.value] = tab.label;
-    }
-    return acc;
-  },
-  {},
-);
+import type { ConfigType, SystemConfig } from '../../type';
 
 const columnHelper = createColumnHelper<SystemConfig>();
 
@@ -67,8 +57,7 @@ interface ConfigTableProps {
   onToggleSelect: (configId: number, checked: boolean) => void;
 }
 
-function renderTypeBadge(type: string) {
-  const label = CONFIG_TYPE_META[type];
+function renderTypeBadge(type: string, label?: string) {
   if (!label) {
     return null;
   }
@@ -97,10 +86,19 @@ export function ConfigTable({
   onToggleSelectAll,
   onToggleSelect,
 }: ConfigTableProps) {
+  const tTable = useTranslations('ConfigManagement.table');
   const { hasPermission } = usePermissions();
   const canEditConfig = hasPermission('system:config:edit');
   const canDeleteConfig = hasPermission('system:config:remove');
   const showActions = canEditConfig || canDeleteConfig;
+
+  const typeLabels = useMemo<Record<ConfigType, string>>(
+    () => ({
+      Y: tTable('type.Y'),
+      N: tTable('type.N'),
+    }),
+    [tTable],
+  );
 
   const columns = useMemo(() => {
     const baseColumns = [
@@ -108,7 +106,7 @@ export function ConfigTable({
         id: 'select',
         header: () => (
           <Checkbox
-            aria-label="选择全部参数"
+            aria-label={tTable('selection.selectAll')}
             checked={headerCheckboxState}
             onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
           />
@@ -118,7 +116,9 @@ export function ConfigTable({
           const isSelected = selectedIds.has(config.configId);
           return (
             <Checkbox
-              aria-label={`选择 ${config.configName}`}
+              aria-label={tTable('selection.selectItem', {
+                target: config.configName,
+              })}
               checked={isSelected}
               onCheckedChange={(checked) =>
                 onToggleSelect(config.configId, checked === true)
@@ -134,21 +134,21 @@ export function ConfigTable({
         },
       }),
       columnHelper.accessor('configName', {
-        header: '参数名称',
+        header: tTable('columns.configName'),
         cell: ({ getValue }) => (
           <span className="text-sm text-foreground">{getValue()}</span>
         ),
         meta: { headerClassName: 'min-w-[200px]' },
       }),
       columnHelper.accessor('configKey', {
-        header: '参数键名',
+        header: tTable('columns.configKey'),
         cell: ({ getValue }) => (
           <span className="text-sm text-muted-foreground">{getValue()}</span>
         ),
         meta: { headerClassName: 'min-w-[160px]' },
       }),
       columnHelper.accessor('configValue', {
-        header: '参数键值',
+        header: tTable('columns.configValue'),
         cell: ({ getValue }) => (
           <code className="inline-flex rounded bg-muted px-2 py-1 text-xs">
             {getValue()}
@@ -157,13 +157,16 @@ export function ConfigTable({
         meta: { headerClassName: 'min-w-[220px]' },
       }),
       columnHelper.accessor('configType', {
-        header: '类型',
-        cell: ({ getValue }) => renderTypeBadge(getValue()),
+        header: tTable('columns.configType'),
+        cell: ({ getValue }) => {
+          const value = getValue() as ConfigType;
+          return renderTypeBadge(value, typeLabels[value]);
+        },
         enableSorting: false,
         meta: { headerClassName: 'w-[120px]', cellClassName: 'w-[120px]' },
       }),
       columnHelper.accessor('remark', {
-        header: '备注',
+        header: tTable('columns.remark'),
         cell: ({ row }) => {
           const remark = row.original.remark?.trim();
           if (!remark) {
@@ -198,7 +201,11 @@ export function ConfigTable({
       baseColumns.push(
         columnHelper.display({
           id: 'actions',
-          header: () => <span className="block text-right">操作</span>,
+          header: () => (
+            <span className="block text-right">
+              {tTable('columns.actions')}
+            </span>
+          ),
           cell: ({ row }) => {
             const config = row.original;
             return (
@@ -211,7 +218,9 @@ export function ConfigTable({
                     className="size-8"
                     onPointerDown={(event) => event.stopPropagation()}
                     onClick={(event) => event.stopPropagation()}
-                    aria-label={`更多操作：${config.configName}`}
+                    aria-label={tTable('actions.moreAria', {
+                      target: config.configName,
+                    })}
                   >
                     <MoreHorizontal className="size-4" />
                   </Button>
@@ -225,7 +234,7 @@ export function ConfigTable({
                       }}
                     >
                       <Edit2 className="mr-2 size-4" />
-                      编辑参数
+                      {tTable('actions.edit')}
                     </DropdownMenuItem>
                   ) : null}
                   {canDeleteConfig ? (
@@ -237,7 +246,7 @@ export function ConfigTable({
                       }}
                     >
                       <Trash2 className="mr-2 size-4" />
-                      删除参数
+                      {tTable('actions.delete')}
                     </DropdownMenuItem>
                   ) : null}
                 </DropdownMenuContent>
@@ -266,6 +275,8 @@ export function ConfigTable({
     onToggleSelectAll,
     selectedIds,
     showActions,
+    tTable,
+    typeLabels,
   ]);
 
   const table = useReactTable({
@@ -315,12 +326,14 @@ export function ConfigTable({
                     <Empty className="border-0 bg-transparent p-4">
                       <EmptyHeader>
                         <EmptyTitle>
-                          {isLoading ? '参数数据加载中' : '暂无参数记录'}
+                          {isLoading
+                            ? tTable('empty.title.loading')
+                            : tTable('empty.title.idle')}
                         </EmptyTitle>
                         <EmptyDescription>
                           {isLoading
-                            ? '正在获取系统参数，请稍候。'
-                            : '先新增一条参数即可在此维护。'}
+                            ? tTable('empty.description.loading')
+                            : tTable('empty.description.idle')}
                         </EmptyDescription>
                       </EmptyHeader>
                     </Empty>

@@ -57,7 +57,7 @@ func resolveLanguage(ctx *gin.Context, fallback string) string {
 		return fallback
 	}
 
-	if lang := canonicalize(ctx.Query("lang")); lang != "" {
+	if lang := matchAcceptLanguage(ctx.GetHeader("Accept-Language")); lang != "" {
 		return lang
 	}
 
@@ -65,10 +65,6 @@ func resolveLanguage(ctx *gin.Context, fallback string) string {
 		if lang := canonicalize(cookie); lang != "" {
 			return lang
 		}
-	}
-
-	if lang := matchAcceptLanguage(ctx.GetHeader("Accept-Language")); lang != "" {
-		return lang
 	}
 
 	return fallback

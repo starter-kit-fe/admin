@@ -24,8 +24,7 @@ import {
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
-
-import { TYPE_STATUS_TABS } from '../../constants';
+import { useTranslations } from 'next-intl';
 
 interface DictTypeListProps {
   items: DictType[];
@@ -51,9 +50,11 @@ export function DictTypeList({
   const canEditType = hasPermission('system:dict:edit');
   const canDeleteType = hasPermission('system:dict:remove');
   const showActions = canAddData || canEditType || canDeleteType;
+  const tList = useTranslations('DictManagement.typeList');
+  const tStatus = useTranslations('DictManagement.status');
+
   const renderStatusBadge = (status?: string | null) => {
-    const meta = TYPE_STATUS_TABS.find((tab) => tab.value === status);
-    if (!meta || meta.value === 'all') {
+    if (!status || status === '0') {
       return null;
     }
     return (
@@ -66,7 +67,7 @@ export function DictTypeList({
             : 'border-rose-500/20 bg-rose-500/10 text-rose-600',
         )}
       >
-        {meta.label}
+        {tStatus(status)}
       </Badge>
     );
   };
@@ -76,15 +77,13 @@ export function DictTypeList({
       <div className="flex flex-col  space-y-1">
         {isLoading && items.length === 0 ? (
           <div className="flex h-[180px] items-center justify-center text-sm text-muted-foreground">
-            字典类型加载中...
+            {tList('loading')}
           </div>
         ) : items.length === 0 ? (
           <Empty className="m-4 h-[180px] border border-dashed border-border/60">
             <EmptyHeader>
-              <EmptyTitle>暂无字典类型</EmptyTitle>
-              <EmptyDescription>
-                点击右上角“新建”快速添加第一条字典。
-              </EmptyDescription>
+              <EmptyTitle>{tList('emptyTitle')}</EmptyTitle>
+              <EmptyDescription>{tList('emptyDescription')}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
@@ -92,7 +91,7 @@ export function DictTypeList({
             const isActive = dict.dictId === selectedId;
             const badge =
               dict.status !== '0' ? renderStatusBadge(dict.status) : null;
-            const remarkContent = dict.remark?.trim() || '暂无备注';
+            const remarkContent = dict.remark?.trim() || tList('noRemark');
             const showTooltip = remarkContent.length > 20;
             const remarkNode = (
               <span className="max-w-[220px] truncate text-xs text-muted-foreground">
@@ -146,7 +145,9 @@ export function DictTypeList({
                             variant="ghost"
                             size="icon-sm"
                             className="text-muted-foreground"
-                            aria-label="更多操作"
+                            aria-label={tList('moreAria', {
+                              name: dict.dictName,
+                            })}
                           >
                             <MoreHorizontal className="size-4" />
                           </Button>
@@ -155,13 +156,13 @@ export function DictTypeList({
                           {canAddData ? (
                             <DropdownMenuItem onSelect={() => onAddData(dict)}>
                               <Plus className="mr-2 size-3.5" />
-                              新增字典项
+                              {tList('actions.addData')}
                             </DropdownMenuItem>
                           ) : null}
                           {canEditType ? (
                             <DropdownMenuItem onSelect={() => onEdit(dict)}>
                               <Pencil className="mr-2 size-3.5" />
-                              编辑字典
+                              {tList('actions.edit')}
                             </DropdownMenuItem>
                           ) : null}
                           {canDeleteType ? (
@@ -170,7 +171,7 @@ export function DictTypeList({
                               onSelect={() => onDelete(dict)}
                             >
                               <Trash2 className="mr-2 size-3.5" />
-                              删除
+                              {tList('actions.delete')}
                             </DropdownMenuItem>
                           ) : null}
                         </DropdownMenuContent>

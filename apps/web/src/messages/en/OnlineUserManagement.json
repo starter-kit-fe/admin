@@ -1,0 +1,117 @@
+{
+  "header": {
+    "title": "Online users",
+    "description": "Monitor active sessions in real time with filters for account, IP, and activity.",
+    "actions": {
+      "batch": "Bulk logout",
+      "batchPending": "Logging out...",
+      "refresh": "Refresh",
+      "refreshing": "Refreshing..."
+    }
+  },
+  "filters": {
+    "userPlaceholder": "Filter by username",
+    "userClear": "Clear username filter",
+    "ipPlaceholder": "Filter by IP address",
+    "ipClear": "Clear IP filter"
+  },
+  "guard": {
+    "title": "No access",
+    "description": "{code} permission is required to view online users."
+  },
+  "selection": {
+    "summary": "{count, plural, one {# user selected. Bulk logout is available.} other {# users selected. Bulk logout is available.}}"
+  },
+  "status": {
+    "online": "Online",
+    "abnormal": "Abnormal"
+  },
+  "table": {
+    "defaultUser": "User",
+    "columns": {
+      "account": "Account",
+      "ip": "IP / Location",
+      "client": "Client",
+      "status": "Status",
+      "loginTime": "Login time",
+      "actions": "Actions"
+    },
+    "rows": {
+      "unknownLocation": "Unknown location",
+      "lastActive": "Last active: {time}"
+    },
+    "actions": {
+      "view": "View",
+      "force": "Force logout",
+      "pending": "Processing..."
+    },
+    "state": {
+      "loading": "Loading online users...",
+      "error": "Failed to load online users. Please try again later.",
+      "emptyTitle": "No online users",
+      "emptyDescription": "No active sessions right now. Refresh later to see the latest activity."
+    },
+    "selection": {
+      "all": "Select all",
+      "user": "Select {name}"
+    }
+  },
+  "detail": {
+    "title": "Session details",
+    "description": {
+      "named": "Session details for {name}",
+      "generic": "View online session details"
+    },
+    "loading": "Loading session details...",
+    "error": "Failed to load session details. Please try again later.",
+    "empty": "Session not found. It may already be offline.",
+    "statusLabel": "Status description",
+    "close": "Close",
+    "fields": {
+      "userName": "Account",
+      "nickName": "Nickname",
+      "deptName": "Department",
+      "status": "Status",
+      "ipaddr": "Login IP",
+      "loginLocation": "Login location",
+      "loginTime": "Login time",
+      "lastAccessTime": "Last active",
+      "browser": "Browser",
+      "os": "Operating system",
+      "sessionId": "Session ID",
+      "tokenId": "Token ID",
+      "uuid": "UUID"
+    },
+    "unnamed": "Unnamed"
+  },
+  "dialogs": {
+    "batch": {
+      "title": "Bulk logout",
+      "description": {
+        "selected": "Force logout the {count} selected {count, plural, one {user} other {users}}?",
+        "empty": "Select at least one user before running bulk logout."
+      },
+      "confirm": "Bulk logout"
+    },
+    "force": {
+      "title": "Force logout",
+      "description": {
+        "target": "Force logout “{name}”?",
+        "generic": "Are you sure you want to force logout this user?"
+      },
+      "confirm": "Force logout"
+    }
+  },
+  "toast": {
+    "batchSuccess": "Forced {count} {count, plural, one {user} other {users}} offline.",
+    "batchSkipped": "{count, plural, one {# user was skipped due to missing session identifiers.} other {# users were skipped due to missing session identifiers.}}",
+    "batchError": "Bulk logout failed. Please try again later.",
+    "forceSuccess": "The user has been forced offline.",
+    "forceError": "Failed to force logout the user. Please try again later."
+  },
+  "errors": {
+    "missingBatch": "No valid sessions were found for the selected users.",
+    "missingIdentifier": "Missing session identifier. Unable to continue.",
+    "missingDetail": "Missing session identifier. Unable to load the session details."
+  }
+}

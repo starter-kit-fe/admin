@@ -5,16 +5,18 @@ import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function JobManagementHeader() {
   const refresh = useJobManagementRefresh();
   const { isRefreshing, isMutating } = useJobManagementStatus();
   const refreshDisabled = isRefreshing || isMutating;
+  const tHeader = useTranslations('JobManagement.header');
 
   return (
     <ManagementHeader
-      title="定时任务"
-      description="查看并管理调度任务，支持按名称、分组与状态筛选。"
+      title={tHeader('title')}
+      description={tHeader('description')}
       actions={
         <PermissionButton
           required="monitor:job:list"
@@ -28,7 +30,7 @@ export function JobManagementHeader() {
           ) : (
             <RefreshCw className="size-4" />
           )}
-          刷新
+          {tHeader('refresh')}
         </PermissionButton>
       }
     />

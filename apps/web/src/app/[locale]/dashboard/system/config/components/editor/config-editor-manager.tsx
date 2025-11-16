@@ -19,6 +19,7 @@ import {
 import { resolveErrorMessage, toFormValues } from '../../utils';
 import type { ConfigFormValues } from '../../type';
 import { ConfigEditorDialog } from './config-editor-dialog';
+import { useTranslations } from 'next-intl';
 
 export function ConfigEditorManager() {
   const editorState = useConfigEditorState();
@@ -26,6 +27,7 @@ export function ConfigEditorManager() {
   const refresh = useConfigManagementRefresh();
   const { beginMutation, endMutation } =
     useConfigManagementMutationCounter();
+  const tToast = useTranslations('ConfigManagement.toast');
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateConfigPayload) => createConfig(payload),
@@ -33,12 +35,12 @@ export function ConfigEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('新增参数成功');
+      toast.success(tToast('createSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '新增参数失败'));
+      toast.error(resolveErrorMessage(error, tToast('createError')));
     },
     onSettled: () => {
       endMutation();
@@ -57,12 +59,12 @@ export function ConfigEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('参数更新成功');
+      toast.success(tToast('updateSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '更新参数失败'));
+      toast.error(resolveErrorMessage(error, tToast('updateError')));
     },
     onSettled: () => {
       endMutation();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -17,8 +17,10 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { z } from 'zod';
+import { useTranslations } from 'next-intl';
 
-import { configFormSchema, type ConfigFormValues } from '../../type';
+import type { ConfigFormValues } from '../../type';
 
 const DEFAULT_VALUES: ConfigFormValues = {
   configName: '',
@@ -41,8 +43,6 @@ interface ConfigEditorDialogProps {
   onSubmit: (values: ConfigFormValues) => void;
 }
 
-type ConfigFormResolverContext = Record<string, never>;
-
 export function ConfigEditorDialog({
   mode,
   open,
@@ -51,8 +51,38 @@ export function ConfigEditorDialog({
   onOpenChange,
   onSubmit,
 }: ConfigEditorDialogProps) {
-  const form = useForm<ConfigFormValues, ConfigFormResolverContext, ConfigFormValues>({
-    resolver: zodResolver(configFormSchema),
+  const tForm = useTranslations('ConfigManagement.form');
+  const tDialogs = useTranslations('Common.dialogs');
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        configName: z
+          .string()
+          .trim()
+          .min(1, tForm('validation.name.required'))
+          .max(100, tForm('validation.name.max')),
+        configKey: z
+          .string()
+          .trim()
+          .min(1, tForm('validation.key.required'))
+          .max(100, tForm('validation.key.max')),
+        configValue: z
+          .string()
+          .trim()
+          .min(1, tForm('validation.value.required'))
+          .max(500, tForm('validation.value.max')),
+        configType: z.enum(['Y', 'N']),
+        remark: z
+          .string()
+          .trim()
+          .max(255, tForm('validation.remark.max')),
+      }),
+    [tForm],
+  );
+
+  const form = useForm<ConfigFormValues>({
+    resolver: zodResolver(schema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -77,10 +107,10 @@ export function ConfigEditorDialog({
       <ResponsiveDialog.Content className="sm:max-w-xl">
         <ResponsiveDialog.Header>
           <ResponsiveDialog.Title>
-            {mode === 'create' ? '新增参数' : '编辑参数'}
+            {mode === 'create' ? tForm('title.create') : tForm('title.edit')}
           </ResponsiveDialog.Title>
           <ResponsiveDialog.Description>
-            配置系统运行时参数，参数键名需保持唯一。
+            {tForm('description')}
           </ResponsiveDialog.Description>
         </ResponsiveDialog.Header>
         <Form {...form}>
@@ -93,10 +123,13 @@ export function ConfigEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <Required />
-                      参数名称
+                      {tForm('fields.name')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入参数名称" {...field} />
+                      <Input
+                        placeholder={tForm('fields.namePlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -109,10 +142,13 @@ export function ConfigEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <Required />
-                      参数键名
+                      {tForm('fields.key')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="例如 sys.account.registerUser" {...field} />
+                      <Input
+                        placeholder={tForm('fields.keyPlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -125,10 +161,14 @@ export function ConfigEditorDialog({
                   <FormItem className="sm:col-span-2">
                     <FormLabel>
                       <Required />
-                      参数键值
+                      {tForm('fields.value')}
                     </FormLabel>
                     <FormControl>
-                      <Textarea rows={3} placeholder="请输入参数键值" {...field} />
+                      <Textarea
+                        rows={3}
+                        placeholder={tForm('fields.valuePlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,7 +181,7 @@ export function ConfigEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <Required />
-                      参数类型
+                      {tForm('fields.type')}
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -153,13 +193,17 @@ export function ConfigEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="Y" />
                           </FormControl>
-                          <FormLabel className="font-normal">系统内置</FormLabel>
+                          <FormLabel className="font-normal">
+                            {tForm('fields.typeSystem')}
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center gap-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="N" />
                           </FormControl>
-                          <FormLabel className="font-normal">自定义</FormLabel>
+                          <FormLabel className="font-normal">
+                            {tForm('fields.typeCustom')}
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -172,9 +216,13 @@ export function ConfigEditorDialog({
                 name="remark"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>备注</FormLabel>
+                    <FormLabel>{tForm('fields.remark')}</FormLabel>
                     <FormControl>
-                      <Textarea rows={3} placeholder="可填写参数用途说明" {...field} />
+                      <Textarea
+                        rows={3}
+                        placeholder={tForm('fields.remarkPlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -188,10 +236,14 @@ export function ConfigEditorDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                取消
+                {tDialogs('cancel')}
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? '保存中...' : '保存'}
+                {submitting
+                  ? tForm('submit.creating')
+                  : mode === 'create'
+                    ? tForm('submit.create')
+                    : tForm('submit.save')}
               </Button>
             </div>
           </form>

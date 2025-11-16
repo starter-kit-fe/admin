@@ -1,0 +1,209 @@
+{
+  "header": {
+    "title": "Dictionary Management",
+    "description": "Maintain shared dictionary types and entries. {count} types available.",
+    "actions": {
+      "refresh": "Refresh",
+      "create": "New dictionary"
+    }
+  },
+  "status": {
+    "all": "All",
+    "0": "Active",
+    "1": "Disabled"
+  },
+  "typeFilters": {
+    "dictNamePlaceholder": "Filter by dictionary name",
+    "dictNameClear": "Clear dictionary name filter",
+    "dictTypePlaceholder": "Filter by dictionary type",
+    "dictTypeClear": "Clear dictionary type filter",
+    "chips": {
+      "dictName": "Name",
+      "dictType": "Type",
+      "remove": "Remove {target}"
+    },
+    "clearAll": "Clear filters"
+  },
+  "typeList": {
+    "loading": "Loading dictionary types...",
+    "emptyTitle": "No dictionary types",
+    "emptyDescription": "Use the action button to create your first dictionary type.",
+    "noRemark": "No remark",
+    "actions": {
+      "addData": "Add entry",
+      "edit": "Edit dictionary",
+      "delete": "Delete"
+    },
+    "moreAria": "More actions for {name}"
+  },
+  "data": {
+    "selectPrompt": "Select a dictionary type to view its entries.",
+    "total": "Total {count} entries.",
+    "toolbar": {
+      "add": "New entry"
+    },
+    "filters": {
+      "labelPlaceholder": "Filter by label",
+      "labelClear": "Clear label filter",
+      "valuePlaceholder": "Filter by value",
+      "valueClear": "Clear value filter"
+    },
+    "table": {
+      "columns": {
+        "label": "Label",
+        "value": "Value",
+        "sort": "Order",
+        "default": "Default",
+        "remark": "Remark",
+        "actions": "Actions"
+      },
+      "badges": {
+        "default": "Default",
+        "no": "No"
+      },
+      "empty": {
+        "loadingTitle": "Loading dictionary entries",
+        "loadingDescription": "Fetching entries, please wait...",
+        "idleTitle": "No dictionary entries",
+        "idleDescription": "Add an entry to start managing this dictionary."
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "moreAria": "More actions for {name}"
+    }
+  },
+  "typeEditor": {
+    "createTitle": "New dictionary type",
+    "editTitle": "Edit dictionary type",
+    "description": "Configure dictionary metadata shared across modules. Type name and key must remain unique.",
+    "fields": {
+      "dictName": {
+        "label": "Dictionary name",
+        "placeholder": "Enter dictionary name"
+      },
+      "dictType": {
+        "label": "Dictionary key",
+        "placeholder": "Enter dictionary key"
+      },
+      "status": {
+        "label": "Status",
+        "options": {
+          "0": "Active",
+          "1": "Disabled"
+        }
+      },
+      "remark": {
+        "label": "Remark",
+        "placeholder": "Add an optional remark"
+      }
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving..."
+    },
+    "validation": {
+      "dictName": {
+        "required": "Enter a dictionary name",
+        "max": "Up to 100 characters"
+      },
+      "dictType": {
+        "required": "Enter a dictionary key",
+        "max": "Up to 100 characters"
+      },
+      "remark": {
+        "max": "Up to 255 characters"
+      }
+    }
+  },
+  "dataEditor": {
+    "createTitle": "New dictionary entry",
+    "editTitle": "Edit dictionary entry",
+    "description": "Maintain labels and values for the selected dictionary type.",
+    "fields": {
+      "dictLabel": {
+        "label": "Label",
+        "placeholder": "Enter label"
+      },
+      "dictValue": {
+        "label": "Value",
+        "placeholder": "Enter value"
+      },
+      "dictSort": {
+        "label": "Order",
+        "placeholder": "0"
+      },
+      "status": {
+        "label": "Status",
+        "options": {
+          "0": "Active",
+          "1": "Disabled"
+        }
+      },
+      "isDefault": {
+        "label": "Default",
+        "options": {
+          "Y": "Default",
+          "N": "No"
+        }
+      },
+      "remark": {
+        "label": "Remark",
+        "placeholder": "Add an optional remark"
+      }
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving..."
+    },
+    "validation": {
+      "dictLabel": {
+        "required": "Enter a label",
+        "max": "Up to 100 characters"
+      },
+      "dictValue": {
+        "required": "Enter a value",
+        "max": "Up to 100 characters"
+      },
+      "dictSort": {
+        "invalid": "Enter a non-negative integer"
+      },
+      "remark": {
+        "max": "Up to 255 characters"
+      }
+    }
+  },
+  "delete": {
+    "type": {
+      "title": "Delete dictionary type",
+      "description": "Delete \"{name}\"? All related entries will be removed.",
+      "fallback": "Delete the selected dictionary type?"
+    },
+    "data": {
+      "title": "Delete dictionary entry",
+      "description": "Delete entry \"{name}\"?",
+      "fallback": "Delete the selected entry?"
+    }
+  },
+  "toast": {
+    "type": {
+      "createSuccess": "Dictionary type created.",
+      "createError": "Failed to create the dictionary type.",
+      "updateSuccess": "Dictionary type updated.",
+      "updateError": "Failed to update the dictionary type.",
+      "deleteSuccess": "Dictionary type deleted.",
+      "deleteError": "Failed to delete the dictionary type."
+    },
+    "data": {
+      "createSuccess": "Dictionary entry created.",
+      "createError": "Failed to create the dictionary entry.",
+      "updateSuccess": "Dictionary entry updated.",
+      "updateError": "Failed to update the dictionary entry.",
+      "deleteSuccess": "Dictionary entry deleted.",
+      "deleteError": "Failed to delete the dictionary entry."
+    }
+  }
+}

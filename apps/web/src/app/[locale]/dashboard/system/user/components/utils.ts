@@ -1,30 +1,31 @@
 import type { User, UserFormValues } from '../type';
 
 export const STATUS_META = {
-  all: {
-    label: '全部',
-    tone: 'default',
-    badgeClass: 'bg-slate-900 text-white',
-  },
   '0': {
-    label: '正常',
+    labelKey: 'enabled',
     tone: 'success',
     badgeClass: 'bg-primary/10 text-primary',
   },
   '1': {
-    label: '停用',
+    labelKey: 'disabled',
     tone: 'danger',
     badgeClass: 'bg-rose-100 text-rose-700',
   },
 } as const;
 
-export type StatusKey = keyof typeof STATUS_META | 'all';
+export type StatusKey = keyof typeof STATUS_META;
 
 export const DEFAULT_ROLE_VALUE = 'all';
 
-export const getDisplayName = (user: User) => {
+export const getDisplayName = (user: User, fallback?: string) => {
   const base = user.nickName?.trim() || user.userName?.trim();
-  return base && base.length > 0 ? base : '用户';
+  if (base && base.length > 0) {
+    return base;
+  }
+  if (fallback) {
+    return fallback;
+  }
+  return 'User';
 };
 
 export const getAccountLabel = (user: User, fallback = '—') => {
@@ -32,8 +33,8 @@ export const getAccountLabel = (user: User, fallback = '—') => {
   return base && base.length > 0 ? base : fallback;
 };
 
-export const getAvatarFallback = (user: User) => {
-  const name = getDisplayName(user);
+export const getAvatarFallback = (user: User, fallback = 'U') => {
+  const name = getDisplayName(user, fallback);
   return name.slice(0, 1).toUpperCase();
 };
 
@@ -48,11 +49,11 @@ export const formatPhoneNumber = (value?: string | null) => {
   return trimmed;
 };
 
-export const getCompanyLabel = (user: User) => {
-  return user.deptName?.trim() || '—';
+export const getCompanyLabel = (user: User, fallback = '—') => {
+  return user.deptName?.trim() || fallback;
 };
 
-export const getRoleLabel = (user: User) => {
+export const getRoleLabel = (user: User, fallback?: string) => {
   const primaryRole = user.roles?.[0];
   if (primaryRole?.roleName?.trim()) {
     return primaryRole.roleName.trim();
@@ -60,7 +61,7 @@ export const getRoleLabel = (user: User) => {
   if (user.userType?.trim()) {
     return user.userType.trim();
   }
-  return '成员';
+  return fallback ?? 'Member';
 };
 
 export const getEmailLabel = (user: User) => {

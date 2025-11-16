@@ -1,0 +1,119 @@
+{
+  "dashboard": {
+    "header": {
+      "title": "缓存监控",
+      "description": "在同一视图内掌握 Redis 运行状态与键分布。",
+      "updatedAt": "概览更新时间：{time}",
+      "refresh": "刷新数据",
+      "refreshing": "刷新中"
+    },
+    "meta": {
+      "keys": "键总数",
+      "hitRate": "命中率",
+      "ops": "每秒命令"
+    },
+    "error": {
+      "overview": "无法加载缓存概览，请稍后再试。"
+    },
+    "overview": {
+      "title": "运行概览",
+      "description": "查看内存占用、命中率以及客户端连接。",
+      "memory": {
+        "label": "内存占用",
+        "aria": "内存占用比例",
+        "peak": "峰值占用",
+        "fragmentation": "碎片率"
+      },
+      "clients": {
+        "title": "客户端",
+        "connected": "已连接",
+        "blocked": "被阻塞"
+      },
+      "stats": {
+        "title": "访问统计",
+        "hits": "命中",
+        "misses": "未命中",
+        "expired": "过期键",
+        "evicted": "驱逐键"
+      }
+    },
+    "server": {
+      "title": "服务器状态",
+      "description": "核心运行参数与持久化信息。",
+      "fields": {
+        "mode": "运行模式",
+        "role": "角色",
+        "version": "版本",
+        "uptime": "运行时长"
+      },
+      "persistence": {
+        "title": "持久化",
+        "lastRdb": "上次 RDB",
+        "status": "状态",
+        "pending": "未持久化",
+        "aof": "AOF"
+      }
+    },
+    "keyspace": {
+      "title": "Keyspace 分布",
+      "description": "各逻辑库的键数量与过期情况。",
+      "table": {
+        "db": "数据库",
+        "keys": "键数量",
+        "expires": "过期键",
+        "avgTtl": "平均 TTL"
+      },
+      "emptyTitle": "暂无 Keyspace 数据",
+      "emptyDescription": "等待缓存上报指标后再来查看。"
+    }
+  },
+  "table": {
+    "columns": {
+      "key": "键名",
+      "type": "类型",
+      "ttl": "TTL",
+      "idle": "空闲时间",
+      "size": "估算大小",
+      "encoding": "编码"
+    },
+    "copy": {
+      "success": "已复制键名",
+      "error": "复制失败"
+    },
+    "aria": {
+      "copy": "复制键名"
+    },
+    "loading": "正在加载缓存键...",
+    "error": "加载失败，请稍后再试。",
+    "emptyTitle": "未找到匹配的缓存键",
+    "emptyDescription": {
+      "filtered": "尝试调整匹配模式以获取更多结果。",
+      "noFilter": "暂时没有可展示的缓存数据。"
+    }
+  },
+  "list": {
+    "header": {
+      "title": "缓存键列表",
+      "description": "检索与定位缓存键，支持模式筛选与分页查看。",
+      "refresh": "刷新",
+      "refreshing": "刷新中"
+    },
+    "filters": {
+      "placeholder": "通过模式匹配键名，例如 user:*",
+      "clearAria": "清除模式筛选",
+      "reset": "重置筛选",
+      "patternLabel": "匹配模式：",
+      "removePatternAria": "移除匹配模式筛选",
+      "clear": "清除",
+      "limitedTip": "出于性能考虑仅展示前 {count} 条匹配结果。"
+    }
+  },
+  "common": {
+    "unknown": "未知",
+    "permanent": "永久",
+    "justNow": "刚刚",
+    "notExecuted": "未执行",
+    "enabled": "已开启",
+    "disabled": "未开启"
+  }
+}

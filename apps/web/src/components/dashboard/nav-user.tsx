@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
-import {useRouter} from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useMutation } from '@tanstack/react-query';
 import {
   BadgeCheck,
@@ -39,6 +39,7 @@ import {
   LogOut,
   Sparkles,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type ComponentProps, useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -71,6 +72,7 @@ function UserDropdownContent({
   onNavigateProfile,
 }: UserDropdownContentProps) {
   const { className, ...restContentProps } = contentProps ?? {};
+  const t = useTranslations('NavUser');
 
   return (
     <DropdownMenuContent
@@ -84,7 +86,9 @@ function UserDropdownContent({
         <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
           <Avatar className="h-8 w-8 rounded-lg">
             <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback className="rounded-lg">U</AvatarFallback>
+            <AvatarFallback className="rounded-lg">
+              {t('avatarFallback')}
+            </AvatarFallback>
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-medium">{user.name}</span>
@@ -108,7 +112,7 @@ function UserDropdownContent({
           }}
         >
           <BadgeCheck />
-          账号设置
+          {t('menu.settings')}
         </DropdownMenuItem>
         {/* <DropdownMenuItem>
           <CreditCard />
@@ -129,13 +133,14 @@ function UserDropdownContent({
         disabled={isLoggingOut}
       >
         <LogOut />
-        {isLoggingOut ? '退出中...' : '退出登录'}
+        {isLoggingOut ? t('menu.loggingOut') : t('menu.logout')}
       </DropdownMenuItem>
     </DropdownMenuContent>
   );
 }
 
 export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
+  const t = useTranslations('NavUser');
   const router = useRouter();
   const { setUser, setRoles, setPermissions } = useAuthStore();
   const resetAuthState = useCallback(() => {
@@ -147,12 +152,12 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
   const { mutate: triggerLogout, isPending: isLoggingOut } = useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      toast.success('已退出登录');
+      toast.success(t('toast.logoutSuccess'));
     },
     onError: (error: unknown) => {
-      const message =
-        error instanceof Error ? error.message : '退出登录失败，请稍后重试';
-      toast.error(message);
+      const fallback = t('toast.logoutError');
+      const message = error instanceof Error ? error.message : fallback;
+      toast.error(message || fallback);
     },
     onSettled: () => {
       resetAuthState();
@@ -194,18 +199,20 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
     <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>确认退出登录？</AlertDialogTitle>
+          <AlertDialogTitle>{t('dialog.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            退出后需要重新登录才能继续使用后台。
+            {t('dialog.description')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoggingOut}>取消</AlertDialogCancel>
+          <AlertDialogCancel disabled={isLoggingOut}>
+            {t('dialog.cancel')}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirmLogout}
             disabled={isLoggingOut}
           >
-            {isLoggingOut ? '退出中...' : '确认退出'}
+            {isLoggingOut ? t('dialog.confirming') : t('dialog.confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -223,7 +230,9 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
             >
               <Avatar className="h-7 w-7">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback>
+                  {user.name ? user.name.charAt(0) : t('avatarFallback')}
+                </AvatarFallback>
               </Avatar>
               <span className="hidden max-w-[120px] truncate md:block">
                 {user.name}
@@ -256,7 +265,9 @@ export function NavUser({ user, variant = 'sidebar' }: NavUserProps) {
               >
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">用户</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {t('avatarFallback')}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>

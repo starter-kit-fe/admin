@@ -1,0 +1,69 @@
+{
+  "header": {
+    "title": "服务监控",
+    "description": "聚焦后台服务器程序，CPU / 内存 / 存储。",
+    "refreshNow": "立即刷新",
+    "refreshing": "刷新中"
+  },
+  "status": {
+    "never": "尚未获取",
+    "justNow": "刚刚"
+  },
+  "error": {
+    "title": "无法加载服务监控数据",
+    "description": "请稍后刷新重试。"
+  },
+  "quickStats": {
+    "cpu": {
+      "label": "CPU",
+      "hint": "负载 {load1} / {load5} / {load15}"
+    },
+    "memory": {
+      "label": "内存",
+      "hint": "进程占用 {allocation}"
+    },
+    "storage": {
+      "label": "存储",
+      "hint": "{used} / {total}"
+    }
+  },
+  "serverInfo": {
+    "title": "服务器与版本",
+    "description": "服务器级别的信息（区别于进程运行时），最近更新：{time}",
+    "rows": {
+      "name": "服务器名称",
+      "system": "服务器系统",
+      "uptime": "服务器运行时长",
+      "goRuntime": "Go 运行时",
+      "kernel": "内核版本",
+      "currentTime": "当前时间"
+    }
+  },
+  "process": {
+    "title": "后端进程",
+    "description": "展示部署版本 / Commit 以及 Go 进程的 CPU、内存与 GC 行为。",
+    "sections": {
+      "deployment": "部署信息",
+      "metrics": "运行指标"
+    },
+    "summary": {
+      "version": "版本号",
+      "commit": "Commit",
+      "pid": "PID",
+      "startTime": "启动时间",
+      "uptime": "进程运行时长",
+      "goVersion": "Go 版本"
+    },
+    "metrics": {
+      "cpu": "CPU 占用",
+      "memory": "内存占用",
+      "totalMemory": "累计内存",
+      "systemMemory": "系统内存",
+      "goroutines": "Goroutines",
+      "gcCount": "GC 次数",
+      "lastGC": "最后 GC",
+      "nextGC": "下一次 GC",
+      "cgo": "Cgo 调用"
+    }
+  }
+}

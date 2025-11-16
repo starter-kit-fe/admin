@@ -2,6 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 import { DeleteConfirmDialog } from '../delete-confirm-dialog';
 import { removeUser } from '../../api';
@@ -15,6 +16,8 @@ export function UserDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = useUserManagementStore();
   const refresh = useUserManagementRefresh();
   const { beginMutation, endMutation } = useUserManagementMutationCounter();
+  const tDialogs = useTranslations('UserManagement.dialogs');
+  const tToast = useTranslations('UserManagement.toast');
 
   const deleteMutation = useMutation({
     mutationFn: (userId: number) => removeUser(userId),
@@ -22,13 +25,13 @@ export function UserDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('用户已删除');
+      toast.success(tToast('deleteSuccess'));
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '删除用户失败，请稍后再试';
+        error instanceof Error ? error.message : tToast('deleteError');
       toast.error(message);
     },
     onSettled: () => {
@@ -44,12 +47,15 @@ export function UserDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title="删除用户"
+      title={tDialogs('deleteTitle')}
       description={
         deleteTarget
-          ? `确定要删除用户「${deleteTarget.nickName || deleteTarget.userName}」吗？该操作无法撤销。`
-          : '确认删除所选用户吗？'
+          ? tDialogs('deleteMessage', {
+              name: deleteTarget.nickName || deleteTarget.userName,
+            })
+          : tDialogs('deleteMessage', { name: '' })
       }
+      confirmLabel={tDialogs('deleteTitle')}
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (deleteTarget) {

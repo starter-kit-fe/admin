@@ -1,0 +1,114 @@
+{
+  "header": {
+    "title": "角色管理",
+    "description": "维护系统角色与权限字符，支持批量操作与精细化配置。",
+    "refresh": "刷新",
+    "create": "新建角色"
+  },
+  "filters": {
+    "searchPlaceholder": "搜索角色名称或权限字符",
+    "clearSearch": "清空搜索",
+    "statusTabs": {
+      "all": "全部",
+      "0": "启用",
+      "1": "停用"
+    }
+  },
+  "status": {
+    "enabled": "正常",
+    "disabled": "停用"
+  },
+  "table": {
+    "columns": {
+      "name": "角色名称",
+      "key": "权限字符",
+      "status": "状态",
+      "createdAt": "创建时间",
+      "actions": "操作"
+    },
+    "actions": {
+      "edit": "编辑",
+      "delete": "删除角色",
+      "more": "更多操作"
+    },
+    "selection": {
+      "selectAll": "选择全部角色",
+      "selectRole": "选择 {target}"
+    },
+    "state": {
+      "loading": "正在加载角色...",
+      "error": "加载失败，请稍后再试。",
+      "emptyTitle": "暂无角色数据",
+      "emptyDescription": "创建角色后即可在此配置权限和成员。"
+    }
+  },
+  "toast": {
+    "createSuccess": "角色创建成功",
+    "createError": "创建角色失败，请稍后再试",
+    "updateSuccess": "角色信息已更新",
+    "updateError": "更新角色失败，请稍后再试",
+    "deleteSuccess": "角色已删除",
+    "deleteError": "删除角色失败，请稍后再试",
+    "bulkDeleteSuccess": "批量删除成功",
+    "bulkDeleteError": "批量删除失败，请稍后再试",
+    "bulkDeleteEmpty": "请先选择需要删除的角色"
+  },
+  "dialogs": {
+    "deleteTitle": "删除角色",
+    "deleteMessage": "确定要删除角色“{name}”吗？该操作无法撤销。",
+    "deleteFallback": "确定要删除所选角色吗？",
+    "bulkDeleteTitle": "批量删除角色",
+    "bulkDeleteSelected": "将删除选中的 {count} 个角色，操作不可恢复。",
+    "bulkDeleteConfirm": "删除角色",
+    "bulkDeleteCancel": "取消"
+  },
+  "form": {
+    "createTitle": "新增角色",
+    "createDescription": "创建系统角色并配置默认权限。",
+    "editTitle": "编辑角色",
+    "editDescription": "更新角色信息与权限范围。",
+    "loading": "正在加载角色信息...",
+    "fields": {
+      "name": "角色名称",
+      "namePlaceholder": "请输入角色名称",
+      "key": "权限字符",
+      "keyPlaceholder": "请输入权限字符",
+      "sort": "显示顺序",
+      "sortPlaceholder": "默认 0",
+      "status": "角色状态",
+      "remark": "备注",
+      "remarkPlaceholder": "可选",
+      "menu": "菜单权限"
+    },
+    "submit": {
+      "creating": "提交中...",
+      "create": "创建",
+      "save": "保存"
+    },
+    "validation": {
+      "name": {
+        "required": "请输入角色名称",
+        "max": "角色名称不能超过 50 个字符"
+      },
+      "key": {
+        "required": "请输入权限字符",
+        "max": "权限字符不能超过 100 个字符"
+      },
+      "sort": {
+        "range": "排序需为 0 到 9999 之间的整数"
+      },
+      "remark": {
+        "max": "备注最多 256 个字符"
+      }
+    }
+  },
+  "permissionTree": {
+    "title": "菜单权限",
+    "buttonBadge": "按钮",
+    "expand": "展开/折叠",
+    "selectAll": "全选/全不选",
+    "linkage": "父子联动",
+    "emptyTitle": "暂无可配置菜单",
+    "emptyDescription": "启用菜单后可在此为角色分配权限。"
+  }
+}

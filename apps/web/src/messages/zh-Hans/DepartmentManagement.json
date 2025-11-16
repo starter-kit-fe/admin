@@ -1,0 +1,134 @@
+{
+  "header": {
+    "title": "部门管理",
+    "description": [
+      "统一在顶部查看说明，快速掌握组织层级与维护准则。",
+      "使用下方筛选定位部门，并配合树视图完成新增或调整。"
+    ],
+    "actions": {
+      "refresh": "刷新",
+      "create": "新增部门"
+    }
+  },
+  "status": {
+    "all": "全部",
+    "0": "正常",
+    "1": "停用"
+  },
+  "filters": {
+    "searchPlaceholder": "搜索部门名称",
+    "clearSearch": "清空搜索",
+    "chips": {
+      "keyword": "关键词",
+      "status": "状态",
+      "remove": "移除{target}"
+    },
+    "clearAll": "清除过滤"
+  },
+  "tree": {
+    "loading": "加载部门数据...",
+    "error": "加载部门数据失败，请稍后再试。",
+    "retry": "重新加载",
+    "emptyTitle": "暂无部门数据",
+    "emptyDescription": "创建组织结构后即可在此维护上下级关系。",
+    "meta": {
+      "leader": "负责人：{value}",
+      "phone": "电话：{value}",
+      "email": "邮箱：{value}",
+      "remark": "备注：{value}"
+    },
+    "actions": {
+      "addChild": "新增子部门",
+      "edit": "编辑",
+      "delete": "删除"
+    },
+    "badge": {
+      "1": "停用"
+    }
+  },
+  "editor": {
+    "createTitle": "新增部门",
+    "editTitle": "编辑部门",
+    "description": "请填写部门基础信息，所有节点均可新增子部门。",
+    "fields": {
+      "parent": {
+        "label": "上级部门",
+        "placeholder": "请选择上级部门",
+        "topLevel": "顶级部门"
+      },
+      "name": {
+        "label": "部门名称",
+        "placeholder": "输入部门名称"
+      },
+      "order": {
+        "label": "显示排序",
+        "placeholder": "0"
+      },
+      "leader": {
+        "label": "负责人",
+        "placeholder": "输入负责人"
+      },
+      "phone": {
+        "label": "联系电话",
+        "placeholder": "输入联系电话"
+      },
+      "email": {
+        "label": "邮箱",
+        "placeholder": "输入联系邮箱"
+      },
+      "status": {
+        "label": "部门状态",
+        "options": {
+          "0": "正常",
+          "1": "停用"
+        }
+      },
+      "remark": {
+        "label": "备注",
+        "placeholder": "填写备注信息（可选）"
+      }
+    },
+    "actions": {
+      "cancel": "取消",
+      "save": "保存",
+      "saving": "保存中..."
+    },
+    "validation": {
+      "name": {
+        "required": "请输入部门名称",
+        "max": "部门名称不能超过 50 个字符"
+      },
+      "parent": {
+        "required": "请选择上级部门"
+      },
+      "order": {
+        "invalid": "显示排序需为 0 到 9999 的整数"
+      },
+      "leader": {
+        "max": "负责人不能超过 50 个字符"
+      },
+      "phone": {
+        "invalid": "请输入有效联系电话"
+      },
+      "email": {
+        "invalid": "请输入正确邮箱"
+      },
+      "remark": {
+        "max": "备注不能超过 255 个字符"
+      }
+    }
+  },
+  "delete": {
+    "title": "删除部门",
+    "description": "确定要删除部门“{name}”吗？将同时移除其所有子部门。",
+    "fallback": "确认删除所选部门吗？"
+  },
+  "toast": {
+    "createSuccess": "新增部门成功",
+    "createError": "新增部门失败",
+    "updateSuccess": "更新部门成功",
+    "updateError": "更新部门失败",
+    "deleteSuccess": "删除部门成功",
+    "deleteError": "删除部门失败，请稍后再试"
+  }
+}

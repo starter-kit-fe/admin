@@ -1,0 +1,121 @@
+{
+  "header": {
+    "title": "通知公告",
+    "description": "管理系统通知公告，可按状态、类型筛选并快速发布或下线。",
+    "bulkDelete": "批量删除",
+    "selectedCount": "({count})",
+    "refresh": "刷新",
+    "create": "新建公告",
+    "summary": "共 {total} 条记录，已选 {selected} 条。"
+  },
+  "filters": {
+    "statusTabs": {
+      "all": "全部",
+      "0": "正常",
+      "1": "停用"
+    },
+    "keywordPlaceholder": "搜索公告标题",
+    "clearKeyword": "清空标题搜索",
+    "typePlaceholder": "选择公告类型",
+    "typeOptions": {
+      "all": "全部类型",
+      "1": "通知",
+      "2": "公告"
+    },
+    "chips": {
+      "noticeType": "类型",
+      "noticeTitle": "标题"
+    },
+    "clearAll": "清除筛选",
+    "removeAria": "移除 {target}"
+  },
+  "status": {
+    "0": "正常",
+    "1": "停用"
+  },
+  "types": {
+    "1": "通知",
+    "2": "公告"
+  },
+  "table": {
+    "columns": {
+      "title": "标题",
+      "content": "内容",
+      "remark": "备注",
+      "updatedAt": "更新时间",
+      "actions": "操作"
+    },
+    "selection": {
+      "selectAll": "选择全部公告",
+      "selectItem": "选择 {target}"
+    },
+    "feedback": {
+      "loading": "正在加载公告...",
+      "error": "加载失败，请稍后重试。",
+      "emptyTitle": "暂无公告记录",
+      "emptyDescription": "发布公告后即可在此查看与管理。"
+    },
+    "actions": {
+      "edit": "编辑",
+      "delete": "删除",
+      "moreAria": "更多操作：{target}"
+    }
+  },
+  "toast": {
+    "createSuccess": "公告创建成功",
+    "createError": "新建公告失败，请稍后再试",
+    "updateSuccess": "公告已更新",
+    "updateError": "更新公告失败，请稍后再试",
+    "deleteSuccess": "公告已删除",
+    "deleteError": "删除公告失败，请稍后再试",
+    "bulkDeleteSuccess": "批量删除成功",
+    "bulkDeleteError": "删除所选公告失败，请稍后再试"
+  },
+  "dialogs": {
+    "deleteTitle": "删除公告",
+    "deleteMessage": "确定要删除“{name}”吗？",
+    "deleteFallback": "确认删除所选公告吗？",
+    "bulkDeleteTitle": "批量删除公告",
+    "bulkDeleteSelected": "将删除选中的 {count} 条公告记录，操作不可恢复。",
+    "bulkDeleteConfirm": "批量删除",
+    "bulkDeleteCancel": "取消"
+  },
+  "form": {
+    "title": {
+      "create": "新建公告",
+      "edit": "编辑公告"
+    },
+    "description": "配置系统公告内容，将展示在终端公告模块。",
+    "fields": {
+      "title": "公告标题",
+      "titlePlaceholder": "请输入公告标题",
+      "type": "公告类型",
+      "typeNotification": "通知",
+      "typeAnnouncement": "公告",
+      "status": "公告状态",
+      "statusActive": "正常",
+      "statusDisabled": "停用",
+      "content": "公告内容",
+      "contentPlaceholder": "请输入公告内容",
+      "remark": "备注",
+      "remarkPlaceholder": "可填写公告说明"
+    },
+    "submit": {
+      "creating": "保存中...",
+      "create": "创建",
+      "save": "保存"
+    },
+    "validation": {
+      "title": {
+        "required": "请输入公告标题",
+        "max": "公告标题不能超过 50 个字符"
+      },
+      "content": {
+        "required": "请输入公告内容"
+      },
+      "remark": {
+        "max": "备注不能超过 255 个字符"
+      }
+    }
+  }
+}

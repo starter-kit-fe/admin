@@ -1,0 +1,114 @@
+{
+  "header": {
+    "title": "Role Management",
+    "description": "Maintain system roles and permission keys with bulk-friendly workflows.",
+    "refresh": "Refresh",
+    "create": "New Role"
+  },
+  "filters": {
+    "searchPlaceholder": "Search role name or permission key",
+    "clearSearch": "Clear search",
+    "statusTabs": {
+      "all": "All",
+      "0": "Enabled",
+      "1": "Disabled"
+    }
+  },
+  "status": {
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "table": {
+    "columns": {
+      "name": "Role",
+      "key": "Permission key",
+      "status": "Status",
+      "createdAt": "Created",
+      "actions": "Actions"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete role",
+      "more": "More actions"
+    },
+    "selection": {
+      "selectAll": "Select all roles",
+      "selectRole": "Select {target}"
+    },
+    "state": {
+      "loading": "Loading roles...",
+      "error": "Failed to load roles. Please try again later.",
+      "emptyTitle": "No role data",
+      "emptyDescription": "Create a role to configure permissions and members here."
+    }
+  },
+  "toast": {
+    "createSuccess": "Role created successfully.",
+    "createError": "Failed to create role. Please try again later.",
+    "updateSuccess": "Role updated successfully.",
+    "updateError": "Failed to update role. Please try again later.",
+    "deleteSuccess": "Role deleted.",
+    "deleteError": "Failed to delete role. Please try again later.",
+    "bulkDeleteSuccess": "Roles deleted successfully.",
+    "bulkDeleteError": "Failed to delete the selected roles.",
+    "bulkDeleteEmpty": "Select at least one role before running bulk delete."
+  },
+  "dialogs": {
+    "deleteTitle": "Delete role",
+    "deleteMessage": "Are you sure you want to delete \"{name}\"? This cannot be undone.",
+    "deleteFallback": "Are you sure you want to delete the selected role?",
+    "bulkDeleteTitle": "Delete roles",
+    "bulkDeleteSelected": "This will delete the {count} selected roles. This action cannot be undone.",
+    "bulkDeleteConfirm": "Delete roles",
+    "bulkDeleteCancel": "Cancel"
+  },
+  "form": {
+    "createTitle": "New role",
+    "createDescription": "Create a role and configure the default permissions.",
+    "editTitle": "Edit role",
+    "editDescription": "Update role details and permission scope.",
+    "loading": "Loading role information...",
+    "fields": {
+      "name": "Role name",
+      "namePlaceholder": "Enter role name",
+      "key": "Permission key",
+      "keyPlaceholder": "Enter permission key",
+      "sort": "Display order",
+      "sortPlaceholder": "Default 0",
+      "status": "Role status",
+      "remark": "Notes",
+      "remarkPlaceholder": "Optional",
+      "menu": "Menu permissions"
+    },
+    "submit": {
+      "creating": "Submitting...",
+      "create": "Create",
+      "save": "Save"
+    },
+    "validation": {
+      "name": {
+        "required": "Enter the role name",
+        "max": "Role name cannot exceed 50 characters"
+      },
+      "key": {
+        "required": "Enter the permission key",
+        "max": "Permission key cannot exceed 100 characters"
+      },
+      "sort": {
+        "range": "Order must be an integer between 0 and 9999"
+      },
+      "remark": {
+        "max": "Notes cannot exceed 256 characters"
+      }
+    }
+  },
+  "permissionTree": {
+    "title": "Menu permissions",
+    "buttonBadge": "Button",
+    "expand": "Expand / collapse",
+    "selectAll": "Select all / none",
+    "linkage": "Parent-child linkage",
+    "emptyTitle": "No menus available",
+    "emptyDescription": "Enable menus to assign permissions here."
+  }
+}

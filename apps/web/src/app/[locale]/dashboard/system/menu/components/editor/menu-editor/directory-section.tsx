@@ -20,19 +20,22 @@ import type { UseFormReturn } from 'react-hook-form';
 
 import { MenuIconSelect } from '../menu-icon-select';
 import { SectionHeader } from './section-header';
+import { useTranslations } from 'next-intl';
 
 export function DirectorySection({
   form,
 }: {
   form: UseFormReturn<MenuFormValues>;
 }) {
+  const tSection = useTranslations('MenuManagement.form.sections.directory');
+  const tStatus = useTranslations('MenuManagement.status');
   const { control } = form;
 
   return (
     <div className="space-y-4">
       <SectionHeader
-        title="目录配置"
-        description="维护目录的路由地址、图标及状态信息。"
+        title={tSection('title')}
+        description={tSection('description')}
       />
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
@@ -42,12 +45,12 @@ export function DirectorySection({
             <FormItem>
               <FormLabel>
                 <span className="mr-1 text-destructive">*</span>
-                路由地址
+                {tSection('fields.path')}
               </FormLabel>
               <FormControl>
-                <Input placeholder="例如 system 或 monitor" {...field} />
+                <Input placeholder={tSection('fields.pathPlaceholder')} {...field} />
               </FormControl>
-              <FormDescription>填写目录的访问路径，例如 system 或 monitor。</FormDescription>
+              <FormDescription>{tSection('fields.pathDescription')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -61,14 +64,14 @@ export function DirectorySection({
             <FormItem>
               <FormLabel>
                 <span className="mr-1 text-destructive">*</span>
-                目录图标
+                {tSection('fields.icon')}
               </FormLabel>
               <FormControl>
                 <MenuIconSelect
                   value={field.value}
                   onChange={field.onChange}
                   allowEmpty={false}
-                  placeholder="选择目录图标"
+                  placeholder={tSection('fields.iconPlaceholder')}
                 />
               </FormControl>
               <FormMessage />
@@ -80,16 +83,16 @@ export function DirectorySection({
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>状态</FormLabel>
+              <FormLabel>{tSection('fields.status')}</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择状态" />
+                    <SelectValue placeholder={tSection('fields.status')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="0">正常</SelectItem>
-                  <SelectItem value="1">停用</SelectItem>
+                  <SelectItem value="0">{tStatus('enabled')}</SelectItem>
+                  <SelectItem value="1">{tStatus('disabled')}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -102,11 +105,11 @@ export function DirectorySection({
         name="remark"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>备注</FormLabel>
+            <FormLabel>{tSection('fields.remark')}</FormLabel>
             <FormControl>
               <Textarea
                 className="min-h-[96px] resize-none"
-                placeholder="请输入备注（可选）"
+                placeholder={tSection('fields.remarkPlaceholder')}
                 {...field}
               />
             </FormControl>

@@ -1,0 +1,119 @@
+{
+  "dashboard": {
+    "header": {
+      "title": "Cache monitor",
+      "description": "Track Redis runtime health and key distribution from a single view.",
+      "updatedAt": "Overview updated: {time}",
+      "refresh": "Refresh data",
+      "refreshing": "Refreshing"
+    },
+    "meta": {
+      "keys": "Total keys",
+      "hitRate": "Hit rate",
+      "ops": "Commands / sec"
+    },
+    "error": {
+      "overview": "Unable to load the cache overview. Please try again later."
+    },
+    "overview": {
+      "title": "Runtime overview",
+      "description": "Memory usage, hit ratio, and client connections.",
+      "memory": {
+        "label": "Memory usage",
+        "aria": "Memory usage percentage",
+        "peak": "Peak usage",
+        "fragmentation": "Fragmentation"
+      },
+      "clients": {
+        "title": "Clients",
+        "connected": "Connected",
+        "blocked": "Blocked"
+      },
+      "stats": {
+        "title": "Access stats",
+        "hits": "Hits",
+        "misses": "Misses",
+        "expired": "Expired keys",
+        "evicted": "Evicted keys"
+      }
+    },
+    "server": {
+      "title": "Server status",
+      "description": "Core runtime metrics and persistence state.",
+      "fields": {
+        "mode": "Mode",
+        "role": "Role",
+        "version": "Version",
+        "uptime": "Uptime"
+      },
+      "persistence": {
+        "title": "Persistence",
+        "lastRdb": "Last RDB",
+        "status": "Status",
+        "pending": "Unpersisted changes",
+        "aof": "AOF"
+      }
+    },
+    "keyspace": {
+      "title": "Keyspace distribution",
+      "description": "Keys and expirations per logical database.",
+      "table": {
+        "db": "Database",
+        "keys": "Keys",
+        "expires": "Expiring keys",
+        "avgTtl": "Avg TTL"
+      },
+      "emptyTitle": "No keyspace data",
+      "emptyDescription": "Waiting for the cache node to publish metrics."
+    }
+  },
+  "table": {
+    "columns": {
+      "key": "Key",
+      "type": "Type",
+      "ttl": "TTL",
+      "idle": "Idle time",
+      "size": "Estimated size",
+      "encoding": "Encoding"
+    },
+    "copy": {
+      "success": "Key copied to clipboard.",
+      "error": "Failed to copy the key."
+    },
+    "aria": {
+      "copy": "Copy key name"
+    },
+    "loading": "Loading cache keys...",
+    "error": "Failed to load cache keys. Please try again later.",
+    "emptyTitle": "No matching keys",
+    "emptyDescription": {
+      "filtered": "Try adjusting the pattern to see more results.",
+      "noFilter": "No cache data to display yet."
+    }
+  },
+  "list": {
+    "header": {
+      "title": "Cache keys",
+      "description": "Search and inspect Redis keys with pattern filters and pagination.",
+      "refresh": "Refresh",
+      "refreshing": "Refreshing"
+    },
+    "filters": {
+      "placeholder": "Match key names, e.g. user:*",
+      "clearAria": "Clear pattern filter",
+      "reset": "Reset filters",
+      "patternLabel": "Pattern:",
+      "removePatternAria": "Remove pattern filter",
+      "clear": "Clear",
+      "limitedTip": "Showing first {count} matching keys to reduce load."
+    }
+  },
+  "common": {
+    "unknown": "Unknown",
+    "permanent": "Permanent",
+    "justNow": "Just now",
+    "notExecuted": "Not executed",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  }
+}

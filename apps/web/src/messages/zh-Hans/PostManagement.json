@@ -1,0 +1,120 @@
+{
+  "header": {
+    "title": "岗位管理",
+    "description": "通过状态筛选、批量操作和弹窗编辑维护系统岗位。",
+    "actions": {
+      "refresh": "刷新",
+      "create": "新增岗位"
+    }
+  },
+  "filters": {
+    "reset": "重置",
+    "postName": {
+      "placeholder": "搜索岗位名称",
+      "clear": "清空搜索"
+    },
+    "chips": {
+      "postName": "岗位名称",
+      "remove": "移除 {target}"
+    }
+  },
+  "status": {
+    "all": "全部",
+    "0": "在岗",
+    "1": "停用"
+  },
+  "table": {
+    "defaultName": "岗位",
+    "columns": {
+      "postName": "岗位名称",
+      "postCode": "岗位编码",
+      "postSort": "排序",
+      "status": "状态",
+      "actions": "操作"
+    },
+    "actions": {
+      "edit": "编辑",
+      "delete": "删除岗位",
+      "more": "更多操作"
+    },
+    "selection": {
+      "selectAll": "选择全部岗位",
+      "selectPost": "选择 {target}"
+    },
+    "state": {
+      "loading": "正在加载岗位...",
+      "error": "加载失败，请稍后再试。",
+      "emptyTitle": "暂无岗位数据",
+      "emptyDescription": "点击“新增岗位”即可开始维护岗位信息。"
+    }
+  },
+  "toast": {
+    "createSuccess": "岗位创建成功",
+    "createError": "创建岗位失败，请稍后再试",
+    "updateSuccess": "岗位信息已更新",
+    "updateError": "更新岗位失败，请稍后重试",
+    "deleteSuccess": "岗位已删除",
+    "deleteError": "删除岗位失败，请稍后再试",
+    "bulkDeleteSuccess": "批量删除成功",
+    "bulkDeleteError": "批量删除失败，请稍后再试",
+    "bulkDeleteEmpty": "请先选择需要删除的岗位",
+    "selectRequired": "请先选择至少一个岗位"
+  },
+  "delete": {
+    "single": {
+      "title": "删除岗位",
+      "description": "确定要删除岗位「{name}」吗？该操作无法撤销。",
+      "fallback": "确认删除所选岗位吗？"
+    },
+    "bulk": {
+      "title": "批量删除岗位",
+      "description": "将删除选中的 {count} 个岗位，操作不可恢复。",
+      "fallback": "确认删除所选岗位吗？",
+      "confirm": "批量删除"
+    }
+  },
+  "editor": {
+    "createTitle": "新增岗位",
+    "editTitle": "编辑岗位",
+    "description": "维护岗位信息，岗位编码与名称需保持唯一性。",
+    "fields": {
+      "postCode": {
+        "label": "岗位编码",
+        "placeholder": "请输入岗位编码"
+      },
+      "postName": {
+        "label": "岗位名称",
+        "placeholder": "请输入岗位名称"
+      },
+      "status": {
+        "label": "岗位状态",
+        "options": {
+          "0": "在岗",
+          "1": "停用"
+        }
+      },
+      "remark": {
+        "label": "备注",
+        "placeholder": "请输入备注（可选）"
+      }
+    },
+    "actions": {
+      "cancel": "取消",
+      "saving": "保存中...",
+      "save": "保存"
+    },
+    "validation": {
+      "postCode": {
+        "required": "请输入岗位编码",
+        "max": "岗位编码不能超过 50 个字符"
+      },
+      "postName": {
+        "required": "请输入岗位名称",
+        "max": "岗位名称不能超过 50 个字符"
+      },
+      "remark": {
+        "max": "备注不能超过 255 个字符"
+      }
+    }
+  }
+}

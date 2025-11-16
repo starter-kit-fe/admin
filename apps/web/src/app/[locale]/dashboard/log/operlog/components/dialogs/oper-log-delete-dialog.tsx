@@ -12,12 +12,15 @@ import {
   useOperLogManagementStore,
 } from '../../store';
 import { resolveErrorMessage } from '../../utils';
+import { useTranslations } from 'next-intl';
 
 export function OperLogDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = useOperLogManagementStore();
   const refresh = useOperLogManagementRefresh();
   const { beginMutation, endMutation } =
     useOperLogManagementMutationCounter();
+  const tDelete = useTranslations('OperLogManagement.delete');
+  const tToast = useTranslations('OperLogManagement.toast');
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => removeOperLog(id),
@@ -25,12 +28,12 @@ export function OperLogDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('操作日志已删除');
+      toast.success(tToast('deleteSuccess'));
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '删除操作日志失败'));
+      toast.error(resolveErrorMessage(error, tToast('deleteError')));
     },
     onSettled: () => {
       endMutation();
@@ -45,11 +48,13 @@ export function OperLogDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title="删除操作日志"
+      title={tDelete('title')}
       description={
         deleteTarget
-          ? `确定要删除操作「${deleteTarget.title || '未命名'}」的日志记录吗？`
-          : '确定要删除所选操作日志吗？'
+          ? tDelete('description', {
+              title: deleteTarget.title?.trim() || tDelete('untitled'),
+            })
+          : tDelete('fallback')
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

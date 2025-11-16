@@ -19,7 +19,9 @@ import { resolveLucideIcon } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';
 import { MenuNode } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import {Link} from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
+import type { AppLocale } from '@/i18n/routing';
+import { useLocale } from 'next-intl';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import gpkg from '../../../../../package.json';
@@ -68,8 +70,9 @@ export function buildNavItems(
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const locale = useLocale() as AppLocale;
   const { data: menuTree = [], isLoading } = useQuery({
-    queryKey: ['auth', 'menus'],
+    queryKey: ['auth', 'menus', locale],
     queryFn: getMenuTree,
   });
   const [isHydrated, setIsHydrated] = useState(false);
@@ -120,7 +123,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         {shouldShowLoading ? (
           <div className="px-4 py-6 text-sm text-muted-foreground">
-            菜单加载中...
+            {locale === 'en' ? 'Loading menus…' : '菜单加载中...'}
           </div>
         ) : hasNavItems ? (
           <NavMain items={navItems} />
@@ -128,9 +131,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <div className="px-4 py-6">
             <Empty className="border-0 bg-transparent p-2">
               <EmptyHeader>
-                <EmptyTitle>暂无可用菜单</EmptyTitle>
+                <EmptyTitle>
+                  {locale === 'en' ? 'No menus available' : '暂无可用菜单'}
+                </EmptyTitle>
                 <EmptyDescription>
-                  联系管理员为你分配系统权限。
+                  {locale === 'en'
+                    ? 'Ask your administrator to assign permissions.'
+                    : '联系管理员为你分配系统权限。'}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

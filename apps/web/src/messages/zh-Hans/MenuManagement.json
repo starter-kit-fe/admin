@@ -1,0 +1,243 @@
+{
+  "header": {
+    "title": "菜单管理",
+    "description": "维护系统导航结构，可新增、编辑并拖拽排序菜单/目录。",
+    "refresh": "刷新",
+    "create": "新增菜单"
+  },
+  "filters": {
+    "searchPlaceholder": "搜索菜单名称",
+    "clearSearch": "清空搜索",
+    "statusTabs": {
+      "all": "全部",
+      "0": "显示",
+      "1": "隐藏"
+    }
+  },
+  "status": {
+    "enabled": "正常",
+    "disabled": "停用"
+  },
+  "visibility": {
+    "visible": "显示",
+    "hidden": "隐藏"
+  },
+  "types": {
+    "directory": "目录",
+    "menu": "菜单",
+    "button": "按钮"
+  },
+  "tree": {
+    "loading": "菜单加载中...",
+    "error": "菜单加载失败，请稍后再试。",
+    "retry": "重新加载",
+    "emptyTitle": "暂无菜单数据",
+    "emptyDescription": "创建目录或菜单后即可在此进行导航管理。",
+    "labels": {
+      "route": "路由",
+      "permission": "权限",
+      "notConfigured": "未配置",
+      "addChild": "新增子菜单",
+      "edit": "编辑",
+      "delete": "删除",
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "more": "更多操作"
+    }
+  },
+  "toast": {
+    "createSuccess": "菜单创建成功",
+    "createError": "创建菜单失败，请稍后再试",
+    "updateSuccess": "菜单已更新",
+    "updateError": "更新菜单失败，请稍后再试",
+    "deleteSuccess": "菜单已删除",
+    "deleteError": "删除菜单失败，请稍后再试",
+    "reorderSuccess": "菜单排序已更新",
+    "reorderError": "更新排序失败，请稍后再试"
+  },
+  "dialogs": {
+    "deleteTitle": "删除菜单",
+    "deleteMessage": "确定要删除“{name}”吗？其子菜单将一并删除。",
+    "deleteFallback": "确认删除所选菜单吗？"
+  },
+  "form": {
+    "submit": {
+      "creating": "提交中...",
+      "create": "创建",
+      "save": "保存"
+    },
+    "typeTabs": {
+      "options": {
+        "M": {
+          "label": "目录",
+          "description": "仅作分组容器，不可点击"
+        },
+        "C": {
+          "label": "菜单",
+          "description": "常规路由菜单，对应具体页面"
+        },
+        "F": {
+          "label": "按钮",
+          "description": "仅用于权限控制，不在侧边栏显示"
+        }
+      },
+      "hints": {
+        "M": {
+          "title": "目录用于划分层级，通常不对应真实页面。",
+          "helper": "只需维护路由与图标，权限交由子菜单或按钮处理。"
+        },
+        "C": {
+          "title": "菜单需与页面绑定，必须配置完整的路由与权限。",
+          "helper": "请同步维护组件路径、路由地址与权限标识，确保导航一致。"
+        },
+        "F": {
+          "title": "按钮用于页面内的细粒度权限控制。",
+          "helper": "无需设置路由和组件，只需维护权限标识以控制操作按钮。"
+        }
+      }
+    },
+    "createTitle": {
+      "M": "新增目录",
+      "C": "新增菜单",
+      "F": "新增按钮"
+    },
+    "editTitle": {
+      "M": "编辑目录",
+      "C": "编辑菜单",
+      "F": "编辑按钮"
+    },
+    "createDescription": {
+      "M": "创建目录以组织子菜单层级。",
+      "C": "创建路由菜单并配置相关元数据。",
+      "F": "创建页面内使用的按钮权限。"
+    },
+    "editDescription": {
+      "M": "更新目录信息及层级。",
+      "C": "更新菜单的路由、图标与权限。",
+      "F": "更新按钮权限相关信息。"
+    },
+    "sections": {
+      "basic": {
+        "title": "基础信息",
+        "description": {
+          "directory": "设置目录层级与排序。",
+          "default": "设置菜单/按钮的层级、名称与类型。"
+        },
+        "fields": {
+          "name": {
+            "directory": "目录名称",
+            "menu": "菜单名称",
+            "button": "按钮名称",
+            "placeholder": "请输入{target}"
+          },
+          "parent": {
+            "directory": "父级目录",
+            "menu": "父级菜单",
+            "placeholder": "请选择父级"
+          },
+          "order": {
+            "directory": "目录排序",
+            "default": "显示顺序",
+            "placeholder": "0-9999"
+          }
+        }
+      },
+      "directory": {
+        "title": "目录配置",
+        "description": "维护目录的路由、图标及状态。",
+        "fields": {
+          "path": "路由地址",
+          "pathPlaceholder": "例如 system 或 monitor",
+          "pathDescription": "填写目录的访问路径，例如 system 或 monitor。",
+          "icon": "目录图标",
+          "iconPlaceholder": "选择目录图标",
+          "status": "状态",
+          "remark": "备注",
+          "remarkPlaceholder": "可选"
+        }
+      },
+      "menu": {
+        "title": "菜单配置",
+        "description": "配置菜单路由、参数、缓存与权限。",
+        "fields": {
+          "path": "路由地址",
+          "pathPlaceholder": "例如 system/user",
+          "query": "路由参数",
+          "queryPlaceholder": "可选，例如 role=admin",
+          "external": {
+            "label": "外链跳转",
+            "description": "开启后点击菜单直接访问外部链接。"
+          },
+          "cache": {
+            "label": "禁用缓存",
+            "description": "关闭后不使用 keepalive，页面状态将被重置。"
+          },
+          "icon": "菜单图标",
+          "iconPlaceholder": "搜索 Lucide 图标",
+          "visible": "显示状态",
+          "status": "菜单状态",
+          "perms": "权限标识",
+          "permsPlaceholder": "例如 system:user:list"
+        }
+      },
+      "button": {
+        "title": "按钮权限",
+        "description": "按钮只用于权限控制。",
+        "fields": {
+          "perms": "权限标识",
+          "permsPlaceholder": "例如 system:user:list",
+          "status": "按钮状态"
+        }
+      },
+      "remark": {
+        "title": "备注",
+        "description": "可选，用于补充说明。",
+        "placeholder": "请输入备注（可选）"
+      }
+    },
+    "validation": {
+      "name": {
+        "required": "请输入菜单名称",
+        "max": "菜单名称不能超过 50 个字符"
+      },
+      "order": {
+        "range": "显示顺序需为 0-9999 的整数",
+        "required": "请输入排序值"
+      },
+      "path": {
+        "required": "请输入路由地址",
+        "max": "路由地址不超过 200 个字符"
+      },
+      "query": {
+        "max": "路由参数不超过 255 个字符"
+      },
+      "perms": {
+        "required": "请输入权限标识",
+        "max": "权限标识不超过 100 个字符"
+      },
+      "icon": {
+        "required": "请选择图标",
+        "max": "图标标识不超过 100 个字符"
+      },
+      "remark": {
+        "max": "备注最多 500 个字符"
+      }
+    }
+  },
+  "iconSelect": {
+    "placeholder": "选择图标",
+    "searchPlaceholder": "搜索图标（支持拼音/英文）",
+    "clear": "不使用图标",
+    "summary": "共 {count} 个匹配",
+    "virtualized": "已启用虚拟列表",
+    "empty": "没有匹配的图标",
+    "categories": {
+      "all": "全部图标",
+      "other": "其他"
+    }
+  },
+  "parentSelect": {
+    "placeholder": "请选择父级菜单",
+    "root": "根目录"
+  }
+}

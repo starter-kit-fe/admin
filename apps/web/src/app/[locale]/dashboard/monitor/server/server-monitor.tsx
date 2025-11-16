@@ -11,6 +11,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useQuery } from '@tanstack/react-query';
 import { Cpu, HardDrive, MemoryStick, RefreshCcw } from 'lucide-react';
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { getServerStatus } from './api';
 import { ProcessInfoCard } from './components/process-info-card';
@@ -26,6 +27,10 @@ import { DEFAULT_STATUS, summarizeDisks } from './lib/status';
 import type { ServerStatus } from './type';
 
 export function ServerMonitor() {
+  const tHeader = useTranslations('ServerMonitor.header');
+  const tStatus = useTranslations('ServerMonitor.status');
+  const tQuickStats = useTranslations('ServerMonitor.quickStats');
+  const tError = useTranslations('ServerMonitor.error');
   const query = useQuery({
     queryKey: ['monitor', 'server-status'],
     queryFn: getServerStatus,
@@ -54,14 +59,14 @@ export function ServerMonitor() {
 
   const lastUpdated = useMemo(() => {
     if (!status) {
-      return '尚未获取';
+      return tStatus('never');
     }
     try {
       return new Date(query.dataUpdatedAt || Date.now()).toLocaleString();
     } catch {
-      return '刚刚';
+      return tStatus('justNow');
     }
-  }, [status, query.dataUpdatedAt]);
+  }, [status, query.dataUpdatedAt, tStatus]);
 
   const cpuUsagePercent = useMemo(() => {
     const { cpu, process } = normalizedStatus;
@@ -75,42 +80,62 @@ export function ServerMonitor() {
   }, [normalizedStatus]);
 
   const quickStats = useMemo(
-    () => [
-      {
-        label: 'CPU',
-        icon: Cpu,
-        value: cpuUsagePercent,
-        formatValue: formatPercent,
-        hint: `Load ${formatLoad(normalizedStatus.cpu.load1)} / ${formatLoad(normalizedStatus.cpu.load5)} / ${formatLoad(normalizedStatus.cpu.load15)}`,
-        percent: safeNumber(cpuUsagePercent),
-      },
-      {
-        label: '内存',
-        icon: MemoryStick,
-        value: normalizedStatus.memory.usedPercent,
-        formatValue: formatPercent,
-        hint: `进程占用 ${formatBytes(normalizedStatus.memory.processAlloc || normalizedStatus.process.alloc)}`,
-        percent: safeNumber(normalizedStatus.memory.usedPercent),
-      },
-      {
-        label: '存储',
-        icon: HardDrive,
-        value: diskSummary.usedPercent,
-        formatValue: formatPercent,
-        hint: `${formatBytes(diskSummary.used)} / ${formatBytes(diskSummary.total)}`,
-        percent: safeNumber(diskSummary.usedPercent),
-      },
-    ],
-    [cpuUsagePercent, diskSummary, normalizedStatus],
+    () => {
+      const load1 = formatLoad(normalizedStatus.cpu.load1);
+      const load5 = formatLoad(normalizedStatus.cpu.load5);
+      const load15 = formatLoad(normalizedStatus.cpu.load15);
+      const processAlloc = formatBytes(
+        normalizedStatus.memory.processAlloc || normalizedStatus.process.alloc,
+      );
+      const diskUsed = formatBytes(diskSummary.used);
+      const diskTotal = formatBytes(diskSummary.total);
+
+      return [
+        {
+          label: tQuickStats('cpu.label'),
+          icon: Cpu,
+          value: cpuUsagePercent,
+          formatValue: formatPercent,
+          hint: tQuickStats('cpu.hint', {
+            load1,
+            load5,
+            load15,
+          }),
+          percent: safeNumber(cpuUsagePercent),
+        },
+        {
+          label: tQuickStats('memory.label'),
+          icon: MemoryStick,
+          value: normalizedStatus.memory.usedPercent,
+          formatValue: formatPercent,
+          hint: tQuickStats('memory.hint', {
+            allocation: processAlloc,
+          }),
+          percent: safeNumber(normalizedStatus.memory.usedPercent),
+        },
+        {
+          label: tQuickStats('storage.label'),
+          icon: HardDrive,
+          value: diskSummary.usedPercent,
+          formatValue: formatPercent,
+          hint: tQuickStats('storage.hint', {
+            used: diskUsed,
+            total: diskTotal,
+          }),
+          percent: safeNumber(diskSummary.usedPercent),
+        },
+      ];
+    },
+    [cpuUsagePercent, diskSummary, normalizedStatus, tQuickStats],
   );
 
   if (query.isError) {
     return (
       <Card className="border-destructive/40 bg-destructive/10 text-destructive">
         <CardHeader>
-          <CardTitle className="text-lg">无法加载服务监控数据</CardTitle>
+          <CardTitle className="text-lg">{tError('title')}</CardTitle>
           <CardDescription className="text-destructive/80">
-            请稍后刷新重试。
+            {tError('description')}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -122,10 +147,10 @@ export function ServerMonitor() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            服务监控
+            {tHeader('title')}
           </h1>
           <p className="text-sm text-muted-foreground">
-            聚焦后台服务器程序，CPU / 内存 / 存储。
+            {tHeader('description')}
           </p>
         </div>
         <Button
@@ -138,12 +163,12 @@ export function ServerMonitor() {
           {query.isFetching ? (
             <>
               <Spinner className="mr-2 size-4" />
-              刷新中
+              {tHeader('refreshing')}
             </>
           ) : (
             <>
               <RefreshCcw className="mr-2 size-4" />
-              立即刷新
+              {tHeader('refreshNow')}
             </>
           )}
         </Button>

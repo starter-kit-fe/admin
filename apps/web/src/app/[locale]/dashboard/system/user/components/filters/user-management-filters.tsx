@@ -1,3 +1,5 @@
+'use client';
+
 import { StatusTabs } from '@/components/status-tabs';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { AppliedFilters } from './applied-filters';
 import {
@@ -64,6 +67,7 @@ export function UserManagementFilters({
   titleSlot,
   refreshSlot,
 }: UserManagementFiltersProps) {
+  const t = useTranslations('UserManagement.filters');
   if (variant === 'mobile') {
     return (
       <Card className="flex shadow-none flex-col gap-3">
@@ -72,7 +76,7 @@ export function UserManagementFilters({
             <div className="flex flex-col">
               {titleSlot ?? (
                 <span className="text-base font-semibold text-foreground">
-                  筛选
+                  {t('title')}
                 </span>
               )}
             </div>
@@ -94,7 +98,7 @@ export function UserManagementFilters({
             <Input
               value={filterForm.keyword}
               onChange={(event) => onKeywordChange(event.target.value)}
-              placeholder="搜索用户或昵称"
+              placeholder={t('searchPlaceholder')}
               className="h-11 rounded-2xl border-border/60 pl-10 text-base"
             />
           </div>
@@ -104,7 +108,7 @@ export function UserManagementFilters({
         <div>
           <Select value={filterForm.role} onValueChange={onRoleChange}>
             <SelectTrigger className="h-11 w-full rounded-2xl border-border/60">
-              <SelectValue placeholder="选择角色" />
+              <SelectValue placeholder={t('rolePlaceholder')} />
             </SelectTrigger>
             <SelectContent align="start" className="min-w-[12rem] rounded-2xl">
               {roleOptions.map((option) => (

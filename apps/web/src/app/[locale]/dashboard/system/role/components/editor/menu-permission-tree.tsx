@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
@@ -13,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 
 import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
+import { useTranslations } from 'next-intl';
 
 interface MenuPermissionTreeProps {
   nodes: MenuTreeNode[];
@@ -26,6 +29,7 @@ const INDENT_PX = 20;
 type FlatNode = { node: MenuTreeNode; parentId: number };
 
 export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPermissionTreeProps) {
+  const t = useTranslations('RoleManagement.permissionTree');
   const flatNodes = useMemo(() => flattenNodes(nodes), [nodes]);
   const allIds = useMemo(
     () => flatNodes.map((entry) => entry.node.menuId),
@@ -186,7 +190,7 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
               </span>
               {item.menuType === 'F' ? (
                 <Badge variant="secondary" className="ml-1 h-5 px-2 text-[11px]">
-                  按钮
+                  {t('buttonBadge')}
                 </Badge>
               ) : null}
               {item.perms ? (
@@ -200,20 +204,20 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
         );
       });
     },
-    [applySelection, disabled, expanded, toggleNode, valueSet],
+    [applySelection, disabled, expanded, t, toggleNode, valueSet],
   );
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-4 text-sm">
-        <span className="font-medium text-foreground">菜单权限</span>
+        <span className="font-medium text-foreground">{t('title')}</span>
         <label className="flex items-center gap-2 text-muted-foreground">
           <Checkbox
             checked={expandedAll}
             onCheckedChange={(next) => handleToggleExpandAll(next === true)}
             disabled={disabled || parentIds.length === 0}
           />
-          展开/折叠
+          {t('expand')}
         </label>
         <label className="flex items-center gap-2 text-muted-foreground">
           <Checkbox
@@ -221,7 +225,7 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
             onCheckedChange={(next) => handleSelectAll(next === true)}
             disabled={disabled || allIds.length === 0}
           />
-          全选/全不选
+          {t('selectAll')}
         </label>
         <label className="flex items-center gap-2 text-muted-foreground">
           <Checkbox
@@ -229,15 +233,15 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
             onCheckedChange={(next) => setLinkage(next === true)}
             disabled={disabled}
           />
-          父子联动
+          {t('linkage')}
         </label>
       </div>
       <div className="max-h-80 space-y-1 overflow-y-auto rounded-lg border border-border/60 bg-muted/10 p-3">
         {nodes.length === 0 ? (
           <Empty className="h-48 border-0 bg-transparent p-2">
             <EmptyHeader>
-              <EmptyTitle>暂无可配置菜单</EmptyTitle>
-              <EmptyDescription>启用菜单后可在此为角色分配权限。</EmptyDescription>
+              <EmptyTitle>{t('emptyTitle')}</EmptyTitle>
+              <EmptyDescription>{t('emptyDescription')}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (

@@ -34,6 +34,7 @@ import {
 import { format, isValid, parse, parseISO } from 'date-fns';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { Notice } from '../../type';
 
@@ -49,30 +50,26 @@ interface NoticeTableProps {
   onDelete: (notice: Notice) => void;
 }
 
-const STATUS_META: Record<
+const STATUS_BADGE_META: Record<
   Notice['status'],
-  { label: string; className: string }
+  { className: string }
 > = {
   '0': {
-    label: '正常',
     className: 'bg-primary/10 text-primary border-transparent',
   },
   '1': {
-    label: '停用',
     className: 'bg-destructive/10 text-destructive border-transparent',
   },
 };
 
-const TYPE_META: Record<
+const TYPE_BADGE_META: Record<
   Notice['noticeType'],
-  { label: string; className: string }
+  { className: string }
 > = {
   '1': {
-    label: '通知',
     className: 'bg-secondary/70 text-secondary-foreground border-transparent',
   },
   '2': {
-    label: '公告',
     className: 'bg-muted text-muted-foreground border-transparent',
   },
 };
@@ -118,12 +115,18 @@ function NoticeActions({
   onDelete,
   canEdit,
   canDelete,
+  labels,
 }: {
   notice: Notice;
   onEdit: (notice: Notice) => void;
   onDelete: (notice: Notice) => void;
   canEdit: boolean;
   canDelete: boolean;
+  labels: {
+    edit: string;
+    delete: string;
+    moreAria: (target: string) => string;
+  };
 }) {
   if (!canEdit && !canDelete) {
     return null;
@@ -138,7 +141,7 @@ function NoticeActions({
           className="size-8 hover:text-primary"
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
-          aria-label="更多操作"
+          aria-label={labels.moreAria(notice.noticeTitle)}
         >
           <MoreHorizontal className="size-4" />
         </Button>
@@ -147,7 +150,7 @@ function NoticeActions({
         {canEdit ? (
           <DropdownMenuItem onSelect={() => onEdit(notice)}>
             <Pencil className="mr-2 size-4" />
-            编辑
+            {labels.edit}
           </DropdownMenuItem>
         ) : null}
         {canDelete ? (
@@ -159,7 +162,7 @@ function NoticeActions({
             }}
           >
             <Trash2 className="mr-2 size-4" />
-            删除
+            {labels.delete}
           </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>
@@ -178,11 +181,42 @@ export function NoticeTable({
   onEdit,
   onDelete,
 }: NoticeTableProps) {
+  const tTable = useTranslations('NoticeManagement.table');
+  const tStatus = useTranslations('NoticeManagement.status');
+  const tTypes = useTranslations('NoticeManagement.types');
   const columnHelper = useMemo(() => createColumnHelper<Notice>(), []);
   const { hasPermission } = usePermissions();
   const canEditNotice = hasPermission('system:notice:edit');
   const canDeleteNotice = hasPermission('system:notice:remove');
   const showActions = canEditNotice || canDeleteNotice;
+
+  const statusMeta = useMemo(
+    () => ({
+      '0': {
+        label: tStatus('0'),
+        className: STATUS_BADGE_META['0'].className,
+      },
+      '1': {
+        label: tStatus('1'),
+        className: STATUS_BADGE_META['1'].className,
+      },
+    }),
+    [tStatus],
+  );
+
+  const typeMeta = useMemo(
+    () => ({
+      '1': {
+        label: tTypes('1'),
+        className: TYPE_BADGE_META['1'].className,
+      },
+      '2': {
+        label: tTypes('2'),
+        className: TYPE_BADGE_META['2'].className,
+      },
+    }),
+    [tTypes],
+  );
 
   const columns = useMemo(() => {
     const baseColumns = [
@@ -190,7 +224,7 @@ export function NoticeTable({
         id: 'select',
         header: () => (
           <Checkbox
-            aria-label="选择全部公告"
+            aria-label={tTable('selection.selectAll')}
             checked={headerCheckboxState}
             onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
           />
@@ -200,7 +234,9 @@ export function NoticeTable({
           const isSelected = selectedIds.has(notice.noticeId);
           return (
             <Checkbox
-              aria-label={`选择 ${notice.noticeTitle}`}
+              aria-label={tTable('selection.selectItem', {
+                target: notice.noticeTitle,
+              })}
               checked={isSelected}
               onCheckedChange={(checked) =>
                 onToggleSelect(notice.noticeId, checked === true)
@@ -214,11 +250,11 @@ export function NoticeTable({
       }),
       columnHelper.display({
         id: 'title',
-        header: () => '标题',
+        header: () => tTable('columns.title'),
         cell: ({ row }) => {
           const notice = row.original;
-          const typeMeta = TYPE_META[notice.noticeType] ?? TYPE_META['1'];
-          const statusMeta = STATUS_META[notice.status] ?? STATUS_META['1'];
+          const typeInfo = typeMeta[notice.noticeType] ?? typeMeta['1'];
+          const statusInfo = statusMeta[notice.status] ?? statusMeta['1'];
           return (
             <div className="flex flex-col gap-2">
               <span className="font-medium text-foreground">
@@ -227,15 +263,15 @@ export function NoticeTable({
               <div className="flex flex-wrap items-center gap-2">
                 <Badge
                   variant="secondary"
-                  className={cn(MINI_BADGE_CLASS, typeMeta.className)}
+                  className={cn(MINI_BADGE_CLASS, typeInfo.className)}
                 >
-                  {typeMeta.label}
+                  {typeInfo.label}
                 </Badge>
                 <Badge
                   variant="secondary"
-                  className={cn(MINI_BADGE_CLASS, statusMeta.className)}
+                  className={cn(MINI_BADGE_CLASS, statusInfo.className)}
                 >
-                  {statusMeta.label}
+                  {statusInfo.label}
                 </Badge>
               </div>
             </div>
@@ -245,7 +281,7 @@ export function NoticeTable({
       }),
       columnHelper.display({
         id: 'content',
-        header: () => '内容',
+        header: () => tTable('columns.content'),
         cell: ({ row }) => (
           <p className="line-clamp-2 text-sm text-muted-foreground">
             {row.original.noticeContent}
@@ -254,7 +290,7 @@ export function NoticeTable({
         meta: { headerClassName: 'min-w-[240px]' },
       }),
       columnHelper.accessor('remark', {
-        header: () => '备注',
+        header: () => tTable('columns.remark'),
         cell: ({ getValue }) => {
           const value = getValue();
           return (
@@ -267,7 +303,7 @@ export function NoticeTable({
       }),
       columnHelper.display({
         id: 'updatedAt',
-        header: () => '更新时间',
+        header: () => tTable('columns.updatedAt'),
         cell: ({ row }) => {
           const timeLabel = row.original.updateTime ?? row.original.createTime;
           return (
@@ -284,7 +320,11 @@ export function NoticeTable({
       baseColumns.push(
         columnHelper.display({
           id: 'actions',
-          header: () => <span className="block text-right">操作</span>,
+          header: () => (
+            <span className="block text-right">
+              {tTable('columns.actions')}
+            </span>
+          ),
           cell: ({ row }) => (
             <div className="flex justify-end">
               <NoticeActions
@@ -293,6 +333,12 @@ export function NoticeTable({
                 onDelete={onDelete}
                 canEdit={canEditNotice}
                 canDelete={canDeleteNotice}
+                labels={{
+                  edit: tTable('actions.edit'),
+                  delete: tTable('actions.delete'),
+                  moreAria: (target: string) =>
+                    tTable('actions.moreAria', { target }),
+                }}
               />
             </div>
           ),
@@ -316,6 +362,9 @@ export function NoticeTable({
     onToggleSelectAll,
     selectedIds,
     showActions,
+    statusMeta,
+    tTable,
+    typeMeta,
   ]);
 
   const table = useReactTable({
@@ -360,7 +409,7 @@ export function NoticeTable({
                 colSpan={visibleColumnCount}
                 className="h-24 text-center text-sm text-muted-foreground"
               >
-                正在加载公告...
+                {tTable('feedback.loading')}
               </TableCell>
             </TableRow>
           ) : isError ? (
@@ -369,7 +418,7 @@ export function NoticeTable({
                 colSpan={visibleColumnCount}
                 className="h-24 text-center text-sm text-destructive"
               >
-                加载失败，请稍后重试。
+                {tTable('feedback.error')}
               </TableCell>
             </TableRow>
           ) : rows.length === 0 ? (
@@ -377,9 +426,9 @@ export function NoticeTable({
               <TableCell colSpan={visibleColumnCount} className="h-48">
                 <Empty className="border-0 bg-transparent p-6">
                   <EmptyHeader>
-                    <EmptyTitle>暂无公告记录</EmptyTitle>
+                    <EmptyTitle>{tTable('feedback.emptyTitle')}</EmptyTitle>
                     <EmptyDescription>
-                      发布公告后即可在此查看与管理。
+                      {tTable('feedback.emptyDescription')}
                     </EmptyDescription>
                   </EmptyHeader>
                 </Empty>

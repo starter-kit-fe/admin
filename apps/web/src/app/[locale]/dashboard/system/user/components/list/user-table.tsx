@@ -34,6 +34,7 @@ import {
 } from '@tanstack/react-table';
 import { KeyRound, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { User } from '../../type';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -83,6 +84,7 @@ function RowActions({
   canResetPassword,
   canDelete,
 }: RowActionsProps) {
+  const tTable = useTranslations('UserManagement.table');
   const handleSelect = (callback?: (user: User) => void) => () => {
     if (callback) {
       callback(user);
@@ -111,7 +113,7 @@ function RowActions({
           onClick={() => onEdit(user)}
         >
           <Pencil className="mr-1.5 size-3" />
-          修改
+          {tTable('actions.edit')}
         </Button>
       ) : null}
       {showDropdown ? (
@@ -123,7 +125,7 @@ function RowActions({
               className="size-8 hover:text-primary cursor-pointer"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => event.stopPropagation()}
-              aria-label="更多操作"
+              aria-label={tTable('actions.more')}
             >
               <MoreHorizontal className="size-4" />
             </Button>
@@ -136,7 +138,7 @@ function RowActions({
                   onSelect={handleSelect(onResetPassword)}
                 >
                   <KeyRound className="mr-2 size-4" />
-                  重置密码
+                  {tTable('actions.resetPassword')}
                 </DropdownMenuItem>
                 {canDelete ? <DropdownMenuSeparator /> : null}
               </>
@@ -148,7 +150,7 @@ function RowActions({
                 className="text-destructive focus:text-destructive"
               >
                 <Trash2 className="mr-2 size-4" />
-                删除
+                {tTable('actions.delete')}
               </DropdownMenuItem>
             ) : null}
           </DropdownMenuContent>
@@ -170,6 +172,8 @@ export function UserTable({
   isLoading,
   isError,
 }: UserTableProps) {
+  const tTable = useTranslations('UserManagement.table');
+  const tStatus = useTranslations('UserManagement.status');
   const columnHelper = useMemo(() => createColumnHelper<User>(), []);
   const { hasPermission } = usePermissions();
   const canEditUser = hasPermission('system:user:edit');
@@ -183,7 +187,7 @@ export function UserTable({
         id: 'select',
         header: () => (
           <Checkbox
-            aria-label="选择全部"
+            aria-label={tTable('selection.selectAll')}
             checked={headerCheckboxState}
             onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
           />
@@ -194,7 +198,7 @@ export function UserTable({
           const isSelected = selectedIds.has(user.userId);
           return (
             <Checkbox
-              aria-label={`选择 ${label}`}
+              aria-label={tTable('selection.selectUser', { target: label })}
               checked={isSelected}
               onCheckedChange={(checked) =>
                 onToggleSelect(user.userId, checked === true)
@@ -211,11 +215,11 @@ export function UserTable({
       }),
       columnHelper.display({
         id: 'account',
-        header: () => '账号',
+        header: () => tTable('columns.account'),
         cell: ({ row }) => {
           const user = row.original;
           const accountLabel = getAccountLabel(user);
-          const displayName = getDisplayName(user);
+          const displayName = getDisplayName(user, tTable('defaultName'));
           const emailLabel = getEmailLabel(user);
 
           return (
@@ -241,7 +245,7 @@ export function UserTable({
       }),
       columnHelper.display({
         id: 'nickname',
-        header: () => '昵称',
+        header: () => tTable('columns.nickname'),
         cell: ({ row }) => {
           const user = row.original;
           const nickName = user.nickName?.trim();
@@ -257,7 +261,7 @@ export function UserTable({
       }),
       columnHelper.display({
         id: 'phone',
-        header: () => '手机号',
+        header: () => tTable('columns.phone'),
         cell: ({ row }) => {
           const user = row.original;
           return (
@@ -272,7 +276,7 @@ export function UserTable({
       }),
       columnHelper.display({
         id: 'department',
-        header: () => '所属部门',
+        header: () => tTable('columns.dept'),
         cell: ({ row }) => {
           const user = row.original;
           return (
@@ -287,12 +291,12 @@ export function UserTable({
       }),
       columnHelper.display({
         id: 'role',
-        header: () => '角色',
+        header: () => tTable('columns.roles'),
         cell: ({ row }) => {
           const user = row.original;
           return (
             <span className="text-sm text-muted-foreground">
-              {getRoleLabel(user)}
+              {getRoleLabel(user, tTable('defaultRole'))}
             </span>
           );
         },
@@ -302,12 +306,13 @@ export function UserTable({
       }),
       columnHelper.display({
         id: 'status',
-        header: () => '状态',
+        header: () => tTable('columns.status'),
         cell: ({ row }) => {
           const user = row.original;
           const statusMeta =
             STATUS_META[user.status as keyof typeof STATUS_META] ??
             STATUS_META['1'];
+          const statusLabel = tStatus(statusMeta.labelKey);
           return (
             <Badge
               variant="outline"
@@ -316,7 +321,7 @@ export function UserTable({
                 statusMeta.badgeClass,
               )}
             >
-              {statusMeta.label}
+              {statusLabel}
             </Badge>
           );
         },
@@ -331,7 +336,9 @@ export function UserTable({
       baseColumns.push(
         columnHelper.display({
           id: 'actions',
-          header: () => <span className="block text-right">操作</span>,
+          header: () => (
+            <span className="block text-right">{tTable('columns.actions')}</span>
+          ),
           cell: ({ row }) => {
             const user = row.original;
             const isSuperAdmin =
@@ -372,6 +379,8 @@ export function UserTable({
     onToggleSelectAll,
     selectedIds,
     showRowActions,
+    tStatus,
+    tTable,
   ]);
 
   const table = useReactTable({
@@ -415,7 +424,7 @@ export function UserTable({
                 colSpan={visibleColumnCount}
                 className="h-24 text-center text-sm text-muted-foreground"
               >
-                正在加载用户...
+                {tTable('state.loading')}
               </TableCell>
             </TableRow>
           ) : isError ? (
@@ -424,7 +433,7 @@ export function UserTable({
                 colSpan={visibleColumnCount}
                 className="h-24 text-center text-sm text-destructive"
               >
-                加载失败，请稍后再试。
+                {tTable('state.error')}
               </TableCell>
             </TableRow>
           ) : table.getRowModel().rows.length === 0 ? (
@@ -435,9 +444,9 @@ export function UserTable({
               >
                 <Empty className="border-0 bg-transparent p-4">
                   <EmptyHeader>
-                    <EmptyTitle>暂无用户数据</EmptyTitle>
+                    <EmptyTitle>{tTable('state.emptyTitle')}</EmptyTitle>
                     <EmptyDescription>
-                      创建用户后可在此管理详情与权限。
+                      {tTable('state.emptyDescription')}
                     </EmptyDescription>
                   </EmptyHeader>
                 </Empty>

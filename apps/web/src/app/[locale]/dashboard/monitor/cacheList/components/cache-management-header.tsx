@@ -1,6 +1,7 @@
 'use client';
 
 import { RefreshCcw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
@@ -14,11 +15,12 @@ import {
 export function CacheManagementHeader() {
   const { isRefreshing, isMutating } = useCacheListStatus();
   const refresh = useCacheListRefresh();
+  const tHeader = useTranslations('CacheMonitor.list.header');
 
   return (
     <ManagementHeader
-      title="缓存键列表"
-      description="检索和定位缓存键，支持按模式过滤与分页查看。"
+      title={tHeader('title')}
+      description={tHeader('description')}
       actions={
         <PermissionButton
           required="monitor:cache:list"
@@ -31,12 +33,12 @@ export function CacheManagementHeader() {
           {isRefreshing ? (
             <>
               <Spinner className="size-4" />
-              刷新中
+              {tHeader('refreshing')}
             </>
           ) : (
             <>
               <RefreshCcw className="size-4" />
-              刷新
+              {tHeader('refresh')}
             </>
           )}
         </PermissionButton>

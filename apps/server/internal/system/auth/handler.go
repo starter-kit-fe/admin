@@ -17,6 +17,7 @@ import (
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
 	"github.com/starter-kit-fe/admin/internal/system/online"
 	"github.com/starter-kit-fe/admin/middleware"
+	appi18n "github.com/starter-kit-fe/admin/pkg/i18n"
 	jwtpkg "github.com/starter-kit-fe/admin/pkg/jwt"
 	"github.com/starter-kit-fe/admin/pkg/netutil"
 	"github.com/starter-kit-fe/admin/pkg/resp"
@@ -510,7 +511,7 @@ func (h *Handler) GetMenus(ctx *gin.Context) {
 		return
 	}
 
-	nodes := buildMenuTree(menus)
+	nodes := buildMenuTree(ctx, menus)
 
 	ctx.JSON(200, gin.H{
 		"code": 200,
@@ -519,7 +520,7 @@ func (h *Handler) GetMenus(ctx *gin.Context) {
 	})
 }
 
-func buildMenuTree(menus []model.SysMenu) []*MenuNode {
+func buildMenuTree(ctx *gin.Context, menus []model.SysMenu) []*MenuNode {
 	if len(menus) == 0 {
 		return []*MenuNode{}
 	}
@@ -533,7 +534,7 @@ func buildMenuTree(menus []model.SysMenu) []*MenuNode {
 	ordered := make([]*menuWrapper, 0, len(menus))
 
 	for _, menu := range menus {
-		node := transformMenu(menu)
+		node := transformMenu(ctx, menu)
 		wrapper := &menuWrapper{
 			menu: menu,
 			node: node,
@@ -576,15 +577,22 @@ func buildMenuTree(menus []model.SysMenu) []*MenuNode {
 	return roots
 }
 
-func transformMenu(menu model.SysMenu) *MenuNode {
+func transformMenu(ctx *gin.Context, menu model.SysMenu) *MenuNode {
 	path := formatMenuPath(menu)
 	component := resolveMenuComponent(menu)
 	hidden := strings.TrimSpace(menu.Visible) == "1"
 	name := resolveRouteName(menu)
 	isExternal := isExternalLink(menu)
 
+	title := strings.TrimSpace(menu.MenuName)
+	if ctx != nil {
+		if localized := strings.TrimSpace(appi18n.Message(ctx, menu.MenuName)); localized != "" {
+			title = localized
+		}
+	}
+
 	meta := MenuMeta{
-		Title:   menu.MenuName,
+		Title:   title,
 		Icon:    strings.TrimSpace(menu.Icon),
 		NoCache: menu.IsCache,
 	}

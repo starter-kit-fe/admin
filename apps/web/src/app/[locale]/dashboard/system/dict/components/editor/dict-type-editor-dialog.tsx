@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -18,7 +19,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-import { dictTypeFormSchema, type DictTypeFormValues } from '../../type';
+import {
+  buildDictTypeFormSchema,
+  type DictTypeFormValues,
+} from '../../type';
 
 const DEFAULT_VALUES: DictTypeFormValues = {
   dictName: '',
@@ -50,12 +54,15 @@ export function DictTypeEditorDialog({
   onOpenChange,
   onSubmit,
 }: DictTypeEditorDialogProps) {
+  const t = useTranslations('DictManagement.typeEditor');
+  const formSchema = useMemo(() => buildDictTypeFormSchema(t), [t]);
+
   const form = useForm<
     DictTypeFormValues,
     DictTypeFormResolverContext,
     DictTypeFormValues
   >({
-    resolver: zodResolver(dictTypeFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -79,10 +86,10 @@ export function DictTypeEditorDialog({
       <ResponsiveDialog.Content className="sm:max-w-xl">
         <ResponsiveDialog.Header>
           <ResponsiveDialog.Title>
-            {mode === 'create' ? '新增字典类型' : '编辑字典类型'}
+            {mode === 'create' ? t('createTitle') : t('editTitle')}
           </ResponsiveDialog.Title>
           <ResponsiveDialog.Description>
-            配置系统字典类型，字典类型需保持唯一。
+            {t('description')}
           </ResponsiveDialog.Description>
         </ResponsiveDialog.Header>
         <Form {...form}>
@@ -95,10 +102,10 @@ export function DictTypeEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      字典名称
+                      {t('fields.dictName.label')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入字典名称" {...field} />
+                      <Input placeholder={t('fields.dictName.placeholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -111,10 +118,10 @@ export function DictTypeEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      字典类型
+                      {t('fields.dictType.label')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入字典类型" {...field} />
+                      <Input placeholder={t('fields.dictType.placeholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -127,7 +134,7 @@ export function DictTypeEditorDialog({
                   <FormItem className="sm:col-span-2">
                     <FormLabel>
                       <RequiredMark />
-                      状态
+                      {t('fields.status.label')}
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -139,13 +146,17 @@ export function DictTypeEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="0" />
                           </FormControl>
-                          <FormLabel className="font-normal">正常</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('fields.status.options.0')}
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center gap-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="1" />
                           </FormControl>
-                          <FormLabel className="font-normal">停用</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('fields.status.options.1')}
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -158,9 +169,13 @@ export function DictTypeEditorDialog({
                 name="remark"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>备注</FormLabel>
+                    <FormLabel>{t('fields.remark.label')}</FormLabel>
                     <FormControl>
-                      <Textarea rows={3} placeholder="可填写字典用途说明" {...field} />
+                      <Textarea
+                        rows={3}
+                        placeholder={t('fields.remark.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -174,10 +189,10 @@ export function DictTypeEditorDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                取消
+                {t('actions.cancel')}
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? '保存中...' : '保存'}
+                {submitting ? t('actions.saving') : t('actions.save')}
               </Button>
             </div>
           </form>

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -29,21 +30,10 @@ import {
   useUserManagementStore,
 } from '../../store';
 
-const resetPasswordSchema = z
-  .object({
-    password: z
-      .string()
-      .trim()
-      .min(6, '至少 6 位字符')
-      .max(64, '不超过 64 位字符'),
-    confirmPassword: z.string().trim(),
-  })
-  .refine((values) => values.password === values.confirmPassword, {
-    message: '两次输入的密码不一致',
-    path: ['confirmPassword'],
-  });
-
-type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+type ResetPasswordFormValues = {
+  password: string;
+  confirmPassword: string;
+};
 
 const DEFAULT_VALUES: ResetPasswordFormValues = {
   password: '',
@@ -58,6 +48,29 @@ export function UserResetPasswordDialog() {
   const refresh = useUserManagementRefresh();
   const { beginMutation, endMutation } = useUserManagementMutationCounter();
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const tDialogs = useTranslations('UserManagement.dialogs');
+  const tToast = useTranslations('UserManagement.toast');
+  const tForm = useTranslations('UserManagement.form');
+
+  const validationMessages = useMemo(() => ({
+    min: tForm('validation.password.min'),
+    max: tForm('validation.password.max'),
+    mismatch: tForm('validation.password.mismatch'),
+  }), [tForm]);
+
+  const resetPasswordSchema = useMemo(
+    () =>
+      z
+        .object({
+          password: z.string().trim().min(6, validationMessages.min).max(64, validationMessages.max),
+          confirmPassword: z.string().trim(),
+        })
+        .refine((values) => values.password === values.confirmPassword, {
+          message: validationMessages.mismatch,
+          path: ['confirmPassword'],
+        }),
+    [validationMessages],
+  );
 
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -80,13 +93,13 @@ export function UserResetPasswordDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('密码已重置');
+      toast.success(tToast('resetSuccess'));
       setResetPasswordTarget(null);
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '重置密码失败，请稍后再试';
+        error instanceof Error ? error.message : tToast('resetError');
       toast.error(message);
     },
     onSettled: () => {
@@ -97,7 +110,7 @@ export function UserResetPasswordDialog() {
   const handleSubmit = form.handleSubmit((values) => {
     const userId = resetPasswordTarget?.userId;
     if (!userId) {
-      toast.error('未找到需要重置的用户');
+      toast.error(tToast('resetMissing'));
       return;
     }
     mutation.mutate({
@@ -121,9 +134,9 @@ export function UserResetPasswordDialog() {
     >
       <ResponsiveDialog.Content className="sm:max-w-md">
         <ResponsiveDialog.Header className={cn(isMobile && 'hidden')}>
-          <ResponsiveDialog.Title>重置密码</ResponsiveDialog.Title>
+          <ResponsiveDialog.Title>{tDialogs('resetPasswordTitle')}</ResponsiveDialog.Title>
           <ResponsiveDialog.Description>
-            为用户「{displayName}」设置一个新的登录密码。
+            {tDialogs('resetPasswordDescription', { name: displayName })}
           </ResponsiveDialog.Description>
         </ResponsiveDialog.Header>
         <Form {...form}>
@@ -133,12 +146,12 @@ export function UserResetPasswordDialog() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>新密码</FormLabel>
+                  <FormLabel>{tForm('newPassword')}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
                       autoComplete="new-password"
-                      placeholder="至少 6 位字符"
+                      placeholder={tForm('newPasswordPlaceholder')}
                       {...field}
                     />
                   </FormControl>
@@ -151,12 +164,12 @@ export function UserResetPasswordDialog() {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>确认新密码</FormLabel>
+                  <FormLabel>{tForm('confirmPassword')}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
                       autoComplete="new-password"
-                      placeholder="再次输入新密码"
+                      placeholder={tForm('confirmPasswordPlaceholder')}
                       {...field}
                     />
                   </FormControl>
@@ -165,7 +178,7 @@ export function UserResetPasswordDialog() {
               )}
             />
             <p className="text-sm text-muted-foreground">
-              密码将会立即生效，请及时将新密码通知给用户。
+              {tDialogs('resetPasswordNote')}
             </p>
             <ResponsiveDialog.Footer
               className={cn(
@@ -181,14 +194,16 @@ export function UserResetPasswordDialog() {
                 disabled={mutation.isPending}
                 className={cn(isMobile && 'flex-1 basis-2/5')}
               >
-                取消
+                {tDialogs('resetPasswordCancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={mutation.isPending}
                 className={cn(isMobile && 'flex-1 basis-3/5')}
               >
-                {mutation.isPending ? '提交中...' : '确定'}
+                {mutation.isPending
+                  ? tForm('submit.creating')
+                  : tDialogs('resetPasswordConfirm')}
               </Button>
             </ResponsiveDialog.Footer>
           </form>

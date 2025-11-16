@@ -1,0 +1,7 @@
+{
+  "dialogs": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "processing": "Processing..."
+  }
+}

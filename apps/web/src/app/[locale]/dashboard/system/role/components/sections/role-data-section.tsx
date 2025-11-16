@@ -11,6 +11,7 @@ import { SelectionBanner } from '@/components/selection-banner';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 import { listRoles } from '../../api';
 import {
@@ -22,6 +23,7 @@ import type { Role } from '../../type';
 import { RoleTable } from '../list/role-table';
 
 export function RoleDataSection() {
+  const tToast = useTranslations('RoleManagement.toast');
   const {
     status,
     appliedFilters,
@@ -130,7 +132,7 @@ export function RoleDataSection() {
 
   const handleBulkDelete = () => {
     if (selectedCount === 0) {
-      toast.info('请先选择需要删除的角色');
+      toast.info(tToast('bulkDeleteEmpty'));
       return;
     }
     setBulkDeleteOpen(true);

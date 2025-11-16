@@ -1,0 +1,134 @@
+{
+  "header": {
+    "title": "Department Management",
+    "description": [
+      "Review the guidelines above to understand the organizational structure.",
+      "Use the filters below together with the tree view to add or adjust departments."
+    ],
+    "actions": {
+      "refresh": "Refresh",
+      "create": "New department"
+    }
+  },
+  "status": {
+    "all": "All",
+    "0": "Active",
+    "1": "Disabled"
+  },
+  "filters": {
+    "searchPlaceholder": "Search department name",
+    "clearSearch": "Clear search",
+    "chips": {
+      "keyword": "Keyword",
+      "status": "Status",
+      "remove": "Remove {target}"
+    },
+    "clearAll": "Clear filters"
+  },
+  "tree": {
+    "loading": "Loading departments...",
+    "error": "Failed to load department data. Please try again later.",
+    "retry": "Reload",
+    "emptyTitle": "No department data",
+    "emptyDescription": "Create your organizational tree to manage the hierarchy here.",
+    "meta": {
+      "leader": "Lead: {value}",
+      "phone": "Phone: {value}",
+      "email": "Email: {value}",
+      "remark": "Note: {value}"
+    },
+    "actions": {
+      "addChild": "Add child department",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "badge": {
+      "1": "Disabled"
+    }
+  },
+  "editor": {
+    "createTitle": "New department",
+    "editTitle": "Edit department",
+    "description": "Provide the department details. Each node can create its own child departments.",
+    "fields": {
+      "parent": {
+        "label": "Parent department",
+        "placeholder": "Select parent department",
+        "topLevel": "Top-level department"
+      },
+      "name": {
+        "label": "Department name",
+        "placeholder": "Enter department name"
+      },
+      "order": {
+        "label": "Display order",
+        "placeholder": "0"
+      },
+      "leader": {
+        "label": "Owner",
+        "placeholder": "Enter owner"
+      },
+      "phone": {
+        "label": "Phone",
+        "placeholder": "Enter phone number"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Enter contact email"
+      },
+      "status": {
+        "label": "Status",
+        "options": {
+          "0": "Active",
+          "1": "Disabled"
+        }
+      },
+      "remark": {
+        "label": "Remarks",
+        "placeholder": "Add optional notes"
+      }
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving..."
+    },
+    "validation": {
+      "name": {
+        "required": "Enter a department name",
+        "max": "No more than 50 characters"
+      },
+      "parent": {
+        "required": "Select a parent department"
+      },
+      "order": {
+        "invalid": "Enter an integer between 0 and 9999"
+      },
+      "leader": {
+        "max": "No more than 50 characters"
+      },
+      "phone": {
+        "invalid": "Enter a valid phone number"
+      },
+      "email": {
+        "invalid": "Enter a valid email address"
+      },
+      "remark": {
+        "max": "No more than 255 characters"
+      }
+    }
+  },
+  "delete": {
+    "title": "Delete department",
+    "description": "Delete \"{name}\"? This also removes all child departments.",
+    "fallback": "Delete the selected department?"
+  },
+  "toast": {
+    "createSuccess": "Department created successfully.",
+    "createError": "Failed to create the department.",
+    "updateSuccess": "Department updated successfully.",
+    "updateError": "Failed to update the department.",
+    "deleteSuccess": "Department deleted.",
+    "deleteError": "Failed to delete the department. Please try again later."
+  }
+}

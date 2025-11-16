@@ -10,20 +10,28 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import {Link, usePathname} from '@/i18n/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
+import type { AppLocale } from '@/i18n/routing';
 import { useQuery } from '@tanstack/react-query';
+import { useLocale } from 'next-intl';
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-const SEGMENT_LABEL_MAP: Record<string, string> = {
-  log: '日志管理',
-  operlog: '操作日志',
-  logininfor: '登录日志',
-  monitor: '系统监控',
-  job: '定时任务',
-  server: '服务监控',
-  user: '用户管理',
-  system: '系统管理',
-  profile: '账号设置',
+const SEGMENT_LABEL_MAP: Record<
+  string,
+  {
+    zh: string;
+    en: string;
+  }
+> = {
+  log: { zh: '日志管理', en: 'Logs' },
+  operlog: { zh: '操作日志', en: 'Operation Logs' },
+  logininfor: { zh: '登录日志', en: 'Login Logs' },
+  monitor: { zh: '系统监控', en: 'Monitoring' },
+  job: { zh: '定时任务', en: 'Scheduler' },
+  server: { zh: '服务监控', en: 'Server Status' },
+  user: { zh: '用户管理', en: 'Users' },
+  system: { zh: '系统管理', en: 'System' },
+  profile: { zh: '账号设置', en: 'Profile' },
 };
 
 type Crumb = {
@@ -72,14 +80,15 @@ function normalizeUrl(url?: string | null) {
   return base.length > 1 && base.endsWith('/') ? base.slice(0, -1) : base;
 }
 
-function formatSegment(segment: string) {
+function formatSegment(segment: string, locale: AppLocale) {
   if (!segment) {
     return '';
   }
 
   const normalized = segment.toLowerCase();
   if (SEGMENT_LABEL_MAP[normalized]) {
-    return SEGMENT_LABEL_MAP[normalized];
+    const key = locale === 'en' ? 'en' : 'zh';
+    return SEGMENT_LABEL_MAP[normalized][key];
   }
 
   return segment
@@ -89,7 +98,10 @@ function formatSegment(segment: string) {
     .join(' ');
 }
 
-function generateFallbackCrumbs(pathname: string): Crumb[] {
+function generateFallbackCrumbs(
+  pathname: string,
+  locale: AppLocale,
+): Crumb[] {
   const segments = pathname.split('/').filter(Boolean);
   if (segments.length === 0) {
     return [];
@@ -103,7 +115,7 @@ function generateFallbackCrumbs(pathname: string): Crumb[] {
     const hrefSegments = ['dashboard', ...normalized.slice(0, index + 1)];
     const href = `/${hrefSegments.join('/')}`;
     return {
-      label: formatSegment(decoded) || decoded,
+      label: formatSegment(decoded, locale) || decoded,
       href: index === normalized.length - 1 ? undefined : href,
     };
   });
@@ -157,6 +169,7 @@ function InternalBreadcrumbLink({
 
 export function DashboardBreadcrumb() {
   const pathname = usePathname();
+  const locale = useLocale() as AppLocale;
   const normalizedPath = normalizePath(pathname);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -165,7 +178,7 @@ export function DashboardBreadcrumb() {
   }, []);
 
   const { data: menuTree = [] } = useQuery({
-    queryKey: ['auth', 'menus'],
+    queryKey: ['auth', 'menus', locale],
     queryFn: getMenuTree,
     enabled: isMounted,
   });
@@ -178,8 +191,8 @@ export function DashboardBreadcrumb() {
   );
 
   const fallbackCrumbs = useMemo(
-    () => generateFallbackCrumbs(normalizedPath),
-    [normalizedPath],
+    () => generateFallbackCrumbs(normalizedPath, locale),
+    [locale, normalizedPath],
   );
 
   const crumbs =
@@ -192,9 +205,13 @@ export function DashboardBreadcrumb() {
       <BreadcrumbList>
         <BreadcrumbItem className={hasExtraCrumbs ? 'hidden md:block' : undefined}>
           {hasExtraCrumbs ? (
-            <InternalBreadcrumbLink href="/dashboard">控制台</InternalBreadcrumbLink>
+            <InternalBreadcrumbLink href="/dashboard">
+              {locale === 'en' ? 'Dashboard' : '控制台'}
+            </InternalBreadcrumbLink>
           ) : (
-            <BreadcrumbPage>控制台</BreadcrumbPage>
+            <BreadcrumbPage>
+              {locale === 'en' ? 'Dashboard' : '控制台'}
+            </BreadcrumbPage>
           )}
         </BreadcrumbItem>
         {crumbs.map((crumb, index) => {

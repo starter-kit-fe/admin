@@ -9,6 +9,7 @@ import {
   type RowSelectionState,
 } from '@tanstack/react-table';
 import { Eye, LogOut } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { InlineLoading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
@@ -71,11 +72,14 @@ export function OnlineUserTable({
   canViewDetail,
 }: OnlineUserTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<OnlineUser>(), []);
+  const tTable = useTranslations('OnlineUserManagement.table');
+  const tStatus = useTranslations('OnlineUserManagement.status');
+  const defaultUserLabel = tTable('defaultUser');
 
   const columns = useMemo(() => {
     const baseColumns = [
       columnHelper.accessor('userName', {
-        header: () => '登录账号',
+        header: () => tTable('columns.account'),
         cell: ({ row }) => {
           const user = row.original;
           return (
@@ -95,14 +99,14 @@ export function OnlineUserTable({
       }),
       columnHelper.display({
         id: 'ipaddr',
-        header: () => 'IP / 地点',
+        header: () => tTable('columns.ip'),
         cell: ({ row }) => {
           const user = row.original;
           return (
             <div className="space-y-1">
               <p className="text-sm text-foreground">{user.ipaddr || '-'}</p>
               <p className="text-xs text-muted-foreground">
-                {user.loginLocation || '未知地点'}
+                {user.loginLocation || tTable('rows.unknownLocation')}
               </p>
             </div>
           );
@@ -113,7 +117,7 @@ export function OnlineUserTable({
       }),
       columnHelper.display({
         id: 'client',
-        header: () => '客户端',
+        header: () => tTable('columns.client'),
         cell: ({ row }) => {
           const user = row.original;
           return (
@@ -129,12 +133,14 @@ export function OnlineUserTable({
       }),
       columnHelper.display({
         id: 'status',
-        header: () => '状态',
+        header: () => tTable('columns.status'),
         cell: ({ row }) => {
           const user = row.original;
           return (
             <Badge variant={resolveStatusBadgeVariant(user.status)}>
-              {user.status === '0' || !user.status ? '在线' : '异常'}
+              {user.status === '0' || !user.status
+                ? tStatus('online')
+                : tStatus('abnormal')}
             </Badge>
           );
         },
@@ -145,7 +151,7 @@ export function OnlineUserTable({
       }),
       columnHelper.display({
         id: 'loginTime',
-        header: () => '登录时间',
+        header: () => tTable('columns.loginTime'),
         cell: ({ row }) => {
           const user = row.original;
           return (
@@ -155,7 +161,7 @@ export function OnlineUserTable({
               </p>
               {user.lastAccessTime ? (
                 <p className="text-xs text-muted-foreground">
-                  最近活跃：{user.lastAccessTime}
+                  {tTable('rows.lastActive', { time: user.lastAccessTime })}
                 </p>
               ) : null}
             </div>
@@ -171,7 +177,9 @@ export function OnlineUserTable({
       baseColumns.push(
         columnHelper.display({
           id: 'actions',
-          header: () => <span className="block text-right">操作</span>,
+          header: () => (
+            <span className="block text-right">{tTable('columns.actions')}</span>
+          ),
           cell: ({ row }) => {
             const user = row.original;
             const rowId = row.id;
@@ -193,7 +201,7 @@ export function OnlineUserTable({
                     }}
                   >
                     <Eye className="mr-1.5 size-3.5" />
-                    查看
+                    {tTable('actions.view')}
                   </Button>
                 ) : null}
                 {canForceLogout ? (
@@ -210,12 +218,12 @@ export function OnlineUserTable({
                     {isPending ? (
                       <>
                         <Spinner className="mr-1.5 size-4" />
-                        处理中
+                        {tTable('actions.pending')}
                       </>
                     ) : (
                       <>
                         <LogOut className="mr-1.5 size-3.5" />
-                        强退
+                        {tTable('actions.force')}
                       </>
                     )}
                   </Button>
@@ -244,7 +252,7 @@ export function OnlineUserTable({
                 : false;
             return (
               <Checkbox
-                aria-label="选择全部"
+                aria-label={tTable('selection.all')}
                 checked={checkedState}
                 onCheckedChange={(checked) =>
                   table.toggleAllPageRowsSelected(checked === true)
@@ -254,7 +262,9 @@ export function OnlineUserTable({
           },
           cell: ({ row }) => (
             <Checkbox
-              aria-label={`选择 ${row.original.userName || '用户'}`}
+              aria-label={tTable('selection.user', {
+                name: row.original.userName || defaultUserLabel,
+              })}
               checked={row.getIsSelected()}
               disabled={!row.getCanSelect()}
               onCheckedChange={(checked) =>
@@ -280,10 +290,13 @@ export function OnlineUserTable({
     canViewDetail,
     canSelectRows,
     columnHelper,
+    defaultUserLabel,
     isForceMutating,
     onForceLogout,
     onViewDetail,
     pendingForceRowId,
+    tStatus,
+    tTable,
   ]);
 
   const table = useReactTable({
@@ -335,7 +348,7 @@ export function OnlineUserTable({
                   colSpan={visibleColumnCount}
                   className="h-32 text-center align-middle"
                 >
-                  <InlineLoading label="正在加载在线用户..." />
+                  <InlineLoading label={tTable('state.loading')} />
                 </TableCell>
               </TableRow>
             ) : isError ? (
@@ -344,7 +357,7 @@ export function OnlineUserTable({
                   colSpan={visibleColumnCount}
                   className="h-24 text-center text-sm text-destructive"
                 >
-                  加载失败，请稍后重试。
+                  {tTable('state.error')}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows.length === 0 ? (
@@ -355,9 +368,9 @@ export function OnlineUserTable({
                 >
                   <Empty className="border-0 bg-transparent p-4">
                     <EmptyHeader>
-                      <EmptyTitle>暂无在线用户</EmptyTitle>
+                      <EmptyTitle>{tTable('state.emptyTitle')}</EmptyTitle>
                       <EmptyDescription>
-                        当前无活跃会话，稍后或刷新系统查看最新在线情况。
+                        {tTable('state.emptyDescription')}
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>

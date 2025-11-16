@@ -5,6 +5,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Plus, RefreshCcw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { STATUS_TABS } from '../../constants';
 import {
@@ -20,6 +21,8 @@ import {
 } from '../filters/user-management-filters';
 
 export function UserFiltersSection() {
+  const tHeader = useTranslations('UserManagement.header');
+  const tFilters = useTranslations('UserManagement.filters');
   const {
     status,
     setStatus,
@@ -55,10 +58,10 @@ export function UserFiltersSection() {
     () =>
       STATUS_TABS.map((tab) => ({
         value: tab.value,
-        label: tab.label,
+        label: tFilters(tab.labelKey),
         activeColor: tab.color,
       })),
-    [],
+    [tFilters],
   );
 
   const appliedFilterChips = useMemo<FilterChip[]>(() => {
@@ -69,19 +72,19 @@ export function UserFiltersSection() {
           ?.label ?? appliedFilters.role;
       chips.push({
         key: 'role',
-        label: '角色',
+        label: tFilters('chips.role'),
         value: roleLabel,
       });
     }
     if (appliedFilters.keyword) {
       chips.push({
         key: 'keyword',
-        label: '关键字',
+        label: tFilters('chips.keyword'),
         value: appliedFilters.keyword,
       });
     }
     return chips;
-  }, [appliedFilters, roleOptions]);
+  }, [appliedFilters, roleOptions, tFilters]);
 
   const handleRoleChange = (role: string) => {
     clearKeywordDebounce();
@@ -126,7 +129,7 @@ export function UserFiltersSection() {
   };
 
   const mobileTitleSlot = isMobile ? (
-    <span className="text-lg font-semibold text-foreground">用户管理</span>
+    <span className="text-lg font-semibold text-foreground">{tHeader('title')}</span>
   ) : undefined;
 
   const mobileActionSlot = isMobile ? (
@@ -139,7 +142,7 @@ export function UserFiltersSection() {
       disabled={isMutating}
     >
       <Plus className="mr-1.5 size-4" />
-      新增
+      {tFilters('mobileCreate')}
     </PermissionButton>
   ) : undefined;
 
@@ -149,7 +152,7 @@ export function UserFiltersSection() {
       type="button"
       size="icon"
       variant="ghost"
-      aria-label="刷新用户列表"
+      aria-label={tFilters('refreshAria')}
       className="size-9 shrink-0 rounded-full border border-border/60 bg-background/70"
       onClick={() => refresh()}
       disabled={refreshDisabled}

@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
-import { STATUS_TABS } from '../../constants';
+import { STATUS_VALUES } from '../../constants';
 import {
   type StatusValue,
   useDepartmentFilters,
@@ -12,14 +13,15 @@ import { DepartmentFilters } from '../filters/department-filters';
 
 export function DepartmentFiltersSection() {
   const { status, setStatus, keyword, setKeyword } = useDepartmentFilters();
+  const tStatus = useTranslations('DepartmentManagement.status');
 
   const statusTabs = useMemo(
     () =>
-      STATUS_TABS.map((tab) => ({
-        value: tab.value,
-        label: tab.label,
+      STATUS_VALUES.map((value) => ({
+        value,
+        label: tStatus(value),
       })),
-    [],
+    [tStatus],
   );
 
   const handleStatusChange = (value: string) => {

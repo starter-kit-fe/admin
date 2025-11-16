@@ -1,0 +1,10 @@
+{
+  "ariaLabel": "Toggle theme",
+  "menuLabel": "Appearance",
+  "current": "Current",
+  "items": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}

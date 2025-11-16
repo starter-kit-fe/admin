@@ -8,6 +8,7 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group';
 import { Search, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface PostManagementFiltersProps {
   status: string;
@@ -26,6 +27,8 @@ export function PostManagementFilters({
   onPostNameChange,
   disabled = false,
 }: PostManagementFiltersProps) {
+  const t = useTranslations('PostManagement.filters');
+
   return (
     <div className="rounded-xl border border-border/60 bg-background/80 p-4  sm:p-5">
       <div className="flex flex-col gap-4">
@@ -36,7 +39,7 @@ export function PostManagementFilters({
             <Search className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="岗位名称"
+            placeholder={t('postName.placeholder')}
             value={postName}
             onChange={(event) => onPostNameChange(event.target.value)}
             disabled={disabled}
@@ -46,7 +49,7 @@ export function PostManagementFilters({
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label="清空搜索"
+              aria-label={t('postName.clear')}
               className="text-muted-foreground hover:text-foreground"
               onClick={() => onPostNameChange('')}
               disabled={disabled}

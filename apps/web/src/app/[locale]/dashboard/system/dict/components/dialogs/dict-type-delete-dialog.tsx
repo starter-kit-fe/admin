@@ -2,6 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
 import { removeDictType } from '../../api';
@@ -17,6 +18,8 @@ export function DictTypeDeleteDialog() {
   const refresh = useDictManagementRefresh();
   const { beginMutation, endMutation } =
     useDictManagementMutationCounter();
+  const tToast = useTranslations('DictManagement.toast.type');
+  const tDelete = useTranslations('DictManagement.delete.type');
 
   const deleteMutation = useMutation({
     mutationFn: (dictId: number) => removeDictType(dictId),
@@ -24,12 +27,12 @@ export function DictTypeDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('字典类型已删除');
+      toast.success(tToast('deleteSuccess'));
       setTypeDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '删除字典类型失败'));
+      toast.error(resolveErrorMessage(error, tToast('deleteError')));
     },
     onSettled: () => {
       endMutation();
@@ -44,11 +47,11 @@ export function DictTypeDeleteDialog() {
           setTypeDeleteTarget(null);
         }
       }}
-      title="删除字典类型"
+      title={tDelete('title')}
       description={
         typeDeleteTarget
-          ? `确定要删除字典类型「${typeDeleteTarget.dictName}」吗？其字典项会同时清除。`
-          : '确认删除所选字典类型吗？'
+          ? tDelete('description', { name: typeDeleteTarget.dictName })
+          : tDelete('fallback')
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

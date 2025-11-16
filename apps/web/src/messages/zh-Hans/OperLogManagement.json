@@ -1,0 +1,97 @@
+{
+  "header": {
+    "title": "操作日志",
+    "description": "追踪系统操作，支持按业务类型、状态与请求信息筛选。",
+    "total": "当前共 {count} 条记录。",
+    "actions": {
+      "refresh": "刷新"
+    }
+  },
+  "filters": {
+    "statusTabs": {
+      "all": "全部",
+      "0": "成功",
+      "1": "失败"
+    },
+    "title": {
+      "placeholder": "按标题模糊查询",
+      "chip": "标题"
+    },
+    "operator": {
+      "placeholder": "输入操作人员",
+      "chip": "操作人"
+    },
+    "businessType": {
+      "placeholder": "全部业务",
+      "chip": "业务类型"
+    },
+    "requestMethod": {
+      "placeholder": "全部请求",
+      "chip": "请求方式"
+    },
+    "chips": {
+      "remove": "移除 {target}"
+    },
+    "actions": {
+      "clear": "清除全部筛选"
+    }
+  },
+  "status": {
+    "0": "成功",
+    "1": "失败"
+  },
+  "businessTypes": {
+    "all": "全部业务",
+    "0": "其它",
+    "1": "新增",
+    "2": "修改",
+    "3": "删除",
+    "4": "授权",
+    "5": "导出",
+    "6": "导入"
+  },
+  "requestMethods": {
+    "all": "全部请求",
+    "GET": "GET",
+    "POST": "POST",
+    "PUT": "PUT",
+    "DELETE": "DELETE"
+  },
+  "table": {
+    "columns": {
+      "title": "操作标题",
+      "businessType": "业务类型",
+      "status": "执行结果",
+      "requestMethod": "请求方式",
+      "operator": "操作人员",
+      "operUrl": "请求地址",
+      "operTime": "操作时间",
+      "actions": "操作"
+    },
+    "cells": {
+      "department": "部门：{value}",
+      "departmentFallback": "未分配",
+      "ip": "IP：{value}",
+      "cost": "耗时：{value}ms"
+    },
+    "state": {
+      "loading": "正在加载操作日志...",
+      "error": "加载失败，请稍后再试。",
+      "emptyTitle": "暂无操作日志",
+      "emptyDescription": "执行新增、修改或删除后会记录在这里。"
+    },
+    "actions": {
+      "delete": "删除日志"
+    }
+  },
+  "toast": {
+    "deleteSuccess": "操作日志已删除",
+    "deleteError": "删除操作日志失败"
+  },
+  "delete": {
+    "title": "删除操作日志",
+    "description": "确定要删除操作「{title}」的日志记录吗？该操作无法恢复。",
+    "fallback": "确定要删除所选操作日志吗？",
+    "untitled": "未命名操作"
+  }
+}

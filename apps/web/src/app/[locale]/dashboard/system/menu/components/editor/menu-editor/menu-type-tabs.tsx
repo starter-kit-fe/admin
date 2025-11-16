@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import gsap from 'gsap';
 import { Info } from 'lucide-react';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { MenuType } from '@/app/dashboard/system/menu/type';
 import { MENU_TYPE_HINTS, MENU_TYPE_OPTIONS } from './constants';
@@ -15,6 +16,7 @@ interface MenuTypeTabsProps {
 }
 
 export function MenuTypeTabs({ value, onChange, allowedTypes }: MenuTypeTabsProps) {
+  const tForm = useTranslations('MenuManagement.form');
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const hasInitializedRef = useRef(false);
@@ -191,11 +193,17 @@ export function MenuTypeTabs({ value, onChange, allowedTypes }: MenuTypeTabsProp
   }, [options, showTabs, value]);
 
   const currentOption = useMemo(
-    () =>
-      options.find((option) => option.value === value) ?? options[0] ?? MENU_TYPE_OPTIONS[0],
+    () => options.find((option) => option.value === value) ?? options[0] ?? MENU_TYPE_OPTIONS[0],
     [options, value],
   );
   const hint = MENU_TYPE_HINTS[currentOption.value];
+  const getOptionLabel = (optionValue: MenuType, key: 'labelKey' | 'descriptionKey') => {
+    const option = MENU_TYPE_OPTIONS.find((item) => item.value === optionValue);
+    if (!option) return '';
+    return tForm(option[key]);
+  };
+  const currentLabel = getOptionLabel(currentOption.value, 'labelKey');
+  const currentDescription = getOptionLabel(currentOption.value, 'descriptionKey');
 
   return (
     <div className="space-y-4">
@@ -215,6 +223,8 @@ export function MenuTypeTabs({ value, onChange, allowedTypes }: MenuTypeTabsProp
             />
             {options.map((option) => {
               const active = option.value === value;
+              const optionLabel = tForm(option.labelKey);
+              const optionDescription = tForm(option.descriptionKey);
               return (
                 <button
                   key={option.value}
@@ -234,7 +244,7 @@ export function MenuTypeTabs({ value, onChange, allowedTypes }: MenuTypeTabsProp
                       active && 'font-semibold text-foreground',
                     )}
                   >
-                    {option.label}
+                    {optionLabel}
                   </span>
                   <span
                     className={cn(
@@ -242,7 +252,7 @@ export function MenuTypeTabs({ value, onChange, allowedTypes }: MenuTypeTabsProp
                       active && 'text-muted-foreground',
                     )}
                   >
-                    {option.description}
+                    {optionDescription}
                   </span>
                 </button>
               );
@@ -252,8 +262,8 @@ export function MenuTypeTabs({ value, onChange, allowedTypes }: MenuTypeTabsProp
       ) : (
         <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/25 px-4 py-3 text-sm">
           <div className="flex flex-col gap-1">
-            <span className="font-semibold text-foreground">{currentOption.label}</span>
-            <span className="text-xs text-muted-foreground">{currentOption.description}</span>
+            <span className="font-semibold text-foreground">{currentLabel}</span>
+            <span className="text-xs text-muted-foreground">{currentDescription}</span>
           </div>
         </div>
       )}
@@ -261,13 +271,13 @@ export function MenuTypeTabs({ value, onChange, allowedTypes }: MenuTypeTabsProp
         <Info className="mt-0.5 size-4 text-primary" />
         <div className="space-y-1">
           <div className="font-medium text-primary">
-            {currentOption.label} · {currentOption.description}
+            {currentLabel} · {currentDescription}
           </div>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            {hint.title}
+            {tForm(hint.titleKey)}
           </p>
           <p className="text-xs leading-relaxed text-muted-foreground/80">
-            {hint.helper}
+            {tForm(hint.helperKey)}
           </p>
         </div>
       </div>

@@ -13,6 +13,7 @@ import {
   Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { PermissionButton } from '@/components/permission-button';
 import {
@@ -51,33 +52,11 @@ const DEFAULT_OVERVIEW: CacheOverview = {
   keyspace: [],
 };
 
-function formatTimestamp(value?: number) {
+function formatTimestamp(value?: number, fallback = '') {
   if (!value || Number.isNaN(value)) {
-    return '刚刚';
+    return fallback;
   }
   return new Date(value).toLocaleString();
-}
-
-function renderKeyspaceRow(space: CacheKeyspaceInfo) {
-  const avgTTL =
-    typeof space.avgTtl === 'number' && space.avgTtl > 0
-      ? `${Math.round(space.avgTtl / 1000)}s`
-      : '未知';
-
-  return (
-    <tr key={space.db} className="text-sm">
-      <td className="py-2 font-medium text-foreground">
-        {space.db.toUpperCase()}
-      </td>
-      <td className="py-2 text-muted-foreground">
-        {formatNumber(space.keys)}
-      </td>
-      <td className="py-2 text-muted-foreground">
-        {formatNumber(space.expires)}
-      </td>
-      <td className="py-2 text-muted-foreground">{avgTTL}</td>
-    </tr>
-  );
 }
 
 function MetaPill({
@@ -99,6 +78,8 @@ function MetaPill({
 }
 
 export function CacheDashboard() {
+  const tDashboard = useTranslations('CacheMonitor.dashboard');
+  const tCommon = useTranslations('CacheMonitor.common');
   const overviewQuery = useQuery({
     queryKey: ['monitor', 'cache', 'overview'],
     queryFn: getCacheOverview,
@@ -125,33 +106,72 @@ export function CacheDashboard() {
   const metaItems = [
     {
       icon: Database,
-      label: '键总数',
+      key: 'keys',
+      label: tDashboard('meta.keys'),
       value: formatNumber(totalKeys),
     },
     {
       icon: Gauge,
-      label: '命中率',
+      key: 'hitRate',
+      label: tDashboard('meta.hitRate'),
       value: hitRate,
     },
     {
       icon: Activity,
-      label: '每秒命令',
+      key: 'ops',
+      label: tDashboard('meta.ops'),
       value: formatNumber(opsPerSec),
     },
   ];
 
   const serverMeta = [
-    { label: '运行模式', value: overview.server.mode || '未知' },
-    { label: '角色', value: overview.server.role || 'master' },
-    { label: '版本', value: overview.server.version || '-' },
-    { label: '运行时长', value: overview.server.uptime || '-' },
+    {
+      label: tDashboard('server.fields.mode'),
+      value: overview.server.mode || tCommon('unknown'),
+    },
+    {
+      label: tDashboard('server.fields.role'),
+      value: overview.server.role || tCommon('unknown'),
+    },
+    {
+      label: tDashboard('server.fields.version'),
+      value: overview.server.version || '-',
+    },
+    {
+      label: tDashboard('server.fields.uptime'),
+      value: overview.server.uptime || '-',
+    },
   ];
+
+  const renderKeyspaceRow = (space: CacheKeyspaceInfo) => {
+    const avgTTL =
+      typeof space.avgTtl === 'number' && space.avgTtl > 0
+        ? `${Math.round(space.avgTtl / 1000)}s`
+        : tCommon('unknown');
+    return (
+      <tr key={space.db} className="text-sm">
+        <td className="py-2 font-medium text-foreground">
+          {space.db.toUpperCase()}
+        </td>
+        <td className="py-2 text-muted-foreground">
+          {formatNumber(space.keys)}
+        </td>
+        <td className="py-2 text-muted-foreground">
+          {formatNumber(space.expires)}
+        </td>
+        <td className="py-2 text-muted-foreground">{avgTTL}</td>
+      </tr>
+    );
+  };
 
   const refreshOverview = () => {
     void overviewQuery.refetch();
   };
 
   const isRefreshing = overviewQuery.isFetching;
+  const updatedLabel = tDashboard('header.updatedAt', {
+    time: formatTimestamp(overviewQuery.dataUpdatedAt, tCommon('justNow')),
+  });
 
   return (
     <div className="mx-auto flex w-full flex-col gap-6">
@@ -159,15 +179,15 @@ export function CacheDashboard() {
         <CardHeader className="space-y-4 lg:flex lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <CardTitle className="text-2xl font-semibold">
-              缓存监控
+              {tDashboard('header.title')}
             </CardTitle>
             <CardDescription>
-              在统一视图内同时掌握 Redis 运行状态与键分布。
+              {tDashboard('header.description')}
             </CardDescription>
             <div className="flex flex-wrap gap-2">
               {metaItems.map((item) => (
                 <MetaPill
-                  key={item.label}
+                  key={item.key}
                   icon={item.icon}
                   label={item.label}
                   value={item.value}
@@ -176,7 +196,7 @@ export function CacheDashboard() {
             </div>
           </div>
           <div className="flex flex-col items-start gap-3 text-xs text-muted-foreground lg:items-end">
-            <div>概览更新时间：{formatTimestamp(overviewQuery.dataUpdatedAt)}</div>
+            <div>{updatedLabel}</div>
             <PermissionButton
               required="monitor:cache:list"
               type="button"
@@ -188,12 +208,12 @@ export function CacheDashboard() {
               {isRefreshing ? (
                 <>
                   <Spinner className="size-4" />
-                  刷新中
+                  {tDashboard('header.refreshing')}
                 </>
               ) : (
                 <>
                   <RefreshCcw className="size-4" />
-                  刷新数据
+                  {tDashboard('header.refresh')}
                 </>
               )}
             </PermissionButton>
@@ -203,7 +223,7 @@ export function CacheDashboard() {
           <CardContent>
             <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
               <AlertTriangle className="size-4" />
-              无法加载缓存概览，请稍后再试。
+              {tDashboard('error.overview')}
             </div>
           </CardContent>
         ) : null}
@@ -212,28 +232,35 @@ export function CacheDashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="border-border/70 dark:border-border/40">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-lg font-semibold">运行概览</CardTitle>
-            <CardDescription>内存、命中率与客户端连接情况</CardDescription>
+            <CardTitle className="text-lg font-semibold">
+              {tDashboard('overview.title')}
+            </CardTitle>
+            <CardDescription>
+              {tDashboard('overview.description')}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2 rounded-xl border border-border/50 p-4">
               <div className="flex items-center justify-between text-sm font-semibold text-foreground">
                 <span className="flex items-center gap-2">
                   <HardDrive className="size-4 text-muted-foreground" />
-                  内存占用
+                  {tDashboard('overview.memory.label')}
                 </span>
                 <span>{memoryUsageLabel}</span>
               </div>
-              <Progress value={memoryUsagePercent} aria-label="内存占用比例" />
+              <Progress
+                value={memoryUsagePercent}
+                aria-label={tDashboard('overview.memory.aria')}
+              />
               <div className="grid grid-cols-2 gap-y-2 text-xs uppercase tracking-wide text-muted-foreground">
-                <span>峰值占用</span>
+                <span>{tDashboard('overview.memory.peak')}</span>
                 <span className="text-right text-foreground">
                   {overview.memory.usedMemoryPeakHuman ??
                     formatBytes(overview.memory.usedMemoryPeak, {
                       decimals: 1,
                     })}
                 </span>
-                <span>碎片率</span>
+                <span>{tDashboard('overview.memory.fragmentation')}</span>
                 <span className="text-right text-foreground">
                   {formatPercent(overview.memory.fragmentationRatio)}
                 </span>
@@ -243,17 +270,19 @@ export function CacheDashboard() {
               <div className="rounded-xl border border-border/50 p-4">
                 <div className="flex items-center gap-2 text-foreground">
                   <Users className="size-4 text-muted-foreground" />
-                  <span className="text-sm font-semibold">客户端</span>
+                  <span className="text-sm font-semibold">
+                    {tDashboard('overview.clients.title')}
+                  </span>
                 </div>
                 <div className="mt-3 space-y-2 text-xs uppercase tracking-wide">
                   <div className="flex items-center justify-between">
-                    <span>已连接</span>
+                    <span>{tDashboard('overview.clients.connected')}</span>
                     <span className="text-foreground">
                       {formatNumber(overview.clients.connected)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>被阻塞</span>
+                    <span>{tDashboard('overview.clients.blocked')}</span>
                     <span className="text-foreground">
                       {formatNumber(overview.clients.blocked)}
                     </span>
@@ -263,29 +292,31 @@ export function CacheDashboard() {
               <div className="rounded-xl border border-border/50 p-4">
                 <div className="flex items-center gap-2 text-foreground">
                   <Layers className="size-4 text-muted-foreground" />
-                  <span className="text-sm font-semibold">访问统计</span>
+                  <span className="text-sm font-semibold">
+                    {tDashboard('overview.stats.title')}
+                  </span>
                 </div>
                 <div className="mt-3 space-y-2 text-xs uppercase tracking-wide">
                   <div className="flex items-center justify-between">
-                    <span>命中</span>
+                    <span>{tDashboard('overview.stats.hits')}</span>
                     <span className="text-foreground">
                       {formatNumber(overview.stats.keyspaceHits)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>未命中</span>
+                    <span>{tDashboard('overview.stats.misses')}</span>
                     <span className="text-foreground">
                       {formatNumber(overview.stats.keyspaceMisses)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>过期键</span>
+                    <span>{tDashboard('overview.stats.expired')}</span>
                     <span className="text-foreground">
                       {formatNumber(overview.stats.expiredKeys)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>驱逐键</span>
+                    <span>{tDashboard('overview.stats.evicted')}</span>
                     <span className="text-foreground">
                       {formatNumber(overview.stats.evictedKeys)}
                     </span>
@@ -298,8 +329,12 @@ export function CacheDashboard() {
 
         <Card className="border-border/70 dark:border-border/40">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-lg font-semibold">服务器状态</CardTitle>
-            <CardDescription>核心运行参数与持久化信息</CardDescription>
+            <CardTitle className="text-lg font-semibold">
+              {tDashboard('server.title')}
+            </CardTitle>
+            <CardDescription>
+              {tDashboard('server.description')}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/50 p-4">
@@ -317,29 +352,40 @@ export function CacheDashboard() {
             <div className="rounded-xl border border-border/50 p-4">
               <div className="flex items-center gap-2 text-foreground">
                 <Server className="size-4 text-muted-foreground" />
-                <span className="text-sm font-semibold">持久化</span>
+                <span className="text-sm font-semibold">
+                  {tDashboard('server.persistence.title')}
+                </span>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-3 text-xs uppercase tracking-wide">
                 <div>
-                  <div className="text-muted-foreground">上次 RDB</div>
+                  <div className="text-muted-foreground">
+                    {tDashboard('server.persistence.lastRdb')}
+                  </div>
                   <div className="text-sm font-medium text-foreground">
-                    {overview.persistence.rdbLastSaveTime || '未执行'}
+                    {overview.persistence.rdbLastSaveTime ||
+                      tCommon('notExecuted')}
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground">状态</div>
+                  <div className="text-muted-foreground">
+                    {tDashboard('server.persistence.status')}
+                  </div>
                   <div className="text-sm font-medium text-foreground">
-                    {overview.persistence.rdbLastStatus || '未知'}
+                    {overview.persistence.rdbLastStatus || tCommon('unknown')}
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground">未持久化</div>
+                  <div className="text-muted-foreground">
+                    {tDashboard('server.persistence.pending')}
+                  </div>
                   <div className="text-sm font-medium text-foreground">
                     {formatNumber(overview.persistence.rdbChangesSinceLastSave)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground">AOF</div>
+                  <div className="text-muted-foreground">
+                    {tDashboard('server.persistence.aof')}
+                  </div>
                   <div
                     className={cn(
                       'text-sm font-medium',
@@ -348,7 +394,9 @@ export function CacheDashboard() {
                         : 'text-muted-foreground',
                     )}
                   >
-                    {overview.persistence.aofEnabled ? '已开启' : '未开启'}
+                    {overview.persistence.aofEnabled
+                      ? tCommon('enabled')
+                      : tCommon('disabled')}
                   </div>
                 </div>
               </div>
@@ -360,9 +408,9 @@ export function CacheDashboard() {
       <Card className="border-border/70 dark:border-border/40">
         <CardHeader className="space-y-1">
           <CardTitle className="text-lg font-semibold">
-            Keyspace 分布
+            {tDashboard('keyspace.title')}
           </CardTitle>
-          <CardDescription>各逻辑库的键数量与过期情况</CardDescription>
+          <CardDescription>{tDashboard('keyspace.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           {overview.keyspace && overview.keyspace.length > 0 ? (
@@ -370,10 +418,18 @@ export function CacheDashboard() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-                    <th className="py-2 font-medium">数据库</th>
-                    <th className="py-2 font-medium">键数量</th>
-                    <th className="py-2 font-medium">过期键</th>
-                    <th className="py-2 font-medium">平均 TTL</th>
+                    <th className="py-2 font-medium">
+                      {tDashboard('keyspace.table.db')}
+                    </th>
+                    <th className="py-2 font-medium">
+                      {tDashboard('keyspace.table.keys')}
+                    </th>
+                    <th className="py-2 font-medium">
+                      {tDashboard('keyspace.table.expires')}
+                    </th>
+                    <th className="py-2 font-medium">
+                      {tDashboard('keyspace.table.avgTtl')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>{overview.keyspace.map(renderKeyspaceRow)}</tbody>
@@ -382,9 +438,9 @@ export function CacheDashboard() {
           ) : (
             <Empty className="min-h-[160px] border border-dashed border-border/60 bg-muted/40">
               <EmptyHeader>
-                <EmptyTitle>暂无 Keyspace 数据</EmptyTitle>
+                <EmptyTitle>{tDashboard('keyspace.emptyTitle')}</EmptyTitle>
                 <EmptyDescription>
-                  等待缓存上报指标后再来查看分布情况。
+                  {tDashboard('keyspace.emptyDescription')}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

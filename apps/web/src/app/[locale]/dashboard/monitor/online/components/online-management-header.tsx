@@ -1,6 +1,7 @@
 'use client';
 
 import { Ban, RefreshCcw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
@@ -17,13 +18,14 @@ export function OnlineUserManagementHeader() {
     useOnlineUserManagementStore();
   const { isRefreshing, isMutating } = useOnlineUserManagementStatus();
   const refresh = useOnlineUserManagementRefresh();
+  const t = useTranslations('OnlineUserManagement.header');
 
   const selectedCount = selectedUsers.length;
 
   return (
     <ManagementHeader
-      title="在线用户"
-      description="实时查看活跃会话，支持按账号、IP 和活跃时间筛选。"
+      title={t('title')}
+      description={t('description')}
       actions={
         <>
           <PermissionButton
@@ -35,12 +37,12 @@ export function OnlineUserManagementHeader() {
             {isMutating && selectedCount > 0 ? (
               <>
                 <Spinner className="mr-2 size-4" />
-                强退中
+                {t('actions.batchPending')}
               </>
             ) : (
               <>
                 <Ban className="mr-2 size-4" />
-                批量强退
+                {t('actions.batch')}
               </>
             )}
           </PermissionButton>
@@ -53,12 +55,12 @@ export function OnlineUserManagementHeader() {
             {isRefreshing ? (
               <>
                 <Spinner className="mr-2 size-4" />
-                刷新中
+                {t('actions.refreshing')}
               </>
             ) : (
               <>
                 <RefreshCcw className="mr-2 size-4" />
-                刷新
+                {t('actions.refresh')}
               </>
             )}
           </PermissionButton>

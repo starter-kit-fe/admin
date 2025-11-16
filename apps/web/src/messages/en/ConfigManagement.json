@@ -1,0 +1,118 @@
+{
+  "header": {
+    "title": "System Parameters",
+    "description": "Manage runtime configuration items, filter by keyword, edit values, and sync caches.",
+    "refresh": "Refresh",
+    "create": "New parameter",
+    "summary": "{count} parameters in total. Update built-in items with caution."
+  },
+  "filters": {
+    "statusTabs": {
+      "all": "All",
+      "Y": "System",
+      "N": "Custom"
+    },
+    "namePlaceholder": "Search by name",
+    "keyPlaceholder": "Search by config key",
+    "clearSearch": "Clear search",
+    "removeAria": "Remove {target}",
+    "chips": {
+      "configName": "Name",
+      "configKey": "Key"
+    }
+  },
+  "table": {
+    "columns": {
+      "configName": "Parameter",
+      "configKey": "Key",
+      "configValue": "Value",
+      "configType": "Type",
+      "remark": "Remark",
+      "actions": "Actions"
+    },
+    "type": {
+      "Y": "System",
+      "N": "Custom"
+    },
+    "selection": {
+      "selectAll": "Select all parameters",
+      "selectItem": "Select {target}"
+    },
+    "empty": {
+      "title": {
+        "loading": "Loading parameters...",
+        "idle": "No parameters yet"
+      },
+      "description": {
+        "loading": "Fetching system parameters, please wait.",
+        "idle": "Create a parameter to start managing them here."
+      }
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "moreAria": "More actions for {target}"
+    }
+  },
+  "toast": {
+    "createSuccess": "Parameter created successfully.",
+    "createError": "Failed to create parameter. Please try again later.",
+    "updateSuccess": "Parameter updated successfully.",
+    "updateError": "Failed to update parameter. Please try again later.",
+    "deleteSuccess": "Parameter deleted.",
+    "deleteError": "Failed to delete parameter. Please try again later.",
+    "bulkDeleteSuccess": "Parameters deleted successfully.",
+    "bulkDeleteError": "Failed to delete the selected parameters."
+  },
+  "dialogs": {
+    "deleteTitle": "Delete parameter",
+    "deleteMessage": "Delete \"{name}\"?",
+    "deleteFallback": "Delete the selected parameter?",
+    "bulkDeleteTitle": "Delete parameters",
+    "bulkDeleteSelected": "This will delete the {count} selected parameters.",
+    "bulkDeleteConfirm": "Delete parameters",
+    "bulkDeleteCancel": "Cancel"
+  },
+  "form": {
+    "title": {
+      "create": "New parameter",
+      "edit": "Edit parameter"
+    },
+    "description": "Configure runtime parameters. Keys must be unique.",
+    "fields": {
+      "name": "Parameter name",
+      "namePlaceholder": "Enter parameter name",
+      "key": "Config key",
+      "keyPlaceholder": "e.g. sys.account.registerUser",
+      "value": "Config value",
+      "valuePlaceholder": "Enter value",
+      "type": "Parameter type",
+      "typeSystem": "System",
+      "typeCustom": "Custom",
+      "remark": "Remark",
+      "remarkPlaceholder": "Optional remark"
+    },
+    "submit": {
+      "creating": "Saving...",
+      "create": "Create",
+      "save": "Save"
+    },
+    "validation": {
+      "name": {
+        "required": "Enter the parameter name",
+        "max": "Name cannot exceed 100 characters"
+      },
+      "key": {
+        "required": "Enter the config key",
+        "max": "Key cannot exceed 100 characters"
+      },
+      "value": {
+        "required": "Enter the config value",
+        "max": "Value cannot exceed 500 characters"
+      },
+      "remark": {
+        "max": "Notes cannot exceed 255 characters"
+      }
+    }
+  }
+}

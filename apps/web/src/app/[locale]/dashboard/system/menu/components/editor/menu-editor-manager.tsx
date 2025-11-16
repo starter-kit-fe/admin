@@ -25,6 +25,7 @@ import { useMemo } from 'react';
 import { toast } from 'sonner';
 
 import { MenuEditorDialog, type MenuParentOption } from './menu-editor-dialog';
+import { useTranslations } from 'next-intl';
 
 interface CreateParentContext {
   parentId: number;
@@ -40,6 +41,7 @@ export function MenuEditorManager() {
   const { editorState, closeEditor, menuTree } = useMenuManagementStore();
   const refresh = useMenuManagementRefresh();
   const { beginMutation, endMutation } = useMenuManagementMutationCounter();
+  const tToast = useTranslations('MenuManagement.toast');
 
   const createMutation = useMutation({
     mutationFn: createMenu,
@@ -47,13 +49,13 @@ export function MenuEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('菜单创建成功');
+      toast.success(tToast('createSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '创建菜单失败，请稍后再试';
+        error instanceof Error ? error.message : tToast('createError');
       toast.error(message);
     },
     onSettled: () => {
@@ -73,13 +75,13 @@ export function MenuEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('菜单已更新');
+      toast.success(tToast('updateSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '更新菜单失败，请稍后再试';
+        error instanceof Error ? error.message : tToast('updateError');
       toast.error(message);
     },
     onSettled: () => {

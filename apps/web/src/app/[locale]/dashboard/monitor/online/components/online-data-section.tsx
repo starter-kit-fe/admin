@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
+import { useTranslations } from 'next-intl';
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import {
@@ -54,6 +55,7 @@ export function OnlineUserDataSection() {
   const { canList, canForceLogout, canBatchLogout, canQuery } =
     useOnlinePermissionFlags();
   const selectedUserCount = selectedUsers.length;
+  const tGuard = useTranslations('OnlineUserManagement.guard');
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
@@ -197,9 +199,11 @@ export function OnlineUserDataSection() {
           <div className="flex h-48 flex-col items-center justify-center px-4 text-center">
             <Empty className="border-0 bg-transparent p-4">
               <EmptyHeader>
-                <EmptyTitle>暂无访问权限</EmptyTitle>
+                <EmptyTitle>{tGuard('title')}</EmptyTitle>
                 <EmptyDescription>
-                  需要 {ONLINE_PERMISSION_CODES.list} 权限才能查看在线用户。
+                  {tGuard('description', {
+                    code: ONLINE_PERMISSION_CODES.list,
+                  })}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

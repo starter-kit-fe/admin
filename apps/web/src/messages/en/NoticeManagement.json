@@ -1,0 +1,121 @@
+{
+  "header": {
+    "title": "Notices & Announcements",
+    "description": "Publish and manage system notices, filter by status or type, and keep users informed.",
+    "bulkDelete": "Delete selected",
+    "selectedCount": "({count})",
+    "refresh": "Refresh",
+    "create": "New notice",
+    "summary": "{total} records total. {selected} selected."
+  },
+  "filters": {
+    "statusTabs": {
+      "all": "All",
+      "0": "Active",
+      "1": "Disabled"
+    },
+    "keywordPlaceholder": "Search by title",
+    "clearKeyword": "Clear title search",
+    "typePlaceholder": "Filter by type",
+    "typeOptions": {
+      "all": "All types",
+      "1": "Notification",
+      "2": "Announcement"
+    },
+    "chips": {
+      "noticeType": "Type",
+      "noticeTitle": "Title"
+    },
+    "clearAll": "Clear filters",
+    "removeAria": "Remove {target}"
+  },
+  "status": {
+    "0": "Active",
+    "1": "Disabled"
+  },
+  "types": {
+    "1": "Notification",
+    "2": "Announcement"
+  },
+  "table": {
+    "columns": {
+      "title": "Title",
+      "content": "Content",
+      "remark": "Remarks",
+      "updatedAt": "Updated at",
+      "actions": "Actions"
+    },
+    "selection": {
+      "selectAll": "Select all notices",
+      "selectItem": "Select {target}"
+    },
+    "feedback": {
+      "loading": "Loading notices...",
+      "error": "Failed to load notices. Please try again later.",
+      "emptyTitle": "No notices yet",
+      "emptyDescription": "Publish a notice to view and manage it here."
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "moreAria": "More actions for {target}"
+    }
+  },
+  "toast": {
+    "createSuccess": "Notice created successfully.",
+    "createError": "Failed to create the notice. Please try again later.",
+    "updateSuccess": "Notice updated successfully.",
+    "updateError": "Failed to update the notice. Please try again later.",
+    "deleteSuccess": "Notice deleted.",
+    "deleteError": "Failed to delete the notice. Please try again later.",
+    "bulkDeleteSuccess": "Selected notices deleted successfully.",
+    "bulkDeleteError": "Failed to delete the selected notices."
+  },
+  "dialogs": {
+    "deleteTitle": "Delete notice",
+    "deleteMessage": "Delete \"{name}\"?",
+    "deleteFallback": "Delete the selected notice?",
+    "bulkDeleteTitle": "Delete notices",
+    "bulkDeleteSelected": "This will delete the {count} selected notices.",
+    "bulkDeleteConfirm": "Delete notices",
+    "bulkDeleteCancel": "Cancel"
+  },
+  "form": {
+    "title": {
+      "create": "New notice",
+      "edit": "Edit notice"
+    },
+    "description": "Configure notice content displayed to end users.",
+    "fields": {
+      "title": "Title",
+      "titlePlaceholder": "Enter notice title",
+      "type": "Notice type",
+      "typeNotification": "Notification",
+      "typeAnnouncement": "Announcement",
+      "status": "Status",
+      "statusActive": "Active",
+      "statusDisabled": "Disabled",
+      "content": "Content",
+      "contentPlaceholder": "Enter notice content",
+      "remark": "Remarks",
+      "remarkPlaceholder": "Optional description"
+    },
+    "submit": {
+      "creating": "Saving...",
+      "create": "Create",
+      "save": "Save"
+    },
+    "validation": {
+      "title": {
+        "required": "Enter the notice title",
+        "max": "Title cannot exceed 50 characters"
+      },
+      "content": {
+        "required": "Enter the notice content"
+      },
+      "remark": {
+        "max": "Notes cannot exceed 255 characters"
+      }
+    }
+  }
+}

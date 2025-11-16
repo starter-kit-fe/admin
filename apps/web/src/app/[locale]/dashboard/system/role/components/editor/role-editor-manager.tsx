@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 import { createRole, getRoleDetail, updateRole } from '../../api';
 import { listMenuTree } from '@/app/dashboard/system/menu/api';
@@ -19,6 +20,7 @@ export function RoleEditorManager() {
   const { editorState, closeEditor } = useRoleManagementStore();
   const refresh = useRoleManagementRefresh();
   const { beginMutation, endMutation } = useRoleManagementMutationCounter();
+  const tToast = useTranslations('RoleManagement.toast');
 
   const menuTreeQuery = useQuery({
     queryKey: ['system', 'menus', 'tree'],
@@ -54,13 +56,13 @@ export function RoleEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('角色创建成功');
+      toast.success(tToast('createSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '创建角色失败，请稍后重试';
+        error instanceof Error ? error.message : tToast('createError');
       toast.error(message);
     },
     onSettled: () => {
@@ -80,13 +82,13 @@ export function RoleEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('角色信息已更新');
+      toast.success(tToast('updateSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '更新角色失败，请稍后再试';
+        error instanceof Error ? error.message : tToast('updateError');
       toast.error(message);
     },
     onSettled: () => {

@@ -4,6 +4,7 @@ import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 import {
   changeJobStatus,
@@ -41,6 +42,7 @@ export function JobDataSection() {
 
   const [pendingRunId, setPendingRunId] = useState<number | null>(null);
   const [pendingStatusId, setPendingStatusId] = useState<number | null>(null);
+  const tToast = useTranslations('JobManagement.toast');
 
   const queryParams = useMemo(
     () => ({
@@ -109,12 +111,12 @@ export function JobDataSection() {
       setPendingRunId(jobId);
     },
     onSuccess: () => {
-      toast.success('任务已提交执行');
+      toast.success(tToast('runSuccess'));
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '操作失败，请稍后重试';
+        error instanceof Error ? error.message : tToast('runError');
       toast.error(message);
     },
     onSettled: () => {
@@ -139,12 +141,16 @@ export function JobDataSection() {
       setPendingStatusId(jobId);
     },
     onSuccess: ({ nextStatus }) => {
-      toast.success(nextStatus === '0' ? '任务已恢复' : '任务已暂停');
+      toast.success(
+        nextStatus === '0'
+          ? tToast('statusResume')
+          : tToast('statusPause'),
+      );
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '更新任务状态失败，请稍后重试';
+        error instanceof Error ? error.message : tToast('statusError');
       toast.error(message);
     },
     onSettled: () => {

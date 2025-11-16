@@ -1,0 +1,69 @@
+{
+  "header": {
+    "title": "Server monitor",
+    "description": "Focus on the backend server process and track CPU / memory / storage usage.",
+    "refreshNow": "Refresh now",
+    "refreshing": "Refreshing"
+  },
+  "status": {
+    "never": "Not fetched yet",
+    "justNow": "Just now"
+  },
+  "error": {
+    "title": "Unable to load server monitor data",
+    "description": "Please refresh and try again later."
+  },
+  "quickStats": {
+    "cpu": {
+      "label": "CPU",
+      "hint": "Load {load1} / {load5} / {load15}"
+    },
+    "memory": {
+      "label": "Memory",
+      "hint": "Process allocation {allocation}"
+    },
+    "storage": {
+      "label": "Storage",
+      "hint": "{used} / {total}"
+    }
+  },
+  "serverInfo": {
+    "title": "Server & version",
+    "description": "Host-level details (separate from process runtime). Last updated: {time}",
+    "rows": {
+      "name": "Server name",
+      "system": "Operating system",
+      "uptime": "Server uptime",
+      "goRuntime": "Go runtime",
+      "kernel": "Kernel version",
+      "currentTime": "Current time"
+    }
+  },
+  "process": {
+    "title": "Backend process",
+    "description": "Displays the deployed version / commit and Go runtime CPU, memory, and GC stats.",
+    "sections": {
+      "deployment": "Deployment info",
+      "metrics": "Runtime metrics"
+    },
+    "summary": {
+      "version": "Version",
+      "commit": "Commit",
+      "pid": "PID",
+      "startTime": "Start time",
+      "uptime": "Process uptime",
+      "goVersion": "Go version"
+    },
+    "metrics": {
+      "cpu": "CPU usage",
+      "memory": "Memory usage",
+      "totalMemory": "Cumulative memory",
+      "systemMemory": "System memory",
+      "goroutines": "Goroutines",
+      "gcCount": "GC count",
+      "lastGC": "Last GC",
+      "nextGC": "Next GC",
+      "cgo": "Cgo calls"
+    }
+  }
+}

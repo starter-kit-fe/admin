@@ -2,6 +2,7 @@
 
 import type { KeyboardEvent } from 'react';
 import { KeyRound, Pencil, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -48,10 +49,12 @@ export function UserMobileList({
   isLoading,
   isError,
 }: UserMobileListProps) {
+  const tTable = useTranslations('UserManagement.table');
+  const tStatus = useTranslations('UserManagement.status');
   if (isLoading) {
     return (
       <div className="py-12 text-center text-sm text-muted-foreground">
-        正在加载用户...
+        {tTable('state.loading')}
       </div>
     );
   }
@@ -59,7 +62,7 @@ export function UserMobileList({
   if (isError) {
     return (
       <div className="py-12 text-center text-sm text-destructive">
-        加载失败，请稍后再试。
+        {tTable('state.error')}
       </div>
     );
   }
@@ -68,8 +71,8 @@ export function UserMobileList({
     return (
       <Empty className="h-60 border border-dashed border-border/60">
         <EmptyHeader>
-          <EmptyTitle>暂无用户数据</EmptyTitle>
-          <EmptyDescription>创建用户后可在此管理详情与权限。</EmptyDescription>
+          <EmptyTitle>{tTable('state.emptyTitle')}</EmptyTitle>
+          <EmptyDescription>{tTable('state.emptyDescription')}</EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
@@ -79,13 +82,14 @@ export function UserMobileList({
     <div className="flex flex-col gap-4">
       {rows.map((user) => {
         const isSelected = selectedIds.has(user.userId);
-        const displayName = getDisplayName(user);
+        const displayName = getDisplayName(user, tTable('defaultName'));
         const accountLabel = getAccountLabel(user, displayName);
         const trimmedNick = user.nickName?.trim();
         const nicknameLabel = trimmedNick && trimmedNick.length > 0 ? trimmedNick : '—';
         const emailLabel = getEmailLabel(user);
         const statusMeta =
           STATUS_META[user.status as keyof typeof STATUS_META] ?? STATUS_META['1'];
+        const statusLabel = tStatus(statusMeta.labelKey);
         const disableDelete = user.userId === 1 || user.userName === 'admin';
 
         const handleCardActivate = () => {
@@ -115,7 +119,7 @@ export function UserMobileList({
           >
             <div className="flex items-start gap-3">
               <Checkbox
-                aria-label={`选择 ${accountLabel}`}
+                aria-label={tTable('selection.selectUser', { target: accountLabel })}
                 checked={isSelected}
                 onCheckedChange={(checked) => onToggleSelect(user.userId, checked === true)}
                 className="mt-2"
@@ -140,24 +144,24 @@ export function UserMobileList({
                       statusMeta.badgeClass,
                     )}
                   >
-                    {statusMeta.label}
+                    {statusLabel}
                   </Badge>
                 </div>
                 <dl className="mt-2 grid grid-cols-2 gap-3 text-xs text-muted-foreground">
                   <div>
-                    <dt className="font-medium text-foreground">角色</dt>
-                    <dd>{getRoleLabel(user)}</dd>
+                    <dt className="font-medium text-foreground">{tTable('columns.roles')}</dt>
+                    <dd>{getRoleLabel(user, tTable('defaultRole'))}</dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-foreground">部门</dt>
+                    <dt className="font-medium text-foreground">{tTable('columns.dept')}</dt>
                     <dd>{getCompanyLabel(user)}</dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-foreground">昵称</dt>
+                    <dt className="font-medium text-foreground">{tTable('columns.nickname')}</dt>
                     <dd>{nicknameLabel}</dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-foreground">手机号</dt>
+                    <dt className="font-medium text-foreground">{tTable('columns.phone')}</dt>
                     <dd>{formatPhoneNumber(user.phonenumber)}</dd>
                   </div>
                 </dl>
@@ -175,7 +179,7 @@ export function UserMobileList({
                   }}
                 >
                   <Pencil className="size-3.5" />
-                  编辑
+                  {tTable('actions.edit')}
                 </Button>
                 {onResetPassword ? (
                   <Button
@@ -189,7 +193,7 @@ export function UserMobileList({
                     }}
                   >
                     <KeyRound className="size-3.5" />
-                    重置密码
+                    {tTable('actions.resetPassword')}
                   </Button>
                 ) : (
                   <span />
@@ -209,7 +213,7 @@ export function UserMobileList({
                 disabled={disableDelete}
               >
                 <Trash2 className="size-3.5" />
-                删除
+                {tTable('actions.delete')}
               </Button>
             </div>
           </article>

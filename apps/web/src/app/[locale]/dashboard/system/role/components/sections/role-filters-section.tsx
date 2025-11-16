@@ -8,8 +8,10 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { STATUS_TABS } from '../../constants';
 import { RoleManagementFilters } from '../filters/role-management-filters';
+import { useTranslations } from 'next-intl';
 
 export function RoleFiltersSection() {
+  const tFilters = useTranslations('RoleManagement.filters');
   const {
     status,
     setStatus,
@@ -38,9 +40,9 @@ export function RoleFiltersSection() {
     () =>
       STATUS_TABS.map((tab) => ({
         value: tab.value,
-        label: tab.label,
+        label: tFilters(tab.labelKey),
       })),
-    [],
+    [tFilters],
   );
 
   const handleStatusChange = (value: string) => {

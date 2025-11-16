@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 
 import { InlineLoading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,9 @@ export function OnlineUserDetailDialog() {
   const { detailDialog, closeDetailDialog } =
     useOnlineUserManagementStore();
   const { canQuery } = useOnlinePermissionFlags();
+  const tDetail = useTranslations('OnlineUserManagement.detail');
+  const tStatus = useTranslations('OnlineUserManagement.status');
+  const tErrors = useTranslations('OnlineUserManagement.errors');
 
   const identifier = detailDialog.open
     ? resolveOnlineUserIdentifier(detailDialog.user)
@@ -30,7 +34,7 @@ export function OnlineUserDetailDialog() {
     queryKey: [...ONLINE_USERS_QUERY_KEY, 'detail', identifier],
     queryFn: async () => {
       if (!identifier) {
-        throw new Error('缺少会话标识，无法查询详情');
+        throw new Error(tErrors('missingDetail'));
       }
       return getOnlineUserDetail(identifier);
     },
@@ -41,13 +45,18 @@ export function OnlineUserDetailDialog() {
   const detail = query.data ?? (detailDialog.open ? detailDialog.user : null);
   const isLoading = query.isLoading && !detail;
   const hasError = query.isError && !detail;
+  const unnamedFallback = tDetail('unnamed');
   const description = detail
-    ? `账号 ${detail.userName || '未命名'} 的会话详情`
-    : '查看在线会话详情';
+    ? tDetail('description.named', {
+        name: detail.userName || unnamedFallback,
+      })
+    : tDetail('description.generic');
 
   const statusBadge = detail ? (
     <Badge variant={resolveStatusBadgeVariant(detail.status)}>
-      {detail.status === '0' || !detail.status ? '在线' : '异常'}
+      {detail.status === '0' || !detail.status
+        ? tStatus('online')
+        : tStatus('abnormal')}
     </Badge>
   ) : (
     '—'
@@ -58,21 +67,30 @@ export function OnlineUserDetailDialog() {
       return [];
     }
     return [
-      { label: '登录账号', value: detail.userName || '—' },
-      { label: '用户昵称', value: detail.nickName || '—' },
-      { label: '所属部门', value: detail.deptName || '—' },
-      { label: '当前状态', value: statusBadge },
-      { label: '登录 IP', value: detail.ipaddr || '—' },
-      { label: '登录地点', value: detail.loginLocation || '—' },
-      { label: '登录时间', value: detail.loginTime || '—' },
-      { label: '最近活跃', value: detail.lastAccessTime || '—' },
-      { label: '浏览器', value: detail.browser || '—' },
-      { label: '操作系统', value: detail.os || '—' },
-      { label: '会话 ID', value: detail.sessionId || detail.tokenId || '—' },
-      { label: 'Token ID', value: detail.tokenId || '—' },
-      { label: 'UUID', value: detail.uuid || '—' },
+      { label: tDetail('fields.userName'), value: detail.userName || '—' },
+      { label: tDetail('fields.nickName'), value: detail.nickName || '—' },
+      { label: tDetail('fields.deptName'), value: detail.deptName || '—' },
+      { label: tDetail('fields.status'), value: statusBadge },
+      { label: tDetail('fields.ipaddr'), value: detail.ipaddr || '—' },
+      {
+        label: tDetail('fields.loginLocation'),
+        value: detail.loginLocation || '—',
+      },
+      { label: tDetail('fields.loginTime'), value: detail.loginTime || '—' },
+      {
+        label: tDetail('fields.lastAccessTime'),
+        value: detail.lastAccessTime || '—',
+      },
+      { label: tDetail('fields.browser'), value: detail.browser || '—' },
+      { label: tDetail('fields.os'), value: detail.os || '—' },
+      {
+        label: tDetail('fields.sessionId'),
+        value: detail.sessionId || detail.tokenId || '—',
+      },
+      { label: tDetail('fields.tokenId'), value: detail.tokenId || '—' },
+      { label: tDetail('fields.uuid'), value: detail.uuid || '—' },
     ];
-  }, [detail, statusBadge]);
+  }, [detail, statusBadge, tDetail]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -88,7 +106,7 @@ export function OnlineUserDetailDialog() {
     <ResponsiveDialog open={detailDialog.open} onOpenChange={handleOpenChange}>
       <ResponsiveDialog.Content className="sm:max-w-xl">
         <ResponsiveDialog.Header>
-          <ResponsiveDialog.Title>会话详情</ResponsiveDialog.Title>
+          <ResponsiveDialog.Title>{tDetail('title')}</ResponsiveDialog.Title>
           <ResponsiveDialog.Description>
             {description}
           </ResponsiveDialog.Description>
@@ -96,11 +114,11 @@ export function OnlineUserDetailDialog() {
         <div className="space-y-4">
           {isLoading ? (
             <div className="flex h-32 items-center justify-center">
-              <InlineLoading label="正在加载会话详情..." />
+              <InlineLoading label={tDetail('loading')} />
             </div>
           ) : hasError ? (
             <div className="rounded-lg border border-dashed border-destructive/30 bg-destructive/5 px-4 py-6 text-center text-sm text-destructive">
-              加载详情失败，请稍后重试。
+              {tDetail('error')}
             </div>
           ) : detail ? (
             <>
@@ -118,7 +136,9 @@ export function OnlineUserDetailDialog() {
               </dl>
               {detail.msg ? (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">状态描述</p>
+                  <p className="text-xs text-muted-foreground">
+                    {tDetail('statusLabel')}
+                  </p>
                   <p className="rounded-md bg-muted/60 px-3 py-2 text-sm text-foreground">
                     {detail.msg}
                   </p>
@@ -127,7 +147,7 @@ export function OnlineUserDetailDialog() {
             </>
           ) : (
             <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-              未找到该会话，可能已下线。
+              {tDetail('empty')}
             </div>
           )}
         </div>
@@ -137,7 +157,7 @@ export function OnlineUserDetailDialog() {
             variant="outline"
             onClick={() => closeDetailDialog()}
           >
-            关闭
+            {tDetail('close')}
           </Button>
         </ResponsiveDialog.Footer>
       </ResponsiveDialog.Content>

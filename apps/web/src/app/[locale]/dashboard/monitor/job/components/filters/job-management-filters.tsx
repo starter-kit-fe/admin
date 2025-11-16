@@ -1,6 +1,9 @@
+'use client';
+
 import { StatusTabs, type StatusTabItem } from '@/components/status-tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { useTranslations } from 'next-intl';
 
 import type { JobStatusFilter } from '../../constants';
 
@@ -23,6 +26,8 @@ export function JobManagementFilters({
   onStatusChange,
   statusTabs,
 }: JobManagementFiltersProps) {
+  const tFilters = useTranslations('JobManagement.filters');
+
   return (
     <div className="rounded-xl bg-card p-4">
       <div className="flex flex-col gap-4">
@@ -34,19 +39,21 @@ export function JobManagementFilters({
 
         <div className="grid gap-3 md:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="job-name-filter">任务名称</Label>
+            <Label htmlFor="job-name-filter">{tFilters('jobNameLabel')}</Label>
             <Input
               id="job-name-filter"
-              placeholder="按名称筛选"
+              placeholder={tFilters('jobNamePlaceholder')}
               value={jobName}
               onChange={(event) => onJobNameChange(event.target.value)}
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="job-group-filter">任务分组</Label>
+            <Label htmlFor="job-group-filter">
+              {tFilters('jobGroupLabel')}
+            </Label>
             <Input
               id="job-group-filter"
-              placeholder="按分组筛选"
+              placeholder={tFilters('jobGroupPlaceholder')}
               value={jobGroup}
               onChange={(event) => onJobGroupChange(event.target.value)}
             />

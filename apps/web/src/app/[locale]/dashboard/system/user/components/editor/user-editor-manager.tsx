@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 
@@ -19,6 +20,7 @@ export function UserEditorManager() {
     editorState,
     closeEditor,
   } = useUserManagementStore();
+  const t = useTranslations('UserManagement.toast');
   const refresh = useUserManagementRefresh();
   const { beginMutation, endMutation } = useUserManagementMutationCounter();
   const submitLockRef = useRef(false);
@@ -47,13 +49,13 @@ export function UserEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('用户创建成功');
+      toast.success(t('createSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '创建用户失败，请稍后再试';
+        error instanceof Error ? error.message : t('createError');
       toast.error(message);
     },
     onSettled: () => {
@@ -86,13 +88,13 @@ export function UserEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('用户信息已更新');
+      toast.success(t('updateSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '更新用户失败，请稍后再试';
+        error instanceof Error ? error.message : t('updateError');
       toast.error(message);
     },
     onSettled: () => {

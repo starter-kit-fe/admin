@@ -15,9 +15,10 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { listDictData } from '../../api';
-import { DATA_STATUS_TABS, DEFAULT_DEBOUNCE_MS } from '../../constants';
+import { DEFAULT_DEBOUNCE_MS, STATUS_VALUES } from '../../constants';
 import type { DictData, DictType } from '../../type';
 import { areDictDataListsEqual, emptyDictDataList } from '../../utils';
 import { DictDataFilters } from '../filters/dict-data-filters';
@@ -35,6 +36,8 @@ export function DictDataSection() {
   const { openDataCreate, openDataEdit } = useDictDataEditorActions();
   const { setDataDeleteTarget } = useDictDataDeleteState();
   const setRefreshing = useDictManagementSetRefreshing();
+  const tData = useTranslations('DictManagement.data');
+  const tStatus = useTranslations('DictManagement.status');
   const selectedDict: DictType | undefined = useMemo(() => {
     if (selectedDictId == null) {
       return undefined;
@@ -103,15 +106,22 @@ export function DictDataSection() {
     }
   }, [dataQuery.data, dictData, dictDataTotal, setDictData, setDictDataTotal]);
 
+  const statusTabs = useMemo(
+    () =>
+      STATUS_VALUES.map((value) => ({
+        value,
+        label: tStatus(value),
+      })),
+    [tStatus],
+  );
+
   if (!selectedDict || selectedDictId == null) {
     return (
       <Card className="border border-dashed border-border/50 bg-muted/40 py-14 text-center text-sm text-muted-foreground">
-        请选择左侧字典类型以查看字典数据。
+        {tData('selectPrompt')}
       </Card>
     );
   }
-
-  const statusTabs = DATA_STATUS_TABS;
 
   const handleStatusChange = (value: string) => {
     setDataStatus(value as DataStatusValue);
@@ -162,7 +172,7 @@ export function DictDataSection() {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          共 {dictDataTotal} 条字典数据。
+          {tData('total', { count: dictDataTotal })}
         </p>
       </CardContent>
     </Card>

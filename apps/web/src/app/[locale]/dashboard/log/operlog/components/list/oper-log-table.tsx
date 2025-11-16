@@ -28,18 +28,27 @@ import { Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import type { OperLog } from '../../type';
-import {
-  getBusinessTypeLabel,
-  getOperLogStatusBadgeVariant,
-  getOperLogStatusLabel,
-} from '../../utils';
+import { OPER_LOG_REQUEST_METHOD_OPTIONS } from '../../constants';
+import { getOperLogStatusBadgeVariant } from '../../utils';
 import { usePermissions } from '@/hooks/use-permissions';
+import { useTranslations } from 'next-intl';
 
 interface OperLogTableProps {
   rows: OperLog[];
   onDelete: (log: OperLog) => void;
   isLoading: boolean;
   isError: boolean;
+}
+
+type RequestMethod =
+  (typeof OPER_LOG_REQUEST_METHOD_OPTIONS)[number]['value'];
+
+const KNOWN_REQUEST_METHODS = new Set<RequestMethod>(
+  OPER_LOG_REQUEST_METHOD_OPTIONS.map((option) => option.value),
+);
+
+function isKnownRequestMethod(value: string): value is RequestMethod {
+  return KNOWN_REQUEST_METHODS.has(value as RequestMethod);
 }
 
 export function OperLogTable({
@@ -51,20 +60,29 @@ export function OperLogTable({
   const columnHelper = useMemo(() => createColumnHelper<OperLog>(), []);
   const { hasPermission } = usePermissions();
   const canDeleteOperLog = hasPermission('monitor:operlog:remove');
+  const tColumns = useTranslations('OperLogManagement.table.columns');
+  const tCells = useTranslations('OperLogManagement.table.cells');
+  const tStatus = useTranslations('OperLogManagement.status');
+  const tBusinessTypes = useTranslations('OperLogManagement.businessTypes');
+  const tRequestMethods = useTranslations('OperLogManagement.requestMethods');
+  const tState = useTranslations('OperLogManagement.table.state');
+  const tActions = useTranslations('OperLogManagement.table.actions');
 
   const columns = useMemo(
     () => [
       columnHelper.accessor('title', {
-        header: () => '操作标题',
+        header: () => tColumns('title'),
         cell: ({ row }) => {
           const log = row.original;
+          const deptName =
+            log.deptName?.trim() || tCells('departmentFallback');
           return (
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">
                 {log.title || '-'}
               </p>
               <p className="text-xs text-muted-foreground">
-                部门：{log.deptName || '未分配'}
+                {tCells('department', { value: deptName })}
               </p>
             </div>
           );
@@ -74,41 +92,59 @@ export function OperLogTable({
         },
       }),
       columnHelper.accessor('businessType', {
-        header: () => '业务类型',
-        cell: ({ getValue }) => (
-          <Badge variant="secondary" className="rounded-full px-2 py-0.5">
-            {getBusinessTypeLabel(getValue())}
-          </Badge>
-        ),
+        header: () => tColumns('businessType'),
+        cell: ({ getValue }) => {
+          const value = getValue();
+          const label = tBusinessTypes(
+            value === null || value === undefined
+              ? '0'
+              : String(value),
+          );
+          return (
+            <Badge variant="secondary" className="rounded-full px-2 py-0.5">
+              {label}
+            </Badge>
+          );
+        },
         meta: {
           headerClassName: 'w-[120px]',
         },
       }),
       columnHelper.accessor('status', {
-        header: () => '执行结果',
-        cell: ({ getValue }) => (
-          <Badge variant={getOperLogStatusBadgeVariant(getValue())}>
-            {getOperLogStatusLabel(getValue())}
-          </Badge>
-        ),
+        header: () => tColumns('status'),
+        cell: ({ getValue }) => {
+          const value = getValue();
+          const statusKey = String(value) === '0' ? '0' : '1';
+          return (
+            <Badge variant={getOperLogStatusBadgeVariant(value)}>
+              {tStatus(statusKey)}
+            </Badge>
+          );
+        },
         meta: {
           headerClassName: 'w-[120px]',
         },
       }),
       columnHelper.accessor('requestMethod', {
-        header: () => '请求方式',
-        cell: ({ getValue }) => (
-          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-mono uppercase text-foreground/80">
-            {getValue() || '-'}
-          </span>
-        ),
+        header: () => tColumns('requestMethod'),
+        cell: ({ getValue }) => {
+          const raw = getValue();
+          const method = raw ? String(raw) : '';
+          const methodKey = method && isKnownRequestMethod(method) ? method : null;
+          const label = methodKey ? tRequestMethods(methodKey) : method || '-';
+          return (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-mono uppercase text-foreground/80">
+              {label}
+            </span>
+          );
+        },
         meta: {
           headerClassName: 'w-[140px]',
         },
       }),
       columnHelper.display({
         id: 'operator',
-        header: () => '操作人员',
+        header: () => tColumns('operator'),
         cell: ({ row }) => {
           const log = row.original;
           return (
@@ -116,7 +152,7 @@ export function OperLogTable({
               <p className="text-sm text-foreground">{log.operName || '-'}</p>
               {log.operIp ? (
                 <p className="text-xs text-muted-foreground">
-                  IP：{log.operIp}
+                  {tCells('ip', { value: log.operIp })}
                 </p>
               ) : null}
             </div>
@@ -127,7 +163,7 @@ export function OperLogTable({
         },
       }),
       columnHelper.accessor('operUrl', {
-        header: () => '请求地址',
+        header: () => tColumns('operUrl'),
         cell: ({ row, getValue }) => {
           const location = row.original.operLocation;
           return (
@@ -147,7 +183,7 @@ export function OperLogTable({
         },
       }),
       columnHelper.accessor('operTime', {
-        header: () => '操作时间',
+        header: () => tColumns('operTime'),
         cell: ({ row }) => {
           const log = row.original;
           return (
@@ -155,7 +191,7 @@ export function OperLogTable({
               <p>{log.operTime || '-'}</p>
               {log.costTime ? (
                 <p className="text-xs text-muted-foreground">
-                  耗时：{log.costTime}ms
+                  {tCells('cost', { value: log.costTime })}
                 </p>
               ) : null}
             </div>
@@ -169,7 +205,9 @@ export function OperLogTable({
         ? [
             columnHelper.display({
               id: 'actions',
-              header: () => <div className="text-right">操作</div>,
+              header: () => (
+                <div className="text-right">{tColumns('actions')}</div>
+              ),
               cell: ({ row }) => {
                 const log = row.original;
                 return (
@@ -181,7 +219,7 @@ export function OperLogTable({
                       onClick={() => onDelete(log)}
                     >
                       <Trash2 className="size-4" />
-                      <span className="sr-only">删除</span>
+                      <span className="sr-only">{tActions('delete')}</span>
                     </Button>
                   </div>
                 );
@@ -194,7 +232,17 @@ export function OperLogTable({
           ]
         : []),
     ],
-    [canDeleteOperLog, columnHelper, onDelete],
+    [
+      canDeleteOperLog,
+      columnHelper,
+      onDelete,
+      tBusinessTypes,
+      tCells,
+      tColumns,
+      tRequestMethods,
+      tStatus,
+      tActions,
+    ],
   );
 
   const table = useReactTable({
@@ -240,7 +288,7 @@ export function OperLogTable({
                   colSpan={visibleColumnCount}
                   className="h-32 text-center align-middle"
                 >
-                  <InlineLoading label="正在加载操作日志..." />
+                  <InlineLoading label={tState('loading')} />
                 </TableCell>
               </TableRow>
             ) : isError ? (
@@ -249,7 +297,7 @@ export function OperLogTable({
                   colSpan={visibleColumnCount}
                   className="h-24 text-center text-sm text-destructive"
                 >
-                  加载失败，请稍后再试。
+                  {tState('error')}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows.length === 0 ? (
@@ -260,9 +308,9 @@ export function OperLogTable({
                 >
                   <Empty className="border-0 bg-transparent p-4">
                     <EmptyHeader>
-                      <EmptyTitle>暂无操作日志</EmptyTitle>
+                      <EmptyTitle>{tState('emptyTitle')}</EmptyTitle>
                       <EmptyDescription>
-                        执行新增、修改或删除后会记录在这里。
+                        {tState('emptyDescription')}
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>

@@ -32,6 +32,7 @@ import {
 } from '@tanstack/react-table';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { usePermissions } from '@/hooks/use-permissions';
 
@@ -52,16 +53,16 @@ interface RoleTableProps {
 const STATUS_META: Record<
   Role['status'],
   {
-    label: string;
+    labelKey: 'enabled' | 'disabled';
     badgeClass: string;
   }
 > = {
   '0': {
-    label: '正常',
+    labelKey: 'enabled',
     badgeClass: 'bg-primary/10 text-primary',
   },
   '1': {
-    label: '停用',
+    labelKey: 'disabled',
     badgeClass: 'bg-rose-500/10 text-rose-600 border-rose-500/30',
   },
 };
@@ -92,6 +93,8 @@ function RoleRowActions({
   canEdit: boolean;
   canDelete: boolean;
 }) {
+  const tTable = useTranslations('RoleManagement.table');
+  const tActions = useTranslations('RoleManagement.table.actions');
   if (!canEdit && !canDelete) {
     return null;
   }
@@ -104,8 +107,8 @@ function RoleRowActions({
             size="icon"
             className="size-8"
             onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => event.stopPropagation()}
-            aria-label="更多操作"
+            onClick={(event) => event.stopPropagation()} 
+            aria-label={tActions('more')}
             disabled={!canEdit && !canDelete}
           >
             <MoreHorizontal className="size-4" />
@@ -120,7 +123,7 @@ function RoleRowActions({
               }}
             >
               <Pencil className="mr-2 size-4" />
-              编辑
+              {tActions('edit')}
             </DropdownMenuItem>
           ) : null}
           {canDelete ? (
@@ -131,7 +134,7 @@ function RoleRowActions({
                 onDelete(role);
               }}
             >
-              <Trash2 className="mr-2 size-4" /> 删除角色
+              <Trash2 className="mr-2 size-4" /> {tActions('delete')}
             </DropdownMenuItem>
           ) : null}
         </DropdownMenuContent>
@@ -152,6 +155,8 @@ export function RoleTable({
   isError,
 }: RoleTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<Role>(), []);
+  const tTable = useTranslations('RoleManagement.table');
+  const tStatus = useTranslations('RoleManagement.status');
   const { hasPermission } = usePermissions();
   const canEditRole = hasPermission('system:role:edit');
   const canDeleteRole = hasPermission('system:role:remove');
@@ -163,7 +168,7 @@ export function RoleTable({
         id: 'select',
         header: () => (
           <Checkbox
-            aria-label="选择全部"
+            aria-label={tTable('selection.selectAll')}
             checked={headerCheckboxState}
             onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
           />
@@ -171,9 +176,12 @@ export function RoleTable({
         cell: ({ row }) => {
           const role = row.original;
           const isSelected = selectedIds.has(role.roleId);
+          const targetLabel = role.roleName?.trim() || `#${role.roleId}`;
           return (
             <Checkbox
-              aria-label={`选择 ${role.roleName}`}
+              aria-label={tTable('selection.selectRole', {
+                target: targetLabel,
+              })}
               checked={isSelected}
               onCheckedChange={(checked) =>
                 onToggleSelect(role.roleId, checked === true)
@@ -186,7 +194,7 @@ export function RoleTable({
         meta: { headerClassName: 'w-12', cellClassName: 'w-12 align-middle' },
       }),
       columnHelper.accessor('roleName', {
-        header: '角色名称',
+        header: tTable('columns.name'),
         cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="text-sm font-medium text-foreground">
@@ -200,14 +208,14 @@ export function RoleTable({
         meta: { headerClassName: 'min-w-[200px]' },
       }),
       columnHelper.accessor('roleKey', {
-        header: '权限字符',
+        header: tTable('columns.key'),
         cell: ({ getValue }) => (
           <span className="text-sm text-muted-foreground">{getValue()}</span>
         ),
         meta: { headerClassName: 'min-w-[180px]' },
       }),
       columnHelper.accessor('status', {
-        header: '状态',
+        header: tTable('columns.status'),
         cell: ({ getValue }) => {
           const meta = STATUS_META[getValue()] ?? STATUS_META['1'];
           return (
@@ -218,7 +226,7 @@ export function RoleTable({
                 meta.badgeClass,
               )}
             >
-              {meta.label}
+              {tStatus(meta.labelKey)}
             </Badge>
           );
         },
@@ -226,7 +234,7 @@ export function RoleTable({
         meta: { headerClassName: 'w-[120px]' },
       }),
       columnHelper.accessor('createTime', {
-        header: '创建时间',
+        header: tTable('columns.createdAt'),
         cell: ({ getValue }) => (
           <span className="text-sm text-muted-foreground">
             {getDateTimeLabel(getValue())}
@@ -240,7 +248,9 @@ export function RoleTable({
       baseColumns.push(
         columnHelper.display({
           id: 'actions',
-          header: () => <span className="block text-right">操作</span>,
+          header: () => (
+            <span className="block text-right">{tTable('columns.actions')}</span>
+          ),
           cell: ({ row }) => (
             <RoleRowActions
               role={row.original}
@@ -271,6 +281,8 @@ export function RoleTable({
     onToggleSelectAll,
     selectedIds,
     showRowActions,
+    tStatus,
+    tTable,
   ]);
 
   const table = useReactTable({
@@ -314,7 +326,7 @@ export function RoleTable({
                 colSpan={visibleColumnCount}
                 className="h-24 text-center text-sm text-muted-foreground"
               >
-                正在加载角色...
+                {tTable('state.loading')}
               </TableCell>
             </TableRow>
           ) : isError ? (
@@ -323,7 +335,7 @@ export function RoleTable({
                 colSpan={visibleColumnCount}
                 className="h-24 text-center text-sm text-destructive"
               >
-                加载失败，请稍后再试。
+                {tTable('state.error')}
               </TableCell>
             </TableRow>
           ) : table.getRowModel().rows.length === 0 ? (
@@ -334,8 +346,10 @@ export function RoleTable({
               >
                 <Empty className="border-0 bg-transparent p-4">
                   <EmptyHeader>
-                    <EmptyTitle>暂无角色数据</EmptyTitle>
-                    <EmptyDescription>创建角色后即可在此配置权限和成员。</EmptyDescription>
+                    <EmptyTitle>{tTable('state.emptyTitle')}</EmptyTitle>
+                    <EmptyDescription>
+                      {tTable('state.emptyDescription')}
+                    </EmptyDescription>
                   </EmptyHeader>
                 </Empty>
               </TableCell>

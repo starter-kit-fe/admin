@@ -28,8 +28,9 @@ import { Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import type { LoginLog } from '../../type';
-import { getLoginStatusBadgeVariant, getLoginStatusLabel } from '../../utils';
+import { getLoginStatusBadgeVariant } from '../../utils';
 import { usePermissions } from '@/hooks/use-permissions';
+import { useTranslations } from 'next-intl';
 
 interface LoginLogTableProps {
   rows: LoginLog[];
@@ -47,20 +48,27 @@ export function LoginLogTable({
   const columnHelper = useMemo(() => createColumnHelper<LoginLog>(), []);
   const { hasPermission } = usePermissions();
   const canDeleteLog = hasPermission('monitor:logininfor:remove');
+  const tColumns = useTranslations('LoginLogManagement.table.columns');
+  const tTable = useTranslations('LoginLogManagement.table');
+  const tState = useTranslations('LoginLogManagement.table.state');
+  const tStatus = useTranslations('LoginLogManagement.status');
+  const tActions = useTranslations('LoginLogManagement.table.actions');
 
   const columns = useMemo(
     () => [
       columnHelper.accessor('userName', {
-        header: () => '登录账号',
+        header: () => tColumns('account'),
         cell: ({ row }) => {
           const log = row.original;
+          const locationText =
+            log.loginLocation || tTable('locationUnknown');
           return (
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">
                 {log.userName || '-'}
               </p>
               <p className="text-xs text-muted-foreground">
-                地点：{log.loginLocation || '未知地点'}
+                {tTable('locationLabel', { location: locationText })}
               </p>
             </div>
           );
@@ -70,7 +78,7 @@ export function LoginLogTable({
         },
       }),
       columnHelper.accessor('ipaddr', {
-        header: () => '登录 IP',
+        header: () => tColumns('ip'),
         cell: ({ getValue }) => (
           <span className="text-sm text-foreground">{getValue() || '-'}</span>
         ),
@@ -80,7 +88,7 @@ export function LoginLogTable({
       }),
       columnHelper.display({
         id: 'client',
-        header: () => '客户端',
+        header: () => tColumns('client'),
         cell: ({ row }) => {
           const log = row.original;
           return (
@@ -95,18 +103,23 @@ export function LoginLogTable({
         },
       }),
       columnHelper.accessor('status', {
-        header: () => '状态',
-        cell: ({ getValue }) => (
-          <Badge variant={getLoginStatusBadgeVariant(getValue())}>
-            {getLoginStatusLabel(getValue())}
-          </Badge>
-        ),
+        header: () => tColumns('status'),
+        cell: ({ getValue }) => {
+          const status = getValue();
+          const label =
+            status === '0' ? tStatus('success') : tStatus('failed');
+          return (
+            <Badge variant={getLoginStatusBadgeVariant(status)}>
+              {label}
+            </Badge>
+          );
+        },
         meta: {
           headerClassName: 'w-[120px]',
         },
       }),
       columnHelper.accessor('msg', {
-        header: () => '提示信息',
+        header: () => tColumns('message'),
         cell: ({ getValue }) => (
           <span className="line-clamp-2 text-sm text-muted-foreground">
             {getValue() || '-'}
@@ -118,7 +131,7 @@ export function LoginLogTable({
         },
       }),
       columnHelper.accessor('loginTime', {
-        header: () => '登录时间',
+        header: () => tColumns('time'),
         cell: ({ getValue }) => (
           <span className="text-sm text-foreground">{getValue() ?? '-'}</span>
         ),
@@ -130,7 +143,9 @@ export function LoginLogTable({
         ? [
             columnHelper.display({
               id: 'actions',
-              header: () => <div className="text-right">操作</div>,
+              header: () => (
+                <div className="text-right">{tColumns('actions')}</div>
+              ),
               cell: ({ row }) => {
                 const log = row.original;
                 return (
@@ -142,7 +157,7 @@ export function LoginLogTable({
                       onClick={() => onDelete(log)}
                     >
                       <Trash2 className="size-4" />
-                      <span className="sr-only">删除</span>
+                      <span className="sr-only">{tActions('delete')}</span>
                     </Button>
                   </div>
                 );
@@ -155,7 +170,7 @@ export function LoginLogTable({
           ]
         : []),
     ],
-    [canDeleteLog, columnHelper, onDelete],
+    [canDeleteLog, columnHelper, onDelete, tActions, tColumns, tStatus, tTable],
   );
 
   const table = useReactTable({
@@ -201,7 +216,7 @@ export function LoginLogTable({
                   colSpan={visibleColumnCount}
                   className="h-32 text-center align-middle"
                 >
-                  <InlineLoading label="正在加载登录日志..." />
+                  <InlineLoading label={tState('loading')} />
                 </TableCell>
               </TableRow>
             ) : isError ? (
@@ -210,7 +225,7 @@ export function LoginLogTable({
                   colSpan={visibleColumnCount}
                   className="h-24 text-center text-sm text-destructive"
                 >
-                  加载登录日志失败，请稍后再试。
+                  {tState('error')}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows.length === 0 ? (
@@ -221,9 +236,9 @@ export function LoginLogTable({
                 >
                   <Empty className="border-0 bg-transparent p-4">
                     <EmptyHeader>
-                      <EmptyTitle>暂无登录日志数据</EmptyTitle>
+                      <EmptyTitle>{tState('emptyTitle')}</EmptyTitle>
                       <EmptyDescription>
-                        当有新的登录行为时会自动汇总在此。
+                        {tState('emptyDescription')}
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>

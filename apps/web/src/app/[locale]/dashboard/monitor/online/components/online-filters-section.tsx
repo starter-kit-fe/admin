@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { Globe, UserRound, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import {
   InputGroup,
@@ -20,6 +21,7 @@ import { useOnlineUserManagementStore } from '../store';
 export function OnlineUserFiltersSection() {
   const { filterForm, setFilterForm, applyFilters } =
     useOnlineUserManagementStore();
+  const t = useTranslations('OnlineUserManagement.filters');
 
   const userNameTimer = useRef<number | null>(null);
   const ipTimer = useRef<number | null>(null);
@@ -67,7 +69,7 @@ export function OnlineUserFiltersSection() {
           <UserRound className="size-4 text-muted-foreground" />
         </InputGroupAddon>
         <InputGroupInput
-          placeholder="按登录账号筛选"
+          placeholder={t('userPlaceholder')}
           value={filterForm.userName}
           onChange={(event) => handleUserNameChange(event.target.value)}
         />
@@ -75,7 +77,7 @@ export function OnlineUserFiltersSection() {
           <InputGroupButton
             variant="ghost"
             size="icon-sm"
-            aria-label="清空账号筛选"
+            aria-label={t('userClear')}
             onClick={() => handleUserNameChange('')}
           >
             <X className="size-3.5" />
@@ -88,7 +90,7 @@ export function OnlineUserFiltersSection() {
           <Globe className="size-4 text-muted-foreground" />
         </InputGroupAddon>
         <InputGroupInput
-          placeholder="按 IP 地址筛选"
+          placeholder={t('ipPlaceholder')}
           value={filterForm.ipaddr}
           onChange={(event) => handleIpChange(event.target.value)}
         />
@@ -96,7 +98,7 @@ export function OnlineUserFiltersSection() {
           <InputGroupButton
             variant="ghost"
             size="icon-sm"
-            aria-label="清空 IP 筛选"
+            aria-label={t('ipClear')}
             onClick={() => handleIpChange('')}
           >
             <X className="size-3.5" />

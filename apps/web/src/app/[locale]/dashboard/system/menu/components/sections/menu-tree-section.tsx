@@ -17,6 +17,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { MenuTreeView } from '../tree/menu-tree-view';
+import { useTranslations } from 'next-intl';
 
 function useDebouncedValue<T>(value: T, delay: number) {
   const [debounced, setDebounced] = useState(value);
@@ -30,6 +31,8 @@ function useDebouncedValue<T>(value: T, delay: number) {
 }
 
 export function MenuTreeSection() {
+  const tTree = useTranslations('MenuManagement.tree');
+  const tToast = useTranslations('MenuManagement.toast');
   const {
     status,
     keyword,
@@ -89,12 +92,12 @@ export function MenuTreeSection() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('菜单排序已更新');
+      toast.success(tToast('reorderSuccess'));
       void menuQuery.refetch();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '更新排序失败，请稍后再试';
+        error instanceof Error ? error.message : tToast('reorderError');
       toast.error(message);
       void menuQuery.refetch();
     },
@@ -123,14 +126,14 @@ export function MenuTreeSection() {
     return (
       <Card className="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3  dark:border-border/40">
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-sm text-destructive">
-          加载菜单失败，请稍后重试。
+          {tTree('error')}
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => menuQuery.refetch()}
           >
-            重新加载
+            {tTree('retry')}
           </Button>
         </div>
       </Card>

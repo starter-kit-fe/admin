@@ -10,21 +10,27 @@ import type { UseFormReturn } from 'react-hook-form';
 
 import type { MenuFormValues } from '@/app/dashboard/system/menu/type';
 import { SectionHeader } from './section-header';
+import { useTranslations } from 'next-intl';
 
 export function RemarkSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
+  const tSection = useTranslations('MenuManagement.form.sections.remark');
   const { control } = form;
 
   return (
     <div className="space-y-3">
-      <SectionHeader title="备注" description="可选，用于补充该菜单的说明。" />
+      <SectionHeader title={tSection('title')} description={tSection('description')} />
       <FormField
         control={control}
         name="remark"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>备注</FormLabel>
+            <FormLabel>{tSection('title')}</FormLabel>
             <FormControl>
-              <Textarea className="min-h-[96px] resize-none" placeholder="请输入备注（可选）" {...field} />
+              <Textarea
+                className="min-h-[96px] resize-none"
+                placeholder={tSection('placeholder')}
+                {...field}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

@@ -1,0 +1,10 @@
+{
+  "ariaLabel": "切换主题",
+  "menuLabel": "外观模式",
+  "current": "当前",
+  "items": {
+    "light": "浅色模式",
+    "dark": "深色模式",
+    "system": "跟随系统"
+  }
+}

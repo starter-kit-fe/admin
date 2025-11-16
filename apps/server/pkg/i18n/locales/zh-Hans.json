@@ -31,5 +31,12 @@
   "insufficient permissions": "权限不足",
   "cache monitor unavailable": "缓存监控不可用",
   "server monitor service unavailable": "服务器监控不可用",
-  "failed to collect server metrics": "获取服务器指标失败"
+  "failed to collect server metrics": "获取服务器指标失败",
+  "invalid query parameters": "查询参数无效",
+  "login log service unavailable": "登录日志服务不可用",
+  "failed to load login logs": "加载登录日志失败",
+  "invalid login log id": "登录日志 ID 无效",
+  "login log not found": "未找到登录日志",
+  "failed to load login log": "加载登录日志详情失败",
+  "failed to delete login log": "删除登录日志失败"
 }

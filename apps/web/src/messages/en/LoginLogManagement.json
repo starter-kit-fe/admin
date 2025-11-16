@@ -1,0 +1,53 @@
+{
+  "header": {
+    "title": "Login logs",
+    "description": "Review and troubleshoot admin login activity. Filter by account, IP, or status. Total {total} records.",
+    "refresh": "Refresh"
+  },
+  "filters": {
+    "statusTabs": {
+      "all": "All statuses"
+    },
+    "userPlaceholder": "Filter by account",
+    "userClear": "Clear account filter",
+    "ipPlaceholder": "Filter by IP address",
+    "ipClear": "Clear IP filter",
+    "reset": "Reset filters"
+  },
+  "status": {
+    "success": "Success",
+    "failed": "Failed"
+  },
+  "table": {
+    "columns": {
+      "account": "Account",
+      "ip": "Login IP",
+      "client": "Client",
+      "status": "Status",
+      "message": "Message",
+      "time": "Login time",
+      "actions": "Actions"
+    },
+    "locationLabel": "Location: {location}",
+    "locationUnknown": "Unknown location",
+    "state": {
+      "loading": "Loading login logs...",
+      "error": "Failed to load login logs. Please try again later.",
+      "emptyTitle": "No login logs",
+      "emptyDescription": "New login activity will appear here automatically."
+    },
+    "actions": {
+      "delete": "Delete login log"
+    }
+  },
+  "dialogs": {
+    "deleteTitle": "Delete login log",
+    "deleteDescription": "Delete logs for \"{name}\"?",
+    "deleteFallback": "Are you sure you want to delete this login log?",
+    "deleteUnnamed": "Unnamed"
+  },
+  "toast": {
+    "deleteSuccess": "Login log deleted.",
+    "deleteError": "Failed to delete the login log. Please try again later."
+  }
+}

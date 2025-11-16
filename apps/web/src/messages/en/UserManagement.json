@@ -1,0 +1,175 @@
+{
+  "page": {
+    "loading": "Loading users..."
+  },
+  "header": {
+    "title": "User Management",
+    "description": "Filter by status, run bulk operations, and manage accounts with responsive dialogs.",
+    "refresh": "Refresh",
+    "create": "New User"
+  },
+  "filters": {
+    "title": "Filters",
+    "searchPlaceholder": "Search username or nickname",
+    "clearSearch": "Clear search",
+    "rolePlaceholder": "Select role",
+    "allRoles": "All roles",
+    "mobileCreate": "New",
+    "refreshAria": "Refresh user list",
+    "chips": {
+      "role": "Role",
+      "keyword": "Keyword"
+    },
+    "clearAll": "Clear filters",
+    "statusTabs": {
+      "all": "All",
+      "0": "Enabled",
+      "1": "Disabled"
+    },
+    "removeAria": "Remove {target}"
+  },
+  "table": {
+    "defaultName": "User",
+    "defaultRole": "Member",
+    "columns": {
+      "account": "Account",
+      "nickname": "Nickname",
+      "phone": "Phone",
+      "dept": "Department",
+      "roles": "Roles",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "actions": {
+      "edit": "Edit",
+      "more": "More actions",
+      "resetPassword": "Reset password",
+      "delete": "Delete"
+    },
+    "selection": {
+      "selectAll": "Select all",
+      "selectUser": "Select {target}"
+    },
+    "state": {
+      "loading": "Loading users...",
+      "error": "Failed to load users. Please try again later.",
+      "emptyTitle": "No user data",
+      "emptyDescription": "Create a user to manage details and permissions here.",
+      "loadingMore": "Loading more users...",
+      "loadMoreHint": "Swipe up to load more",
+      "noMore": "No more results"
+    }
+  },
+  "status": {
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "toast": {
+    "createSuccess": "User created successfully.",
+    "createError": "Failed to create user. Please try again later.",
+    "updateSuccess": "User updated successfully.",
+    "updateError": "Failed to update user. Please try again later.",
+    "deleteSuccess": "User deleted.",
+    "deleteError": "Failed to delete user. Please try again later.",
+    "bulkDeleteSuccess": "Users deleted successfully.",
+    "bulkDeleteError": "Failed to delete the selected users.",
+    "bulkDeleteTitle": "Delete users?",
+    "bulkDeleteEmpty": "Select at least one user before running bulk delete.",
+    "resetSuccess": "Password reset successfully.",
+    "resetError": "Failed to reset password. Please try again later.",
+    "resetMissing": "Unable to locate the user that needs a reset."
+  },
+  "dialogs": {
+    "deleteTitle": "Delete user",
+    "deleteMessage": "Are you sure you want to delete “{name}”? This cannot be undone.",
+    "bulkDeleteTitle": "Delete users",
+    "bulkDeleteSelected": "This will delete the {count} selected users. This action cannot be undone.",
+    "bulkDeleteConfirm": "Delete users",
+    "bulkDeleteCancel": "Cancel",
+    "resetPasswordTitle": "Reset password",
+    "resetPasswordDescription": "Set a new password for {name}.",
+    "resetPasswordNote": "The password activates immediately. Please notify the user as soon as possible.",
+    "resetPasswordConfirm": "Confirm",
+    "resetPasswordCancel": "Cancel",
+    "createTitle": "New user",
+    "createDescription": "Create a new account and set the initial password.",
+    "editTitle": "Edit user",
+    "editDescription": "Update user profile information and status."
+  },
+  "form": {
+    "initialPassword": "Initial password",
+    "initialPasswordPlaceholder": "At least 6 characters",
+    "account": "Username",
+    "accountPlaceholder": "Enter username",
+    "nickname": "Nickname",
+    "nicknamePlaceholder": "Enter nickname",
+    "email": "Email",
+    "emailPlaceholder": "Enter email",
+    "phone": "Phone",
+    "phonePlaceholder": "Enter phone number",
+    "dept": "Department ID",
+    "deptPlaceholder": "Select department",
+    "roles": "Roles",
+    "rolesPlaceholder": "Select roles",
+    "posts": "Posts",
+    "postsPlaceholder": "Optional",
+    "status": "Status",
+    "sex": "Gender",
+    "sexPlaceholder": "Select gender",
+    "description": "Notes",
+    "optional": "Optional",
+    "searchPlaceholder": "Search options",
+    "searchLoadingTitle": "Loading",
+    "searchLoadingDescription": "Please wait...",
+    "searchEmptyTitle": "No matching results",
+    "searchEmptyDescription": "Try another keyword.",
+    "searchNone": "Skip selection",
+    "searchClear": "Clear selection",
+    "multiSelectPreview": "{preview} and {count} more",
+    "newPassword": "New password",
+    "newPasswordPlaceholder": "At least 6 characters",
+    "confirmPassword": "Confirm password",
+    "confirmPasswordPlaceholder": "Re-enter the password",
+    "submit": {
+      "creating": "Submitting...",
+      "create": "Create",
+      "save": "Save"
+    },
+    "validation": {
+      "account": {
+        "min": "At least 2 characters",
+        "max": "No more than 30 characters"
+      },
+      "nickname": {
+        "required": "Enter a nickname"
+      },
+      "email": {
+        "invalid": "Enter a valid email address"
+      },
+      "phone": {
+        "invalid": "Enter an 11-digit phone number"
+      },
+      "dept": {
+        "numeric": "Department must be a number"
+      },
+      "role": {
+        "invalid": "Invalid role",
+        "required": "Select at least one role"
+      },
+      "post": {
+        "invalid": "Invalid post"
+      },
+      "password": {
+        "required": "Enter the initial password",
+        "min": "At least 6 characters",
+        "max": "No more than 64 characters",
+        "mismatch": "Passwords do not match"
+      }
+    }
+  },
+  "gender": {
+    "male": "Male",
+    "female": "Female",
+    "unknown": "Unknown"
+  }
+}

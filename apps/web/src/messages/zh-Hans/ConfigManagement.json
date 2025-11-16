@@ -1,0 +1,118 @@
+{
+  "header": {
+    "title": "参数设置",
+    "description": "维护系统运行时配置，可按关键字筛选、编辑并同步缓存。",
+    "refresh": "刷新",
+    "create": "新增参数",
+    "summary": "当前共 {count} 条参数，请谨慎修改系统内置项。"
+  },
+  "filters": {
+    "statusTabs": {
+      "all": "全部",
+      "Y": "系统内置",
+      "N": "自定义"
+    },
+    "namePlaceholder": "按名称搜索参数",
+    "keyPlaceholder": "按配置键搜索",
+    "clearSearch": "清空搜索",
+    "removeAria": "移除 {target}",
+    "chips": {
+      "configName": "参数名称",
+      "configKey": "参数键名"
+    }
+  },
+  "table": {
+    "columns": {
+      "configName": "参数名称",
+      "configKey": "参数键名",
+      "configValue": "参数键值",
+      "configType": "类型",
+      "remark": "备注",
+      "actions": "操作"
+    },
+    "type": {
+      "Y": "系统内置",
+      "N": "自定义"
+    },
+    "selection": {
+      "selectAll": "选择全部参数",
+      "selectItem": "选择 {target}"
+    },
+    "empty": {
+      "title": {
+        "loading": "参数数据加载中",
+        "idle": "暂无参数记录"
+      },
+      "description": {
+        "loading": "正在获取系统参数，请稍候。",
+        "idle": "先新增一条参数即可在此维护。"
+      }
+    },
+    "actions": {
+      "edit": "编辑参数",
+      "delete": "删除参数",
+      "moreAria": "更多操作：{target}"
+    }
+  },
+  "toast": {
+    "createSuccess": "新增参数成功",
+    "createError": "新增参数失败，请稍后再试",
+    "updateSuccess": "参数更新成功",
+    "updateError": "更新参数失败，请稍后再试",
+    "deleteSuccess": "参数已删除",
+    "deleteError": "删除参数失败，请稍后再试",
+    "bulkDeleteSuccess": "批量删除成功",
+    "bulkDeleteError": "删除所选参数失败，请稍后再试"
+  },
+  "dialogs": {
+    "deleteTitle": "删除参数",
+    "deleteMessage": "确定要删除“{name}”吗？",
+    "deleteFallback": "确认删除所选参数吗？",
+    "bulkDeleteTitle": "批量删除参数",
+    "bulkDeleteSelected": "将删除选中的 {count} 个参数，操作不可恢复。",
+    "bulkDeleteConfirm": "删除参数",
+    "bulkDeleteCancel": "取消"
+  },
+  "form": {
+    "title": {
+      "create": "新增参数",
+      "edit": "编辑参数"
+    },
+    "description": "配置系统运行时参数，参数键名必须唯一。",
+    "fields": {
+      "name": "参数名称",
+      "namePlaceholder": "请输入参数名称",
+      "key": "参数键名",
+      "keyPlaceholder": "例如 sys.account.registerUser",
+      "value": "参数键值",
+      "valuePlaceholder": "请输入参数键值",
+      "type": "参数类型",
+      "typeSystem": "系统内置",
+      "typeCustom": "自定义",
+      "remark": "备注",
+      "remarkPlaceholder": "可填写参数用途说明"
+    },
+    "submit": {
+      "creating": "保存中...",
+      "create": "创建",
+      "save": "保存"
+    },
+    "validation": {
+      "name": {
+        "required": "请输入参数名称",
+        "max": "参数名称不能超过 100 个字符"
+      },
+      "key": {
+        "required": "请输入参数键名",
+        "max": "参数键名不能超过 100 个字符"
+      },
+      "value": {
+        "required": "请输入参数键值",
+        "max": "参数键值不能超过 500 个字符"
+      },
+      "remark": {
+        "max": "备注不能超过 255 个字符"
+      }
+    }
+  }
+}

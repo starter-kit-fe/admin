@@ -31,16 +31,9 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { DepartmentNode, DepartmentStatus } from '../../type';
-
-const STATUS_META: Partial<Record<DepartmentStatus, { label: string; className: string }>> = {
-  '1': {
-    label: '停用',
-    className:
-      'border border-rose-400/40 bg-rose-500/10 text-rose-600 dark:border-rose-400/50 dark:bg-rose-500/20 dark:text-rose-100',
-  },
-};
 
 interface DepartmentTreeViewProps {
   nodes: DepartmentNode[];
@@ -95,6 +88,19 @@ export function DepartmentTreeView({
   onEdit,
   onDelete,
 }: DepartmentTreeViewProps) {
+  const tTree = useTranslations('DepartmentManagement.tree');
+  const statusBadges = useMemo<Partial<
+    Record<DepartmentStatus, { label: string; className: string }>
+  >>(
+    () => ({
+      '1': {
+        label: tTree('badge.1'),
+        className:
+          'border border-rose-400/40 bg-rose-500/10 text-rose-600 dark:border-rose-400/50 dark:bg-rose-500/20 dark:text-rose-100',
+      },
+    }),
+    [tTree],
+  );
   const parentIds = useMemo(() => {
     const ids: number[] = [];
     const walk = (items: DepartmentNode[]) => {
@@ -149,7 +155,7 @@ export function DepartmentTreeView({
       return items.map((item, index) => {
         const hasChildren = Boolean(item.children?.length);
         const isExpanded = hasChildren ? expanded.has(item.deptId) : false;
-        const statusMeta = STATUS_META[item.status];
+        const statusMeta = statusBadges[item.status];
         const isLast = index === items.length - 1;
 
         return (
@@ -191,13 +197,19 @@ export function DepartmentTreeView({
                     ) : null}
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    {item.leader ? <span>负责人：{item.leader}</span> : null}
-                    {item.phone ? <span>电话：{item.phone}</span> : null}
-                    {item.email ? <span>邮箱：{item.email}</span> : null}
+                    {item.leader ? (
+                      <span>{tTree('meta.leader', { value: item.leader })}</span>
+                    ) : null}
+                    {item.phone ? (
+                      <span>{tTree('meta.phone', { value: item.phone })}</span>
+                    ) : null}
+                    {item.email ? (
+                      <span>{tTree('meta.email', { value: item.email })}</span>
+                    ) : null}
                   </div>
                   {item.remark ? (
                     <div className="text-xs text-muted-foreground/80">
-                      备注：{item.remark}
+                      {tTree('meta.remark', { value: item.remark })}
                     </div>
                   ) : null}
                 </div>
@@ -215,18 +227,18 @@ export function DepartmentTreeView({
                   <DropdownMenuContent align="end" className="w-36">
                     <DropdownMenuItem onClick={() => onAddChild(item)}>
                       <Plus className="mr-2 h-4 w-4" />
-                      新增子部门
+                      {tTree('actions.addChild')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onEdit(item)}>
                       <Pencil className="mr-2 h-4 w-4" />
-                      编辑
+                      {tTree('actions.edit')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                       onClick={() => onDelete(item)}
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
-                      删除
+                      {tTree('actions.delete')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -241,15 +253,15 @@ export function DepartmentTreeView({
         );
       });
     },
-    [expanded, onAddChild, onDelete, onEdit, toggleNode],
+    [expanded, onAddChild, onDelete, onEdit, toggleNode, statusBadges, tTree],
   );
 
   if (nodes.length === 0) {
     return (
       <Empty className="h-60 border border-dashed border-border/60">
         <EmptyHeader>
-          <EmptyTitle>暂无部门数据</EmptyTitle>
-          <EmptyDescription>创建组织结构后即可在此维护上下级关系。</EmptyDescription>
+          <EmptyTitle>{tTree('emptyTitle')}</EmptyTitle>
+          <EmptyDescription>{tTree('emptyDescription')}</EmptyDescription>
         </EmptyHeader>
       </Empty>
     );

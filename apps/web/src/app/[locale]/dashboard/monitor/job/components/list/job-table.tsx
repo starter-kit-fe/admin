@@ -37,6 +37,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { STATUS_BADGE_VARIANT } from '../../constants';
 import type { Job } from '../../type';
@@ -68,6 +69,23 @@ export function JobTable({
   onToggleStatus,
   onDelete,
 }: JobTableProps) {
+  const tTable = useTranslations('JobManagement.table');
+  const tStatus = useTranslations('JobManagement.status');
+  const misfirePolicyLabels = useMemo(
+    () => tTable.raw('misfirePolicies') as Record<string, string>,
+    [tTable],
+  );
+  const concurrentLabels = useMemo(
+    () => tTable.raw('concurrent') as Record<string, string>,
+    [tTable],
+  );
+  const statusLabels = useMemo(
+    () => ({
+      '0': tStatus('0'),
+      '1': tStatus('1'),
+    }),
+    [tStatus],
+  );
   const columnHelper = useMemo(() => createColumnHelper<Job>(), []);
   const { hasPermission } = usePermissions();
   const canRunJob = hasPermission('monitor:job:run');
@@ -78,7 +96,7 @@ export function JobTable({
   const columns = useMemo(
     () => [
       columnHelper.accessor('jobName', {
-        header: () => '任务名称',
+        header: () => tTable('columns.jobName'),
         cell: ({ row }) => {
           const job = row.original;
           return (
@@ -97,7 +115,7 @@ export function JobTable({
         },
       }),
       columnHelper.accessor('invokeTarget', {
-        header: () => '调用目标',
+        header: () => tTable('columns.invokeTarget'),
         cell: ({ getValue }) => {
           const target = getValue();
           if (!target) {
@@ -111,7 +129,7 @@ export function JobTable({
         },
       }),
       columnHelper.accessor('cronExpression', {
-        header: () => 'Cron 表达式',
+        header: () => tTable('columns.cronExpression'),
         cell: ({ row }) => {
           const job = row.original;
           return (
@@ -120,7 +138,12 @@ export function JobTable({
                 {job.cronExpression || '-'}
               </p>
               <p className="text-xs text-muted-foreground">
-                策略：{resolveMisfireLabel(job.misfirePolicy)}
+                {tTable('policyLabel', {
+                  policy: resolveMisfireLabel(
+                    job.misfirePolicy,
+                    misfirePolicyLabels,
+                  ),
+                })}
               </p>
             </div>
           );
@@ -130,21 +153,21 @@ export function JobTable({
         },
       }),
       columnHelper.accessor('concurrent', {
-        header: () => '并发',
+        header: () => tTable('columns.concurrent'),
         cell: ({ getValue }) => (
-          <span>{resolveConcurrentLabel(getValue())}</span>
+          <span>{resolveConcurrentLabel(getValue(), concurrentLabels)}</span>
         ),
         meta: {
           headerClassName: 'w-[80px]',
         },
       }),
       columnHelper.accessor('status', {
-        header: () => '状态',
+        header: () => tTable('columns.status'),
         cell: ({ getValue }) => {
           const status = getValue() ?? '1';
           return (
             <Badge variant={STATUS_BADGE_VARIANT[status] ?? 'outline'}>
-              {resolveStatusLabel(status)}
+              {resolveStatusLabel(status, statusLabels)}
             </Badge>
           );
         },
@@ -154,13 +177,21 @@ export function JobTable({
       }),
       columnHelper.display({
         id: 'timestamps',
-        header: () => '更新时间',
+        header: () => tTable('columns.updatedAt'),
         cell: ({ row }) => {
           const job = row.original;
           return (
             <div className="space-y-1 text-xs text-muted-foreground">
-              <p>创建：{job.createTime || '-'}</p>
-              <p>更新：{job.updateTime || '-'}</p>
+              <p>
+                {tTable('timestamps.created', {
+                  time: job.createTime || '-',
+                })}
+              </p>
+              <p>
+                {tTable('timestamps.updated', {
+                  time: job.updateTime || '-',
+                })}
+              </p>
             </div>
           );
         },
@@ -172,7 +203,11 @@ export function JobTable({
         ? [
             columnHelper.display({
               id: 'actions',
-              header: () => <span className="block text-right">操作</span>,
+              header: () => (
+                <span className="block text-right">
+                  {tTable('columns.actions')}
+                </span>
+              ),
               cell: ({ row }) => {
                 const job = row.original;
                 const jobId = job.jobId;
@@ -194,12 +229,12 @@ export function JobTable({
                         {isRunning ? (
                           <>
                             <Spinner className="size-3.5" />
-                            触发中
+                            {tTable('actions.running')}
                           </>
                         ) : (
                           <>
                             <Play className="size-3.5" />
-                            触发
+                            {tTable('actions.run')}
                           </>
                         )}
                       </Button>
@@ -216,12 +251,14 @@ export function JobTable({
                         {isUpdatingStatus ? (
                           <>
                             <Spinner className="size-3.5" />
-                            更新中
+                            {tTable('actions.togglePending')}
                           </>
                         ) : (
                           <>
                             <Clock className="size-3.5" />
-                            {nextStatus === '0' ? '恢复' : '暂停'}
+                            {nextStatus === '0'
+                              ? tTable('actions.resume')
+                              : tTable('actions.pause')}
                           </>
                         )}
                       </Button>
@@ -235,7 +272,7 @@ export function JobTable({
                         onClick={() => onDelete(job)}
                       >
                         <Trash2 className="size-3.5" />
-                        删除
+                        {tTable('actions.delete')}
                       </Button>
                     ) : null}
                   </div>
@@ -262,6 +299,10 @@ export function JobTable({
       onToggleStatus,
       onDelete,
       showActions,
+      tTable,
+      misfirePolicyLabels,
+      concurrentLabels,
+      statusLabels,
     ],
   );
 
@@ -308,7 +349,7 @@ export function JobTable({
                   colSpan={visibleColumnCount}
                   className="h-32 text-center align-middle"
                 >
-                  <InlineLoading label="正在加载任务..." />
+                  <InlineLoading label={tTable('state.loading')} />
                 </TableCell>
               </TableRow>
             ) : isError ? (
@@ -317,7 +358,7 @@ export function JobTable({
                   colSpan={visibleColumnCount}
                   className="h-24 text-center text-sm text-destructive"
                 >
-                  加载失败，请稍后再试。
+                  {tTable('state.error')}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows.length === 0 ? (
@@ -328,9 +369,9 @@ export function JobTable({
                 >
                   <Empty className="border-0 bg-transparent p-4">
                     <EmptyHeader>
-                      <EmptyTitle>暂无任务数据</EmptyTitle>
+                      <EmptyTitle>{tTable('state.emptyTitle')}</EmptyTitle>
                       <EmptyDescription>
-                        配置定时任务后可在此查看与管理。
+                        {tTable('state.emptyDescription')}
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>

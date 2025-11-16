@@ -1,0 +1,75 @@
+{
+  "header": {
+    "title": "Scheduled Jobs",
+    "description": "Monitor cron jobs and run, pause, or filter them by name, group, and status.",
+    "refresh": "Refresh"
+  },
+  "filters": {
+    "statusTabs": {
+      "all": "All",
+      "0": "Active",
+      "1": "Paused"
+    },
+    "jobNameLabel": "Job name",
+    "jobNamePlaceholder": "Filter by name",
+    "jobGroupLabel": "Job group",
+    "jobGroupPlaceholder": "Filter by group"
+  },
+  "table": {
+    "columns": {
+      "jobName": "Job",
+      "invokeTarget": "Invoke target",
+      "cronExpression": "Cron expression",
+      "concurrent": "Concurrency",
+      "status": "Status",
+      "updatedAt": "Updated",
+      "actions": "Actions"
+    },
+    "policyLabel": "Policy: {policy}",
+    "misfirePolicies": {
+      "1": "Run immediately",
+      "2": "Execute once",
+      "3": "Skip execution"
+    },
+    "concurrent": {
+      "0": "Allowed",
+      "1": "Disallowed"
+    },
+    "actions": {
+      "run": "Run",
+      "running": "Running",
+      "togglePending": "Updating",
+      "resume": "Resume",
+      "pause": "Pause",
+      "delete": "Delete"
+    },
+    "state": {
+      "loading": "Loading jobs...",
+      "error": "Failed to load jobs. Please try again later.",
+      "emptyTitle": "No jobs yet",
+      "emptyDescription": "Configure scheduled jobs to view and manage them here."
+    },
+    "timestamps": {
+      "created": "Created: {time}",
+      "updated": "Updated: {time}"
+    }
+  },
+  "status": {
+    "0": "Active",
+    "1": "Paused"
+  },
+  "toast": {
+    "runSuccess": "Job submitted for execution.",
+    "runError": "Operation failed. Please try again later.",
+    "statusResume": "Job resumed.",
+    "statusPause": "Job paused.",
+    "statusError": "Failed to update job status. Please try again later.",
+    "deleteSuccess": "Job deleted.",
+    "deleteError": "Failed to delete the job. Please try again later."
+  },
+  "dialogs": {
+    "deleteTitle": "Delete job",
+    "deleteDescription": "Are you sure you want to delete “{name}”?",
+    "deleteFallback": "Are you sure you want to delete this job?"
+  }
+}

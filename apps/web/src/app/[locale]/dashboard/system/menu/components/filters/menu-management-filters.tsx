@@ -15,11 +15,20 @@ import {
 } from '@/components/ui/input-group';
 import { Search, X } from 'lucide-react';
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
 export function MenuManagementFilters() {
+  const t = useTranslations('MenuManagement.filters');
   const { status, setStatus, keyword, setKeyword } = useMenuManagementStore();
 
-  const statusTabs = useMemo(() => STATUS_TABS, []);
+  const statusTabs = useMemo(
+    () =>
+      STATUS_TABS.map((tab) => ({
+        value: tab.value,
+        label: t(tab.labelKey),
+      })),
+    [t],
+  );
 
   return (
     <Card className="rounded-xl shadow-none sm:p-5">
@@ -35,7 +44,7 @@ export function MenuManagementFilters() {
               <Search className="size-4 text-muted-foreground" />
             </InputGroupAddon>
             <InputGroupInput
-              placeholder="搜索菜单名称"
+              placeholder={t('searchPlaceholder')}
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
             />
@@ -43,7 +52,7 @@ export function MenuManagementFilters() {
               <InputGroupButton
                 variant="ghost"
                 size="icon-sm"
-                aria-label="清空搜索"
+                aria-label={t('clearSearch')}
                 className="text-muted-foreground hover:text-foreground"
                 onClick={() => setKeyword('')}
               >

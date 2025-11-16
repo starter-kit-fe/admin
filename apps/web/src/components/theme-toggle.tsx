@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Monitor, Moon, Sun } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import {
   type MouseEvent as ReactMouseEvent,
@@ -19,13 +20,11 @@ import {
   useState,
 } from 'react';
 
-const THEME_ITEMS = [
-  { value: 'light', label: '浅色模式', icon: Sun },
-  { value: 'dark', label: '深色模式', icon: Moon },
-  { value: 'system', label: '跟随系统', icon: Monitor },
-] as const;
-
-type ThemeValue = (typeof THEME_ITEMS)[number]['value'];
+type ThemeOption = {
+  value: 'light' | 'dark' | 'system';
+  icon: typeof Sun;
+};
+type ThemeValue = ThemeOption['value'];
 
 const runThemeTransition = (
   event: ReactMouseEvent<HTMLElement> | null,
@@ -74,8 +73,14 @@ const runThemeTransition = (
 };
 
 export function ThemeToggle({ className }: { className?: string }) {
+  const t = useTranslations('ThemeToggle');
   const { theme, setTheme, systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const themeOptions: ThemeOption[] = [
+    { value: 'light', icon: Sun },
+    { value: 'dark', icon: Moon },
+    { value: 'system', icon: Monitor },
+  ];
 
   useEffect(() => {
     setMounted(true);
@@ -92,7 +97,7 @@ export function ThemeToggle({ className }: { className?: string }) {
   }, [mounted, theme, systemTheme]);
 
   const ActiveIcon =
-    THEME_ITEMS.find((item) => item.value === activeTheme)?.icon ?? Monitor;
+    themeOptions.find((item) => item.value === activeTheme)?.icon ?? Monitor;
 
   const handleThemeSelection =
     (value: ThemeValue) => (event: ReactMouseEvent<HTMLElement>) => {
@@ -105,17 +110,17 @@ export function ThemeToggle({ className }: { className?: string }) {
         <Button
           variant="outline"
           size="icon"
-          className={cn('relative size-10 rounded-full  ', className)}
-          aria-label="切换主题"
+          className={cn('relative size-10 rounded-full', className)}
+          aria-label={t('ariaLabel')}
         >
           <ActiveIcon className="h-[1.1rem] w-[1.1rem] transition-transform duration-200" />
-          <span className="sr-only">切换主题</span>
+          <span className="sr-only">{t('ariaLabel')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>外观模式</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('menuLabel')}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {THEME_ITEMS.map((item) => {
+        {themeOptions.map((item) => {
           const Icon = item.icon;
           const isActive = theme === item.value;
           return (
@@ -125,10 +130,10 @@ export function ThemeToggle({ className }: { className?: string }) {
               onClick={handleThemeSelection(item.value)}
             >
               <Icon className="h-4 w-4" />
-              <span className="flex-1 text-sm">{item.label}</span>
+              <span className="flex-1 text-sm">{t(`items.${item.value}`)}</span>
               {isActive && (
                 <span className="rounded-full bg-primary/15 px-2 text-xs text-primary">
-                  当前
+                  {t('current')}
                 </span>
               )}
             </DropdownMenuItem>

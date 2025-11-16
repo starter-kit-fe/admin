@@ -12,6 +12,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
+import { DEFAULT_ROLE_VALUE } from '../utils';
 
 export type FiltersFormState = {
   role: string;
@@ -36,6 +39,7 @@ export function FiltersBar({
   onKeywordChange,
   roleOptions,
 }: FiltersBarProps) {
+  const t = useTranslations('UserManagement.filters');
   const handleKeywordClear = () => {
     if (value.keyword) {
       onKeywordChange('');
@@ -51,7 +55,7 @@ export function FiltersBar({
               <Search className="size-4 text-muted-foreground" />
             </InputGroupAddon>
             <InputGroupInput
-              placeholder="请输入用户名或昵称"
+              placeholder={t('searchPlaceholder')}
               value={value.keyword}
               onChange={(event) => onKeywordChange(event.target.value)}
             />
@@ -59,7 +63,7 @@ export function FiltersBar({
               <InputGroupButton
                 variant="ghost"
                 size="icon-sm"
-                aria-label="清空搜索"
+                aria-label={t('clearSearch')}
                 className="text-muted-foreground hover:text-foreground"
                 onClick={handleKeywordClear}
                 disabled={!value.keyword}
@@ -73,9 +77,10 @@ export function FiltersBar({
       <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
         <Select value={value.role} onValueChange={onRoleChange}>
           <SelectTrigger className="h-10 w-full bg-muted flex-1 rounded-lg border-muted sm:w-48">
-            <SelectValue placeholder="选择角色" />
+            <SelectValue placeholder={t('rolePlaceholder')} />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value={DEFAULT_ROLE_VALUE}>{t('allRoles')}</SelectItem>
             {roleOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}

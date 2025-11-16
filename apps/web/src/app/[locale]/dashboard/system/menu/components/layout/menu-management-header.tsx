@@ -4,6 +4,7 @@ import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCcw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import {
   useMenuManagementRefresh,
@@ -12,6 +13,7 @@ import {
 } from '@/app/dashboard/system/menu/store';
 
 export function MenuManagementHeader() {
+  const t = useTranslations('MenuManagement.header');
   const { openCreate } = useMenuManagementStore();
   const { isRefreshing, isMutating } = useMenuManagementStatus();
   const refresh = useMenuManagementRefresh();
@@ -28,7 +30,7 @@ export function MenuManagementHeader() {
         className="flex items-center gap-2"
       >
         {isRefreshing ? <Spinner className="size-4" /> : <RefreshCcw className="size-4" />}
-        刷新
+        {t('refresh')}
       </PermissionButton>
       <PermissionButton
         required="system:menu:add"
@@ -38,15 +40,15 @@ export function MenuManagementHeader() {
         className="flex items-center gap-2"
       >
         <Plus className="size-4" />
-        新增目录/菜单
+        {t('create')}
       </PermissionButton>
     </>
   );
 
   return (
     <ManagementHeader
-      title="菜单管理"
-      description="维护系统导航结构，支持新增、编辑及拖拽排序。"
+      title={t('title')}
+      description={t('description')}
       actions={actions}
     />
   );

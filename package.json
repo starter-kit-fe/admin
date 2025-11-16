@@ -1,6 +1,6 @@
 {
   "name": "admin",
-  "version": "25.1115.1444",
+  "version": "25.1116.1805",
   "private": true,
   "scripts": {
     "build": "turbo run build",

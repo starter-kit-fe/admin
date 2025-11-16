@@ -1,0 +1,243 @@
+{
+  "header": {
+    "title": "Menu Management",
+    "description": "Maintain the navigation tree, create routes, and reorder items with drag-and-drop controls.",
+    "refresh": "Refresh",
+    "create": "New menu"
+  },
+  "filters": {
+    "searchPlaceholder": "Search menu name",
+    "clearSearch": "Clear search",
+    "statusTabs": {
+      "all": "All",
+      "0": "Visible",
+      "1": "Hidden"
+    }
+  },
+  "status": {
+    "enabled": "Active",
+    "disabled": "Disabled"
+  },
+  "visibility": {
+    "visible": "Visible",
+    "hidden": "Hidden"
+  },
+  "types": {
+    "directory": "Directory",
+    "menu": "Menu",
+    "button": "Button"
+  },
+  "tree": {
+    "loading": "Loading menus...",
+    "error": "Failed to load menus. Please try again later.",
+    "retry": "Reload",
+    "emptyTitle": "No menu data",
+    "emptyDescription": "Create directories or menus to start organizing the navigation tree.",
+    "labels": {
+      "route": "Route",
+      "permission": "Permission",
+      "notConfigured": "Not configured",
+      "addChild": "Add child",
+      "edit": "Edit",
+      "delete": "Delete",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "more": "More actions"
+    }
+  },
+  "toast": {
+    "createSuccess": "Menu created successfully.",
+    "createError": "Failed to create menu. Please try again later.",
+    "updateSuccess": "Menu updated successfully.",
+    "updateError": "Failed to update menu. Please try again later.",
+    "deleteSuccess": "Menu deleted.",
+    "deleteError": "Failed to delete menu. Please try again later.",
+    "reorderSuccess": "Menu order updated.",
+    "reorderError": "Failed to update order. Please try again later."
+  },
+  "dialogs": {
+    "deleteTitle": "Delete menu",
+    "deleteMessage": "Delete \"{name}\"? Child menus will be removed as well.",
+    "deleteFallback": "Delete the selected menu?"
+  },
+  "form": {
+    "submit": {
+      "creating": "Submitting...",
+      "create": "Create",
+      "save": "Save"
+    },
+    "typeTabs": {
+      "options": {
+        "M": {
+          "label": "Directory",
+          "description": "Grouping container, not a clickable route"
+        },
+        "C": {
+          "label": "Menu",
+          "description": "Standard routed menu backed by a page"
+        },
+        "F": {
+          "label": "Button",
+          "description": "Permission-only item, hidden in sidebar"
+        }
+      },
+      "hints": {
+        "M": {
+          "title": "Directories define sidebar hierarchy and rarely map to real pages.",
+          "helper": "Only maintain the path and icon; delegate permissions to child menus or buttons."
+        },
+        "C": {
+          "title": "Menus map to real pages and require route, component, and permission wiring.",
+          "helper": "Configure component paths, routes, and permission keys to keep navigation consistent."
+        },
+        "F": {
+          "title": "Buttons control fine-grained permissions inside a page.",
+          "helper": "No route/component needed—only maintain the permission key used by page actions."
+        }
+      }
+    },
+    "createTitle": {
+      "M": "New directory",
+      "C": "New menu",
+      "F": "New button"
+    },
+    "editTitle": {
+      "M": "Edit directory",
+      "C": "Edit menu",
+      "F": "Edit button"
+    },
+    "createDescription": {
+      "M": "Create a directory to organize nested menus.",
+      "C": "Create a routed menu and configure the related metadata.",
+      "F": "Create a permission button used inside pages."
+    },
+    "editDescription": {
+      "M": "Update directory information and hierarchy.",
+      "C": "Update menu routing, icons, and permissions.",
+      "F": "Update button permission metadata."
+    },
+    "sections": {
+      "basic": {
+        "title": "Basic info",
+        "description": {
+          "directory": "Define the hierarchy and sorting for directories.",
+          "default": "Define the hierarchy, name, and basic type info."
+        },
+        "fields": {
+          "name": {
+            "directory": "Directory name",
+            "menu": "Menu name",
+            "button": "Button name",
+            "placeholder": "Enter {target}"
+          },
+          "parent": {
+            "directory": "Parent directory",
+            "menu": "Parent menu",
+            "placeholder": "Select parent"
+          },
+          "order": {
+            "directory": "Directory order",
+            "default": "Display order",
+            "placeholder": "0-9999"
+          }
+        }
+      },
+      "directory": {
+        "title": "Directory settings",
+        "description": "Configure route, icon, and status for the directory.",
+        "fields": {
+          "path": "Route",
+          "pathPlaceholder": "e.g. system or monitor",
+          "pathDescription": "Fill the directory path segment, e.g. system or monitor.",
+          "icon": "Directory icon",
+          "iconPlaceholder": "Choose directory icon",
+          "status": "Status",
+          "remark": "Notes",
+          "remarkPlaceholder": "Optional notes"
+        }
+      },
+      "menu": {
+        "title": "Menu settings",
+        "description": "Configure routes, parameters, caching, and permissions.",
+        "fields": {
+          "path": "Route",
+          "pathPlaceholder": "e.g. system/user",
+          "query": "Route params",
+          "queryPlaceholder": "Optional, e.g. role=admin",
+          "external": {
+            "label": "External link",
+            "description": "When enabled, the menu opens an external URL."
+          },
+          "cache": {
+            "label": "Disable cache",
+            "description": "Turn off keepalive to reset the page state."
+          },
+          "icon": "Menu icon",
+          "iconPlaceholder": "Search Lucide icons",
+          "visible": "Visible status",
+          "status": "Menu status",
+          "perms": "Permission key",
+          "permsPlaceholder": "E.g. system:user:list"
+        }
+      },
+      "button": {
+        "title": "Button permissions",
+        "description": "Buttons control permissions inside a page.",
+        "fields": {
+          "perms": "Permission key",
+          "permsPlaceholder": "E.g. system:user:list",
+          "status": "Button status"
+        }
+      },
+      "remark": {
+        "title": "Notes",
+        "description": "Optional description for this menu.",
+        "placeholder": "Optional notes"
+      }
+    },
+    "validation": {
+      "name": {
+        "required": "Enter the menu name",
+        "max": "Name cannot exceed 50 characters"
+      },
+      "order": {
+        "range": "Order must be an integer between 0 and 9999",
+        "required": "Enter the display order"
+      },
+      "path": {
+        "required": "Enter the route path",
+        "max": "Route cannot exceed 200 characters"
+      },
+      "query": {
+        "max": "Query cannot exceed 255 characters"
+      },
+      "perms": {
+        "required": "Enter the permission key",
+        "max": "Permission key cannot exceed 100 characters"
+      },
+      "icon": {
+        "required": "Select an icon",
+        "max": "Icon identifier cannot exceed 100 characters"
+      },
+      "remark": {
+        "max": "Notes cannot exceed 500 characters"
+      }
+    }
+  },
+  "iconSelect": {
+    "placeholder": "Select icon",
+    "searchPlaceholder": "Search icons (supports pinyin/English)",
+    "clear": "No icon",
+    "summary": "{count} matches",
+    "virtualized": "Virtualization on",
+    "empty": "No matching icons",
+    "categories": {
+      "all": "All icons",
+      "other": "Other"
+    }
+  },
+  "parentSelect": {
+    "placeholder": "Select parent menu",
+    "root": "Root directory"
+  }
+}

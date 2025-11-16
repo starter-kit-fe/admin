@@ -5,8 +5,10 @@ import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { RefreshCw, ShieldPlus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function RoleManagementHeader() {
+  const t = useTranslations('RoleManagement.header');
   const { openCreate } = useRoleManagementStore();
   const { isRefreshing, isMutating } = useRoleManagementStatus();
   const refresh = useRoleManagementRefresh();
@@ -14,8 +16,8 @@ export function RoleManagementHeader() {
 
   return (
     <ManagementHeader
-      title="角色管理"
-      description="维护系统角色与权限字符，支持解锁批量操作与细粒度数据范围。"
+      title={t('title')}
+      description={t('description')}
       actions={
         <>
           <PermissionButton
@@ -26,7 +28,7 @@ export function RoleManagementHeader() {
             disabled={refreshDisabled}
           >
             {isRefreshing ? <Spinner className="size-4" /> : <RefreshCw className="size-4" />}
-            刷新
+            {t('refresh')}
           </PermissionButton>
           <PermissionButton
             required="system:role:add"
@@ -35,7 +37,7 @@ export function RoleManagementHeader() {
             disabled={isMutating}
           >
             <ShieldPlus className="size-4" />
-            新建角色
+            {t('create')}
           </PermissionButton>
         </>
       }

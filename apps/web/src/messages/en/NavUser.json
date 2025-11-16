@@ -1,0 +1,19 @@
+{
+  "avatarFallback": "U",
+  "menu": {
+    "settings": "Account settings",
+    "logout": "Sign out",
+    "loggingOut": "Signing out..."
+  },
+  "dialog": {
+    "title": "Sign out?",
+    "description": "You will need to sign in again to continue using the console.",
+    "cancel": "Cancel",
+    "confirm": "Sign out",
+    "confirming": "Signing out..."
+  },
+  "toast": {
+    "logoutSuccess": "Signed out successfully.",
+    "logoutError": "Failed to sign out. Please try again."
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "header": {
+    "title": "Operation logs",
+    "description": "Track system operations and filter by business type, status, or request metadata.",
+    "total": "Total {count} records",
+    "actions": {
+      "refresh": "Refresh"
+    }
+  },
+  "filters": {
+    "statusTabs": {
+      "all": "All",
+      "0": "Success",
+      "1": "Failure"
+    },
+    "title": {
+      "placeholder": "Search title",
+      "chip": "Title"
+    },
+    "operator": {
+      "placeholder": "Search operator",
+      "chip": "Operator"
+    },
+    "businessType": {
+      "placeholder": "All business types",
+      "chip": "Business type"
+    },
+    "requestMethod": {
+      "placeholder": "All methods",
+      "chip": "Request method"
+    },
+    "chips": {
+      "remove": "Remove {target}"
+    },
+    "actions": {
+      "clear": "Clear filters"
+    }
+  },
+  "status": {
+    "0": "Success",
+    "1": "Failure"
+  },
+  "businessTypes": {
+    "all": "All business",
+    "0": "Other",
+    "1": "Create",
+    "2": "Update",
+    "3": "Delete",
+    "4": "Authorize",
+    "5": "Export",
+    "6": "Import"
+  },
+  "requestMethods": {
+    "all": "All methods",
+    "GET": "GET",
+    "POST": "POST",
+    "PUT": "PUT",
+    "DELETE": "DELETE"
+  },
+  "table": {
+    "columns": {
+      "title": "Operation title",
+      "businessType": "Business type",
+      "status": "Result",
+      "requestMethod": "Request method",
+      "operator": "Operator",
+      "operUrl": "Request URL",
+      "operTime": "Operation time",
+      "actions": "Actions"
+    },
+    "cells": {
+      "department": "Department: {value}",
+      "departmentFallback": "Unassigned",
+      "ip": "IP: {value}",
+      "cost": "Duration: {value}ms"
+    },
+    "state": {
+      "loading": "Loading operation logs...",
+      "error": "Failed to load logs. Please try again later.",
+      "emptyTitle": "No operation logs",
+      "emptyDescription": "Create, update, or delete actions will show up here once recorded."
+    },
+    "actions": {
+      "delete": "Delete log"
+    }
+  },
+  "toast": {
+    "deleteSuccess": "Operation log deleted.",
+    "deleteError": "Failed to delete log. Please try again later."
+  },
+  "delete": {
+    "title": "Delete operation log",
+    "description": "Delete log for \"{title}\"? This cannot be undone.",
+    "fallback": "Delete the selected operation log?",
+    "untitled": "Untitled operation"
+  }
+}

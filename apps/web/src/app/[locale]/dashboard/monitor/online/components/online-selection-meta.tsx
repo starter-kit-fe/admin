@@ -1,11 +1,14 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useOnlinePermissionFlags } from '../hooks';
 import { useOnlineUserManagementStore } from '../store';
 
 export function OnlineUserSelectionMeta() {
   const { selectedUsers } = useOnlineUserManagementStore();
   const { canBatchLogout } = useOnlinePermissionFlags();
+  const t = useTranslations('OnlineUserManagement.selection');
 
   if (!canBatchLogout || selectedUsers.length === 0) {
     return null;
@@ -13,7 +16,7 @@ export function OnlineUserSelectionMeta() {
 
   return (
     <div className="text-sm text-muted-foreground">
-      已选择 {selectedUsers.length} 名用户，可执行批量强退。
+      {t('summary', { count: selectedUsers.length })}
     </div>
   );
 }

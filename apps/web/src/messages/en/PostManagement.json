@@ -1,0 +1,120 @@
+{
+  "header": {
+    "title": "Post management",
+    "description": "Filter by status, run bulk actions, and maintain job posts with responsive dialogs.",
+    "actions": {
+      "refresh": "Refresh",
+      "create": "New post"
+    }
+  },
+  "filters": {
+    "reset": "Reset",
+    "postName": {
+      "placeholder": "Search post name",
+      "clear": "Clear search"
+    },
+    "chips": {
+      "postName": "Post name",
+      "remove": "Remove {target}"
+    }
+  },
+  "status": {
+    "all": "All",
+    "0": "Active",
+    "1": "Disabled"
+  },
+  "table": {
+    "defaultName": "Post",
+    "columns": {
+      "postName": "Post name",
+      "postCode": "Post code",
+      "postSort": "Order",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete post",
+      "more": "More actions"
+    },
+    "selection": {
+      "selectAll": "Select all posts",
+      "selectPost": "Select {target}"
+    },
+    "state": {
+      "loading": "Loading posts...",
+      "error": "Failed to load posts. Please try again later.",
+      "emptyTitle": "No post data",
+      "emptyDescription": "Click \"New post\" to start maintaining job assignments here."
+    }
+  },
+  "toast": {
+    "createSuccess": "Post created successfully.",
+    "createError": "Failed to create post. Please try again later.",
+    "updateSuccess": "Post updated successfully.",
+    "updateError": "Failed to update post. Please try again later.",
+    "deleteSuccess": "Post deleted.",
+    "deleteError": "Failed to delete post. Please try again later.",
+    "bulkDeleteSuccess": "Posts deleted successfully.",
+    "bulkDeleteError": "Failed to delete the selected posts.",
+    "bulkDeleteEmpty": "Select at least one post before running bulk delete.",
+    "selectRequired": "Select at least one post before continuing."
+  },
+  "delete": {
+    "single": {
+      "title": "Delete post",
+      "description": "Delete \"{name}\"? This cannot be undone.",
+      "fallback": "Delete the selected post?"
+    },
+    "bulk": {
+      "title": "Delete posts",
+      "description": "This will delete the {count} selected posts. This action cannot be undone.",
+      "fallback": "Are you sure you want to delete the selected posts?",
+      "confirm": "Delete posts"
+    }
+  },
+  "editor": {
+    "createTitle": "New post",
+    "editTitle": "Edit post",
+    "description": "Maintain post information. Post codes and names must remain unique.",
+    "fields": {
+      "postCode": {
+        "label": "Post code",
+        "placeholder": "Enter post code"
+      },
+      "postName": {
+        "label": "Post name",
+        "placeholder": "Enter post name"
+      },
+      "status": {
+        "label": "Status",
+        "options": {
+          "0": "Active",
+          "1": "Disabled"
+        }
+      },
+      "remark": {
+        "label": "Notes",
+        "placeholder": "Optional"
+      }
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save"
+    },
+    "validation": {
+      "postCode": {
+        "required": "Enter the post code",
+        "max": "Post code cannot exceed 50 characters"
+      },
+      "postName": {
+        "required": "Enter the post name",
+        "max": "Post name cannot exceed 50 characters"
+      },
+      "remark": {
+        "max": "Notes cannot exceed 255 characters"
+      }
+    }
+  }
+}

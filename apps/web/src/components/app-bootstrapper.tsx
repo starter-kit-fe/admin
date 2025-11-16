@@ -4,18 +4,19 @@ import { getMenuTree } from '@/app/dashboard/api';
 import { getUserInfo } from '@/app/login/api';
 import type { AuthPayloadLoose } from '@/app/login/type';
 import { useAuthStore } from '@/stores';
-import {usePathname} from '@/i18n/navigation';
+import { usePathname } from '@/i18n/navigation';
+import type { AppLocale } from '@/i18n/routing';
+import { useLocale } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 const AUTH_ME_QUERY_KEY = ['auth', 'me'] as const;
-const AUTH_MENU_QUERY_KEY = ['auth', 'menus'] as const;
-
 export function AppBootstrapper() {
   const queryClient = useQueryClient();
   const { user, setUser, setPermissions, setRoles } = useAuthStore();
-  const hasBootstrappedRef = useRef(false);
+  const lastBootstrappedLocaleRef = useRef<AppLocale | null>(null);
   const pathname = usePathname();
+  const locale = useLocale() as AppLocale;
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -26,15 +27,15 @@ export function AppBootstrapper() {
     const inDashboard = currentPath.startsWith('/dashboard');
 
     if (!inDashboard) {
-      hasBootstrappedRef.current = false;
+      lastBootstrappedLocaleRef.current = null;
       return;
     }
 
-    if (hasBootstrappedRef.current) {
+    if (lastBootstrappedLocaleRef.current === locale) {
       return;
     }
 
-    hasBootstrappedRef.current = true;
+    lastBootstrappedLocaleRef.current = locale;
     let cancelled = false;
 
     const bootstrap = async () => {
@@ -46,7 +47,7 @@ export function AppBootstrapper() {
           retry: false,
         }),
         queryClient.fetchQuery({
-          queryKey: AUTH_MENU_QUERY_KEY,
+          queryKey: ['auth', 'menus', locale],
           queryFn: getMenuTree,
           staleTime: 60_000,
           retry: false,
@@ -70,7 +71,7 @@ export function AppBootstrapper() {
       }
 
       if (menuResult.status === 'rejected') {
-        queryClient.removeQueries({ queryKey: AUTH_MENU_QUERY_KEY });
+        queryClient.removeQueries({ queryKey: ['auth', 'menus', locale] });
       }
     };
 
@@ -79,7 +80,7 @@ export function AppBootstrapper() {
     return () => {
       cancelled = true;
     };
-  }, [pathname, queryClient, setPermissions, setRoles, setUser]);
+  }, [locale, pathname, queryClient, setPermissions, setRoles, setUser]);
 
   return null;
 }

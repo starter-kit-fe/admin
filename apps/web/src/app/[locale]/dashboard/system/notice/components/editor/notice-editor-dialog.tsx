@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,26 +18,9 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { useTranslations } from 'next-intl';
 
 import type { NoticeFormValues } from '../../type';
-
-const noticeFormSchema = z.object({
-  noticeTitle: z
-    .string()
-    .trim()
-    .min(1, '请输入公告标题')
-    .max(50, '公告标题不能超过 50 个字符'),
-  noticeType: z.enum(['1', '2']),
-  noticeContent: z
-    .string()
-    .trim()
-    .min(1, '请输入公告内容'),
-  status: z.enum(['0', '1']),
-  remark: z
-    .string()
-    .trim()
-    .max(255, '备注不能超过 255 个字符'),
-});
 
 const DEFAULT_VALUES: NoticeFormValues = {
   noticeTitle: '',
@@ -68,8 +51,33 @@ export function NoticeEditorDialog({
   onOpenChange,
   onSubmit,
 }: NoticeEditorDialogProps) {
+  const tForm = useTranslations('NoticeManagement.form');
+  const tDialogs = useTranslations('Common.dialogs');
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        noticeTitle: z
+          .string()
+          .trim()
+          .min(1, tForm('validation.title.required'))
+          .max(50, tForm('validation.title.max')),
+        noticeType: z.enum(['1', '2']),
+        noticeContent: z
+          .string()
+          .trim()
+          .min(1, tForm('validation.content.required')),
+        status: z.enum(['0', '1']),
+        remark: z
+          .string()
+          .trim()
+          .max(255, tForm('validation.remark.max')),
+      }),
+    [tForm],
+  );
+
   const form = useForm<NoticeFormValues>({
-    resolver: zodResolver(noticeFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -94,10 +102,10 @@ export function NoticeEditorDialog({
       <ResponsiveDialog.Content className="sm:max-w-2xl">
         <ResponsiveDialog.Header>
           <ResponsiveDialog.Title>
-            {mode === 'create' ? '新增通知公告' : '编辑通知公告'}
+            {mode === 'create' ? tForm('title.create') : tForm('title.edit')}
           </ResponsiveDialog.Title>
           <ResponsiveDialog.Description>
-            配置系统通知公告内容，将展示于用户端公告模块。
+            {tForm('description')}
           </ResponsiveDialog.Description>
         </ResponsiveDialog.Header>
         <Form {...form}>
@@ -110,10 +118,13 @@ export function NoticeEditorDialog({
                   <FormItem className="sm:col-span-2">
                     <FormLabel>
                       <Required />
-                      公告标题
+                      {tForm('fields.title')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入公告标题" {...field} />
+                      <Input
+                        placeholder={tForm('fields.titlePlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -126,7 +137,7 @@ export function NoticeEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <Required />
-                      公告类型
+                      {tForm('fields.type')}
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -138,13 +149,17 @@ export function NoticeEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="1" />
                           </FormControl>
-                          <FormLabel className="font-normal">通知</FormLabel>
+                          <FormLabel className="font-normal">
+                            {tForm('fields.typeNotification')}
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center gap-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="2" />
                           </FormControl>
-                          <FormLabel className="font-normal">公告</FormLabel>
+                          <FormLabel className="font-normal">
+                            {tForm('fields.typeAnnouncement')}
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -159,7 +174,7 @@ export function NoticeEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <Required />
-                      公告状态
+                      {tForm('fields.status')}
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -171,13 +186,17 @@ export function NoticeEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="0" />
                           </FormControl>
-                          <FormLabel className="font-normal">正常</FormLabel>
+                          <FormLabel className="font-normal">
+                            {tForm('fields.statusActive')}
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center gap-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="1" />
                           </FormControl>
-                          <FormLabel className="font-normal">关闭</FormLabel>
+                          <FormLabel className="font-normal">
+                            {tForm('fields.statusDisabled')}
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -192,10 +211,14 @@ export function NoticeEditorDialog({
                   <FormItem className="sm:col-span-2">
                     <FormLabel>
                       <Required />
-                      公告内容
+                      {tForm('fields.content')}
                     </FormLabel>
                     <FormControl>
-                      <Textarea rows={6} placeholder="请输入公告内容" {...field} />
+                      <Textarea
+                        rows={6}
+                        placeholder={tForm('fields.contentPlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -206,9 +229,13 @@ export function NoticeEditorDialog({
                 name="remark"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>备注</FormLabel>
+                    <FormLabel>{tForm('fields.remark')}</FormLabel>
                     <FormControl>
-                      <Textarea rows={3} placeholder="可填写公告说明" {...field} />
+                      <Textarea
+                        rows={3}
+                        placeholder={tForm('fields.remarkPlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -222,10 +249,14 @@ export function NoticeEditorDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                取消
+                {tDialogs('cancel')}
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? '保存中...' : '保存'}
+                {submitting
+                  ? tForm('submit.creating')
+                  : mode === 'create'
+                    ? tForm('submit.create')
+                    : tForm('submit.save')}
               </Button>
             </div>
           </form>

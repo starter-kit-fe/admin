@@ -1,3 +1,5 @@
+'use client';
+
 import { type StatusTabItem, StatusTabs } from '@/components/status-tabs';
 import { Card } from '@/components/ui/card';
 import {
@@ -7,6 +9,7 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group';
 import { Search, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface RoleManagementFiltersProps {
   status: string;
@@ -23,6 +26,8 @@ export function RoleManagementFilters({
   onKeywordChange,
   statusTabs,
 }: RoleManagementFiltersProps) {
+  const t = useTranslations('RoleManagement.filters');
+
   return (
     <Card className="shadow-none rounded-xl gap-3 sm:p-5 ">
       <StatusTabs
@@ -36,7 +41,7 @@ export function RoleManagementFilters({
           <Search className="size-4 text-muted-foreground" />
         </InputGroupAddon>
         <InputGroupInput
-          placeholder="搜索角色名称或权限字符"
+          placeholder={t('searchPlaceholder')}
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
         />
@@ -44,7 +49,7 @@ export function RoleManagementFilters({
           <InputGroupButton
             variant="ghost"
             size="icon-sm"
-            aria-label="清空搜索"
+            aria-label={t('clearSearch')}
             className="text-muted-foreground hover:text-foreground"
             onClick={() => onKeywordChange('')}
             disabled={!keyword}

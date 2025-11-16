@@ -1,50 +1,54 @@
+'use client';
+
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useTranslations } from 'next-intl';
 
 import { listDeptOptions, listPostOptions, listRoleOptions } from '../../api';
 import type { DeptOption, User, UserFormValues } from '../../type';
 import { type OptionItem, UserEditorForm } from '../editor/user-editor-form';
 
-const userFormSchema = z.object({
-  userName: z
-    .string()
-    .trim()
-    .min(2, '至少 2 个字符')
-    .max(30, '不超过 30 个字符'),
-  nickName: z.string().trim().min(1, '请输入用户昵称'),
-  email: z
-    .string()
-    .trim()
-    .refine(
-      (value) => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
-      '邮箱格式不正确',
-    ),
-  phonenumber: z
-    .string()
-    .trim()
-    .refine(
-      (value) => value === '' || /^1\d{10}$/.test(value),
-      '请输入 11 位手机号',
-    ),
-  sex: z.enum(['0', '1', '2']),
-  status: z.enum(['0', '1']),
-  deptId: z
-    .string()
-    .trim()
-    .refine((value) => value === '' || /^\d+$/.test(value), '部门需为数字'),
-  roleIds: z
-    .array(z.string().trim().min(1, '无效的角色'))
-    .min(1, '请选择至少一个角色'),
-  postIds: z.array(z.string().trim().min(1, '无效的岗位')),
-  remark: z.string().trim(),
-  password: z.string(),
-});
+const buildUserFormSchema = (tForm: ReturnType<typeof useTranslations>) =>
+  z.object({
+    userName: z
+      .string()
+      .trim()
+      .min(2, tForm('validation.account.min'))
+      .max(30, tForm('validation.account.max')),
+    nickName: z.string().trim().min(1, tForm('validation.nickname.required')),
+    email: z
+      .string()
+      .trim()
+      .refine(
+        (value) => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+        tForm('validation.email.invalid'),
+      ),
+    phonenumber: z
+      .string()
+      .trim()
+      .refine(
+        (value) => value === '' || /^1\d{10}$/.test(value),
+        tForm('validation.phone.invalid'),
+      ),
+    sex: z.enum(['0', '1', '2']),
+    status: z.enum(['0', '1']),
+    deptId: z
+      .string()
+      .trim()
+      .refine((value) => value === '' || /^\d+$/.test(value), tForm('validation.dept.numeric')),
+    roleIds: z
+      .array(z.string().trim().min(1, tForm('validation.role.invalid')))
+      .min(1, tForm('validation.role.required')),
+    postIds: z.array(z.string().trim().min(1, tForm('validation.post.invalid'))),
+    remark: z.string().trim(),
+    password: z.string(),
+  });
 
 const DEFAULT_VALUES: UserFormValues = {
   userName: '',
@@ -82,10 +86,18 @@ export function UserEditorDialog({
   onSubmit,
 }: UserEditorDialogProps) {
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const tForm = useTranslations('UserManagement.form');
+  const tDialogs = useTranslations('UserManagement.dialogs');
+  const userFormSchema = useMemo(() => buildUserFormSchema(tForm), [tForm]);
   const form = useForm<UserFormValues, UserFormResolverContext>({
     resolver: zodResolver(userFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
+  useEffect(() => {
+    if (open) {
+      form.reset(defaultValues ?? DEFAULT_VALUES);
+    }
+  }, [defaultValues, form, open]);
 
   useEffect(() => {
     if (open) {
@@ -155,7 +167,7 @@ export function UserEditorDialog({
     }
     const fetched = roleQuery.data.map<OptionItem>((role) => ({
       value: String(role.roleId),
-      label: role.roleName || role.roleKey || `角色 ${role.roleId}`,
+      label: role.roleName || role.roleKey || `Role ${role.roleId}`,
     }));
     if (fetched.length > 0) {
       setRoleOptionCache((prev) => mergeOptionLists(prev, fetched));
@@ -168,7 +180,7 @@ export function UserEditorDialog({
     }
     const fetched = postQuery.data.map<OptionItem>((post) => ({
       value: String(post.postId),
-      label: post.postName || post.postCode || `岗位 ${post.postId}`,
+      label: post.postName || post.postCode || `Post ${post.postId}`,
     }));
     if (fetched.length > 0) {
       setPostOptionCache((prev) => mergeOptionLists(prev, fetched));
@@ -186,7 +198,7 @@ export function UserEditorDialog({
     if (mode === 'create' && trimmedPassword.length === 0) {
       form.setError('password', {
         type: 'manual',
-        message: '请输入登录密码',
+        message: tForm('validation.password.required'),
       });
       return;
     }
@@ -194,7 +206,7 @@ export function UserEditorDialog({
     if (trimmedPassword.length > 0 && trimmedPassword.length < 6) {
       form.setError('password', {
         type: 'manual',
-        message: '至少 6 位字符',
+        message: tForm('validation.password.min'),
       });
       return;
     }
@@ -211,11 +223,14 @@ export function UserEditorDialog({
     });
   });
 
-  const title = mode === 'create' ? '新增用户' : '编辑用户';
+  const title =
+    mode === 'create'
+      ? tDialogs('createTitle')
+      : tDialogs('editTitle');
   const description =
     mode === 'create'
-      ? '创建一个新的系统账号并设置默认密码。'
-      : '更新用户的基本信息和状态。';
+      ? tDialogs('createDescription')
+      : tDialogs('editDescription');
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
@@ -279,7 +294,7 @@ function buildFallbackRoleOptions(user?: User | null): OptionItem[] {
     seen.add(value);
     items.push({
       value,
-      label: role.roleName || role.roleKey || `角色 ${role.roleId}`,
+      label: role.roleName || role.roleKey || `Role ${role.roleId}`,
     });
   });
   return items;
@@ -302,7 +317,7 @@ function buildFallbackPostOptions(user?: User | null): OptionItem[] {
     seen.add(value);
     items.push({
       value,
-      label: post.postName || post.postCode || `岗位 ${post.postId}`,
+      label: post.postName || post.postCode || `Post ${post.postId}`,
     });
   });
   return items;
@@ -314,7 +329,7 @@ function buildDeptOptions(
 ): OptionItem[] {
   const fetched = (data ?? []).map<OptionItem>((dept) => ({
     value: String(dept.deptId),
-    label: dept.deptName || `部门 ${dept.deptId}`,
+    label: dept.deptName || `Dept ${dept.deptId}`,
   }));
   if (
     fallback &&

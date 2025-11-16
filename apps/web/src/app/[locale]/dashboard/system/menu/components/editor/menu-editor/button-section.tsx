@@ -17,13 +17,16 @@ import type { UseFormReturn } from 'react-hook-form';
 
 import type { MenuFormValues } from '@/app/dashboard/system/menu/type';
 import { SectionHeader } from './section-header';
+import { useTranslations } from 'next-intl';
 
 export function ButtonSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
+  const tSection = useTranslations('MenuManagement.form.sections.button');
+  const tStatus = useTranslations('MenuManagement.status');
   const { control } = form;
 
   return (
     <div className="space-y-4">
-      <SectionHeader title="按钮权限" description="按钮用于权限控制，不在侧边导航中展示。" />
+      <SectionHeader title={tSection('title')} description={tSection('description')} />
       <FormField
         control={control}
         name="perms"
@@ -31,10 +34,10 @@ export function ButtonSection({ form }: { form: UseFormReturn<MenuFormValues> })
           <FormItem>
             <FormLabel>
               <span className="mr-1 text-destructive">*</span>
-              权限标识
+              {tSection('fields.perms')}
             </FormLabel>
             <FormControl>
-              <Input placeholder="例如 system:user:list" {...field} />
+              <Input placeholder={tSection('fields.permsPlaceholder')} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -46,16 +49,16 @@ export function ButtonSection({ form }: { form: UseFormReturn<MenuFormValues> })
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>按钮状态</FormLabel>
+              <FormLabel>{tSection('fields.status')}</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择状态" />
+                    <SelectValue placeholder={tSection('fields.status')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="0">正常</SelectItem>
-                  <SelectItem value="1">停用</SelectItem>
+                  <SelectItem value="0">{tStatus('enabled')}</SelectItem>
+                  <SelectItem value="1">{tStatus('disabled')}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
