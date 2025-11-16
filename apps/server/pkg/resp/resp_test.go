@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	appi18n "github.com/starter-kit-fe/admin/pkg/i18n"
+	appi18n "github.com/starter-kit-fe/admin/internal/middleware/i18n"
 )
 
 func TestOKUsesLocalizedMessage(t *testing.T) {

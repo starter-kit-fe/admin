@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/system/online"
-	"github.com/starter-kit-fe/admin/middleware"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 

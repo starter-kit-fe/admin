@@ -17,6 +17,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/starter-kit-fe/admin/internal/middleware"
+	appi18n "github.com/starter-kit-fe/admin/internal/middleware/i18n"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
 	"github.com/starter-kit-fe/admin/internal/system/cache"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
@@ -35,8 +37,6 @@ import (
 	"github.com/starter-kit-fe/admin/internal/system/role"
 	"github.com/starter-kit-fe/admin/internal/system/server"
 	"github.com/starter-kit-fe/admin/internal/system/user"
-	"github.com/starter-kit-fe/admin/middleware"
-	appi18n "github.com/starter-kit-fe/admin/pkg/i18n"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 

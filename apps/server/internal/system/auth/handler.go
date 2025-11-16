@@ -13,11 +13,11 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/starter-kit-fe/admin/constant"
+	"github.com/starter-kit-fe/admin/internal/middleware"
+	appi18n "github.com/starter-kit-fe/admin/internal/middleware/i18n"
 	"github.com/starter-kit-fe/admin/internal/model"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
 	"github.com/starter-kit-fe/admin/internal/system/online"
-	"github.com/starter-kit-fe/admin/middleware"
-	appi18n "github.com/starter-kit-fe/admin/pkg/i18n"
 	jwtpkg "github.com/starter-kit-fe/admin/pkg/jwt"
 	"github.com/starter-kit-fe/admin/pkg/netutil"
 	"github.com/starter-kit-fe/admin/pkg/resp"
@@ -459,7 +459,7 @@ func (h *Handler) GetInfo(ctx *gin.Context) {
 
 	ctx.JSON(200, gin.H{
 		"code": 200,
-		"msg":  "操作成功",
+		"msg":  appi18n.Message(ctx, "操作成功"),
 		"data": gin.H{
 			"permissions": permissions,
 			"roles":       roles,
@@ -515,7 +515,7 @@ func (h *Handler) GetMenus(ctx *gin.Context) {
 
 	ctx.JSON(200, gin.H{
 		"code": 200,
-		"msg":  "操作成功",
+		"msg":  appi18n.Message(ctx, "操作成功"),
 		"data": nodes,
 	})
 }

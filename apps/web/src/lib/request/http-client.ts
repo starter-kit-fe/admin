@@ -1,65 +1,22 @@
-/**
- * HTTP 请求类封装（强类型，无 any）
- * 配合 React Query 使用，简化超时和重试逻辑
- */
-interface RequestConfig {
-  baseURL?: string;
-  headers?: Record<string, string>;
-}
-
-interface RequestOptions extends RequestInit {
-  params?: Record<string, string | number | boolean>;
-  data?: unknown; // 用于传递请求体
-  skipAuthRefresh?: boolean;
-}
-
-interface ApiResponse<T> {
-  data: T;
-  status?: number;
-  ok?: boolean;
-  code?: number; // 后端业务状态码
-  msg?: string | null; // 后端消息
-}
-
-const SUCCESS_STATUS_MIN = 200;
-const SUCCESS_STATUS_MAX = 299;
-const DEFAULT_ERROR_MESSAGE = '请求失败，请稍后重试';
-const DEFAULT_UNAUTHORIZED_MESSAGE = '登录信息已过期，请重新登录';
-const LOGIN_ROUTE = '/login';
+import {
+  DEFAULT_ERROR_MESSAGE,
+  DEFAULT_UNAUTHORIZED_MESSAGE,
+  SUCCESS_STATUS_MAX,
+  SUCCESS_STATUS_MIN,
+} from './constants';
+import {
+  isLoginPathname,
+  resolveLoginRoute,
+} from './locale';
+import { showSessionExpiredDialog } from './session-dialog';
+import type {
+  ApiResponse,
+  RequestConfig,
+  RequestOptions,
+} from './types';
 
 let hasTriggeredUnauthorizedRedirect = false;
 let refreshPromise: Promise<boolean> | null = null;
-
-const showSessionExpiredDialog = (
-  message: string,
-  onConfirm: () => void,
-  onCancel: () => void,
-) => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  const openDialog = () =>
-    import('@/components/session-expired-dialog')
-      .then(({ showSessionExpiredDialogUI }) => {
-        showSessionExpiredDialogUI({
-          message,
-          onConfirm,
-          onCancel,
-        });
-      })
-      .catch(() => {
-        const confirmed =
-          typeof window.confirm === 'function' ? window.confirm(message) : true;
-        if (confirmed) {
-          onConfirm();
-        } else {
-          onCancel();
-        }
-      });
-
-  void openDialog();
-};
 
 function isSuccessfulStatus(code?: number) {
   if (typeof code !== 'number') {
@@ -119,7 +76,9 @@ export class HttpClient {
       // ignore storage clear failures (e.g. disabled storage)
     }
 
-    const alreadyOnLogin = window.location.pathname.startsWith(LOGIN_ROUTE);
+    const pathname = window.location.pathname;
+    const loginRoute = resolveLoginRoute(pathname);
+    const alreadyOnLogin = isLoginPathname(pathname);
     if (alreadyOnLogin) {
       return;
     }
@@ -129,20 +88,19 @@ export class HttpClient {
     }
 
     hasTriggeredUnauthorizedRedirect = true;
-    const currentUrl =
-      window.location.pathname + window.location.search + window.location.hash;
+    const currentUrl = pathname + window.location.search + window.location.hash;
     const redirectParam = encodeURIComponent(currentUrl || '/');
-    const target = `${LOGIN_ROUTE}?redirect=${redirectParam}`;
+    const target = `${loginRoute}?redirect=${redirectParam}`;
 
-    showSessionExpiredDialog(
-      fallbackMessage,
-      () => {
+    showSessionExpiredDialog({
+      message: fallbackMessage,
+      onConfirm: () => {
         window.location.replace(target);
       },
-      () => {
+      onCancel: () => {
         hasTriggeredUnauthorizedRedirect = false;
       },
-    );
+    });
   }
 
   private unwrapResponse<T>(response: ApiResponse<T>): T {

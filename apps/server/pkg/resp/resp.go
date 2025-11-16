@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	serveri18n "github.com/starter-kit-fe/admin/pkg/i18n"
+	serveri18n "github.com/starter-kit-fe/admin/internal/middleware/i18n"
 )
 
 type Response struct {
