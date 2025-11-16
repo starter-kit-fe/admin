@@ -7,7 +7,8 @@
   "keywords": [
     "Dashboard UI",
     "React admin",
-    "Next.js"
+    "Next.js",
+    "Multilingual"
   ],
   "primaryCta": {
     "authenticated": "Enter dashboard",

@@ -2,7 +2,7 @@
   "features": {
     "badge": "Core Features",
     "title": "From UI to data, everything you need for a modern admin",
-    "description": "Reusable UI, data tooling and security primitives help teams ship dashboards fast.",
+    "description": "Reusable UI, data tooling, multilingual routing and security primitives help teams ship dashboards fast.",
     "cards": {
       "interface": {
         "title": "Modern interface system",
@@ -29,6 +29,15 @@
           "Permission checks",
           "Sign-in logs",
           "Observability"
+        ]
+      },
+      "multilingual": {
+        "title": "Built-in multilingual",
+        "description": "Locale-aware routing powered by next-intl keeps English/Chinese pages in sync.",
+        "highlights": [
+          "Locale routing",
+          "Bilingual content",
+          "Preference cookies"
         ]
       }
     }

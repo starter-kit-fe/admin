@@ -17,6 +17,7 @@ import gsap from 'gsap';
 import {ScrollTrigger} from 'gsap/ScrollTrigger';
 import {
   Activity,
+  Languages,
   Layers,
   Palette,
   ShieldCheck,
@@ -30,6 +31,7 @@ const FEATURE_CARD_BLUEPRINT = [
   {key: 'interface', icon: Layers},
   {key: 'data', icon: Activity},
   {key: 'security', icon: ShieldCheck},
+  {key: 'multilingual', icon: Languages},
 ] as const;
 
 const THEME_CARD_BLUEPRINT = [
@@ -397,7 +399,7 @@ export default function Page() {
       <main ref={containerRef} className="space-y-20 pb-20">
         <section
           id="features"
-          className="mx-auto  px-6 pt-16 md:px-10 lg:px-12 container"
+          className="container mx-auto px-6 pt-16 md:px-10 lg:px-12"
           data-animate-section
         >
           <div className="flex flex-col gap-4">
@@ -421,7 +423,7 @@ export default function Page() {
               {featuresCopy.description}
             </p>
           </div>
-          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {featureCards.map((feature) => {
               const Icon = feature.icon;
               return (
@@ -461,7 +463,7 @@ export default function Page() {
 
         <section
           id="themes"
-          className="mx-auto  px-6 md:px-10 lg:px-12 container"
+          className="container mx-auto px-6 md:px-10 lg:px-12"
           data-animate-section
         >
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-center">
@@ -519,7 +521,7 @@ export default function Page() {
 
         <section
           id="resources"
-          className="mx-auto  px-6 md:px-10 lg:px-12 container"
+          className="container mx-auto px-6 md:px-10 lg:px-12"
           data-animate-section
         >
           <div className="flex flex-col gap-4">
