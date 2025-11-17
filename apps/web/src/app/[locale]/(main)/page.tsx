@@ -25,7 +25,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 const FEATURE_CARD_BLUEPRINT = [
   { key: 'interface', icon: Layers },
@@ -270,7 +270,7 @@ export default function Page() {
     rel: secondaryRel,
   } = secondaryCta;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = containerRef.current;
     if (!root || typeof window === 'undefined') {
       return;
@@ -313,17 +313,27 @@ export default function Page() {
           return;
         }
 
+        if (introTargets.length) {
+          gsap.set(introTargets, { autoAlpha: 0, y: 14 });
+        }
+        if (cardTargets.length) {
+          gsap.set(cardTargets, { autoAlpha: 0, y: 16 });
+        }
+        if (highlightTargets.length) {
+          gsap.set(highlightTargets, { autoAlpha: 0, y: 10 });
+        }
+
         const sectionTimeline = gsap.timeline({
-          defaults: { ease: 'power2.out', duration: 0.9 },
+          defaults: { ease: 'power2.out', duration: 0.65 },
+          paused: true,
         });
 
         if (introTargets.length) {
-          sectionTimeline.fromTo(
+          sectionTimeline.to(
             introTargets,
-            { y: 36, opacity: 0 },
             {
               y: 0,
-              opacity: 1,
+              autoAlpha: 1,
               stagger: { each: 0.08, from: 'start' },
             },
             0,
@@ -332,28 +342,26 @@ export default function Page() {
 
         if (cardTargets.length) {
           const cardPosition = introTargets.length ? '-=0.25' : 0;
-          sectionTimeline.fromTo(
+          sectionTimeline.to(
             cardTargets,
-            { y: 48, opacity: 0 },
             {
               y: 0,
-              opacity: 1,
-              stagger: { each: 0.14, from: 'start' },
+              autoAlpha: 1,
+              stagger: { each: 0.12, from: 'start' },
             },
             cardPosition,
           );
         }
 
         if (highlightTargets.length) {
-          sectionTimeline.fromTo(
+          sectionTimeline.to(
             highlightTargets,
-            { y: 18, opacity: 0 },
             {
               y: 0,
-              opacity: 1,
+              autoAlpha: 1,
               stagger: { each: 0.06, from: 'center' },
             },
-            '-=0.25',
+            '-=0.2',
           );
         }
 
@@ -362,10 +370,10 @@ export default function Page() {
         sectionTriggers.push(
           ScrollTrigger.create({
             trigger: section,
-            animation: sectionTimeline,
             start: 'top 78%',
             once: true,
             id: `section-${index}`,
+            onEnter: () => sectionTimeline.play(),
           }),
         );
       });
@@ -375,21 +383,21 @@ export default function Page() {
       );
 
       parallaxElements.forEach((element, index) => {
-        const parallaxTimeline = gsap.timeline();
+        const parallaxTimeline = gsap.timeline({ paused: true });
         parallaxTimeline.fromTo(
           element,
-          { yPercent: -6 },
-          { yPercent: 6, ease: 'none' },
+          { yPercent: -4 },
+          { yPercent: 4, ease: 'none' },
         );
         sectionTimelines.push(parallaxTimeline);
 
         parallaxTriggers.push(
           ScrollTrigger.create({
             trigger: element,
-            animation: parallaxTimeline,
             start: 'top 90%',
             once: true,
             id: `parallax-${index}`,
+            onEnter: () => parallaxTimeline.play(),
           }),
         );
       });
