@@ -1,10 +1,13 @@
-import {Badge} from '@/components/ui/badge';
-import {Link} from '@/i18n/navigation';
-import {Github, Mail, Twitter} from 'lucide-react';
-import {useTranslations} from 'next-intl';
+'use client';
+
+import pkg from '@/../package.json';
+import { Badge } from '@/components/ui/badge';
+import { Link } from '@/i18n/navigation';
+import { Github, Mail, Twitter } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useEffect, useMemo, useState } from 'react';
 
 import gpkg from '../../../../package.json';
-import pkg from '@/../package.json';
 
 const SOCIAL_LINKS = [
   {
@@ -26,21 +29,43 @@ const SOCIAL_LINKS = [
 
 export default function Footer() {
   const t = useTranslations('Footer');
+  const locale = useLocale();
+  const [fontFamily, setFontFamily] = useState('');
+  const brandTitle = t('brand.title');
+  const brandDescription = t('brand.description');
+  const brandKeywords = useMemo(() => {
+    const fallbackKeywords = pkg.seo.keywords.slice(0, 4);
+    const localizedKeywords = t.raw('brand.keywords');
+    return Array.isArray(localizedKeywords)
+      ? (localizedKeywords as string[])
+      : fallbackKeywords;
+  }, [t]);
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const computed = window.getComputedStyle(document.body);
+    const family =
+      computed.getPropertyValue('font-family') || computed.fontFamily || '';
+    setFontFamily(family.replace(/\s+/g, ' ').trim());
+  }, []);
   const year = new Date().getFullYear();
-  const keywords = pkg.seo.keywords.slice(0, 4);
   const productLinks = [
-    {label: t('product.overview'), href: {pathname: '/', hash: 'features'}},
-    {label: t('product.themes'), href: {pathname: '/', hash: 'themes'}},
-    {label: t('product.resources'), href: {pathname: '/', hash: 'resources'}},
+    { label: t('product.overview'), href: { pathname: '/', hash: 'features' } },
+    { label: t('product.themes'), href: { pathname: '/', hash: 'themes' } },
+    {
+      label: t('product.resources'),
+      href: { pathname: '/', hash: 'resources' },
+    },
   ] as const;
   const accountLinks = [
-    {label: t('account.login'), href: '/login'},
-    {label: t('account.dashboard'), href: '/dashboard'},
-    {label: t('account.logs'), href: '/dashboard/system/log'},
+    { label: t('account.login'), href: '/login' },
+    { label: t('account.dashboard'), href: '/dashboard' },
+    { label: t('account.logs'), href: '/dashboard/system/log' },
   ] as const;
   const legalLinks = [
-    {label: t('legal.terms'), href: '/terms'},
-    {label: t('legal.privacy'), href: '/privacy'},
+    { label: t('legal.terms'), href: '/terms' },
+    { label: t('legal.privacy'), href: '/privacy' },
   ] as const;
 
   return (
@@ -52,13 +77,13 @@ export default function Footer() {
               href="/"
               className="text-lg font-semibold tracking-tight text-foreground"
             >
-              {pkg.seo.title}
+              {brandTitle}
             </Link>
             <p className="max-w-lg text-sm text-muted-foreground">
-              {pkg.seo.description}
+              {brandDescription}
             </p>
             <div className="flex flex-wrap gap-2">
-              {keywords.map((keyword) => (
+              {brandKeywords.map((keyword) => (
                 <Badge
                   key={keyword}
                   variant="secondary"
@@ -140,10 +165,15 @@ export default function Footer() {
               {t('meta', {
                 start: 2018,
                 year,
-                title: pkg.seo.og.title,
+                title: brandTitle,
                 version: gpkg.version,
               })}
             </p>
+            {process.env.NODE_ENV !== 'production' && (
+              <p className="text-[11px] text-muted-foreground/80">
+                Debug · locale: {locale} · font: {fontFamily || 'detecting…'}
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-4 text-sm">

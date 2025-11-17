@@ -1,4 +1,14 @@
 {
+  "brand": {
+    "title": "Admin Template — Modern Dashboard UI for Developers",
+    "description": "A clean and responsive admin dashboard template built for modern web apps. Includes reusable UI components, charts, tables, and authentication pages.",
+    "keywords": [
+      "Admin template",
+      "Dashboard UI",
+      "React admin",
+      "Next.js admin panel"
+    ]
+  },
   "headingProduct": "Product",
   "headingAccount": "Account",
   "headingContact": "Contact us",

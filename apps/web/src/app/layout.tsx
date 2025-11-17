@@ -51,11 +51,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: { locale?: string };
 }) {
+  const lang = routing.locales.includes(params?.locale ?? '')
+    ? params?.locale
+    : routing.defaultLocale;
+
   return (
-    <html lang={routing.defaultLocale} suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         <meta httpEquiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="renderer" content="webkit" />

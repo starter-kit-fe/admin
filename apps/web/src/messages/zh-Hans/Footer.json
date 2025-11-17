@@ -1,4 +1,14 @@
 {
+  "brand": {
+    "title": "Admin 模板 — 为开发者打造的现代化控制台",
+    "description": "简洁且响应迅速的管理后台模板，内置可复用的 UI 组件、图表、表格与认证页面。",
+    "keywords": [
+      "管理后台模板",
+      "仪表盘 UI",
+      "React 管理端",
+      "Next.js 管理面板"
+    ]
+  },
   "headingProduct": "产品",
   "headingAccount": "账号",
   "headingContact": "联系我们",
