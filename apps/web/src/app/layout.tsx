@@ -51,14 +51,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params: { locale?: string };
 }) {
-  const lang = routing.locales.includes(params?.locale ?? '')
-    ? params?.locale
-    : routing.defaultLocale;
+  const lang = routing.defaultLocale;
 
   return (
     <html lang={lang} suppressHydrationWarning>
