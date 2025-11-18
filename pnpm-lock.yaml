@@ -199,6 +199,9 @@ importers:
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
+      typescript:
+        specifier: ^5
+        version: 5.9.2
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -266,9 +269,6 @@ importers:
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
-      typescript:
-        specifier: ^5
-        version: 5.9.2
       vitest:
         specifier: ^4.0.8
         version: 4.0.8(@types/node@20.19.21)(jiti@2.6.1)(jsdom@27.2.0)(lightningcss@1.30.1)(terser@5.16.9)(yaml@2.8.1)
