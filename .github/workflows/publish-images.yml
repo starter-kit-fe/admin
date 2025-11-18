@@ -28,9 +28,6 @@ jobs:
           - name: server
             context: .
             file: apps/server/Dockerfile
-            build-args: |
-              VERSION=${{ env.VERSION }}
-              COMMIT=${{ env.COMMIT }}
           - name: postgres
             context: .
             file: deployments/docker/postgres/Dockerfile
@@ -65,5 +62,5 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/admin-${{ matrix.name }}:${{ env.VERSION }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/admin-${{ matrix.name }}:latest
-          build-args: ${{ matrix.build-args || '' }}
+          build-args: ${{ matrix.name == 'server' && format('VERSION={0}\nCOMMIT={1}', env.VERSION, env.COMMIT) || '' }}
           provenance: false
