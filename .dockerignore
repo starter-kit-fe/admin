@@ -1,0 +1,35 @@
+# VCS and tooling
+.git
+.gitignore
+.turbo
+**/.turbo
+
+# Node / pnpm
+node_modules
+**/node_modules
+.pnpm-store
+.pnp*
+
+# Next.js and build artifacts
+.next
+**/.next
+dist
+**/dist
+build
+**/build
+out
+**/out
+.open-next
+
+# Go build caches
+**/.gocache
+**/.gopath
+**/tmp
+
+# Local environment and IDE files
+.env
+.env.*
+**/.env
+**/.env.*
+.DS_Store
+.vscode
