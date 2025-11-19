@@ -2,9 +2,12 @@
 
 FROM node:20-alpine AS base
 WORKDIR /app
+# Keep pnpm store in a known path we can copy between stages (avoids reinstall/prune failures)
+ENV PNPM_STORE_PATH=/pnpm-store
 
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat \
+  && mkdir -p /pnpm-store
 
 # Only copy dependency manifests for better layer caching
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
@@ -36,9 +39,11 @@ COPY packages/ui/package.json ./packages/ui/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 
-# Reuse already-installed deps and prune to production so next.config.ts doesn't try to auto-install TypeScript at runtime
+# Reuse already-installed deps and install only prod deps so next.config.ts doesn't try to auto-install TypeScript at runtime
 COPY --from=deps /app/node_modules ./node_modules
-RUN corepack enable && pnpm prune --prod --filter web
+# pnpm prune needs the store metadata
+COPY --from=deps /pnpm-store /pnpm-store
+RUN corepack enable && pnpm install --prod --filter web --frozen-lockfile --prefer-offline
 
 # Copy built assets
 COPY --from=builder /app/apps/web/.next ./apps/web/.next
