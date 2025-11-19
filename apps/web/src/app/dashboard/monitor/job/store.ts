@@ -18,6 +18,7 @@ const filterFormAtom = atom<JobFilterState>({ ...DEFAULT_FILTERS });
 const appliedFiltersAtom = atom<JobFilterState>({ ...DEFAULT_FILTERS });
 const paginationAtom = atom<PaginationState>({ ...DEFAULT_PAGINATION });
 const deleteTargetAtom = atom<Job | null>(null);
+const editorAtom = atom<JobEditorState | null>(null);
 const refreshingAtom = atom(false);
 const activeMutationsAtom = atom(0);
 const isMutatingAtom = atom((get) => get(activeMutationsAtom) > 0);
@@ -85,10 +86,14 @@ const setPaginationAtom = atom(
   },
 );
 
-const setDeleteTargetAtom = atom(
+const setDeleteTargetAtom = atom(null, (_get, set, job: Job | null) => {
+  set(deleteTargetAtom, job);
+});
+
+const setEditorAtom = atom(
   null,
-  (_get, set, job: Job | null) => {
-    set(deleteTargetAtom, job);
+  (_get, set, editorState: JobEditorState | null) => {
+    set(editorAtom, editorState);
   },
 );
 
@@ -127,6 +132,10 @@ export interface JobManagementStore {
   setPagination: (action: SetStateAction<PaginationState>) => void;
   deleteTarget: Job | null;
   setDeleteTarget: (job: Job | null) => void;
+  editorState: JobEditorState | null;
+  openCreateEditor: () => void;
+  openEditEditor: (job: Job) => void;
+  closeEditor: () => void;
 }
 
 export const useJobManagementStore = (): JobManagementStore => {
@@ -134,12 +143,14 @@ export const useJobManagementStore = (): JobManagementStore => {
   const appliedFilters = useAtomValue(appliedFiltersAtom);
   const pagination = useAtomValue(paginationAtom);
   const deleteTarget = useAtomValue(deleteTargetAtom);
+  const editorState = useAtomValue(editorAtom);
 
   const setFilterForm = useSetAtom(setFilterFormAtom);
   const applyFiltersSetter = useSetAtom(applyFiltersAtom);
   const resetFilters = useSetAtom(resetFiltersAtom);
   const setPagination = useSetAtom(setPaginationAtom);
   const setDeleteTarget = useSetAtom(setDeleteTargetAtom);
+  const setEditorState = useSetAtom(setEditorAtom);
 
   const applyFilters = (
     filters: JobFilterState,
@@ -158,6 +169,10 @@ export const useJobManagementStore = (): JobManagementStore => {
     setPagination,
     deleteTarget,
     setDeleteTarget,
+    editorState,
+    openCreateEditor: () => setEditorState({ mode: 'create', job: null }),
+    openEditEditor: (job: Job) => setEditorState({ mode: 'edit', job }),
+    closeEditor: () => setEditorState(null),
   };
 };
 
@@ -181,3 +196,7 @@ export const useJobManagementRefresh = () =>
 
 export const useJobManagementSetRefreshHandler = () =>
   useSetAtom(setRefreshActionAtom);
+
+type JobEditorState =
+  | { mode: 'create'; job: null }
+  | { mode: 'edit'; job: Job };

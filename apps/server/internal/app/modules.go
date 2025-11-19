@@ -1,6 +1,8 @@
 package app
 
 import (
+	"log/slog"
+
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
@@ -57,7 +59,7 @@ type moduleSet struct {
 	sessionValidator   middleware.SessionValidator
 }
 
-func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client) moduleSet {
+func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client, logger *slog.Logger) moduleSet {
 	healthSvc := health.New(sqlDB, redisCache)
 	healthHandler := health.NewHandler(healthSvc)
 
@@ -76,7 +78,10 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	onlineSvc := online.NewService(onlineRepo, newSessionManager(sessionStore))
 	onlineHandler := online.NewHandler(onlineSvc)
 	jobRepo := job.NewRepository(sqlDB)
-	jobSvc := job.NewService(jobRepo)
+	jobSvc := job.NewService(jobRepo, job.ServiceOptions{
+		Logger: logger,
+		Redis:  redisCache,
+	})
 	jobHandler := job.NewHandler(jobSvc)
 	serverSvc := server.NewService()
 	serverHandler := server.NewHandler(serverSvc)

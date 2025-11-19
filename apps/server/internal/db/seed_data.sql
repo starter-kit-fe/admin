@@ -296,8 +296,8 @@ insert into sys_config values(5, '账号自助-是否开启用户注册功能', 
 insert into sys_config values(6, '用户登录-黑名单列表',           'sys.login.blackIPList',            '',              'Y', 'admin', sysdate(), 'admin', null, '设置登录IP黑名单限制，多个匹配项以;分隔，支持匹配（*通配、网段）');
 insert into sys_config values(7, '用户管理-初始密码修改策略',     'sys.account.initPasswordModify',   '1',             'Y', 'admin', sysdate(), 'admin', null, '0：初始密码修改策略关闭，没有任何提示，1：提醒用户，如果未修改初始密码，则在登录时就会提醒修改密码对话框');
 insert into sys_config values(8, '用户管理-账号密码更新周期',     'sys.account.passwordValidateDays', '0',             'Y', 'admin', sysdate(), 'admin', null, '密码更新周期（填写数字，数据初始化值为0不限制，若修改必须为大于0小于365的正整数），如果超过这个周期登录系统时，则在登录时就会提醒修改密码对话框');
-insert into sys_job values(1, '系统默认（无参）', 'DEFAULT', 'ryTask.ryNoParams',        '0/10 * * * * ?', '3', '1', '1', 'admin', sysdate(), 'admin', null, '');
-insert into sys_job values(2, '系统默认（有参）', 'DEFAULT', 'ryTask.ryParams(\'admin\')',  '0/15 * * * * ?', '3', '1', '1', 'admin', sysdate(), 'admin', null, '');
-insert into sys_job values(3, '系统默认（多参）', 'DEFAULT', 'ryTask.ryMultipleParams(\'admin\', true, 2000L, 316.50D, 100)',  '0/20 * * * * ?', '3', '1', '1', 'admin', sysdate(), 'admin', null, '');
+insert into sys_job values(1, '系统默认（无参）', 'DEFAULT', 'ryTask.ryNoParams',        '{}', '0/10 * * * * ?', '3', '1', '1', 'admin', sysdate(), 'admin', null, '');
+insert into sys_job values(2, '系统默认（有参）', 'DEFAULT', 'ryTask.ryParams(\'admin\')',  '{}', '0/15 * * * * ?', '3', '1', '1', 'admin', sysdate(), 'admin', null, '');
+insert into sys_job values(3, '系统默认（多参）', 'DEFAULT', 'ryTask.ryMultipleParams(\'admin\', true, 2000L, 316.50D, 100)',  '{}', '0/20 * * * * ?', '3', '1', '1', 'admin', sysdate(), 'admin', null, '');
 insert into sys_notice values('1', '温馨提醒：2018-07-01 admin新版本发布啦', '2', '新版本内容', '0', 'admin', sysdate(), 'admin', null, '管理员');
 insert into sys_notice values('2', '维护通知：2018-07-01 admin系统凌晨维护', '1', '维护内容',   '0', 'admin', sysdate(), 'admin', null, '管理员');

@@ -11,6 +11,7 @@ import (
 
 	"github.com/starter-kit-fe/admin/constant"
 	"github.com/starter-kit-fe/admin/internal/config"
+	"github.com/starter-kit-fe/admin/internal/system/job"
 )
 
 type Options struct {
@@ -24,6 +25,7 @@ type App struct {
 	server *http.Server
 	db     *gorm.DB
 	cache  *redis.Client
+	jobs   *job.Service
 }
 
 func New(ctx context.Context, opts Options) (*App, error) {
@@ -47,18 +49,28 @@ func New(ctx context.Context, opts Options) (*App, error) {
 		return nil, err
 	}
 
-	modules := buildModuleSet(cfg, sqlDB, redisCache)
+	modules := buildModuleSet(cfg, sqlDB, redisCache, appLogger)
 	throttleMW := buildThrottle(cfg, appLogger)
 	engine := buildRouterEngine(cfg, appLogger, modules, throttleMW)
 	server := buildHTTPServer(cfg, engine)
 
-	return &App{
+	appInstance := &App{
 		cfg:    cfg,
 		logger: appLogger,
 		server: server,
 		db:     sqlDB,
 		cache:  redisCache,
-	}, nil
+		jobs:   modules.jobService,
+	}
+
+	if appInstance.jobs != nil {
+		if err := appInstance.jobs.Start(ctx); err != nil {
+			appInstance.closeResources()
+			return nil, err
+		}
+	}
+
+	return appInstance, nil
 }
 
 func ensureContext(ctx context.Context) context.Context {
@@ -117,6 +129,9 @@ func (a *App) Run(ctx context.Context) error {
 }
 
 func (a *App) closeResources() {
+	if a.jobs != nil {
+		a.jobs.Stop()
+	}
 	// 关闭数据库连接池
 	if a.db != nil {
 		if raw, err := a.db.DB(); err == nil {

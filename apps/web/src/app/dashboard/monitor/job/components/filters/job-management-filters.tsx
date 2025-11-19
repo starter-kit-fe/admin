@@ -1,6 +1,8 @@
 import { StatusTabs, type StatusTabItem } from '@/components/status-tabs';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+} from '@/components/ui/input-group';
 
 import type { JobStatusFilter } from '../../constants';
 
@@ -32,25 +34,21 @@ export function JobManagementFilters({
           tabs={statusTabs}
         />
 
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="job-name-filter">任务名称</Label>
-            <Input
-              id="job-name-filter"
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <InputGroup className="w-full bg-muted/60 sm:w-[280px]">
+            <InputGroupInput
               placeholder="按名称筛选"
               value={jobName}
               onChange={(event) => onJobNameChange(event.target.value)}
             />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="job-group-filter">任务分组</Label>
-            <Input
-              id="job-group-filter"
+          </InputGroup>
+          <InputGroup className="w-full bg-muted/60 sm:w-[280px]">
+            <InputGroupInput
               placeholder="按分组筛选"
               value={jobGroup}
               onChange={(event) => onJobGroupChange(event.target.value)}
             />
-          </div>
+          </InputGroup>
         </div>
       </div>
     </div>

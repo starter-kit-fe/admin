@@ -32,6 +32,7 @@ export function JobDataSection() {
     pagination,
     setPagination,
     setDeleteTarget,
+    openEditEditor,
   } = useJobManagementStore();
   const refresh = useJobManagementRefresh();
   const setRefreshing = useJobManagementSetRefreshing();
@@ -100,6 +101,9 @@ export function JobDataSection() {
 
   const handleSelectDelete = (job: Job) => {
     setDeleteTarget(job);
+  };
+  const handleEditJob = (job: Job) => {
+    openEditEditor(job);
   };
 
   const runJobMutation = useMutation({
@@ -183,6 +187,7 @@ export function JobDataSection() {
           onRunJob={handleRunJob}
           onToggleStatus={handleToggleStatus}
           onDelete={handleSelectDelete}
+          onEdit={handleEditJob}
         />
       </section>
 

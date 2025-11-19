@@ -278,6 +278,10 @@ definitions:
         type: string
       cronExpression:
         type: string
+      invokeParams:
+        items:
+          type: integer
+        type: array
       invokeTarget:
         type: string
       jobGroup:
@@ -301,6 +305,10 @@ definitions:
         type: string
       cronExpression:
         type: string
+      invokeParams:
+        items:
+          type: integer
+        type: array
       invokeTarget:
         type: string
       jobGroup:
@@ -1109,6 +1117,51 @@ paths:
       security:
       - BearerAuth: []
       summary: 修改定时任务
+      tags:
+      - Monitor/Job
+  /v1/monitor/jobs/{id}/detail:
+    get:
+      description: 返回任务及执行日志
+      parameters:
+      - description: 任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 日志页码
+        in: query
+        name: logPageNum
+        type: integer
+      - description: 日志页大小
+        in: query
+        name: logPageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取定时任务详情
       tags:
       - Monitor/Job
   /v1/monitor/jobs/{id}/run:

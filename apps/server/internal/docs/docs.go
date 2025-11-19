@@ -792,6 +792,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/monitor/jobs/{id}/detail": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "返回任务及执行日志",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Monitor/Job"
+                ],
+                "summary": "获取定时任务详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "任务ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "日志页码",
+                        "name": "logPageNum",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "日志页大小",
+                        "name": "logPageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/monitor/jobs/{id}/run": {
             "post": {
                 "security": [
@@ -5299,6 +5369,12 @@ const docTemplate = `{
                 "cronExpression": {
                     "type": "string"
                 },
+                "invokeParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "invokeTarget": {
                     "type": "string"
                 },
@@ -5327,6 +5403,12 @@ const docTemplate = `{
                 },
                 "cronExpression": {
                     "type": "string"
+                },
+                "invokeParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "invokeTarget": {
                     "type": "string"

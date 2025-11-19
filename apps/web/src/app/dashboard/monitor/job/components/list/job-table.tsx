@@ -4,17 +4,18 @@ import { InlineLoading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import {
   Table,
   TableBody,
@@ -30,13 +31,9 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Clock, Play, Trash2 } from 'lucide-react';
-import {
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { Clock, Edit2, MoreHorizontal, Play, Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { STATUS_BADGE_VARIANT } from '../../constants';
 import type { Job } from '../../type';
@@ -56,6 +53,7 @@ interface JobTableProps {
   onRunJob: (jobId: number) => void;
   onToggleStatus: (jobId: number, nextStatus: string) => void;
   onDelete: (job: Job) => void;
+  onEdit: (job: Job) => void;
 }
 
 export function JobTable({
@@ -67,13 +65,18 @@ export function JobTable({
   onRunJob,
   onToggleStatus,
   onDelete,
+  onEdit,
 }: JobTableProps) {
+  const router = useRouter();
   const columnHelper = useMemo(() => createColumnHelper<Job>(), []);
   const { hasPermission } = usePermissions();
   const canRunJob = hasPermission('monitor:job:run');
   const canChangeStatus = hasPermission('monitor:job:changeStatus');
   const canDeleteJob = hasPermission('monitor:job:remove');
-  const showActions = canRunJob || canChangeStatus || canDeleteJob;
+  const canViewDetail = hasPermission('monitor:job:query');
+  const canEditJob = hasPermission('monitor:job:edit');
+  const showActions =
+    canRunJob || canChangeStatus || canDeleteJob || canViewDetail || canEditJob;
 
   const columns = useMemo(
     () => [
@@ -93,7 +96,8 @@ export function JobTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[200px]',
+          headerClassName: 'w-[200px]',
+          cellClassName: 'whitespace-nowrap pr-4',
         },
       }),
       columnHelper.accessor('invokeTarget', {
@@ -103,11 +107,17 @@ export function JobTable({
           if (!target) {
             return <span className="text-xs text-muted-foreground">-</span>;
           }
-          return <InvokeTargetValue value={target} />;
+          return (
+            <div className="max-w-[300px] overflow-x-auto scrollbar-thin">
+              <span className="inline-block whitespace-nowrap text-xs font-mono text-foreground">
+                {target}
+              </span>
+            </div>
+          );
         },
         meta: {
-          headerClassName: 'w-[320px]',
-          cellClassName: 'w-[320px]',
+          headerClassName: 'w-[300px]',
+          cellClassName: 'pr-4',
         },
       }),
       columnHelper.accessor('cronExpression', {
@@ -126,7 +136,8 @@ export function JobTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[220px]',
+          headerClassName: 'w-[220px]',
+          cellClassName: 'whitespace-nowrap pr-4',
         },
       }),
       columnHelper.accessor('concurrent', {
@@ -165,102 +176,143 @@ export function JobTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[200px]',
+          headerClassName: 'w-[180px]',
+          cellClassName: 'whitespace-nowrap',
         },
       }),
       ...(showActions
         ? [
-            columnHelper.display({
-              id: 'actions',
-              header: () => <span className="block text-right">操作</span>,
-              cell: ({ row }) => {
-                const job = row.original;
-                const jobId = job.jobId;
-                const isRunning = pendingRunId === jobId;
-                const isUpdatingStatus = pendingStatusId === jobId;
-                const nextStatus = job.status === '0' ? '1' : '0';
+          columnHelper.display({
+            id: 'actions',
+            header: () => <span className="block text-right">操作</span>,
+            cell: ({ row }) => {
+              const job = row.original;
+              const jobId = job.jobId;
+              const isRunning = pendingRunId === jobId;
+              const isUpdatingStatus = pendingStatusId === jobId;
+              const nextStatus = job.status === '0' ? '1' : '0';
 
-                return (
-                  <div className="flex justify-end gap-2">
-                    {canRunJob ? (
+              return (
+                <div className="flex justify-end">
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
                       <Button
                         type="button"
                         variant="ghost"
-                        size="sm"
-                        className="gap-1 text-xs"
-                        onClick={() => onRunJob(jobId)}
-                        disabled={isRunning}
+                        size="icon"
+                        className="size-8"
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onClick={(event) => event.stopPropagation()}
+                        aria-label={`更多操作：${job.jobName}`}
                       >
-                        {isRunning ? (
-                          <>
-                            <Spinner className="size-3.5" />
-                            触发中
-                          </>
-                        ) : (
-                          <>
-                            <Play className="size-3.5" />
-                            触发
-                          </>
-                        )}
+                        <MoreHorizontal className="size-4" />
                       </Button>
-                    ) : null}
-                    {canChangeStatus ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1 text-xs"
-                        onClick={() => onToggleStatus(jobId, nextStatus)}
-                        disabled={isUpdatingStatus}
-                      >
-                        {isUpdatingStatus ? (
-                          <>
-                            <Spinner className="size-3.5" />
-                            更新中
-                          </>
-                        ) : (
-                          <>
-                            <Clock className="size-3.5" />
-                            {nextStatus === '0' ? '恢复' : '暂停'}
-                          </>
-                        )}
-                      </Button>
-                    ) : null}
-                    {canDeleteJob ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1 text-xs text-destructive hover:text-destructive"
-                        onClick={() => onDelete(job)}
-                      >
-                        <Trash2 className="size-3.5" />
-                        删除
-                      </Button>
-                    ) : null}
-                  </div>
-                );
-              },
-              meta: {
-                headerClassName:
-                  'sticky right-0 z-20 w-[260px] bg-card text-right border-l border-border/60',
-                cellClassName:
-                  'sticky right-0 z-10 w-[260px] bg-card text-right border-l border-border/60 group-hover:bg-muted/60',
-              },
-            }),
-          ]
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      {canViewDetail ? (
+                        <DropdownMenuItem
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            router.push(`/dashboard/monitor/job/${jobId}`);
+                          }}
+                        >
+                          查看详情
+                        </DropdownMenuItem>
+                      ) : null}
+                      {canEditJob ? (
+                        <DropdownMenuItem
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            onEdit(job);
+                          }}
+                        >
+                          <Edit2 className="mr-2 size-4" />
+                          编辑任务
+                        </DropdownMenuItem>
+                      ) : null}
+                      {canRunJob ? (
+                        <DropdownMenuItem
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            onRunJob(jobId);
+                          }}
+                          disabled={isRunning}
+                        >
+                          {isRunning ? (
+                            <>
+                              <Spinner className="mr-2 size-3.5" />
+                              触发中
+                            </>
+                          ) : (
+                            <>
+                              <Play className="mr-2 size-4" />
+                              立即触发
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                      ) : null}
+                      {canChangeStatus ? (
+                        <DropdownMenuItem
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            onToggleStatus(jobId, nextStatus);
+                          }}
+                          disabled={isUpdatingStatus}
+                        >
+                          {isUpdatingStatus ? (
+                            <>
+                              <Spinner className="mr-2 size-3.5" />
+                              更新中
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="mr-2 size-4" />
+                              {nextStatus === '0' ? '恢复任务' : '暂停任务'}
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                      ) : null}
+                      {canDeleteJob ? (
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            onDelete(job);
+                          }}
+                        >
+                          <Trash2 className="mr-2 size-4" />
+                          删除任务
+                        </DropdownMenuItem>
+                      ) : null}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              );
+            },
+            meta: {
+              headerClassName:
+                'sticky right-0 z-20 w-[100px] bg-card/95 backdrop-blur-md text-right border-l border-border/60 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+              cellClassName:
+                'sticky right-0 z-10 w-[100px] bg-card/80 backdrop-blur-md text-right border-l border-border/60 group-hover:bg-muted/50 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            },
+          }),
+        ]
         : []),
     ],
     [
       canChangeStatus,
       canDeleteJob,
+      canEditJob,
       canRunJob,
+      canViewDetail,
       columnHelper,
-      pendingRunId,
-      pendingStatusId,
+      onDelete,
+      onEdit,
       onRunJob,
       onToggleStatus,
-      onDelete,
+      pendingRunId,
+      pendingStatusId,
+      router,
       showActions,
     ],
   );
@@ -276,8 +328,8 @@ export function JobTable({
 
   return (
     <div className="rounded-xl border border-border/60">
-      <div className="w-full overflow-x-auto">
-        <Table className="min-w-[960px]">
+      <div className="w-full overflow-x-auto scrollbar-thin">
+        <Table className="w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="bg-muted/40">
@@ -286,16 +338,16 @@ export function JobTable({
                     key={header.id}
                     className={cn(
                       header.column.columnDef.meta?.headerClassName as
-                        | string
-                        | undefined,
+                      | string
+                      | undefined,
                     )}
                   >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -347,8 +399,8 @@ export function JobTable({
                       key={cell.id}
                       className={cn(
                         cell.column.columnDef.meta?.cellClassName as
-                          | string
-                          | undefined,
+                        | string
+                        | undefined,
                       )}
                     >
                       {flexRender(
@@ -367,65 +419,6 @@ export function JobTable({
   );
 }
 
-function InvokeTargetValue({ value }: { value: string }) {
-  const [node, setNode] = useState<HTMLDivElement | null>(null);
-  const [isOverflowing, setIsOverflowing] = useState(false);
-
-  const handleRef = useCallback((element: HTMLDivElement | null) => {
-    setNode(element);
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!node) {
-      setIsOverflowing(false);
-      return;
-    }
-
-    const checkOverflow = () => {
-      const hasOverflow =
-        node.scrollWidth > node.clientWidth ||
-        node.scrollHeight > node.clientHeight;
-      setIsOverflowing((prev) => (prev === hasOverflow ? prev : hasOverflow));
-    };
-
-    checkOverflow();
-
-    if (typeof ResizeObserver === 'undefined') {
-      return;
-    }
-
-    const observer = new ResizeObserver(() => {
-      checkOverflow();
-    });
-    observer.observe(node);
-    return () => {
-      observer.disconnect();
-    };
-  }, [node, value]);
-
-  const content = (
-    <div ref={handleRef} className="w-[320px] truncate font-mono text-xs">
-      {value}
-    </div>
-  );
-
-  if (!isOverflowing) {
-    return content;
-  }
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{content}</TooltipTrigger>
-      <TooltipContent
-        side="top"
-        align="start"
-        className="max-w-xl break-words font-mono text-xs"
-      >
-        {value}
-      </TooltipContent>
-    </Tooltip>
-  );
-}
 
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData, TValue> {

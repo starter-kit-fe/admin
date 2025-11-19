@@ -1,6 +1,11 @@
-import { del, get, patch, post } from '@/lib/request';
+import { del, get, patch, post, put } from '@/lib/request';
 
-import type { Job, JobListResponse } from './type';
+import type {
+  Job,
+  JobDetailParams,
+  JobDetailResponse,
+  JobListResponse,
+} from './type';
 
 export interface JobListParams {
   pageNum?: number;
@@ -48,4 +53,35 @@ export function deleteJob(jobId: number) {
 
 export function getJob(jobId: number) {
   return get<Job>(`/v1/monitor/jobs/${jobId}`);
+}
+
+export function getJobDetail(jobId: number, params: JobDetailParams = {}) {
+  const query: Record<string, string> = {};
+  if (params.logPageNum) {
+    query.logPageNum = String(params.logPageNum);
+  }
+  if (params.logPageSize) {
+    query.logPageSize = String(params.logPageSize);
+  }
+  return get<JobDetailResponse>(`/v1/monitor/jobs/${jobId}/detail`, query);
+}
+
+export interface JobPayload {
+  jobName: string;
+  jobGroup: string;
+  invokeTarget: string;
+  cronExpression: string;
+  misfirePolicy: string;
+  concurrent: string;
+  status: string;
+  remark?: string;
+  invokeParams?: string;
+}
+
+export function createJob(payload: JobPayload) {
+  return post('/v1/monitor/jobs', payload);
+}
+
+export function updateJob(jobId: number, payload: JobPayload) {
+  return put(`/v1/monitor/jobs/${jobId}`, payload);
 }

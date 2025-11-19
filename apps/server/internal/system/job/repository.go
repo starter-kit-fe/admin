@@ -147,3 +147,59 @@ func (r *Repository) UpdateJobStatus(ctx context.Context, id int64, status strin
 		Where("job_id = ?", id).
 		Update("status", status).Error
 }
+
+func (r *Repository) ListEnabledJobs(ctx context.Context) ([]model.SysJob, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
+	}
+	var records []model.SysJob
+	if err := r.db.WithContext(ctx).
+		Model(&model.SysJob{}).
+		Where("status = ?", "0").
+		Order("job_id ASC").
+		Find(&records).Error; err != nil {
+		return nil, err
+	}
+	return records, nil
+}
+
+func (r *Repository) CreateJobLog(ctx context.Context, record *model.SysJobLog) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if record == nil {
+		return errors.New("job log record is required")
+	}
+	return r.db.WithContext(ctx).Create(record).Error
+}
+
+func (r *Repository) ListJobLogs(ctx context.Context, jobID int64, pageNum, pageSize int) ([]model.SysJobLog, int64, error) {
+	if r == nil || r.db == nil {
+		return nil, 0, ErrRepositoryUnavailable
+	}
+
+	query := r.db.WithContext(ctx).Model(&model.SysJobLog{}).Where("job_id = ?", jobID)
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if pageNum <= 0 {
+		pageNum = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	var records []model.SysJobLog
+	if err := query.
+		Order("job_log_id DESC").
+		Offset((pageNum - 1) * pageSize).
+		Limit(pageSize).
+		Find(&records).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return records, total, nil
+}

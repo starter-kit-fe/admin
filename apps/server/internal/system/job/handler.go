@@ -1,6 +1,7 @@
 package job
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 	"strings"
@@ -33,29 +34,36 @@ type listJobQuery struct {
 }
 
 type createJobRequest struct {
-	JobName        string  `json:"jobName" binding:"required"`
-	JobGroup       string  `json:"jobGroup"`
-	InvokeTarget   string  `json:"invokeTarget" binding:"required"`
-	CronExpression string  `json:"cronExpression" binding:"required"`
-	MisfirePolicy  string  `json:"misfirePolicy"`
-	Concurrent     string  `json:"concurrent"`
-	Status         string  `json:"status"`
-	Remark         *string `json:"remark"`
+	JobName        string          `json:"jobName" binding:"required"`
+	JobGroup       string          `json:"jobGroup"`
+	InvokeTarget   string          `json:"invokeTarget" binding:"required"`
+	InvokeParams   json.RawMessage `json:"invokeParams"`
+	CronExpression string          `json:"cronExpression" binding:"required"`
+	MisfirePolicy  string          `json:"misfirePolicy"`
+	Concurrent     string          `json:"concurrent"`
+	Status         string          `json:"status"`
+	Remark         *string         `json:"remark"`
 }
 
 type updateJobRequest struct {
-	JobName        *string `json:"jobName"`
-	JobGroup       *string `json:"jobGroup"`
-	InvokeTarget   *string `json:"invokeTarget"`
-	CronExpression *string `json:"cronExpression"`
-	MisfirePolicy  *string `json:"misfirePolicy"`
-	Concurrent     *string `json:"concurrent"`
-	Status         *string `json:"status"`
-	Remark         *string `json:"remark"`
+	JobName        *string          `json:"jobName"`
+	JobGroup       *string          `json:"jobGroup"`
+	InvokeTarget   *string          `json:"invokeTarget"`
+	InvokeParams   *json.RawMessage `json:"invokeParams"`
+	CronExpression *string          `json:"cronExpression"`
+	MisfirePolicy  *string          `json:"misfirePolicy"`
+	Concurrent     *string          `json:"concurrent"`
+	Status         *string          `json:"status"`
+	Remark         *string          `json:"remark"`
 }
 
 type changeStatusRequest struct {
 	Status string `json:"status" binding:"required"`
+}
+
+type jobDetailQuery struct {
+	LogPageNum  int `form:"logPageNum"`
+	LogPageSize int `form:"logPageSize"`
 }
 
 // List godoc
@@ -134,6 +142,7 @@ func (h *Handler) Create(ctx *gin.Context) {
 		JobName:        payload.JobName,
 		JobGroup:       payload.JobGroup,
 		InvokeTarget:   payload.InvokeTarget,
+		InvokeParams:   payload.InvokeParams,
 		CronExpression: payload.CronExpression,
 		MisfirePolicy:  payload.MisfirePolicy,
 		Concurrent:     payload.Concurrent,
@@ -187,6 +196,55 @@ func (h *Handler) Get(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(job))
 }
 
+// Detail godoc
+// @Summary 获取定时任务详情
+// @Description 返回任务及执行日志
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "任务ID"
+// @Param logPageNum query int false "日志页码"
+// @Param logPageSize query int false "日志页大小"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/{id}/detail [get]
+func (h *Handler) Detail(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
+		return
+	}
+
+	id, err := parseID(ctx.Param("id"))
+	if err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid job id"))
+		return
+	}
+
+	var query jobDetailQuery
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid query parameters"))
+		return
+	}
+
+	detail, err := h.service.GetJobDetail(ctx.Request.Context(), id, ListJobLogsOptions{
+		PageNum:  query.LogPageNum,
+		PageSize: query.LogPageSize,
+	})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			resp.NotFound(ctx, resp.WithMessage("job not found"))
+			return
+		}
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load job detail"))
+		return
+	}
+
+	resp.OK(ctx, resp.WithData(detail))
+}
+
 // Update godoc
 // @Summary 修改定时任务
 // @Description 更新任务及调度信息
@@ -225,6 +283,7 @@ func (h *Handler) Update(ctx *gin.Context) {
 		JobName:        payload.JobName,
 		JobGroup:       payload.JobGroup,
 		InvokeTarget:   payload.InvokeTarget,
+		InvokeParams:   payload.InvokeParams,
 		CronExpression: payload.CronExpression,
 		MisfirePolicy:  payload.MisfirePolicy,
 		Concurrent:     payload.Concurrent,

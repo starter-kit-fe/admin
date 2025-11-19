@@ -257,6 +257,7 @@ type SysJob struct {
 	JobName        string     `gorm:"column:job_name;primaryKey" json:"job_name"`
 	JobGroup       string     `gorm:"column:job_group;primaryKey" json:"job_group"`
 	InvokeTarget   string     `gorm:"column:invoke_target" json:"invoke_target"`
+	InvokeParams   string     `gorm:"column:invoke_params" json:"invoke_params"`
 	CronExpression string     `gorm:"column:cron_expression" json:"cron_expression"`
 	MisfirePolicy  string     `gorm:"column:misfire_policy" json:"misfire_policy"`
 	Concurrent     string     `gorm:"column:concurrent" json:"concurrent"`
@@ -274,9 +275,11 @@ func (SysJob) TableName() string {
 
 type SysJobLog struct {
 	JobLogID      int64      `gorm:"column:job_log_id;primaryKey;autoIncrement" json:"job_log_id"`
+	JobID         int64      `gorm:"column:job_id" json:"job_id"`
 	JobName       string     `gorm:"column:job_name" json:"job_name"`
 	JobGroup      string     `gorm:"column:job_group" json:"job_group"`
 	InvokeTarget  string     `gorm:"column:invoke_target" json:"invoke_target"`
+	InvokeParams  string     `gorm:"column:invoke_params" json:"invoke_params"`
 	JobMessage    *string    `gorm:"column:job_message" json:"job_message,omitempty"`
 	Status        string     `gorm:"column:status" json:"status"`
 	ExceptionInfo string     `gorm:"column:exception_info" json:"exception_info"`
