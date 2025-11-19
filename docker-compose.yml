@@ -1,0 +1,113 @@
+services:
+  db:
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-starter-kit-fe}/admin-postgres:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: deployments/docker/postgres/Dockerfile
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-admin}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c work_mem=16MB
+      -c maintenance_work_mem=256MB
+      -c effective_cache_size=1536MB
+      -c wal_compression=on
+      -c synchronous_commit=off
+      -c max_wal_size=2GB
+      -c min_wal_size=256MB
+      -c checkpoint_timeout=10min
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c jit=off
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER:-admin} -d $${POSTGRES_DB:-admin} || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stop_grace_period: 1m
+
+  redis:
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-starter-kit-fe}/admin-redis:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: deployments/docker/redis/Dockerfile
+    restart: unless-stopped
+    command: >
+      redis-server
+      --save 60 1000
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory ${REDIS_MAXMEMORY:-512mb}
+      --maxmemory-policy volatile-lru
+      --tcp-keepalive 300
+      --requirepass "${REDIS_PASSWORD:-changeme}"
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stop_grace_period: 30s
+
+  server:
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-starter-kit-fe}/admin-server:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+      args:
+        VERSION: ${APP_VERSION:-dev}
+        COMMIT: ${APP_COMMIT:-local}
+    restart: unless-stopped
+    environment:
+      PORT: ${SERVER_PORT:-27401}
+      HTTP_ADDR: ":${SERVER_PORT:-27401}"
+      APP_MODE: release
+      GIN_MODE: release
+      DB_URL: ${DB_URL:-postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-changeme}@db:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-admin}?sslmode=disable}
+      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD:-changeme}@redis:${REDIS_PORT:-6379}/0}
+      AUTH_SECRET: ${AUTH_SECRET:-please-change-me}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${SERVER_PORT:-27401}:27401"
+
+  web:
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-starter-kit-fe}/admin-web:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
+      BASE_URL: ${BASE_URL:-http://server:${SERVER_PORT:-27401}}
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+
+volumes:
+  db_data:
+    driver: local
+  redis_data:
+    driver: local
