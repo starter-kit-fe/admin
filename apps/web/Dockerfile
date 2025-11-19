@@ -41,6 +41,8 @@ COPY packages/typescript-config/package.json ./packages/typescript-config/packag
 
 # Reuse already-installed deps and install only prod deps so next.config.ts doesn't try to auto-install TypeScript at runtime
 COPY --from=deps /app/node_modules ./node_modules
+# Local node_modules links for the web workspace
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 # pnpm prune needs the store metadata
 COPY --from=deps /pnpm-store /pnpm-store
 RUN corepack enable && pnpm install --prod --filter web --frozen-lockfile --prefer-offline

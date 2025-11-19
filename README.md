@@ -46,6 +46,34 @@
    docker compose ps
    ```
 
+## 本地构建与调试（Docker Compose）
+
+无需推送镜像即可本地起全栈：
+
+```sh
+# 1) 准备环境变量（可在 .env 中覆盖默认镜像前缀/tag）
+cp env.docker.example .env
+# 例：本地构建用本地主机仓库名
+echo "IMAGE_REGISTRY=local" >> .env
+echo "IMAGE_OWNER=admin-local" >> .env
+echo "IMAGE_TAG=dev" >> .env
+
+# 2) 构建镜像（包含 web/server/db/redis）
+docker compose --env-file .env build
+
+# 3) 启动并映射端口
+docker compose --env-file .env up -d
+
+# 4) 查看服务
+docker compose ps
+```
+
+端口默认：前端 3000、后端 27401、Postgres 5432、Redis 6379，可在 `.env` 中调整。若需清理本地数据卷：
+
+```sh
+docker compose --env-file .env down -v
+```
+
 ## 其他命令
 
 - 本地开发：`pnpm install` 然后 `pnpm dev`
