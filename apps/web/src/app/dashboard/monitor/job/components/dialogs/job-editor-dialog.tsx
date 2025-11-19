@@ -19,10 +19,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import {
   CONCURRENT_LABELS,
   MISFIRE_POLICY_LABELS,
+  PREDEFINED_JOB_TYPES,
   STATUS_TABS,
 } from '../../constants';
 import {
@@ -34,8 +42,10 @@ import { createJob, updateJob, type JobPayload } from '../../api';
 import type { Job } from '../../type';
 import { jobFormSchema, type JobFormValues } from '../../type';
 import { stringifyInvokeParams } from '../../utils';
+import { CronHelper } from './cron-helper';
 
 const DEFAULT_VALUES: JobFormValues = {
+  jobType: 'custom',
   jobName: '',
   jobGroup: 'DEFAULT',
   invokeTarget: '',
@@ -64,14 +74,19 @@ export function JobEditorDialog() {
     if (!job) {
       return DEFAULT_VALUES;
     }
+    // 检测任务类型
+    const detectedType = PREDEFINED_JOB_TYPES.find(
+      t => t.value === job.invokeTarget && t.value !== 'custom'
+    );
     return {
+      jobType: detectedType?.value ?? 'custom',
       jobName: job.jobName ?? '',
       jobGroup: job.jobGroup ?? 'DEFAULT',
       invokeTarget: job.invokeTarget ?? '',
       cronExpression: job.cronExpression ?? '',
-      misfirePolicy: job.misfirePolicy ?? '3',
-      concurrent: job.concurrent ?? '1',
-      status: job.status ?? '0',
+      misfirePolicy: (job.misfirePolicy ?? '3') as '1' | '2' | '3',
+      concurrent: (job.concurrent ?? '1') as '0' | '1',
+      status: (job.status ?? '0') as '0' | '1',
       remark: job.remark ?? '',
       invokeParams: stringifyInvokeParams(job.invokeParams),
     };
@@ -95,8 +110,22 @@ export function JobEditorDialog() {
     closeEditor();
   };
 
-const createMutation = useMutation({
-  mutationFn: createJob,
+  const handleJobTypeChange = (jobType: string) => {
+    const selectedType = PREDEFINED_JOB_TYPES.find(t => t.value === jobType);
+    if (selectedType) {
+      if (jobType !== 'custom') {
+        form.setValue('invokeTarget', selectedType.value);
+      } else {
+        form.setValue('invokeTarget', '');
+      }
+      form.setValue('jobGroup', selectedType.defaultGroup);
+      form.setValue('cronExpression', selectedType.defaultCron);
+      form.setValue('invokeParams', JSON.stringify(selectedType.defaultParams, null, 2));
+    }
+  };
+
+  const createMutation = useMutation({
+    mutationFn: createJob,
     onMutate: () => {
       beginMutation();
     },
@@ -115,14 +144,14 @@ const createMutation = useMutation({
     },
   });
 
-const updateMutation = useMutation({
-  mutationFn: ({
-    jobId,
-    payload,
-  }: {
-    jobId: number;
-    payload: JobPayload;
-  }) => updateJob(jobId, payload),
+  const updateMutation = useMutation({
+    mutationFn: ({
+      jobId,
+      payload,
+    }: {
+      jobId: number;
+      payload: JobPayload;
+    }) => updateJob(jobId, payload),
     onMutate: () => {
       beginMutation();
     },
@@ -155,18 +184,64 @@ const updateMutation = useMutation({
 
   return (
     <ResponsiveDialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <ResponsiveDialog.Content className="sm:max-w-2xl">
+      <ResponsiveDialog.Content className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <ResponsiveDialog.Header>
           <ResponsiveDialog.Title>
             {mode === 'create' ? '新增任务' : '编辑任务'}
           </ResponsiveDialog.Title>
           <ResponsiveDialog.Description>
-            配置调度规则与调用目标，支持 JSON 参数传递。
+            配置定时任务的执行规则和参数。选择任务类型后会自动填充默认参数。
           </ResponsiveDialog.Description>
         </ResponsiveDialog.Header>
         <Form {...form}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
+              {/* 基础信息 */}
+              <div className="sm:col-span-2 flex items-center gap-2 pb-2 border-b">
+                <span className="font-semibold text-lg">基础信息</span>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="jobType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>任务类型</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        handleJobTypeChange(value);
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          {field.value ? (
+                            <span className="font-medium">
+                              {PREDEFINED_JOB_TYPES.find((t) => t.value === field.value)?.label}
+                            </span>
+                          ) : (
+                            <SelectValue placeholder="选择任务类型" />
+                          )}
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PREDEFINED_JOB_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            <div className="flex flex-col gap-0.5 text-left">
+                              <span className="font-medium">{type.label}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {type.description}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="jobName"
@@ -174,47 +249,85 @@ const updateMutation = useMutation({
                   <FormItem>
                     <FormLabel>任务名称</FormLabel>
                     <FormControl>
-                      <Input placeholder="例如 数据同步任务" {...field} />
+                      <Input placeholder="例如: 数据库备份任务" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="jobGroup"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>任务分组</FormLabel>
-                    <FormControl>
-                      <Input placeholder="默认为 DEFAULT" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="invokeTarget"
-                render={({ field }) => (
-                  <FormItem className="sm:col-span-2">
-                    <FormLabel>调用目标</FormLabel>
-                    <FormControl>
-                      <Input placeholder="例如 jobService.handleReport" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {form.watch('jobType') === 'custom' && (
+                <FormField
+                  control={form.control}
+                  name="invokeTarget"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2">
+                      <FormLabel>调用目标</FormLabel>
+                      <FormControl>
+                        <Input placeholder="例如 jobService.handleReport" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {/* 调度配置 */}
+              <div className="sm:col-span-2 flex items-center gap-2 pt-4 pb-2 border-b">
+                <span className="font-semibold text-lg">调度配置</span>
+              </div>
+
               <FormField
                 control={form.control}
                 name="cronExpression"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Cron 表达式</FormLabel>
+                    <FormLabel>Cron 规则</FormLabel>
                     <FormControl>
-                      <Input placeholder="例如 0 */5 * * * ?" {...field} />
+                      <CronHelper
+                        value={field.value}
+                        onChange={field.onChange}
+                        error={form.formState.errors.cronExpression?.message}
+                      />
                     </FormControl>
+                  </FormItem>
+                )}
+              />
+              {/* 执行策略 */}
+              <div className="sm:col-span-2 flex items-center gap-2 pt-4 pb-2 border-b">
+                <span className="font-semibold text-lg">执行策略</span>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                    <FormLabel>初始状态</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        className="flex gap-6"
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        {STATUS_TABS.filter((tab) => tab.value !== 'all').map(
+                          (tab) => (
+                            <FormItem
+                              key={tab.value}
+                              className="flex items-center gap-2 space-y-0"
+                            >
+                              <FormControl>
+                                <RadioGroupItem value={tab.value} />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                {tab.label}
+                              </FormLabel>
+                            </FormItem>
+                          ),
+                        )}
+                      </RadioGroup>
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      正常状态的任务会按照 Cron 表达式自动执行,暂停状态的任务不会自动执行
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -223,11 +336,14 @@ const updateMutation = useMutation({
                 control={form.control}
                 name="misfirePolicy"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>调度策略</FormLabel>
+                  <FormItem className="rounded-lg border p-4">
+                    <FormLabel className="text-base">错过策略</FormLabel>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      当任务错过执行时间时的处理策略
+                    </p>
                     <FormControl>
                       <RadioGroup
-                        className="flex flex-wrap gap-3"
+                        className="flex flex-col gap-3"
                         value={field.value}
                         onValueChange={field.onChange}
                       >
@@ -256,11 +372,14 @@ const updateMutation = useMutation({
                 control={form.control}
                 name="concurrent"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>并发策略</FormLabel>
+                  <FormItem className="rounded-lg border p-4">
+                    <FormLabel className="text-base">并发执行</FormLabel>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      是否允许同一任务的多个实例同时执行
+                    </p>
                     <FormControl>
                       <RadioGroup
-                        className="flex flex-wrap gap-3"
+                        className="flex flex-col gap-3"
                         value={field.value}
                         onValueChange={field.onChange}
                       >
@@ -285,52 +404,28 @@ const updateMutation = useMutation({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem className="sm:col-span-2">
-                    <FormLabel>任务状态</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        className="flex gap-4"
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        {STATUS_TABS.filter((tab) => tab.value !== 'all').map(
-                          (tab) => (
-                            <FormItem
-                              key={tab.value}
-                              className="flex items-center gap-2 space-y-0"
-                            >
-                              <FormControl>
-                                <RadioGroupItem value={tab.value} />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                {tab.label}
-                              </FormLabel>
-                            </FormItem>
-                          ),
-                        )}
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* 参数配置 */}
+              <div className="sm:col-span-2 flex items-center gap-2 pt-4 pb-2 border-b">
+                <span className="font-semibold text-lg">参数配置</span>
+              </div>
+
               <FormField
                 control={form.control}
                 name="invokeParams"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>调用参数（JSON）</FormLabel>
+                    <FormLabel>任务参数 (JSON 格式)</FormLabel>
                     <FormControl>
                       <Textarea
-                        rows={4}
-                        placeholder='例如 {"foo":"bar"}'
+                        rows={6}
+                        placeholder='例如: {"retentionDays": 7, "compress": true}'
                         {...field}
+                        className="font-mono text-sm"
                       />
                     </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      根据任务类型配置不同的参数。选择预定义任务类型会自动填充默认参数。
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -340,9 +435,9 @@ const updateMutation = useMutation({
                 name="remark"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>备注</FormLabel>
+                    <FormLabel>备注 (可选)</FormLabel>
                     <FormControl>
-                      <Textarea rows={3} placeholder="可填写调度说明" {...field} />
+                      <Textarea rows={2} placeholder="任务说明或注意事项" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

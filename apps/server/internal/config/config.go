@@ -22,6 +22,8 @@ type Config struct {
 	Redis    RedisConfig
 	Auth     AuthConfig
 	Security SecurityConfig
+	S3       S3Config
+	Backup   BackupConfig
 }
 
 type AppConfig struct {
@@ -67,6 +69,20 @@ type RateLimitConfig struct {
 	Requests int
 	Burst    int
 	Period   time.Duration
+}
+
+type S3Config struct {
+	Endpoint     string
+	AccessKey    string
+	SecretKey    string
+	Bucket       string
+	Region       string
+	UsePathStyle bool
+}
+
+type BackupConfig struct {
+	RetentionDays int
+	TempDir       string
 }
 
 func Load(envFiles ...string) (*Config, error) {
@@ -117,6 +133,18 @@ func Load(envFiles ...string) (*Config, error) {
 				Requests: v.GetInt("security.rate_limit.requests"),
 				Burst:    v.GetInt("security.rate_limit.burst"),
 			},
+		},
+		S3: S3Config{
+			Endpoint:     strings.TrimSpace(v.GetString("s3.endpoint")),
+			AccessKey:    strings.TrimSpace(v.GetString("s3.access_key")),
+			SecretKey:    strings.TrimSpace(v.GetString("s3.secret_key")),
+			Bucket:       strings.TrimSpace(v.GetString("s3.bucket")),
+			Region:       strings.TrimSpace(v.GetString("s3.region")),
+			UsePathStyle: v.GetBool("s3.use_path_style"),
+		},
+		Backup: BackupConfig{
+			RetentionDays: v.GetInt("backup.retention_days"),
+			TempDir:       strings.TrimSpace(v.GetString("backup.temp_dir")),
 		},
 	}
 
@@ -215,6 +243,21 @@ func (c *Config) Normalize() {
 	if c.Auth.CookieSameSite == "" {
 		c.Auth.CookieSameSite = constant.JWT_COOKIE_SAME_SITE
 	}
+
+	// S3 配置规范化
+	c.S3.Region = strings.TrimSpace(c.S3.Region)
+	if c.S3.Region == "" {
+		c.S3.Region = "us-east-1"
+	}
+
+	// 备份配置规范化
+	if c.Backup.RetentionDays <= 0 {
+		c.Backup.RetentionDays = 7
+	}
+	c.Backup.TempDir = strings.TrimSpace(c.Backup.TempDir)
+	if c.Backup.TempDir == "" {
+		c.Backup.TempDir = "/tmp/backups"
+	}
 }
 
 func normalizeAddr(addr string) string {
@@ -292,6 +335,14 @@ func newViper() *viper.Viper {
 	v.SetDefault("security.rate_limit.requests", 60)
 	v.SetDefault("security.rate_limit.burst", 60)
 	v.SetDefault("security.rate_limit.period", "1m")
+	v.SetDefault("s3.endpoint", "")
+	v.SetDefault("s3.access_key", "")
+	v.SetDefault("s3.secret_key", "")
+	v.SetDefault("s3.bucket", "")
+	v.SetDefault("s3.region", "us-east-1")
+	v.SetDefault("s3.use_path_style", false)
+	v.SetDefault("backup.retention_days", 7)
+	v.SetDefault("backup.temp_dir", "/tmp/backups")
 
 	_ = v.BindEnv("app.name", "APP_NAME")
 	_ = v.BindEnv("app.mode", "APP_MODE", "GIN_MODE")
@@ -314,6 +365,14 @@ func newViper() *viper.Viper {
 	_ = v.BindEnv("security.rate_limit.requests", "SECURITY_RATE_LIMIT_REQUESTS")
 	_ = v.BindEnv("security.rate_limit.burst", "SECURITY_RATE_LIMIT_BURST")
 	_ = v.BindEnv("security.rate_limit.period", "SECURITY_RATE_LIMIT_PERIOD")
+	_ = v.BindEnv("s3.endpoint", "S3_ENDPOINT")
+	_ = v.BindEnv("s3.access_key", "S3_ACCESS_KEY")
+	_ = v.BindEnv("s3.secret_key", "S3_SECRET_KEY")
+	_ = v.BindEnv("s3.bucket", "S3_BUCKET")
+	_ = v.BindEnv("s3.region", "S3_REGION")
+	_ = v.BindEnv("s3.use_path_style", "S3_USE_PATH_STYLE")
+	_ = v.BindEnv("backup.retention_days", "BACKUP_RETENTION_DAYS")
+	_ = v.BindEnv("backup.temp_dir", "BACKUP_TEMP_DIR")
 
 	return v
 }

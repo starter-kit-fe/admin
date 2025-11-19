@@ -3,11 +3,12 @@ import { notFound } from 'next/navigation';
 import { JobDetailContent } from '../components/detail/job-detail-content';
 
 interface JobDetailPageProps {
-  params: { jobId: string };
+  params: Promise<{ jobId: string }>;
 }
 
-export default function JobDetailPage({ params }: JobDetailPageProps) {
-  const jobId = Number(params.jobId);
+export default async function JobDetailPage({ params }: JobDetailPageProps) {
+  const { jobId: jobIdParam } = await params;
+  const jobId = Number(jobIdParam);
   if (!Number.isFinite(jobId) || jobId <= 0) {
     notFound();
   }
