@@ -29,10 +29,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Install only prod deps for the web workspace
+# Seed workspace metadata for pnpm
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY apps/web/package.json ./apps/web/package.json
-RUN corepack enable && pnpm install --frozen-lockfile --prod --filter web
+COPY packages/ui/package.json ./packages/ui/package.json
+COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
+COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
+
+# Reuse already-installed deps and prune to production so next.config.ts doesn't try to auto-install TypeScript at runtime
+COPY --from=deps /app/node_modules ./node_modules
+RUN corepack enable && pnpm prune --prod --filter web
 
 # Copy built assets
 COPY --from=builder /app/apps/web/.next ./apps/web/.next
