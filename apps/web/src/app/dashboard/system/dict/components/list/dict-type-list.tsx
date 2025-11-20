@@ -21,6 +21,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useState } from 'react';
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
@@ -139,42 +150,15 @@ export function DictTypeList({
                   <div className="flex items-start gap-2">
                     {badge}
                     {showActions ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="text-muted-foreground"
-                            aria-label="更多操作"
-                          >
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          {canAddData ? (
-                            <DropdownMenuItem onSelect={() => onAddData(dict)}>
-                              <Plus className="mr-2 size-3.5" />
-                              新增字典项
-                            </DropdownMenuItem>
-                          ) : null}
-                          {canEditType ? (
-                            <DropdownMenuItem onSelect={() => onEdit(dict)}>
-                              <Pencil className="mr-2 size-3.5" />
-                              编辑字典
-                            </DropdownMenuItem>
-                          ) : null}
-                          {canDeleteType ? (
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onSelect={() => onDelete(dict)}
-                            >
-                              <Trash2 className="mr-2 size-3.5" />
-                              删除
-                            </DropdownMenuItem>
-                          ) : null}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <DictTypeActions
+                        dict={dict}
+                        canAddData={canAddData}
+                        canEditType={canEditType}
+                        canDeleteType={canDeleteType}
+                        onAddData={onAddData}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                      />
                     ) : null}
                   </div>
                 </div>
@@ -184,5 +168,138 @@ export function DictTypeList({
         )}
       </div>
     </ScrollArea>
+  );
+}
+
+function DictTypeActions({
+  dict,
+  canAddData,
+  canEditType,
+  canDeleteType,
+  onAddData,
+  onEdit,
+  onDelete,
+}: {
+  dict: DictType;
+  canAddData: boolean;
+  canEditType: boolean;
+  canDeleteType: boolean;
+  onAddData: (dict: DictType) => void;
+  onEdit: (dict: DictType) => void;
+  onDelete: (dict: DictType) => void;
+}) {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground"
+            aria-label="更多操作"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+        >
+          <SheetHeader className="px-4 pb-2 pt-3 text-left">
+            <SheetTitle>操作</SheetTitle>
+            <SheetDescription>选择要对该字典类型执行的操作。</SheetDescription>
+          </SheetHeader>
+          <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+            {canAddData ? (
+              <Button
+                variant="secondary"
+                className="w-full justify-between"
+                onClick={() => {
+                  onAddData(dict);
+                  setOpen(false);
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <Plus className="size-4" />
+                  新增字典项
+                </span>
+                <span className="text-xs text-muted-foreground">添加新的键值</span>
+              </Button>
+            ) : null}
+            {canEditType ? (
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onEdit(dict);
+                  setOpen(false);
+                }}
+              >
+                <Pencil className="size-4" />
+                编辑字典
+              </Button>
+            ) : null}
+            {canDeleteType ? (
+              <Button
+                variant="destructive"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onDelete(dict);
+                  setOpen(false);
+                }}
+              >
+                <Trash2 className="size-4" />
+                删除
+              </Button>
+            ) : null}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground"
+          aria-label="更多操作"
+        >
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40">
+        {canAddData ? (
+          <DropdownMenuItem onSelect={() => onAddData(dict)}>
+            <Plus className="mr-2 size-3.5" />
+            新增字典项
+          </DropdownMenuItem>
+        ) : null}
+        {canEditType ? (
+          <DropdownMenuItem onSelect={() => onEdit(dict)}>
+            <Pencil className="mr-2 size-3.5" />
+            编辑字典
+          </DropdownMenuItem>
+        ) : null}
+        {canDeleteType ? (
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onSelect={() => onDelete(dict)}
+          >
+            <Trash2 className="mr-2 size-3.5" />
+            删除
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

@@ -23,10 +23,20 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Edit2, MoreHorizontal, Trash2 } from 'lucide-react';
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 
 import { DATA_STATUS_TABS } from '../../constants';
 import { usePermissions } from '@/hooks/use-permissions';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DictDataTableProps {
   rows: DictData[];
@@ -72,6 +82,7 @@ function DictDataTableComponent({
   const canEditDict = hasPermission('system:dict:edit');
   const canDeleteDict = hasPermission('system:dict:remove');
   const showActions = canEditDict || canDeleteDict;
+  const isMobile = useIsMobile();
 
   const columns = useMemo(() => {
     const baseColumns = [
@@ -134,6 +145,17 @@ function DictDataTableComponent({
           header: () => <span className="block text-right">操作</span>,
           cell: ({ row }) => {
             const dict = row.original;
+            if (isMobile) {
+              return (
+                <DictDataMobileActions
+                  dict={dict}
+                  canEdit={canEditDict}
+                  canDelete={canDeleteDict}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              );
+            }
             return (
               <div className="flex justify-end">
                 <DropdownMenu modal={false}>
@@ -185,7 +207,7 @@ function DictDataTableComponent({
     }
 
     return baseColumns;
-  }, [canDeleteDict, canEditDict, onDelete, onEdit, showActions]);
+  }, [canDeleteDict, canEditDict, isMobile, onDelete, onEdit, showActions]);
 
   const table = useReactTable({
     data: rows,
@@ -291,6 +313,84 @@ function DictDataTableComponent({
 
 export const DictDataTable = memo(DictDataTableComponent);
 DictDataTable.displayName = 'DictDataTable';
+
+function DictDataMobileActions({
+  dict,
+  canEdit,
+  canDelete,
+  onEdit,
+  onDelete,
+}: {
+  dict: DictData;
+  canEdit: boolean;
+  canDelete: boolean;
+  onEdit: (item: DictData) => void;
+  onDelete: (item: DictData) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  if (!canEdit && !canDelete) {
+    return null;
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground"
+          aria-label="更多操作"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent
+        side="bottom"
+        className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+      >
+        <SheetHeader className="px-4 pb-2 pt-3 text-left">
+          <SheetTitle>操作</SheetTitle>
+          <SheetDescription>为该字典项选择要执行的操作。</SheetDescription>
+        </SheetHeader>
+        <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+          {canEdit ? (
+            <Button
+              variant="secondary"
+              className="w-full justify-between"
+              onClick={() => {
+                onEdit(dict);
+                setOpen(false);
+              }}
+            >
+              <span className="flex items-center gap-2">
+                <Edit2 className="size-4" />
+                编辑
+              </span>
+              <span className="text-xs text-muted-foreground">修改标签与键值</span>
+            </Button>
+          ) : null}
+          {canDelete ? (
+            <Button
+              variant="destructive"
+              className="w-full justify-start gap-2"
+              onClick={() => {
+                onDelete(dict);
+                setOpen(false);
+              }}
+            >
+              <Trash2 className="size-4" />
+              删除
+            </Button>
+          ) : null}
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
 
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData, TValue> {

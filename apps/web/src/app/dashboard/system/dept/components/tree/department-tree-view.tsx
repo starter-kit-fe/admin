@@ -14,6 +14,15 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import {
   ChevronDown,
@@ -95,6 +104,9 @@ export function DepartmentTreeView({
   onEdit,
   onDelete,
 }: DepartmentTreeViewProps) {
+  const isMobile = useIsMobile();
+  const [mobileActionNode, setMobileActionNode] = useState<DepartmentNode | null>(null);
+
   const parentIds = useMemo(() => {
     const ids: number[] = [];
     const walk = (items: DepartmentNode[]) => {
@@ -201,35 +213,14 @@ export function DepartmentTreeView({
                     </div>
                   ) : null}
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 shrink-0 text-muted-foreground"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-36">
-                    <DropdownMenuItem onClick={() => onAddChild(item)}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      新增子部门
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEdit(item)}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      编辑
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                      onClick={() => onDelete(item)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      删除
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <DepartmentActions
+                  node={item}
+                  onAddChild={onAddChild}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  isMobile={isMobile}
+                  onOpenMobile={() => setMobileActionNode(item)}
+                />
               </div>
             </div>
             {hasChildren && isExpanded ? (
@@ -255,5 +246,160 @@ export function DepartmentTreeView({
     );
   }
 
-  return <div className="space-y-1">{renderNodes(nodes)}</div>;
+  return (
+    <>
+      <div className="space-y-1">{renderNodes(nodes)}</div>
+      <MobileDepartmentActionSheet
+        node={mobileActionNode}
+        onAddChild={onAddChild}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMobileActionNode(null);
+          }
+        }}
+      />
+    </>
+  );
+}
+
+function DepartmentActions({
+  node,
+  onAddChild,
+  onEdit,
+  onDelete,
+  isMobile,
+  onOpenMobile,
+}: {
+  node: DepartmentNode;
+  onAddChild: (node: DepartmentNode) => void;
+  onEdit: (node: DepartmentNode) => void;
+  onDelete: (node: DepartmentNode) => void;
+  isMobile: boolean;
+  onOpenMobile: () => void;
+}) {
+  if (isMobile) {
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 shrink-0 text-muted-foreground"
+        onClick={onOpenMobile}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </Button>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 shrink-0 text-muted-foreground"
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-36">
+        <DropdownMenuItem onClick={() => onAddChild(node)}>
+          <Plus className="mr-2 h-4 w-4" />
+          新增子部门
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onEdit(node)}>
+          <Pencil className="mr-2 h-4 w-4" />
+          编辑
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+          onClick={() => onDelete(node)}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          删除
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function MobileDepartmentActionSheet({
+  node,
+  onAddChild,
+  onEdit,
+  onDelete,
+  onOpenChange,
+}: {
+  node: DepartmentNode | null;
+  onAddChild: (node: DepartmentNode) => void;
+  onEdit: (node: DepartmentNode) => void;
+  onDelete: (node: DepartmentNode) => void;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <Sheet open={Boolean(node)} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+      >
+        <SheetHeader className="px-4 pb-2 pt-3 text-left">
+          <SheetTitle>操作</SheetTitle>
+          <SheetDescription>为该部门选择要执行的操作。</SheetDescription>
+        </SheetHeader>
+        <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+          <Button
+            variant="secondary"
+            className="w-full justify-between"
+            onClick={() => {
+              if (node) {
+                onAddChild(node);
+              }
+              onOpenChange(false);
+            }}
+          >
+            <span className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              新增子部门
+            </span>
+            <span className="text-xs text-muted-foreground">添加下级节点</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full justify-between"
+            onClick={() => {
+              if (node) {
+                onEdit(node);
+              }
+              onOpenChange(false);
+            }}
+          >
+            <span className="flex items-center gap-2">
+              <Pencil className="h-4 w-4" />
+              编辑
+            </span>
+            <span className="text-xs text-muted-foreground">修改部门信息</span>
+          </Button>
+          <Button
+            variant="destructive"
+            className="w-full justify-between"
+            onClick={() => {
+              if (node) {
+                onDelete(node);
+              }
+              onOpenChange(false);
+            }}
+          >
+            <span className="flex items-center gap-2">
+              <Trash2 className="h-4 w-4" />
+              删除
+            </span>
+            <span className="text-xs text-muted-foreground">删除并移除子部门</span>
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
 }

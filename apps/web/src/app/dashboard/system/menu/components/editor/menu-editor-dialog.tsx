@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
+import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 
 import type { MenuFormValues, MenuType } from '@/app/dashboard/system/menu/type';
 import { buildRouteSlug } from '@/app/dashboard/system/menu/utils';
@@ -153,6 +154,7 @@ export function MenuEditorDialog({
     resolver: zodResolver(menuFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
+  const formId = 'menu-editor-form';
 
   useEffect(() => {
     form.register('menuType');
@@ -239,51 +241,55 @@ export function MenuEditorDialog({
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialog.Content className="sm:max-w-2xl max-h-[90vh] overflow-hidden p-0">
-        <div className="flex h-full max-h-[90vh] flex-col min-h-0">
-          <ResponsiveDialog.Header className="flex-shrink-0 border-b border-border/60 px-6 py-5">
-            <ResponsiveDialog.Title>{dialogTitle}</ResponsiveDialog.Title>
-            <ResponsiveDialog.Description>{dialogDescription}</ResponsiveDialog.Description>
-          </ResponsiveDialog.Header>
-
-          <Form {...form}>
-            <form className="flex h-full flex-1 flex-col min-h-0" onSubmit={handleSubmit}>
-              <div className="flex-1 overflow-y-auto px-6 py-5">
-                <div className="space-y-8 pb-4">
-                  <MenuTypeTabs
-                    value={menuType}
-                    allowedTypes={allowedMenuTypes}
-                    onChange={(next) => form.setValue('menuType', next)}
-                  />
-                  {menuType === 'M' ? (
-                    <DirectoryForm form={form} parentOptions={parentOptions} />
-                  ) : null}
-                  {menuType === 'C' ? (
-                    <MenuForm form={form} parentOptions={parentOptions} />
-                  ) : null}
-                  {menuType === 'F' ? (
-                    <ButtonForm form={form} parentOptions={parentOptions} />
-                  ) : null}
-                </div>
-              </div>
-
-              <ResponsiveDialog.Footer className="flex-shrink-0 gap-2 border-t border-border/60 bg-background px-6 py-4 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={submitting}
-                >
-                  取消
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitText}
-                </Button>
-              </ResponsiveDialog.Footer>
-            </form>
-          </Form>
-        </div>
-      </ResponsiveDialog.Content>
+      <FormDialogLayout
+        title={dialogTitle}
+        description={dialogDescription}
+        contentClassName="sm:max-w-2xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+              className="flex-1 sm:flex-none sm:min-w-[96px]"
+            >
+              取消
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              disabled={submitting}
+              className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
+            >
+              {submitText}
+            </Button>
+          </>
+        }
+      >
+        <Form {...form}>
+          <form
+            id={formId}
+            className="flex flex-col gap-8 pb-4"
+            onSubmit={handleSubmit}
+          >
+            <MenuTypeTabs
+              value={menuType}
+              allowedTypes={allowedMenuTypes}
+              onChange={(next) => form.setValue('menuType', next)}
+            />
+            {menuType === 'M' ? (
+              <DirectoryForm form={form} parentOptions={parentOptions} />
+            ) : null}
+            {menuType === 'C' ? (
+              <MenuForm form={form} parentOptions={parentOptions} />
+            ) : null}
+            {menuType === 'F' ? (
+              <ButtonForm form={form} parentOptions={parentOptions} />
+            ) : null}
+          </form>
+        </Form>
+      </FormDialogLayout>
     </ResponsiveDialog>
   );
 }

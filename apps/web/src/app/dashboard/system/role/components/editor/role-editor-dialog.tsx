@@ -1,4 +1,5 @@
 import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
+import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +13,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
@@ -116,184 +116,180 @@ export function RoleEditorDialog({
       : '保存';
 
   const disabled = submitting || loading;
+  const formId = 'role-editor-form';
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialog.Content className="sm:max-w-2xl max-h-[90vh] overflow-hidden p-0">
-        <div className="flex h-full max-h-[90vh] flex-col min-h-0">
-          <ResponsiveDialog.Header className="flex-shrink-0 border-b border-border/60 px-6 py-5">
-            <ResponsiveDialog.Title>{title}</ResponsiveDialog.Title>
-            <ResponsiveDialog.Description>
-              {description}
-            </ResponsiveDialog.Description>
-          </ResponsiveDialog.Header>
-
-          <Form {...form}>
-            <form
-              className="flex h-full flex-1 flex-col min-h-0"
-              onSubmit={handleSubmit}
+      <FormDialogLayout
+        title={title}
+        description={description}
+        contentClassName="sm:max-w-2xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={disabled}
+              className="flex-1 sm:flex-none sm:min-w-[96px]"
             >
-              <div className="flex-1 overflow-y-auto px-6 py-5">
-                <div className="space-y-5 pb-4">
-                  {loading ? (
-                    <div className="flex min-h-[160px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/40">
-                      <InlineLoading label="正在加载角色信息..." />
-                    </div>
-                  ) : null}
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="roleName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            <span className="mr-1 text-destructive">*</span>
-                            角色名称
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="请输入角色名称"
-                              disabled={disabled}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="roleKey"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            <span className="mr-1 text-destructive">*</span>
-                            权限字符
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="请输入权限字符"
-                              disabled={disabled}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="roleSort"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>显示顺序</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="默认 0"
-                              disabled={disabled}
-                              value={field.value}
-                              onChange={(event) =>
-                                field.onChange(event.target.value)
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>角色状态</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              className="flex gap-4"
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              disabled={disabled}
-                            >
-                              <FormItem className="flex items-center gap-2 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="0" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  正常
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center gap-2 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="1" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  停用
-                                </FormLabel>
-                              </FormItem>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="remark"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>备注</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            className="min-h-[96px] resize-none"
-                            placeholder="请输入备注（可选）"
-                            disabled={disabled}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="menuIds"
-                    render={({ field }) => (
-                      <FormItem>
-                        <MenuPermissionTree
-                          nodes={menuTree ?? []}
-                          value={field.value}
-                          onChange={field.onChange}
-                          disabled={disabled || menuTreeLoading}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+              取消
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              disabled={disabled}
+              className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
+            >
+              {submitText}
+            </Button>
+          </>
+        }
+      >
+        <Form {...form}>
+          <form
+            id={formId}
+            className="flex flex-col gap-5 pb-4"
+            onSubmit={handleSubmit}
+          >
+            {loading ? (
+              <div className="flex min-h-[160px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/40">
+                <InlineLoading label="正在加载角色信息..." />
               </div>
+            ) : null}
 
-              <ResponsiveDialog.Footer className="flex-shrink-0 flex gap-2 border-t border-border/60 bg-background px-6 py-4 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={disabled}
-                >
-                  取消
-                </Button>
-                <Button type="submit" disabled={disabled}>
-                  {submitText}
-                </Button>
-              </ResponsiveDialog.Footer>
-            </form>
-          </Form>
-        </div>
-      </ResponsiveDialog.Content>
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="roleName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      <span className="mr-1 text-destructive">*</span>
+                      角色名称
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="请输入角色名称"
+                        disabled={disabled}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="roleKey"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      <span className="mr-1 text-destructive">*</span>
+                      权限字符
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="请输入权限字符"
+                        disabled={disabled}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="roleSort"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>显示顺序</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="默认 0"
+                        disabled={disabled}
+                        value={field.value}
+                        onChange={(event) =>
+                          field.onChange(event.target.value)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>角色状态</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        className="flex gap-4"
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={disabled}
+                      >
+                        <FormItem className="flex items-center gap-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">正常</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center gap-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">停用</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="remark"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>备注</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      className="min-h-[96px] resize-none"
+                      placeholder="请输入备注（可选）"
+                      disabled={disabled}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="menuIds"
+              render={({ field }) => (
+                <FormItem>
+                  <MenuPermissionTree
+                    nodes={menuTree ?? []}
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={disabled || menuTreeLoading}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
+      </FormDialogLayout>
     </ResponsiveDialog>
   );
 }

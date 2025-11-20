@@ -1,3 +1,4 @@
+import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -93,19 +94,41 @@ export function DepartmentEditorDialog({
     });
   });
 
+  const title = mode === 'create' ? '新增部门' : '编辑部门';
+  const description = '请填写部门基础信息，所有节点均可新增子部门。';
+  const submitText = submitting ? '保存中...' : '保存';
+  const formId = 'department-editor-form';
+
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialog.Content className="sm:max-w-2xl">
-        <ResponsiveDialog.Header>
-          <ResponsiveDialog.Title>
-            {mode === 'create' ? '新增部门' : '编辑部门'}
-          </ResponsiveDialog.Title>
-          <ResponsiveDialog.Description>
-            请填写部门基础信息，所有节点均可新增子部门。
-          </ResponsiveDialog.Description>
-        </ResponsiveDialog.Header>
+      <FormDialogLayout
+        title={title}
+        description={description}
+        contentClassName="sm:max-w-2xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+              className="flex-1 sm:flex-none sm:min-w-[96px]"
+            >
+              取消
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              disabled={submitting}
+              className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
+            >
+              {submitText}
+            </Button>
+          </>
+        }
+      >
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-6 pb-2">
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -268,22 +291,9 @@ export function DepartmentEditorDialog({
                 </FormItem>
               )}
             />
-            <ResponsiveDialog.Footer className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={submitting}
-              >
-                取消
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? '保存中...' : '保存'}
-              </Button>
-            </ResponsiveDialog.Footer>
           </form>
         </Form>
-      </ResponsiveDialog.Content>
+      </FormDialogLayout>
     </ResponsiveDialog>
   );
 }

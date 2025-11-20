@@ -3,7 +3,6 @@
 import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +15,16 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { resolveLucideIcon } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';
 import {
@@ -126,6 +135,7 @@ export function MenuTreeView({
   canDelete = true,
   canReorder = true,
 }: MenuTreeViewProps) {
+  const isMobile = useIsMobile();
   const parentIds = useMemo(() => {
     const ids: number[] = [];
     const walk = (items: MenuTreeNode[]) => {
@@ -331,96 +341,25 @@ export function MenuTreeView({
                               未配置
                             </span>
                           )}
-                        </span>
-                      ) : null}
+                </span>
+              ) : null}
                     </div>
                   </div>
 
-                <div className="flex items-center gap-1">
-                  {canReorder ? (
-                    <>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground"
-                        disabled={!canMoveUp}
-                        onClick={() => handleMove(parentId, items, index, 'up')}
-                      >
-                        <ArrowUp className="h-4 w-4" />
-                        <span className="sr-only">上移</span>
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground"
-                        disabled={!canMoveDown}
-                        onClick={() =>
-                          handleMove(parentId, items, index, 'down')
-                        }
-                      >
-                        <ArrowDown className="h-4 w-4" />
-                        <span className="sr-only">下移</span>
-                      </Button>
-                    </>
-                  ) : null}
-                  {!isButton && canAddChild ? (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => onAddChild(node)}
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span className="sr-only">新增子菜单</span>
-                    </Button>
-                  ) : null}
-                  {canEdit ? (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => onEdit(node)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">编辑</span>
-                    </Button>
-                  ) : null}
-                  {canEdit || canDelete ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">更多操作</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-36">
-                        {canEdit ? (
-                          <DropdownMenuItem onSelect={() => onEdit(node)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            编辑
-                          </DropdownMenuItem>
-                        ) : null}
-                        {canDelete ? (
-                          <DropdownMenuItem
-                            onSelect={() => onDelete(node)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            删除
-                          </DropdownMenuItem>
-                        ) : null}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : null}
-                </div>
+                <MenuActions
+                  node={node}
+                  canAddChild={!isButton && canAddChild}
+                  canEdit={canEdit}
+                  canDelete={canDelete}
+                  canMoveUp={canReorder && canMoveUp}
+                  canMoveDown={canReorder && canMoveDown}
+                  onAddChild={() => onAddChild(node)}
+                  onEdit={() => onEdit(node)}
+                  onDelete={() => onDelete(node)}
+                  onMoveUp={() => handleMove(parentId, items, index, 'up')}
+                  onMoveDown={() => handleMove(parentId, items, index, 'down')}
+                  isMobile={isMobile}
+                />
                 </div>
                 {node.remark ? (
                   <div className="pl-8 pr-2 text-xs text-muted-foreground">
@@ -474,8 +413,230 @@ export function MenuTreeView({
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
+  );
+}
+
+  return <div>{renderNodes(nodes)}</div>;
+}
+
+function MenuActions({
+  node,
+  canAddChild,
+  canEdit,
+  canDelete,
+  canMoveUp,
+  canMoveDown,
+  onAddChild,
+  onEdit,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+  isMobile,
+}: {
+  node: MenuTreeNode;
+  canAddChild: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onAddChild: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  isMobile: boolean;
+}) {
+  const hasActions =
+    canAddChild || canEdit || canDelete || canMoveUp || canMoveDown;
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  if (!hasActions) {
+    return null;
+  }
+
+  if (isMobile) {
+    return (
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+            <span className="sr-only">更多操作</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+        >
+          <SheetHeader className="px-4 pb-2 pt-3 text-left">
+            <SheetTitle>操作</SheetTitle>
+            <SheetDescription>选择要对该菜单执行的操作。</SheetDescription>
+          </SheetHeader>
+          <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+            {canMoveUp ? (
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onMoveUp();
+                  setSheetOpen(false);
+                }}
+              >
+                <ArrowUp className="h-4 w-4" />
+                上移
+              </Button>
+            ) : null}
+            {canMoveDown ? (
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onMoveDown();
+                  setSheetOpen(false);
+                }}
+              >
+                <ArrowDown className="h-4 w-4" />
+                下移
+              </Button>
+            ) : null}
+            {canAddChild ? (
+              <Button
+                variant="secondary"
+                className="w-full justify-between"
+                onClick={() => {
+                  onAddChild();
+                  setSheetOpen(false);
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  新增子菜单
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  添加下级或按钮
+                </span>
+              </Button>
+            ) : null}
+            {canEdit ? (
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onEdit();
+                  setSheetOpen(false);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+                编辑
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <Button
+                variant="destructive"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onDelete();
+                  setSheetOpen(false);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+                删除
+              </Button>
+            ) : null}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     );
   }
 
-  return <div>{renderNodes(nodes)}</div>;
+  return (
+    <div className="flex items-center gap-1">
+      {canMoveUp || canMoveDown ? (
+        <>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground"
+            disabled={!canMoveUp}
+            onClick={onMoveUp}
+          >
+            <ArrowUp className="h-4 w-4" />
+            <span className="sr-only">上移</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground"
+            disabled={!canMoveDown}
+            onClick={onMoveDown}
+          >
+            <ArrowDown className="h-4 w-4" />
+            <span className="sr-only">下移</span>
+          </Button>
+        </>
+      ) : null}
+      {canAddChild ? (
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onAddChild}
+        >
+          <Plus className="h-4 w-4" />
+          <span className="sr-only">新增子菜单</span>
+        </Button>
+      ) : null}
+      {canEdit ? (
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onEdit}
+        >
+          <Pencil className="h-4 w-4" />
+          <span className="sr-only">编辑</span>
+        </Button>
+      ) : null}
+      {canEdit || canDelete ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+              <span className="sr-only">更多操作</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-36">
+            {canEdit ? (
+              <DropdownMenuItem onSelect={onEdit}>
+                <Pencil className="mr-2 h-4 w-4" />
+                编辑
+              </DropdownMenuItem>
+            ) : null}
+            {canDelete ? (
+              <DropdownMenuItem
+                onSelect={onDelete}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                删除
+              </DropdownMenuItem>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
+    </div>
+  );
 }

@@ -22,36 +22,34 @@ export function MenuManagementFilters() {
   const statusTabs = useMemo(() => STATUS_TABS, []);
 
   return (
-    <Card className="rounded-xl shadow-none sm:p-5">
-      <div className="">
-        <StatusTabs
-          value={status}
-          onValueChange={(value) => setStatus(value as StatusValue)}
-          tabs={statusTabs}
-        />
-        <div className="mt-0 md:mt-4">
-          <InputGroup className="w-full border-muted bg-muted/60 sm:max-w-sm">
-            <InputGroupAddon>
-              <Search className="size-4 text-muted-foreground" />
-            </InputGroupAddon>
-            <InputGroupInput
-              placeholder="搜索菜单名称"
-              value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
-            />
-            {keyword ? (
-              <InputGroupButton
-                variant="ghost"
-                size="icon-sm"
-                aria-label="清空搜索"
-                className="text-muted-foreground hover:text-foreground"
-                onClick={() => setKeyword('')}
-              >
-                <X className="size-3.5" />
-              </InputGroupButton>
-            ) : null}
-          </InputGroup>
-        </div>
+    <Card className="rounded-xl shadow-none p-4 gap-2">
+      <StatusTabs
+        value={status}
+        onValueChange={(value) => setStatus(value as StatusValue)}
+        tabs={statusTabs}
+      />
+      <div className="mt-0 md:mt-4">
+        <InputGroup className="w-full border-muted bg-muted/60 sm:max-w-sm">
+          <InputGroupAddon>
+            <Search className="size-4 text-muted-foreground" />
+          </InputGroupAddon>
+          <InputGroupInput
+            placeholder="搜索菜单名称"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+          />
+          {keyword ? (
+            <InputGroupButton
+              variant="ghost"
+              size="icon-sm"
+              aria-label="清空搜索"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => setKeyword('')}
+            >
+              <X className="size-3.5" />
+            </InputGroupButton>
+          ) : null}
+        </InputGroup>
       </div>
     </Card>
   );

@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -87,17 +88,41 @@ export function PostEditorDialog({
     });
   });
 
+  const title = mode === 'create' ? '新增岗位' : '编辑岗位';
+  const description = '维护岗位信息，岗位编码与名称需保持唯一性。';
+  const submitText = submitting ? '保存中...' : '保存';
+  const formId = 'post-editor-form';
+
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialog.Content className="sm:max-w-xl">
-        <ResponsiveDialog.Header>
-          <ResponsiveDialog.Title>{mode === 'create' ? '新增岗位' : '编辑岗位'}</ResponsiveDialog.Title>
-          <ResponsiveDialog.Description>
-            维护岗位信息，岗位编码与名称需保持唯一性。
-          </ResponsiveDialog.Description>
-        </ResponsiveDialog.Header>
+      <FormDialogLayout
+        title={title}
+        description={description}
+        contentClassName="sm:max-w-xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+              className="flex-1 sm:flex-none sm:min-w-[96px]"
+            >
+              取消
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              disabled={submitting}
+              className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
+            >
+              {submitText}
+            </Button>
+          </>
+        }
+      >
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-6 pb-2">
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -179,22 +204,9 @@ export function PostEditorDialog({
                 </FormItem>
               )}
             />
-            <ResponsiveDialog.Footer className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={submitting}
-              >
-                取消
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? '保存中...' : '保存'}
-              </Button>
-            </ResponsiveDialog.Footer>
           </form>
         </Form>
-      </ResponsiveDialog.Content>
+      </FormDialogLayout>
     </ResponsiveDialog>
   );
 }

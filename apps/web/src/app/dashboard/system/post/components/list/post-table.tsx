@@ -31,6 +31,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 import {
   PINNED_ACTION_COLUMN_META,
@@ -38,6 +39,16 @@ import {
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import { usePermissions } from '@/hooks/use-permissions';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import type { Post } from '../../type';
 
@@ -86,6 +97,72 @@ function PostActions({
   if (!canEdit && !canDelete) {
     return null;
   }
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  if (isMobile) {
+    return (
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+            aria-label="更多操作"
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+        >
+          <SheetHeader className="px-4 pb-2 pt-3 text-left">
+            <SheetTitle>操作</SheetTitle>
+            <SheetDescription>
+              选择要对该岗位执行的操作。
+            </SheetDescription>
+          </SheetHeader>
+          <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+            {canEdit ? (
+              <Button
+                variant="secondary"
+                className="w-full justify-between"
+                onClick={() => {
+                  onEdit(post);
+                  setSheetOpen(false);
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <Pencil className="size-4" />
+                  编辑
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  修改岗位信息
+                </span>
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <Button
+                variant="destructive"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onDelete(post);
+                  setSheetOpen(false);
+                }}
+              >
+                <Trash2 className="size-4" /> 删除岗位
+              </Button>
+            ) : null}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
     <div className="flex justify-end">
       <DropdownMenu modal={false}>
@@ -241,8 +318,8 @@ export function PostTable({
   const rowsModel = table.getRowModel().rows;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border/60 bg-card  dark:border-border/40">
-      <Table className={PINNED_TABLE_CLASS}>
+    <div className="w-full overflow-x-auto rounded-xl border border-border/60 bg-card dark:border-border/40 scrollbar-thin">
+      <Table className={`${PINNED_TABLE_CLASS} min-w-[640px] sm:min-w-[760px] table-fixed`}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-muted/40">
