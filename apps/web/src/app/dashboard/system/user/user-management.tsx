@@ -15,7 +15,7 @@ export function UserManagement() {
 
   return (
     <div className="mx-auto flex w-full flex-col gap-6 sm:gap-6">
-      {!isMobile ? <UserManagementHeader /> : null}
+      <UserManagementHeader />
       <UserFiltersSection />
       <UserDataSection />
       <UserEditorManager />

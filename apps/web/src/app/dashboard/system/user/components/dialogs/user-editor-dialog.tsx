@@ -1,3 +1,5 @@
+import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
+import { Button } from '@/components/ui/button';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
@@ -81,7 +83,6 @@ export function UserEditorDialog({
   onOpenChange,
   onSubmit,
 }: UserEditorDialogProps) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
   const form = useForm<UserFormValues, UserFormResolverContext>({
     resolver: zodResolver(userFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
@@ -216,41 +217,54 @@ export function UserEditorDialog({
     mode === 'create'
       ? '创建一个新的系统账号并设置默认密码。'
       : '更新用户的基本信息和状态。';
+  const formId = 'user-editor-form';
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialog.Content className="sm:max-w-xl">
-        <ResponsiveDialog.Header className={cn(isMobile && '!text-left')}>
-          <ResponsiveDialog.Title>{title}</ResponsiveDialog.Title>
-          <ResponsiveDialog.Description>
-            {description}
-          </ResponsiveDialog.Description>
-        </ResponsiveDialog.Header>
-        <div
-          className={cn(
-            'max-h-[70vh] space-y-5 overflow-y-auto pr-1',
-            isMobile && 'max-h-none space-y-4 overflow-y-visible pr-0',
-          )}
-        >
-          <UserEditorForm
-            form={form}
-            isMobile={isMobile}
-            mode={mode}
-            submitting={submitting}
-            deptOptions={deptOptions}
-            roleOptions={roleOptions}
-            postOptions={postOptions}
-            deptLoading={deptQuery.isFetching}
-            roleLoading={roleQuery.isFetching}
-            postLoading={postQuery.isFetching}
-            onDeptSearch={setDeptSearch}
-            onRoleSearch={setRoleSearch}
-            onPostSearch={setPostSearch}
-            onCancel={() => onOpenChange(false)}
-            onSubmit={handleSubmit}
-          />
-        </div>
-      </ResponsiveDialog.Content>
+      <FormDialogLayout
+        title={title}
+        description={description}
+        contentClassName="sm:max-w-xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+              className="flex-1 sm:flex-none sm:min-w-[96px]"
+            >
+              取消
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              disabled={submitting}
+              className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
+            >
+              {submitting ? '提交中...' : mode === 'create' ? '创建' : '保存'}
+            </Button>
+          </>
+        }
+      >
+        <UserEditorForm
+          className="flex-1 min-h-0"
+          formId={formId}
+          form={form}
+          mode={mode}
+          submitting={submitting}
+          deptOptions={deptOptions}
+          roleOptions={roleOptions}
+          postOptions={postOptions}
+          deptLoading={deptQuery.isFetching}
+          roleLoading={roleQuery.isFetching}
+          postLoading={postQuery.isFetching}
+          onDeptSearch={setDeptSearch}
+          onRoleSearch={setRoleSearch}
+          onPostSearch={setPostSearch}
+          onSubmit={handleSubmit}
+        />
+      </FormDialogLayout>
     </ResponsiveDialog>
   );
 }

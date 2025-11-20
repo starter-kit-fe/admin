@@ -277,7 +277,7 @@ export function RoleEditorDialog({
                 </div>
               </div>
 
-              <ResponsiveDialog.Footer className="flex-shrink-0 gap-2 border-t border-border/60 bg-background px-6 py-4 sm:flex-row sm:justify-end">
+              <ResponsiveDialog.Footer className="flex-shrink-0 flex gap-2 border-t border-border/60 bg-background px-6 py-4 sm:flex-row sm:justify-end">
                 <Button
                   type="button"
                   variant="outline"

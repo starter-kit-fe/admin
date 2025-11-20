@@ -21,7 +21,6 @@ import {
   useUserManagementStore,
 } from '../../store';
 import type { User } from '../../type';
-import { UserMobileList } from '../list/user-mobile-list';
 import { UserTable } from '../list/user-table';
 import { DEFAULT_ROLE_VALUE, getRoleLabel } from '../utils';
 
@@ -272,66 +271,31 @@ export function UserDataSection() {
       />
 
       <section className="overflow-hidden rounded-xl border border-border/60 bg-card  dark:border-border/40">
-        {isMobile ? (
-          <div className="flex flex-col p-2">
-            <UserMobileList
-              rows={filteredRows}
-              selectedIds={selectedIds}
-              onToggleSelect={handleToggleSelectRow}
-              onEdit={openEdit}
-              onResetPassword={handleResetPassword}
-              onDelete={setDeleteTarget}
-              isLoading={listIsLoading}
-              isError={listIsError}
-            />
-            <div
-              ref={loadMoreRef}
-              className="flex min-h-12 items-center justify-center px-3 pb-1 pt-4 text-xs text-muted-foreground"
-            >
-              {listIsLoading &&
-              filteredRows.length === 0 ? null : mobileHasNextPage ? (
-                isFetchingNextPage ? (
-                  <span className="flex items-center gap-2">
-                    <Spinner className="size-4" />
-                    正在加载更多...
-                  </span>
-                ) : (
-                  '上拉加载更多'
-                )
-              ) : (
-                '没有更多了'
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 overflow-x-auto">
-            <UserTable
-              rows={filteredRows}
-              headerCheckboxState={headerCheckboxState}
-              onToggleSelectAll={handleToggleSelectAll}
-              selectedIds={selectedIds}
-              onToggleSelect={handleToggleSelectRow}
-              onEdit={openEdit}
-              onResetPassword={handleResetPassword}
-              onDelete={setDeleteTarget}
-              isLoading={userListQuery.isLoading}
-              isError={userListQuery.isError}
-            />
-          </div>
-        )}
+        <div className="flex-1 overflow-x-auto">
+          <UserTable
+            rows={filteredRows}
+            headerCheckboxState={headerCheckboxState}
+            onToggleSelectAll={handleToggleSelectAll}
+            selectedIds={selectedIds}
+            onToggleSelect={handleToggleSelectRow}
+            onEdit={openEdit}
+            onResetPassword={handleResetPassword}
+            onDelete={setDeleteTarget}
+            isLoading={userListQuery.isLoading}
+            isError={userListQuery.isError}
+          />
+        </div>
       </section>
 
-      {!isMobile ? (
-        <PaginationToolbar
-          totalItems={total}
-          currentPage={pagination.pageNum}
-          pageSize={pagination.pageSize}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          pageSizeOptions={PAGE_SIZE_OPTIONS}
-          disabled={userListQuery.isFetching || isMutating}
-        />
-      ) : null}
+      <PaginationToolbar
+        totalItems={total}
+        currentPage={pagination.pageNum}
+        pageSize={pagination.pageSize}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+        disabled={userListQuery.isFetching || isMutating}
+      />
     </div>
   );
 }

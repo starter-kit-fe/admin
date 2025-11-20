@@ -24,7 +24,7 @@ export function RoleManagementFilters({
   statusTabs,
 }: RoleManagementFiltersProps) {
   return (
-    <Card className="shadow-none rounded-xl gap-3 sm:p-5 ">
+    <Card className="shadow-none rounded-xl gap-3 p-4">
       <StatusTabs
         value={status}
         onValueChange={onStatusChange}

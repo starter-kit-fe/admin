@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +30,22 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { usePermissions } from '@/hooks/use-permissions';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -33,16 +54,9 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { KeyRound, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  PINNED_ACTION_COLUMN_META,
-  PINNED_TABLE_CLASS,
-} from '@/components/table/pinned-actions';
-import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import type { User } from '../../type';
-import { usePermissions } from '@/hooks/use-permissions';
-
 import {
   STATUS_META,
   formatPhoneNumber,
@@ -53,6 +67,12 @@ import {
   getEmailLabel,
   getRoleLabel,
 } from '../utils';
+
+const ACTION_COLUMN_META = {
+  headerClassName: 'sticky right-0 z-20 w-[52px] bg-card text-right',
+  cellClassName:
+    'sticky right-0 z-10 w-[52px] bg-card text-right group-hover:bg-muted/50',
+};
 
 interface UserTableProps {
   rows: User[];
@@ -78,6 +98,69 @@ interface RowActionsProps {
   canDelete: boolean;
 }
 
+function EllipsisText({
+  text,
+  className,
+  placeholder = '—',
+}: {
+  text?: string | null;
+  className?: string;
+  placeholder?: string;
+}) {
+  const display = text && text.trim().length > 0 ? text : null;
+  const textRef = useRef<HTMLSpanElement | null>(null);
+  const [overflow, setOverflow] = useState(false);
+
+  useLayoutEffect(() => {
+    const node = textRef.current;
+    if (!node) return;
+    const check = () => {
+      setOverflow(node.scrollWidth - node.clientWidth > 1);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(node);
+    window.addEventListener('resize', check);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', check);
+    };
+  }, [display]);
+
+  useEffect(() => {
+    const node = textRef.current;
+    if (!node) return;
+    setOverflow(node.scrollWidth - node.clientWidth > 1);
+  }, [display]);
+
+  const content = (
+    <span
+      ref={textRef}
+      className={cn(
+        'block truncate text-sm text-foreground',
+        !display && 'text-muted-foreground',
+        className,
+      )}
+      title={overflow ? (display ?? undefined) : undefined}
+    >
+      {display ?? placeholder}
+    </span>
+  );
+
+  if (!display || !overflow) {
+    return content;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{content}</TooltipTrigger>
+      <TooltipContent className="max-w-xs break-words text-sm">
+        {display}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 function RowActions({
   user,
   onEdit,
@@ -89,68 +172,143 @@ function RowActions({
   canDelete,
 }: RowActionsProps) {
   const showDropdown = canEdit || canResetPassword || canDelete;
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   if (!showDropdown) {
     return null;
   }
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 hover:text-primary cursor-pointer"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => event.stopPropagation()}
-            aria-label="更多操作"
+    <div className="flex justify-end ">
+      {isMobile ? (
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="size-7 sm:size-8 hover:text-primary cursor-pointer"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
+              aria-label="更多操作"
+            >
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent
+            side="bottom"
+            className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
           >
-            <MoreHorizontal className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          {canEdit ? (
-            <DropdownMenuItem
-              onSelect={(event) => {
-                event.preventDefault();
-                onEdit(user);
-              }}
+            <SheetHeader className="px-4 pb-2 pt-3 text-left">
+              <SheetTitle>操作</SheetTitle>
+              <SheetDescription>为该用户选择要执行的操作。</SheetDescription>
+            </SheetHeader>
+            <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+              {canEdit ? (
+                <Button
+                  variant="secondary"
+                  className="w-full justify-between"
+                  onClick={() => {
+                    onEdit(user);
+                    setSheetOpen(false);
+                  }}
+                >
+                  <span className="flex items-center gap-2">
+                    <Pencil className="size-4" />
+                    修改
+                  </span>
+                  <span className="text-xs text-muted-foreground">编辑信息</span>
+                </Button>
+              ) : null}
+              {canResetPassword ? (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2"
+                  onClick={() => {
+                    onResetPassword?.(user);
+                    setSheetOpen(false);
+                  }}
+                  disabled={!onResetPassword}
+                >
+                  <KeyRound className="size-4" />
+                  重置密码
+                </Button>
+              ) : null}
+              {canDelete ? (
+                <Button
+                  variant="destructive"
+                  className="w-full justify-start gap-2"
+                  onClick={() => {
+                    if (disableDelete) return;
+                    onDelete(user);
+                    setSheetOpen(false);
+                  }}
+                  disabled={disableDelete}
+                >
+                  <Trash2 className="size-4" />
+                  删除
+                </Button>
+              ) : null}
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="size-7 sm:size-8 hover:text-primary cursor-pointer"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
+              aria-label="更多操作"
             >
-              <Pencil className="mr-2 size-4" />
-              修改
-            </DropdownMenuItem>
-          ) : null}
-          {canResetPassword ? (
-            <DropdownMenuItem
-              disabled={!onResetPassword}
-              onSelect={(event) => {
-                event.preventDefault();
-                onResetPassword?.(user);
-              }}
-            >
-              <KeyRound className="mr-2 size-4" />
-              重置密码
-            </DropdownMenuItem>
-          ) : null}
-          {canDelete ? <DropdownMenuSeparator /> : null}
-          {canDelete ? (
-            <DropdownMenuItem
-              disabled={disableDelete}
-              onSelect={(event) => {
-                event.preventDefault();
-                if (!disableDelete) {
-                  onDelete(user);
-                }
-              }}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="mr-2 size-4" />
-              删除
-            </DropdownMenuItem>
-          ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            {canEdit ? (
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault();
+                  onEdit(user);
+                }}
+              >
+                <Pencil className="mr-2 size-4" />
+                修改
+              </DropdownMenuItem>
+            ) : null}
+            {canResetPassword ? (
+              <DropdownMenuItem
+                disabled={!onResetPassword}
+                onSelect={(event) => {
+                  event.preventDefault();
+                  onResetPassword?.(user);
+                }}
+              >
+                <KeyRound className="mr-2 size-4" />
+                重置密码
+              </DropdownMenuItem>
+            ) : null}
+            {canDelete ? <DropdownMenuSeparator /> : null}
+            {canDelete ? (
+              <DropdownMenuItem
+                disabled={disableDelete}
+                onSelect={(event) => {
+                  event.preventDefault();
+                  if (!disableDelete) {
+                    onDelete(user);
+                  }
+                }}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 size-4" />
+                删除
+              </DropdownMenuItem>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 }
@@ -216,24 +374,30 @@ export function UserTable({
           const emailLabel = getEmailLabel(user);
 
           return (
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <Avatar className="h-10 w-10 border border-border/60 ">
                 {user.avatar ? (
                   <AvatarImage src={user.avatar} alt={displayName} />
                 ) : null}
                 <AvatarFallback>{getAvatarFallback(user)}</AvatarFallback>
               </Avatar>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">
-                  {accountLabel}
-                </p>
-                <p className="text-xs text-muted-foreground">{emailLabel}</p>
+              <div className="min-w-0 space-y-1">
+                <EllipsisText
+                  text={accountLabel}
+                  className="text-sm font-medium text-foreground max-w-[200px]"
+                />
+                <EllipsisText
+                  text={emailLabel}
+                  className="text-xs text-muted-foreground max-w-[220px]"
+                  placeholder="未设置邮箱"
+                />
               </div>
             </div>
           );
         },
         meta: {
-          headerClassName: 'min-w-[160px] md:min-w-[220px]',
+          headerClassName: 'min-w-[150px] md:min-w-[190px]',
+          cellClassName: 'min-w-[170px] max-w-[190px]',
         },
       }),
       columnHelper.display({
@@ -243,13 +407,15 @@ export function UserTable({
           const user = row.original;
           const nickName = user.nickName?.trim();
           return (
-            <span className="text-sm text-muted-foreground">
-              {nickName && nickName.length > 0 ? nickName : '—'}
-            </span>
+            <EllipsisText
+              text={nickName && nickName.length > 0 ? nickName : undefined}
+              className="text-sm text-muted-foreground max-w-[140px]"
+            />
           );
         },
         meta: {
-          headerClassName: 'min-w-[140px] md:min-w-[160px]',
+          headerClassName: 'min-w-[110px] md:min-w-[140px]',
+          cellClassName: 'max-w-[150px]',
         },
       }),
       columnHelper.display({
@@ -258,13 +424,16 @@ export function UserTable({
         cell: ({ row }) => {
           const user = row.original;
           return (
-            <span className="text-sm text-muted-foreground">
-              {formatPhoneNumber(user.phonenumber)}
-            </span>
+            <EllipsisText
+              text={formatPhoneNumber(user.phonenumber)}
+              className="text-sm text-muted-foreground max-w-[130px]"
+            />
           );
         },
         meta: {
-          headerClassName: 'min-w-[120px] md:min-w-[160px]',
+          headerClassName:
+            'hidden sm:table-cell min-w-[100px] md:min-w-[140px]',
+          cellClassName: 'hidden sm:table-cell max-w-[140px]',
         },
       }),
       columnHelper.display({
@@ -273,13 +442,15 @@ export function UserTable({
         cell: ({ row }) => {
           const user = row.original;
           return (
-            <span className="text-sm text-muted-foreground">
-              {getCompanyLabel(user)}
-            </span>
+            <EllipsisText
+              text={getCompanyLabel(user)}
+              className="text-sm text-muted-foreground max-w-[150px]"
+            />
           );
         },
         meta: {
-          headerClassName: 'min-w-[140px] md:min-w-[180px]',
+          headerClassName: 'min-w-[120px] md:min-w-[160px]',
+          cellClassName: 'max-w-[170px]',
         },
       }),
       columnHelper.display({
@@ -288,13 +459,16 @@ export function UserTable({
         cell: ({ row }) => {
           const user = row.original;
           return (
-            <span className="text-sm text-muted-foreground">
-              {getRoleLabel(user)}
-            </span>
+            <EllipsisText
+              text={getRoleLabel(user)}
+              className="text-sm text-muted-foreground max-w-[140px]"
+            />
           );
         },
         meta: {
-          headerClassName: 'min-w-[140px] md:min-w-[160px]',
+          headerClassName:
+            'hidden sm:table-cell min-w-[110px] md:min-w-[150px]',
+          cellClassName: 'hidden sm:table-cell max-w-[160px]',
         },
       }),
       columnHelper.display({
@@ -331,8 +505,7 @@ export function UserTable({
           header: () => <span className="block text-right">操作</span>,
           cell: ({ row }) => {
             const user = row.original;
-            const isSuperAdmin =
-              user.userId === 1 || user.userName === 'admin';
+            const isSuperAdmin = user.userId === 1 || user.userName === 'admin';
             return (
               <RowActions
                 user={user}
@@ -347,7 +520,7 @@ export function UserTable({
             );
           },
           enableSorting: false,
-          meta: { ...PINNED_ACTION_COLUMN_META },
+          meta: { ...PINNED_ACTION_COLUMN_META, ...ACTION_COLUMN_META },
         }),
       );
     }
@@ -377,8 +550,10 @@ export function UserTable({
   const visibleColumnCount = table.getVisibleLeafColumns().length;
 
   return (
-    <div className="overflow-x-auto">
-      <Table className={PINNED_TABLE_CLASS}>
+    <div className="w-full overflow-x-auto scrollbar-thin">
+      <Table
+        className={`${PINNED_TABLE_CLASS} min-w-[600px] sm:min-w-[760px] table-fixed`}
+      >
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-muted/40">

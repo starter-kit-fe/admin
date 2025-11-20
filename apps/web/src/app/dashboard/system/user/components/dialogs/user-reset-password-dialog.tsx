@@ -127,51 +127,56 @@ export function UserResetPasswordDialog() {
           </ResponsiveDialog.Description>
         </ResponsiveDialog.Header>
         <Form {...form}>
-          <form className={cn('space-y-4', isMobile && 'pb-24')} onSubmit={handleSubmit}>
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>新密码</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      autoComplete="new-password"
-                      placeholder="至少 6 位字符"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>确认新密码</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      autoComplete="new-password"
-                      placeholder="再次输入新密码"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <p className="text-sm text-muted-foreground">
-              密码将会立即生效，请及时将新密码通知给用户。
-            </p>
+          <form
+            className={cn('flex h-full min-h-0 flex-col', isMobile && 'pt-2')}
+            onSubmit={handleSubmit}
+          >
+            <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 sm:pr-0">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>新密码</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder="至少 6 位字符"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>确认新密码</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder="再次输入新密码"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <p className="text-sm text-muted-foreground">
+                密码将会立即生效，请及时将新密码通知给用户。
+              </p>
+            </div>
             <ResponsiveDialog.Footer
               className={cn(
-                'flex flex-col gap-2 sm:flex-row sm:justify-end',
+                'mt-2 flex flex-col gap-2 sm:flex-row sm:justify-end',
                 isMobile &&
-                  'sticky bottom-0 left-0 right-0 w-full rounded-none border-t border-border/60 bg-card/95 px-4 py-3 backdrop-blur sm:static sm:border-none sm:bg-transparent sm:px-0 sm:py-0',
+                  'sticky bottom-0 left-0 right-0 z-10 w-full flex-row items-center justify-between gap-3 rounded-none border-t border-border/60 bg-card/95 px-4 py-4 backdrop-blur sm:static sm:justify-end sm:border-none sm:bg-transparent sm:px-0 sm:py-0',
               )}
             >
               <Button
@@ -179,14 +184,14 @@ export function UserResetPasswordDialog() {
                 variant="outline"
                 onClick={() => setResetPasswordTarget(null)}
                 disabled={mutation.isPending}
-                className={cn(isMobile && 'flex-1 basis-2/5')}
+                className={cn(isMobile && 'flex-1')}
               >
                 取消
               </Button>
               <Button
                 type="submit"
                 disabled={mutation.isPending}
-                className={cn(isMobile && 'flex-1 basis-3/5')}
+                className={cn(isMobile && 'flex-1')}
               >
                 {mutation.isPending ? '提交中...' : '确定'}
               </Button>

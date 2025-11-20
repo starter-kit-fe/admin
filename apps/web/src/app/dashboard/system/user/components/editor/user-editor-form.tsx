@@ -26,7 +26,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import {
   Select,
   SelectContent,
@@ -52,7 +51,6 @@ export interface OptionItem {
 
 interface UserEditorFormProps {
   form: UseFormReturn<UserFormValues>;
-  isMobile: boolean;
   mode: 'create' | 'edit';
   submitting?: boolean;
   deptOptions: OptionItem[];
@@ -64,13 +62,13 @@ interface UserEditorFormProps {
   onDeptSearch: (value: string) => void;
   onRoleSearch: (value: string) => void;
   onPostSearch: (value: string) => void;
-  onCancel: () => void;
   onSubmit: ReturnType<UseFormReturn<UserFormValues>['handleSubmit']>;
+  className?: string;
+  formId?: string;
 }
 
 export function UserEditorForm({
   form,
-  isMobile,
   mode,
   submitting,
   deptOptions,
@@ -82,19 +80,10 @@ export function UserEditorForm({
   onDeptSearch,
   onRoleSearch,
   onPostSearch,
-  onCancel,
   onSubmit,
+  className,
+  formId,
 }: UserEditorFormProps) {
-  const cancelButtonClasses = cn(isMobile && 'flex-1 basis-2/5');
-  const submitButtonClasses = cn(isMobile && 'flex-1 basis-3/5');
-
-  const submitText =
-    submitting && (mode === 'create' || mode === 'edit')
-      ? '提交中...'
-      : mode === 'create'
-        ? '创建'
-        : '保存';
-
   const passwordField =
     mode === 'create' ? (
       <FormField
@@ -121,227 +110,214 @@ export function UserEditorForm({
 
   return (
     <Form {...form}>
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="userName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center">
-                  <RequiredMark /> 登录账号
-                </FormLabel>
-                <FormControl>
-                  <Input placeholder="请输入登录账号" autoComplete="username" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="nickName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center">
-                  <RequiredMark /> 用户昵称
-                </FormLabel>
-                <FormControl>
-                  <Input placeholder="请输入用户昵称" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phonenumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>手机号</FormLabel>
-                <FormControl>
-                  <Input placeholder="可选" inputMode="numeric" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>邮箱</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="可选" autoComplete="email" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="deptId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>归属部门</FormLabel>
-                <FormControl>
-                  <SearchableCombobox
-                    placeholder="请选择归属部门"
-                    value={field.value}
-                    options={deptOptions}
-                    loading={deptLoading}
-                    disabled={submitting}
-                    onSearch={onDeptSearch}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="roleIds"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center">
-                  <RequiredMark /> 角色
-                </FormLabel>
-                <FormControl>
-                  <SearchableMultiSelect
-                    placeholder="请选择角色"
-                    value={field.value}
-                    options={roleOptions}
-                    loading={roleLoading}
-                    disabled={submitting}
-                    onSearch={onRoleSearch}
-                    onChange={field.onChange}
-                    allowClear
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="postIds"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>岗位</FormLabel>
-                <FormControl>
-                  <SearchableMultiSelect
-                    placeholder="可选"
-                    value={field.value}
-                    options={postOptions}
-                    loading={postLoading}
-                    disabled={submitting}
-                    onSearch={onPostSearch}
-                    onChange={field.onChange}
-                    allowClear
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="sex"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>用户性别</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={(value: '0' | '1' | '2') => field.onChange(value)}
-                  disabled={submitting}
-                >
+      <form
+        className={cn('flex h-full min-h-0 flex-col', className)}
+        onSubmit={onSubmit}
+        id={formId}
+      >
+        <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 sm:pr-0">
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="userName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center">
+                    <RequiredMark /> 登录账号
+                  </FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择性别" />
-                    </SelectTrigger>
+                    <Input placeholder="请输入登录账号" autoComplete="username" {...field} />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="0">男</SelectItem>
-                    <SelectItem value="1">女</SelectItem>
-                    <SelectItem value="2">未知</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center">
-                  <RequiredMark /> 账号状态
-                </FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    className="flex flex-wrap gap-4"
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="nickName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center">
+                    <RequiredMark /> 用户昵称
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="请输入用户昵称" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phonenumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>手机号</FormLabel>
+                  <FormControl>
+                    <Input placeholder="可选" inputMode="numeric" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>邮箱</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="可选" autoComplete="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="deptId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>归属部门</FormLabel>
+                  <FormControl>
+                    <SearchableCombobox
+                      placeholder="请选择归属部门"
+                      value={field.value}
+                      options={deptOptions}
+                      loading={deptLoading}
+                      disabled={submitting}
+                      onSearch={onDeptSearch}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="roleIds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center">
+                    <RequiredMark /> 角色
+                  </FormLabel>
+                  <FormControl>
+                    <SearchableMultiSelect
+                      placeholder="请选择角色"
+                      value={field.value}
+                      options={roleOptions}
+                      loading={roleLoading}
+                      disabled={submitting}
+                      onSearch={onRoleSearch}
+                      onChange={field.onChange}
+                      allowClear
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="postIds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>岗位</FormLabel>
+                  <FormControl>
+                    <SearchableMultiSelect
+                      placeholder="可选"
+                      value={field.value}
+                      options={postOptions}
+                      loading={postLoading}
+                      disabled={submitting}
+                      onSearch={onPostSearch}
+                      onChange={field.onChange}
+                      allowClear
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="sex"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>用户性别</FormLabel>
+                  <Select
                     value={field.value}
-                    onValueChange={field.onChange}
+                    onValueChange={(value: '0' | '1' | '2') => field.onChange(value)}
                     disabled={submitting}
                   >
-                    <FormItem className="flex items-center gap-2 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="0" />
-                      </FormControl>
-                      <FormLabel className="font-normal">正常</FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center gap-2 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="1" />
-                      </FormControl>
-                      <FormLabel className="font-normal">停用</FormLabel>
-                    </FormItem>
-                  </RadioGroup>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择性别" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="0">男</SelectItem>
+                      <SelectItem value="1">女</SelectItem>
+                      <SelectItem value="2">未知</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center">
+                    <RequiredMark /> 账号状态
+                  </FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      className="flex flex-wrap gap-4"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={submitting}
+                    >
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="0" />
+                        </FormControl>
+                        <FormLabel className="font-normal">正常</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="1" />
+                        </FormControl>
+                        <FormLabel className="font-normal">停用</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {passwordField}
+          </div>
+
+          <FormField
+            control={form.control}
+            name="remark"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>备注</FormLabel>
+                <FormControl>
+                  <Textarea className="min-h-[96px] resize-none" placeholder="可选" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          {passwordField}
         </div>
 
-        <FormField
-          control={form.control}
-          name="remark"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>备注</FormLabel>
-              <FormControl>
-                <Textarea className="min-h-[96px] resize-none" placeholder="可选" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <ResponsiveDialog.Footer
-          className={cn(
-            'flex flex-col gap-2 sm:flex-row sm:justify-end',
-            isMobile &&
-              'sticky bottom-0 left-0 right-0 w-full rounded-none border-t border-border/60 bg-card/95 px-4 py-3 backdrop-blur sm:static sm:border-none sm:bg-transparent sm:px-0 sm:py-0',
-          )}
-        >
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={submitting}
-            className={cancelButtonClasses}
-          >
-            取消
-          </Button>
-          <Button type="submit" disabled={submitting} className={submitButtonClasses}>
-            {submitText}
-          </Button>
-        </ResponsiveDialog.Footer>
+       
       </form>
     </Form>
   );
