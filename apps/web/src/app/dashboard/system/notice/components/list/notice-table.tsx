@@ -35,6 +35,11 @@ import { format, isValid, parse, parseISO } from 'date-fns';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import type { Notice } from '../../type';
 
 interface NoticeTableProps {
@@ -297,8 +302,7 @@ export function NoticeTable({
             </div>
           ),
           meta: {
-            headerClassName: 'w-[120px] text-right',
-            cellClassName: 'text-right',
+            ...PINNED_ACTION_COLUMN_META,
           },
         }),
       );
@@ -329,7 +333,7 @@ export function NoticeTable({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border/60 bg-card dark:border-border/40">
-      <Table>
+      <Table className={PINNED_TABLE_CLASS}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-muted/40">
@@ -355,14 +359,7 @@ export function NoticeTable({
         </TableHeader>
         <TableBody>
           {loading ? (
-            <TableRow>
-              <TableCell
-                colSpan={visibleColumnCount}
-                className="h-24 text-center text-sm text-muted-foreground"
-              >
-                正在加载公告...
-              </TableCell>
-            </TableRow>
+            <TableLoadingSkeleton columns={visibleColumnCount} />
           ) : isError ? (
             <TableRow>
               <TableCell
@@ -389,7 +386,7 @@ export function NoticeTable({
             rows.map((row) => (
               <TableRow
                 key={row.id}
-                className="transition-colors hover:bg-muted/60"
+                className="group transition-colors hover:bg-muted/60"
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell

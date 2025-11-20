@@ -8,12 +8,18 @@ import {
   useReactTable,
   type RowSelectionState,
 } from '@tanstack/react-table';
-import { Eye, LogOut } from 'lucide-react';
+import { Eye, LogOut, MoreHorizontal } from 'lucide-react';
 
-import { InlineLoading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
@@ -30,12 +36,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 
-import type { OnlineUser } from '../type';
+import type { OnlineUser } from '../../type';
 import {
   getOnlineUserRowId,
   resolveStatusBadgeVariant,
-} from '../utils';
+} from '../../utils';
 
 interface OnlineUserTableProps {
   rows: OnlineUser[];
@@ -90,7 +101,7 @@ export function OnlineUserTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[180px]',
+          headerClassName: 'min-w-[140px] md:min-w-[180px]',
         },
       }),
       columnHelper.display({
@@ -108,7 +119,7 @@ export function OnlineUserTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[180px]',
+          headerClassName: 'min-w-[140px] md:min-w-[180px]',
         },
       }),
       columnHelper.display({
@@ -124,7 +135,7 @@ export function OnlineUserTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[160px]',
+          headerClassName: 'min-w-[130px] md:min-w-[160px]',
         },
       }),
       columnHelper.display({
@@ -139,7 +150,7 @@ export function OnlineUserTable({
           );
         },
         meta: {
-          headerClassName: 'w-[100px]',
+          headerClassName: 'w-[90px]',
           cellClassName: 'align-middle',
         },
       }),
@@ -162,7 +173,7 @@ export function OnlineUserTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[180px]',
+          headerClassName: 'min-w-[150px] md:min-w-[180px]',
         },
       }),
     ];
@@ -180,54 +191,59 @@ export function OnlineUserTable({
               isForceMutating &&
               pendingForceRowId === rowId;
 
-            return (
-              <div className="flex justify-end gap-2">
-                {canViewDetail ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2 text-sm font-medium"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onViewDetail(user);
-                    }}
-                  >
-                    <Eye className="mr-1.5 size-3.5" />
-                    查看
-                  </Button>
-                ) : null}
-                {canForceLogout ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2 text-sm font-medium"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onForceLogout(user);
-                    }}
-                    disabled={isPending}
-                  >
-                    {isPending ? (
-                      <>
-                        <Spinner className="mr-1.5 size-4" />
-                        处理中
-                      </>
-                    ) : (
-                      <>
-                        <LogOut className="mr-1.5 size-3.5" />
-                        强退
-                      </>
-                    )}
-                  </Button>
-                ) : null}
+              return (
+              <div className="flex justify-end">
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 hover:text-primary"
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onClick={(event) => event.stopPropagation()}
+                      aria-label="更多操作"
+                    >
+                      <MoreHorizontal className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    {canViewDetail ? (
+                      <DropdownMenuItem
+                        onSelect={() => onViewDetail(user)}
+                      >
+                        <Eye className="mr-2 size-4" />
+                        查看详情
+                      </DropdownMenuItem>
+                    ) : null}
+                    {canViewDetail && canForceLogout ? (
+                      <DropdownMenuSeparator />
+                    ) : null}
+                    {canForceLogout ? (
+                      <DropdownMenuItem
+                        disabled={isPending}
+                        onSelect={() => onForceLogout(user)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        {isPending ? (
+                          <>
+                            <Spinner className="mr-2 size-4" />
+                            处理中
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="mr-2 size-4" />
+                            强退
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                    ) : null}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             );
           },
           enableSorting: false,
-          meta: {
-            headerClassName: 'w-[120px] text-right',
-            cellClassName: 'text-right',
-          },
+          meta: { ...PINNED_ACTION_COLUMN_META },
         }),
       );
     }
@@ -303,99 +319,90 @@ export function OnlineUserTable({
 
   return (
     <div className="rounded-xl border border-border/60">
-      <div className="w-full overflow-x-auto">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className={cn(
-                      header.column.columnDef.meta?.headerClassName as
-                        | string
-                        | undefined,
-                    )}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={visibleColumnCount}
-                  className="h-32 text-center align-middle"
+      <Table className={`${PINNED_TABLE_CLASS} [&_td]:align-top`}>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  className={cn(
+                    header.column.columnDef.meta?.headerClassName as
+                      | string
+                      | undefined,
+                  )}
                 >
-                  <InlineLoading label="正在加载在线用户..." />
-                </TableCell>
-              </TableRow>
-            ) : isError ? (
-              <TableRow>
-                <TableCell
-                  colSpan={visibleColumnCount}
-                  className="h-24 text-center text-sm text-destructive"
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableLoadingSkeleton columns={visibleColumnCount} />
+          ) : isError ? (
+            <TableRow>
+              <TableCell
+                colSpan={visibleColumnCount}
+                className="h-24 text-center text-sm text-destructive"
+              >
+                加载失败，请稍后重试。
+              </TableCell>
+            </TableRow>
+          ) : table.getRowModel().rows.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={visibleColumnCount}
+                className="h-48 text-center align-middle"
+              >
+                <Empty className="border-0 bg-transparent p-4">
+                  <EmptyHeader>
+                    <EmptyTitle>暂无在线用户</EmptyTitle>
+                    <EmptyDescription>
+                      当前无活跃会话，稍后或刷新系统查看最新在线情况。
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              </TableCell>
+            </TableRow>
+          ) : (
+            table.getRowModel().rows.map((row) => {
+              const isSelected = row.getIsSelected();
+              return (
+                <TableRow
+                  key={row.id}
+                  className={cn(
+                    'group transition-colors hover:bg-muted/60',
+                    isSelected && 'bg-emerald-50/70 dark:bg-emerald-500/20',
+                  )}
                 >
-                  加载失败，请稍后重试。
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={visibleColumnCount}
-                  className="h-48 text-center align-middle"
-                >
-                  <Empty className="border-0 bg-transparent p-4">
-                    <EmptyHeader>
-                      <EmptyTitle>暂无在线用户</EmptyTitle>
-                      <EmptyDescription>
-                        当前无活跃会话，稍后或刷新系统查看最新在线情况。
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                </TableCell>
-              </TableRow>
-            ) : (
-              table.getRowModel().rows.map((row) => {
-                const isSelected = row.getIsSelected();
-                return (
-                  <TableRow
-                    key={row.id}
-                    className={cn(
-                      'transition-colors hover:bg-muted/60',
-                      isSelected && 'bg-emerald-50/70 dark:bg-emerald-500/20',
-                    )}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className={cn(
-                          cell.column.columnDef.meta?.cellClassName as
-                            | string
-                            | undefined,
-                        )}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        cell.column.columnDef.meta?.cellClassName as
+                          | string
+                          | undefined,
+                      )}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }

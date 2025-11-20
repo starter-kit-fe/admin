@@ -3,17 +3,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { DeleteConfirmDialog } from '../../../system/user/components/delete-confirm-dialog';
-import { forceLogoutOnlineUser } from '../api';
-import { ONLINE_USERS_QUERY_KEY } from '../constants';
+import { DeleteConfirmDialog } from '../../../../system/user/components/delete-confirm-dialog';
+import { forceLogoutOnlineUser } from '../../api';
+import { ONLINE_USERS_QUERY_KEY } from '../../constants';
 import {
   useOnlineUserManagementMutationCounter,
   useOnlineUserManagementStore,
-} from '../store';
+} from '../../store';
 import {
   getOnlineUserRowId,
   resolveOnlineUserIdentifier,
-} from '../utils';
+} from '../../utils';
 
 export function OnlineUserForceLogoutDialog() {
   const {

@@ -1,6 +1,5 @@
 'use client';
 
-import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -22,6 +21,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import {
   createColumnHelper,
   flexRender,
@@ -244,14 +244,10 @@ export function CacheKeyTable({
       </TableHeader>
       <TableBody>
         {isLoading ? (
-          <TableRow>
-            <TableCell
-              colSpan={visibleColumnCount}
-              className="h-32 text-center align-middle"
-            >
-              <InlineLoading label="正在加载缓存键..." />
-            </TableCell>
-          </TableRow>
+          <TableLoadingSkeleton
+            columns={visibleColumnCount}
+            className="bg-muted/20"
+          />
         ) : isError ? (
           <TableRow>
             <TableCell

@@ -1,8 +1,13 @@
 'use client';
 
-import { InlineLoading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
@@ -24,12 +29,17 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Trash2 } from 'lucide-react';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import type { LoginLog } from '../../type';
 import { getLoginStatusBadgeVariant, getLoginStatusLabel } from '../../utils';
 import { usePermissions } from '@/hooks/use-permissions';
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 
 interface LoginLogTableProps {
   rows: LoginLog[];
@@ -135,21 +145,38 @@ export function LoginLogTable({
                 const log = row.original;
                 return (
                   <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(log)}
-                    >
-                      <Trash2 className="size-4" />
-                      <span className="sr-only">删除</span>
-                    </Button>
+                    <DropdownMenu modal={false}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-8"
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onClick={(event) => event.stopPropagation()}
+                          aria-label="更多操作"
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-28">
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            onDelete(log);
+                          }}
+                        >
+                          <Trash2 className="mr-2 size-4" />
+                          删除
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 );
               },
               meta: {
-                headerClassName: 'w-[120px]',
-                cellClassName: 'text-right',
+                ...PINNED_ACTION_COLUMN_META,
               },
             }),
           ]
@@ -170,7 +197,7 @@ export function LoginLogTable({
   return (
     <div className="rounded-xl border border-border/60 bg-card">
       <div className="w-full overflow-x-auto">
-        <Table>
+        <Table className={PINNED_TABLE_CLASS}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="bg-muted/40">
@@ -196,14 +223,7 @@ export function LoginLogTable({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={visibleColumnCount}
-                  className="h-32 text-center align-middle"
-                >
-                  <InlineLoading label="正在加载登录日志..." />
-                </TableCell>
-              </TableRow>
+              <TableLoadingSkeleton columns={visibleColumnCount} />
             ) : isError ? (
               <TableRow>
                 <TableCell
@@ -233,7 +253,7 @@ export function LoginLogTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="transition-colors hover:bg-muted/60"
+                  className="group transition-colors hover:bg-muted/60"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell

@@ -10,7 +10,6 @@ import {
 import { Clipboard, TimerReset } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -27,6 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 
 import type { CacheKeyItem } from '../api/types';
 import { formatBytes, formatDuration } from '../utils';
@@ -168,14 +168,7 @@ export function CacheKeyTable({
       </TableHeader>
       <TableBody>
         {isLoading ? (
-          <TableRow>
-            <TableCell
-              colSpan={visibleColumnCount}
-              className="h-32 text-center align-middle"
-            >
-              <InlineLoading label="正在加载缓存键..." />
-            </TableCell>
-          </TableRow>
+          <TableLoadingSkeleton columns={visibleColumnCount} />
         ) : isError ? (
           <TableRow>
             <TableCell

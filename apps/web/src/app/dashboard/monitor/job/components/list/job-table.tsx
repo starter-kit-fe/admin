@@ -1,6 +1,10 @@
 'use client';
 
-import { InlineLoading } from '@/components/loading';
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -32,8 +37,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Clock, Edit2, Eye, MoreHorizontal, Play, Trash2 } from 'lucide-react';
-import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 
 import { STATUS_BADGE_VARIANT } from '../../constants';
 import type { Job } from '../../type';
@@ -42,7 +47,6 @@ import {
   resolveMisfireLabel,
   resolveStatusLabel,
 } from '../../utils';
-import { usePermissions } from '@/hooks/use-permissions';
 
 interface JobTableProps {
   rows: Job[];
@@ -102,28 +106,8 @@ export function JobTable({
           );
         },
         meta: {
-          headerClassName: 'w-[200px]',
-          cellClassName: 'whitespace-nowrap pr-4',
-        },
-      }),
-      columnHelper.accessor('invokeTarget', {
-        header: () => '调用目标',
-        cell: ({ getValue }) => {
-          const target = getValue();
-          if (!target) {
-            return <span className="text-xs text-muted-foreground">-</span>;
-          }
-          return (
-            <div className="max-w-[300px] overflow-x-auto scrollbar-thin">
-              <span className="inline-block whitespace-nowrap text-xs font-mono text-foreground">
-                {target}
-              </span>
-            </div>
-          );
-        },
-        meta: {
-          headerClassName: 'w-[300px]',
-          cellClassName: 'pr-4',
+          headerClassName: 'min-w-[100px]',
+          cellClassName: 'min-w-[100px] whitespace-nowrap pr-4',
         },
       }),
       columnHelper.accessor('cronExpression', {
@@ -142,17 +126,17 @@ export function JobTable({
           );
         },
         meta: {
-          headerClassName: 'w-[220px]',
-          cellClassName: 'whitespace-nowrap pr-4',
+          headerClassName: 'min-w-[180px]',
+          cellClassName: 'min-w-[180px] whitespace-nowrap pr-4',
         },
       }),
       columnHelper.accessor('concurrent', {
         header: () => '并发',
         cell: ({ getValue }) => (
-          <span>{resolveConcurrentLabel(getValue())}</span>
+          <span className='text-[12px]'>{resolveConcurrentLabel(getValue())}</span>
         ),
         meta: {
-          headerClassName: 'w-[80px]',
+          headerClassName: 'w-[120px]',
         },
       }),
       columnHelper.accessor('status', {
@@ -160,12 +144,14 @@ export function JobTable({
         cell: ({ getValue }) => {
           const status = getValue() ?? '1';
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col items-start justify-start">
               <Badge variant={STATUS_BADGE_VARIANT[status] ?? 'outline'}>
                 {resolveStatusLabel(status)}
               </Badge>
               {status === '0' ? (
-                <span className="text-[11px] text-muted-foreground">调度中</span>
+                <span className="text-[11px] text-muted-foreground">
+                  调度中
+                </span>
               ) : null}
             </div>
           );
@@ -187,8 +173,8 @@ export function JobTable({
           );
         },
         meta: {
-          headerClassName: 'w-[180px]',
-          cellClassName: 'whitespace-nowrap',
+          headerClassName: 'min-w-[100px]',
+          cellClassName: 'min-w-[100px] whitespace-normal break-words',
         },
       }),
       ...(showActions
@@ -202,30 +188,11 @@ export function JobTable({
               const isRunPending = pendingRunId === jobId;
               const isUpdatingStatus = pendingStatusId === jobId;
               const nextStatus = job.status === '0' ? '1' : '0';
-              const concurrencyLocked = job.isRunning && job.concurrent === '1';
+              const concurrencyLocked =
+                job.isRunning && job.concurrent === '1';
 
               return (
-                <div className="flex items-center justify-end gap-1">
-                  {canRunJob ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8"
-                      disabled={isRunPending || concurrencyLocked}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onRunJob(job);
-                      }}
-                      aria-label={`立即执行：${job.jobName}`}
-                    >
-                      {isRunPending ? (
-                        <Spinner className="size-4" />
-                      ) : (
-                        <Play className="size-4" />
-                      )}
-                    </Button>
-                  ) : null}
+                <div className="flex items-center justify-end">
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -328,10 +295,7 @@ export function JobTable({
               );
             },
             meta: {
-              headerClassName:
-                'sticky right-0 z-20 w-[120px] bg-card/95 backdrop-blur-md text-right border-l border-border/60 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)]',
-              cellClassName:
-                'sticky right-0 z-10 w-[120px] bg-card/80 backdrop-blur-md text-right border-l border-border/60 group-hover:bg-muted/50 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+              ...PINNED_ACTION_COLUMN_META,
             },
           }),
         ]
@@ -367,7 +331,7 @@ export function JobTable({
   return (
     <div className="rounded-xl border border-border/60">
       <div className="w-full overflow-x-auto scrollbar-thin">
-        <Table className="w-full">
+        <Table className={`${PINNED_TABLE_CLASS} min-w-[800px]`}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="bg-muted/40">
@@ -393,14 +357,7 @@ export function JobTable({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={visibleColumnCount}
-                  className="h-32 text-center align-middle"
-                >
-                  <InlineLoading label="正在加载任务..." />
-                </TableCell>
-              </TableRow>
+              <TableLoadingSkeleton columns={visibleColumnCount} />
             ) : isError ? (
               <TableRow>
                 <TableCell
@@ -456,7 +413,6 @@ export function JobTable({
     </div>
   );
 }
-
 
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData, TValue> {

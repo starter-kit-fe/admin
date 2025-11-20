@@ -3,23 +3,23 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Trash2, X } from 'lucide-react';
 
-type FilterChip = {
-  key: string;
+export type OnlineFilterChip = {
+  key: 'userName' | 'ipaddr';
   label: string;
   value: string;
 };
 
-interface AppliedFiltersProps {
-  items: FilterChip[];
-  onRemove: (key: string) => void;
+interface OnlineAppliedFiltersProps {
+  items: OnlineFilterChip[];
+  onRemove: (key: OnlineFilterChip['key']) => void;
   onClear: () => void;
 }
 
-export function AppliedFilters({
+export function OnlineAppliedFilters({
   items,
   onRemove,
   onClear,
-}: AppliedFiltersProps) {
+}: OnlineAppliedFiltersProps) {
   if (items.length === 0) {
     return null;
   }
@@ -30,7 +30,7 @@ export function AppliedFilters({
         <Badge
           key={item.key}
           variant="secondary"
-          className="flex items-center gap-2 rounded-full px-3 py-1 text-sm  dark:bg-secondary/30 dark:text-secondary-foreground"
+          className="flex items-center gap-2 rounded-full px-3 py-1 text-sm dark:bg-secondary/30 dark:text-secondary-foreground"
         >
           <span className="font-medium text-muted-foreground">
             {item.label}：

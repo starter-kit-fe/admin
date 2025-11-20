@@ -8,14 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 
-import { getOnlineUserDetail } from '../api';
-import { ONLINE_USERS_QUERY_KEY } from '../constants';
-import { useOnlinePermissionFlags } from '../hooks';
-import { useOnlineUserManagementStore } from '../store';
+import { getOnlineUserDetail } from '../../api';
+import { ONLINE_USERS_QUERY_KEY } from '../../constants';
+import { useOnlinePermissionFlags } from '../../hooks';
+import { useOnlineUserManagementStore } from '../../store';
 import {
   resolveOnlineUserIdentifier,
   resolveStatusBadgeVariant,
-} from '../utils';
+} from '../../utils';
 
 export function OnlineUserDetailDialog() {
   const { detailDialog, closeDetailDialog } =

@@ -35,6 +35,11 @@ import {
 import { KeyRound, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import type { User } from '../type';
 import {
   STATUS_META,
@@ -75,29 +80,8 @@ function RowActions({
   onDelete,
   disableDelete,
 }: RowActionsProps) {
-  const handleSelect = (callback?: (user: User) => void) => () => {
-    if (callback) {
-      callback(user);
-    }
-  };
-
-  const handleDeleteSelect = () => {
-    if (!disableDelete) {
-      onDelete(user);
-    }
-  };
-
   return (
     <div className="flex justify-end">
-      <Button
-        variant="ghost"
-        size="sm"
-        className=" gap-0.5 px-2.5 hover:text-primary cursor-pointer"
-        onClick={() => onEdit(user)}
-      >
-        <Pencil className="mr-1.5 size-3" />
-        修改
-      </Button>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
@@ -113,8 +97,20 @@ function RowActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              onEdit(user);
+            }}
+          >
+            <Pencil className="mr-2 size-4" />
+            修改
+          </DropdownMenuItem>
+          <DropdownMenuItem
             disabled={!onResetPassword}
-            onSelect={handleSelect(onResetPassword)}
+            onSelect={(event) => {
+              event.preventDefault();
+              onResetPassword?.(user);
+            }}
           >
             <KeyRound className="mr-2 size-4" />
             重置密码
@@ -122,7 +118,12 @@ function RowActions({
           <DropdownMenuSeparator />
           <DropdownMenuItem
             disabled={disableDelete}
-            onSelect={handleDeleteSelect}
+            onSelect={(event) => {
+              event.preventDefault();
+              if (!disableDelete) {
+                onDelete(user);
+              }
+            }}
             className="text-destructive focus:text-destructive"
           >
             <Trash2 className="mr-2 size-4" />
@@ -207,7 +208,7 @@ export function UserTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[220px]',
+          headerClassName: 'min-w-[160px] md:min-w-[220px]',
         },
       }),
       columnHelper.display({
@@ -223,7 +224,7 @@ export function UserTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[160px]',
+          headerClassName: 'min-w-[140px] md:min-w-[160px]',
         },
       }),
       columnHelper.display({
@@ -238,7 +239,7 @@ export function UserTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[160px]',
+          headerClassName: 'min-w-[120px] md:min-w-[160px]',
         },
       }),
       columnHelper.display({
@@ -253,7 +254,7 @@ export function UserTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[180px]',
+          headerClassName: 'min-w-[140px] md:min-w-[180px]',
         },
       }),
       columnHelper.display({
@@ -268,7 +269,7 @@ export function UserTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[160px]',
+          headerClassName: 'min-w-[140px] md:min-w-[160px]',
         },
       }),
       columnHelper.display({
@@ -294,7 +295,7 @@ export function UserTable({
         },
         enableSorting: false,
         meta: {
-          headerClassName: 'w-[120px]',
+          headerClassName: 'w-[90px]',
         },
       }),
       columnHelper.display({
@@ -314,10 +315,7 @@ export function UserTable({
           );
         },
         enableSorting: false,
-        meta: {
-          headerClassName: 'w-[120px] text-right',
-          cellClassName: 'text-right',
-        },
+        meta: { ...PINNED_ACTION_COLUMN_META },
       }),
     ],
     [
@@ -342,7 +340,7 @@ export function UserTable({
 
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <Table className={PINNED_TABLE_CLASS}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-muted/40">
@@ -368,14 +366,7 @@ export function UserTable({
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            <TableRow>
-              <TableCell
-                colSpan={visibleColumnCount}
-                className="h-24 text-center text-sm text-muted-foreground"
-              >
-                正在加载用户...
-              </TableCell>
-            </TableRow>
+            <TableLoadingSkeleton columns={visibleColumnCount} />
           ) : isError ? (
             <TableRow>
               <TableCell
@@ -407,7 +398,7 @@ export function UserTable({
                 <TableRow
                   key={row.id}
                   className={cn(
-                    'transition-colors hover:bg-muted/60',
+                    'group transition-colors hover:bg-muted/60',
                     isSelected && 'bg-emerald-50/70 dark:bg-emerald-500/20',
                   )}
                 >

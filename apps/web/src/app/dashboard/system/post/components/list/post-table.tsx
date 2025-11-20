@@ -32,6 +32,11 @@ import {
 } from '@tanstack/react-table';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import { usePermissions } from '@/hooks/use-permissions';
 
 import type { Post } from '../../type';
@@ -175,14 +180,14 @@ export function PostTable({
       cell: ({ getValue }) => (
         <span className="text-sm text-muted-foreground">{getValue()}</span>
       ),
-      meta: { headerClassName: 'min-w-[160px]' },
+      meta: { headerClassName: 'min-w-[140px] md:min-w-[160px]' },
     }),
     columnHelper.accessor('postCode', {
       header: '岗位编码',
       cell: ({ getValue }) => (
         <span className="text-sm text-muted-foreground">{getValue()}</span>
       ),
-      meta: { headerClassName: 'min-w-[140px]' },
+      meta: { headerClassName: 'min-w-[120px] md:min-w-[140px]' },
     }),
 
     columnHelper.accessor('postSort', {
@@ -190,7 +195,7 @@ export function PostTable({
       cell: ({ getValue }) => (
         <span className="text-sm text-muted-foreground">{getValue()}</span>
       ),
-      meta: { headerClassName: 'w-[100px]', cellClassName: 'w-[100px]' },
+      meta: { headerClassName: 'w-[80px]', cellClassName: 'w-[80px]' },
     }),
     columnHelper.accessor('status', {
       header: '状态',
@@ -220,10 +225,7 @@ export function PostTable({
               />
             ),
             enableSorting: false,
-            meta: {
-              headerClassName: 'w-[140px] text-right',
-              cellClassName: 'text-right',
-            },
+            meta: { ...PINNED_ACTION_COLUMN_META },
           }),
         ]
       : []),
@@ -240,7 +242,7 @@ export function PostTable({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border/60 bg-card  dark:border-border/40">
-      <Table>
+      <Table className={PINNED_TABLE_CLASS}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-muted/40">
@@ -266,14 +268,7 @@ export function PostTable({
         </TableHeader>
         <TableBody>
           {loading ? (
-            <TableRow>
-              <TableCell
-                colSpan={visibleColumnCount}
-                className="h-24 text-center text-sm text-muted-foreground"
-              >
-                正在加载岗位...
-              </TableCell>
-            </TableRow>
+            <TableLoadingSkeleton columns={visibleColumnCount} />
           ) : isError ? (
             <TableRow>
               <TableCell
@@ -303,7 +298,7 @@ export function PostTable({
             rowsModel.map((row) => (
               <TableRow
                 key={row.id}
-                className="transition-colors hover:bg-muted/60"
+                className="group transition-colors hover:bg-muted/60"
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell

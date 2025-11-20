@@ -34,6 +34,11 @@ import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { usePermissions } from '@/hooks/use-permissions';
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 
 import type { Role } from '../../type';
 
@@ -197,14 +202,14 @@ export function RoleTable({
             </span>
           </div>
         ),
-        meta: { headerClassName: 'min-w-[200px]' },
+        meta: { headerClassName: 'min-w-[140px] md:min-w-[200px]' },
       }),
       columnHelper.accessor('roleKey', {
         header: '权限字符',
         cell: ({ getValue }) => (
           <span className="text-sm text-muted-foreground">{getValue()}</span>
         ),
-        meta: { headerClassName: 'min-w-[180px]' },
+        meta: { headerClassName: 'min-w-[140px] md:min-w-[180px]' },
       }),
       columnHelper.accessor('status', {
         header: '状态',
@@ -232,7 +237,7 @@ export function RoleTable({
             {getDateTimeLabel(getValue())}
           </span>
         ),
-        meta: { headerClassName: 'min-w-[180px]' },
+        meta: { headerClassName: 'min-w-[140px] md:min-w-[180px]' },
       }),
     ];
 
@@ -251,10 +256,7 @@ export function RoleTable({
             />
           ),
           enableSorting: false,
-          meta: {
-            headerClassName: 'w-[140px] text-right',
-            cellClassName: 'text-right',
-          },
+          meta: { ...PINNED_ACTION_COLUMN_META },
         }),
       );
     }
@@ -283,7 +285,7 @@ export function RoleTable({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border/60 bg-card  dark:border-border/40">
-      <Table>
+      <Table className={PINNED_TABLE_CLASS}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-muted/40">
@@ -309,14 +311,7 @@ export function RoleTable({
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            <TableRow>
-              <TableCell
-                colSpan={visibleColumnCount}
-                className="h-24 text-center text-sm text-muted-foreground"
-              >
-                正在加载角色...
-              </TableCell>
-            </TableRow>
+            <TableLoadingSkeleton columns={visibleColumnCount} />
           ) : isError ? (
             <TableRow>
               <TableCell
@@ -348,7 +343,7 @@ export function RoleTable({
                 <TableRow
                   key={row.id}
                   className={cn(
-                    'transition-colors hover:bg-muted/60',
+                    'group transition-colors hover:bg-muted/60',
                     isSelected && 'bg-emerald-50/70 dark:bg-emerald-500/20',
                   )}
                 >

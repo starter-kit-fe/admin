@@ -1,18 +1,5 @@
 'use client';
 
-import type { LucideIcon } from 'lucide-react';
-import {
-  Activity,
-  AlertTriangle,
-  Database,
-  Gauge,
-  HardDrive,
-  Layers,
-  RefreshCcw,
-  Server,
-  Users,
-} from 'lucide-react';
-
 import { NumberTicker } from '@/components/number-ticker';
 import { PermissionButton } from '@/components/permission-button';
 import {
@@ -30,6 +17,18 @@ import {
 } from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
+import type { LucideIcon } from 'lucide-react';
+import {
+  Activity,
+  AlertTriangle,
+  Database,
+  Gauge,
+  HardDrive,
+  Layers,
+  RefreshCcw,
+  Server,
+  Users,
+} from 'lucide-react';
 
 import type { CacheKeyspaceInfo } from '../api/types';
 import { useCacheOverviewStream } from '../hooks/use-cache-overview-stream';
@@ -59,9 +58,7 @@ function renderKeyspaceRow(space: CacheKeyspaceInfo) {
       <td className="py-2 font-medium text-foreground">
         {space.db.toUpperCase()}
       </td>
-      <td className="py-2 text-muted-foreground">
-        {formatNumber(space.keys)}
-      </td>
+      <td className="py-2 text-muted-foreground">{formatNumber(space.keys)}</td>
       <td className="py-2 text-muted-foreground">
         {formatNumber(space.expires)}
       </td>
@@ -96,25 +93,29 @@ function MetaPill({
 }
 
 function getMemoryTone(percent: number) {
+  const baseTheme = {
+    backdrop:
+      'bg-gradient-to-br from-transparent via-primary/12 to-transparent',
+    fill: 'bg-primary/10 from-transparent via-primary/35 to-transparent',
+    badge: 'bg-primary/15 text-primary',
+  };
+
   if (percent >= 85) {
     return {
-      backdrop: 'bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-transparent',
-      fill: 'from-rose-500/40 via-rose-500/20 to-transparent',
-      badge: 'bg-rose-500/15 text-rose-600 dark:text-rose-200',
+      ...baseTheme,
+      fill: 'bg-primary/20 from-transparent via-primary/45 to-transparent',
+      badge: 'bg-primary/20 text-primary',
     };
   }
+
   if (percent >= 65) {
     return {
-      backdrop: 'bg-gradient-to-br from-amber-400/15 via-amber-400/5 to-transparent',
-      fill: 'from-amber-400/35 via-amber-400/15 to-transparent',
-      badge: 'bg-amber-400/20 text-amber-700 dark:text-amber-100',
+      ...baseTheme,
+      fill: 'bg-primary/15 from-transparent via-primary/40 to-transparent',
     };
   }
-  return {
-    backdrop: 'bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent',
-    fill: 'from-emerald-500/30 via-emerald-500/15 to-transparent',
-    badge: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300',
-  };
+
+  return baseTheme;
 }
 
 const safeNumber = (value?: number | null) =>
@@ -135,7 +136,7 @@ export function CacheDashboard() {
   const memoryLimitLabel =
     maxMemory > 0
       ? formatBytes(maxMemory, { decimals: 1 })
-      : overview.memory.maxMemoryHuman ?? '未配置上限';
+      : (overview.memory.maxMemoryHuman ?? '未配置上限');
   const memoryPeakLabel =
     overview.memory.usedMemoryPeakHuman ??
     formatBytes(peakMemory, {
@@ -163,8 +164,7 @@ export function CacheDashboard() {
       icon: Activity,
       label: '每秒命令',
       value: opsPerSec,
-      formatValue: (val: number) =>
-        formatNumber(Math.max(0, Math.round(val))),
+      formatValue: (val: number) => formatNumber(Math.max(0, Math.round(val))),
     },
   ];
 
@@ -179,16 +179,15 @@ export function CacheDashboard() {
     ? 'bg-primary/15 text-primary'
     : 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-100';
   const connectionLabel = stream.isConnected ? '实时更新' : '等待连接';
-  const isConnecting = stream.isLoading || (!stream.isConnected && !stream.error);
+  const isConnecting =
+    stream.isLoading || (!stream.isConnected && !stream.error);
 
   return (
     <div className="mx-auto flex w-full flex-col gap-6">
       <Card className="shadow-none border-none">
         <CardHeader className="space-y-4 lg:flex lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-semibold">
-              缓存监控
-            </CardTitle>
+            <CardTitle className="text-2xl font-semibold">缓存监控</CardTitle>
             <CardDescription>
               使用 SSE 实时捕获 Redis 运行状态与键分布，无需轮询。
             </CardDescription>
@@ -214,7 +213,9 @@ export function CacheDashboard() {
               <span
                 className={cn(
                   'inline-block size-2.5 rounded-full',
-                  stream.isConnected ? 'bg-primary animate-pulse' : 'bg-amber-500',
+                  stream.isConnected
+                    ? 'bg-primary animate-pulse'
+                    : 'bg-amber-500',
                 )}
               />
               {connectionLabel}
@@ -267,14 +268,6 @@ export function CacheDashboard() {
                   memoryTone.backdrop,
                 )}
               />
-              <div
-                aria-hidden
-                className={cn(
-                  'pointer-events-none absolute inset-y-1 left-1 rounded-xl bg-gradient-to-r transition-[width] duration-700 ease-out',
-                  memoryTone.fill,
-                )}
-                style={{ width: memoryFillWidth }}
-              />
               <div className="relative space-y-3">
                 <div className="flex items-center justify-between text-sm font-semibold text-foreground">
                   <span className="flex items-center gap-2">
@@ -290,7 +283,8 @@ export function CacheDashboard() {
                     <NumberTicker
                       value={memoryUsagePercent}
                       formatValue={(val) =>
-                        formatPercent(Math.max(0, Math.min(100, val)))}
+                        formatPercent(Math.max(0, Math.min(100, val)))
+                      }
                       snap={0.1}
                     />
                   </span>
@@ -303,7 +297,9 @@ export function CacheDashboard() {
                       formatValue={(val) => formatBytes(val, { decimals: 1 })}
                       className="text-lg font-semibold text-foreground"
                     />
-                    <div className="text-muted-foreground">峰值 {memoryPeakLabel}</div>
+                    <div className="text-muted-foreground">
+                      峰值 {memoryPeakLabel}
+                    </div>
                   </div>
                   <div className="text-right">
                     <div className="text-muted-foreground">限制</div>
@@ -335,7 +331,8 @@ export function CacheDashboard() {
                     <NumberTicker
                       value={connectedClients}
                       formatValue={(val) =>
-                        formatNumber(Math.max(0, Math.round(val)))}
+                        formatNumber(Math.max(0, Math.round(val)))
+                      }
                       className="text-foreground"
                     />
                   </div>
@@ -344,7 +341,8 @@ export function CacheDashboard() {
                     <NumberTicker
                       value={blockedClients}
                       formatValue={(val) =>
-                        formatNumber(Math.max(0, Math.round(val)))}
+                        formatNumber(Math.max(0, Math.round(val)))
+                      }
                       className="text-foreground"
                     />
                   </div>
@@ -361,7 +359,8 @@ export function CacheDashboard() {
                     <NumberTicker
                       value={hitCount}
                       formatValue={(val) =>
-                        formatNumber(Math.max(0, Math.round(val)))}
+                        formatNumber(Math.max(0, Math.round(val)))
+                      }
                       className="text-foreground"
                     />
                   </div>
@@ -370,7 +369,8 @@ export function CacheDashboard() {
                     <NumberTicker
                       value={missCount}
                       formatValue={(val) =>
-                        formatNumber(Math.max(0, Math.round(val)))}
+                        formatNumber(Math.max(0, Math.round(val)))
+                      }
                       className="text-foreground"
                     />
                   </div>
@@ -379,7 +379,8 @@ export function CacheDashboard() {
                     <NumberTicker
                       value={expiredKeys}
                       formatValue={(val) =>
-                        formatNumber(Math.max(0, Math.round(val)))}
+                        formatNumber(Math.max(0, Math.round(val)))
+                      }
                       className="text-foreground"
                     />
                   </div>
@@ -388,7 +389,8 @@ export function CacheDashboard() {
                     <NumberTicker
                       value={evictedKeys}
                       formatValue={(val) =>
-                        formatNumber(Math.max(0, Math.round(val)))}
+                        formatNumber(Math.max(0, Math.round(val)))
+                      }
                       className="text-foreground"
                     />
                   </div>
@@ -453,7 +455,7 @@ export function CacheDashboard() {
                     className={cn(
                       'text-sm font-medium',
                       overview.persistence.aofEnabled
-                        ? 'text-emerald-600 dark:text-emerald-400'
+                        ? 'text-primary'
                         : 'text-muted-foreground',
                     )}
                   >
@@ -468,9 +470,7 @@ export function CacheDashboard() {
 
       <Card className="shadow-none border-none px-2 py-3">
         <CardHeader className="">
-          <CardTitle className="text-lg font-semibold">
-            Keyspace 分布
-          </CardTitle>
+          <CardTitle className="text-lg font-semibold">Keyspace 分布</CardTitle>
           <CardDescription>各逻辑库的键数量与过期情况</CardDescription>
         </CardHeader>
         <CardContent>

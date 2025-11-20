@@ -39,6 +39,10 @@ import {
 import { Edit2, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
 import { usePermissions } from '@/hooks/use-permissions';
 
 import { CONFIG_TYPE_TABS } from '../../constants';
@@ -138,14 +142,14 @@ export function ConfigTable({
         cell: ({ getValue }) => (
           <span className="text-sm text-foreground">{getValue()}</span>
         ),
-        meta: { headerClassName: 'min-w-[200px]' },
+        meta: { headerClassName: 'min-w-[140px] md:min-w-[200px]' },
       }),
       columnHelper.accessor('configKey', {
         header: '参数键名',
         cell: ({ getValue }) => (
           <span className="text-sm text-muted-foreground">{getValue()}</span>
         ),
-        meta: { headerClassName: 'min-w-[160px]' },
+        meta: { headerClassName: 'min-w-[140px] md:min-w-[160px]' },
       }),
       columnHelper.accessor('configValue', {
         header: '参数键值',
@@ -154,13 +158,13 @@ export function ConfigTable({
             {getValue()}
           </code>
         ),
-        meta: { headerClassName: 'min-w-[220px]' },
+        meta: { headerClassName: 'min-w-[180px] md:min-w-[220px]' },
       }),
       columnHelper.accessor('configType', {
         header: '类型',
         cell: ({ getValue }) => renderTypeBadge(getValue()),
         enableSorting: false,
-        meta: { headerClassName: 'w-[120px]', cellClassName: 'w-[120px]' },
+        meta: { headerClassName: 'w-[90px]', cellClassName: 'w-[90px]' },
       }),
       columnHelper.accessor('remark', {
         header: '备注',
@@ -245,12 +249,7 @@ export function ConfigTable({
             );
           },
           enableSorting: false,
-          meta: {
-            headerClassName:
-              'sticky right-0 z-20 w-[140px] bg-card text-right',
-            cellClassName:
-              'sticky right-0 z-10 w-[140px] bg-card text-right group-hover:bg-muted/50',
-          },
+          meta: { ...PINNED_ACTION_COLUMN_META },
         }),
       );
     }
@@ -281,7 +280,7 @@ export function ConfigTable({
     <Card className="border py-0 shadow-none overflow-hidden">
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <Table className="min-w-[720px]">
+          <Table className={PINNED_TABLE_CLASS}>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="bg-muted/40">
