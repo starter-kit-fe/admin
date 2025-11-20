@@ -1,23 +1,16 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import {
   Activity,
-  AlertCircle,
   ArrowLeft,
-  Braces,
-  CalendarClock,
-  CheckCircle2,
   Clock3,
-  History,
-  Info,
   Loader2,
   PauseCircle,
   PlayCircle,
   RefreshCw,
-  XCircle,
   type LucideIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -31,7 +24,7 @@ import { usePermissions } from '@/hooks/use-permissions';
 
 import { getJobDetail, runJob } from '../../api';
 import { BASE_QUERY_KEY, STATUS_BADGE_VARIANT } from '../../constants';
-import type { Job, JobLog } from '../../type';
+import type { Job } from '../../type';
 import {
   resolveConcurrentLabel,
   resolveMisfireLabel,
@@ -43,6 +36,8 @@ import {
   formatDateTime,
   getNextExecutionTimes,
 } from '../../utils/cron';
+import { JobLogsViewer } from './job-logs-viewer';
+import { RealtimeLogViewer } from './realtime-log-viewer';
 
 type Tone = 'emerald' | 'amber' | 'sky' | 'rose' | 'slate';
 
@@ -113,39 +108,6 @@ const DEFAULT_JOB_STATUS_META: JobStatusMeta = {
   tone: 'slate',
 };
 
-interface LogStatusMeta {
-  label: string;
-  description: string;
-  icon: LucideIcon;
-  badgeVariant: 'secondary' | 'destructive' | 'outline';
-  tone: Tone;
-}
-
-const LOG_STATUS_META: Record<string, LogStatusMeta> = {
-  '0': {
-    label: '执行成功',
-    description: '任务执行完成且未返回错误。',
-    icon: CheckCircle2,
-    badgeVariant: 'secondary',
-    tone: 'emerald',
-  },
-  '1': {
-    label: '执行失败',
-    description: '任务执行失败，请查看异常信息。',
-    icon: XCircle,
-    badgeVariant: 'destructive',
-    tone: 'rose',
-  },
-};
-
-const DEFAULT_LOG_STATUS_META: LogStatusMeta = {
-  label: '等待调度',
-  description: '任务等待下一次调度或状态尚未更新。',
-  icon: AlertCircle,
-  badgeVariant: 'outline',
-  tone: 'sky',
-};
-
 interface JobDetailContentProps {
   jobId: number;
 }
@@ -155,6 +117,8 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
     pageNum: 1,
     pageSize: DEFAULT_LOG_PAGE_SIZE,
   });
+  const [activeLogId, setActiveLogId] = useState<number | null>(null);
+  const [activeLogName, setActiveLogName] = useState('');
   const { hasPermission } = usePermissions();
   const canRunJob = hasPermission('monitor:job:run');
 
@@ -182,8 +146,12 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
 
   const runJobMutation = useMutation({
     mutationFn: () => runJob(jobId),
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success('任务已提交执行');
+      if (data?.jobLogId) {
+        setActiveLogId(data.jobLogId);
+        setActiveLogName(detail?.job?.jobName ?? '任务执行');
+      }
       detailQuery.refetch();
     },
     onError: (error) => {
@@ -196,22 +164,6 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
   const formattedParams = useMemo(() => {
     return stringifyInvokeParams(detail?.invokeParamsText ?? job?.invokeParams);
   }, [detail?.invokeParamsText, job?.invokeParams]);
-
-  const summaryFields = useMemo(() => {
-    if (!job) {
-      return [];
-    }
-    return [
-      { label: '调用目标', value: job.invokeTarget || '—' },
-      { label: '调度策略', value: resolveMisfireLabel(job.misfirePolicy) },
-      { label: '并发策略', value: resolveConcurrentLabel(job.concurrent) },
-      { label: '备注', value: job.remark || '—' },
-      { label: '创建人', value: job.createBy || '—' },
-      { label: '创建时间', value: job.createTime || '—' },
-      { label: '更新人', value: job.updateBy || '—' },
-      { label: '更新时间', value: job.updateTime || '—' },
-    ];
-  }, [job]);
 
   const cronDescription = useMemo(() => {
     if (!job?.cronExpression) {
@@ -229,54 +181,23 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
     );
   }, [job?.cronExpression]);
 
-  const lastLog = logs?.items[0];
-  const lastLogMeta = lastLog ? resolveLogStatusMeta(lastLog.status) : null;
-  const totalRuns = logs?.total ?? 0;
+  const nextExecution = useMemo(() => {
+    return upcomingExecutions[0] ?? (job?.status === '1' ? '已暂停' : '等待调度');
+  }, [job?.status, upcomingExecutions]);
 
-  const overviewCards = useMemo<InfoCardConfig[]>(() => {
-    return [
-      {
-        label: '下一次执行',
-        value:
-          upcomingExecutions[0] ??
-          (job?.cronExpression ? '等待调度' : '未设置 Cron 表达式'),
-        description:
-          upcomingExecutions.length > 1
-            ? `后续：${upcomingExecutions.slice(1).join('，')}`
-            : job?.cronExpression
-            ? 'Cron 计划已就绪'
-            : '请配置 Cron 规则',
-        icon: CalendarClock,
-      },
-      {
-        label: 'Cron 描述',
-        value: cronDescription,
-        description: job?.cronExpression || '没有可用的 Cron 表达式',
-        icon: Activity,
-      },
-      {
-        label: '最近执行',
-        value: lastLog
-          ? `${lastLogMeta?.label ?? ''} · ${lastLog.createTime || '—'}`
-          : job?.status === '0'
-          ? '等待首次执行'
-          : '任务已暂停',
-        description:
-          lastLog?.jobMessage ||
-          (job?.status === '0'
-            ? '任务已排队，耐心等待计划触发即可'
-            : '恢复任务以重新开始调度'),
-        icon: History,
-      },
-      {
-        label: '执行日志',
-        value: `${totalRuns} 条`,
-        description:
-          totalRuns > 0 ? '可在下方时间线中查看详情' : '暂无执行记录',
-        icon: Loader2,
-      },
-    ];
-  }, [cronDescription, job?.cronExpression, job?.status, lastLog, lastLogMeta?.label, lastLog?.jobMessage, lastLog?.createTime, totalRuns, upcomingExecutions]);
+  useEffect(() => {
+    const runningLog = logs?.items.find((item) => item.status === '2');
+    if (runningLog) {
+      setActiveLogId(runningLog.jobLogId);
+      setActiveLogName(runningLog.jobName || job?.jobName || '任务执行');
+      return;
+    }
+
+    if (detail?.job?.currentLogId) {
+      setActiveLogId(detail.job.currentLogId);
+      setActiveLogName(detail.job.jobName);
+    }
+  }, [detail?.job?.currentLogId, detail?.job?.jobName, detail?.job?.isRunning, job?.jobName, logs?.items, runJobMutation.isPending]);
 
   const handleLogPageChange = (page: number) => {
     setLogPagination((prev) => ({ ...prev, pageNum: page }));
@@ -290,31 +211,57 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
     if (!job || runJobMutation.isPending) {
       return;
     }
+
+    if (job.isRunning && job.concurrent === '1') {
+      toast.info('任务正在执行且不允许并发，请稍后再试');
+      return;
+    }
+
     runJobMutation.mutate();
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/dashboard/monitor/job" className="flex items-center gap-2">
             <ArrowLeft className="size-4" />
             返回列表
           </Link>
         </Button>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
+          <span className="truncate">
+            {job?.jobName ? job.jobName : '任务详情'}
+          </span>
+          {job ? (
+            <>
+              <Badge variant={STATUS_BADGE_VARIANT[job.status] ?? 'outline'}>
+                {resolveStatusLabel(job.status)}
+              </Badge>
+              <span className="text-xs font-medium text-muted-foreground">
+                #{job.jobId} · {job.jobGroup || 'DEFAULT'}
+              </span>
+            </>
+          ) : null}
+        </div>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
           {job && canRunJob ? (
             <Button
               variant="default"
               size="sm"
               onClick={handleTriggerJob}
-              disabled={runJobMutation.isPending}
+              disabled={runJobMutation.isPending || (job.isRunning && job.concurrent === '1')}
               className="flex items-center gap-2"
             >
               {runJobMutation.isPending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
                   触发中...
+                </>
+              ) : job.isRunning && job.concurrent === '1' ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  执行中
                 </>
               ) : (
                 <>
@@ -343,7 +290,7 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border/60 bg-card p-6">
+      <div className="rounded-xl border border-border/60 bg-card">
         {isLoading ? (
           <div className="flex h-48 items-center justify-center">
             <InlineLoading label="正在加载任务详情..." />
@@ -353,89 +300,75 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
             加载失败，请稍后再试。
           </div>
         ) : job ? (
-          <div className="space-y-8">
-            <JobHero job={job} cronExpression={job.cronExpression} />
+          <div className="grid gap-4 p-4 lg:grid-cols-[320px_1fr]">
+            <JobSummaryPanel
+              job={job}
+              statusMeta={getJobStatusMeta(job.status)}
+              tone={getToneStyles(getJobStatusMeta(job.status).tone)}
+              nextExecution={nextExecution}
+              cronDescription={cronDescription}
+              upcomingExecutions={upcomingExecutions}
+              formattedParams={formattedParams}
+            />
 
-            <section>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {overviewCards.map((card) => (
-                  <InfoCard key={card.label} {...card} />
-                ))}
-              </div>
-            </section>
-
-            <section className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Info className="size-4 text-muted-foreground" />
-                <span>任务配置</span>
-              </div>
-              <div className="grid gap-4 text-sm md:grid-cols-2">
-                {summaryFields.map((field) => (
-                  <div
-                    key={field.label}
-                    className="space-y-1 rounded-lg border border-border/60 p-3"
-                  >
-                    <p className="text-xs text-muted-foreground">{field.label}</p>
-                    <div className="font-medium text-foreground">
-                      {field.value ?? '—'}
-                    </div>
+            <div className="space-y-3">
+              {activeLogId ? (
+                <div className="space-y-2 rounded-lg border border-border/70 bg-muted/30 p-3">
+                  <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">
+                    <Activity className="size-4 text-sky-600" />
+                    <span>实时执行 · {activeLogName || job.jobName}</span>
+                    <Badge variant="outline" className="animate-pulse">
+                      执行中
+                    </Badge>
                   </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Braces className="size-4 text-muted-foreground" />
-                <span>调用参数</span>
-              </div>
-              <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
-                {formattedParams ? (
-                  <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words text-xs font-mono text-foreground">
-                    {formattedParams}
-                  </pre>
-                ) : (
-                  <p className="text-sm text-muted-foreground">未配置参数</p>
-                )}
-              </div>
-            </section>
-
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Activity className="size-4 text-muted-foreground" />
-                  <span>执行时间线</span>
-                </div>
-                <p className="text-xs text-muted-foreground">共 {logs?.total ?? 0} 条</p>
-              </div>
-              {logs && logs.items.length > 0 ? (
-                <div className="space-y-4">
-                  {logs.items.map((log, index) => (
-                    <JobLogTimelineItem
-                      key={log.jobLogId}
-                      log={log}
-                      isLast={index === logs.items.length - 1}
-                    />
-                  ))}
-                  <PaginationToolbar
-                    totalItems={logs.total}
-                    currentPage={logs.pageNum}
-                    pageSize={logs.pageSize}
-                    onPageChange={handleLogPageChange}
-                    onPageSizeChange={handleLogPageSizeChange}
-                    pageSizeOptions={LOG_PAGE_SIZES}
-                    disabled={detailQuery.isFetching}
-                    className="justify-end"
+                  <RealtimeLogViewer
+                    jobLogId={activeLogId}
+                    jobName={activeLogName || job.jobName}
+                    onComplete={() => {
+                      detailQuery.refetch();
+                      setActiveLogId(null);
+                    }}
                   />
                 </div>
-              ) : (
-                <AwaitingExecutionState
-                  jobStatus={job.status}
-                  cronDescription={cronDescription}
-                  upcomingExecutions={upcomingExecutions}
-                />
-              )}
-            </section>
+              ) : null}
+
+              <div className="space-y-2 rounded-lg border border-border/70 bg-background">
+                <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Activity className="size-4 text-muted-foreground" />
+                    <span>执行日志</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    共 {logs?.total ?? 0} 条
+                  </span>
+                </div>
+                <div className="p-2 sm:p-3">
+                  {logs && logs.items.length > 0 ? (
+                    <JobLogsViewer logs={logs.items} isLoading={detailQuery.isFetching} />
+                  ) : (
+                    <AwaitingExecutionState
+                      jobStatus={job.status}
+                      cronDescription={cronDescription}
+                      upcomingExecutions={upcomingExecutions}
+                    />
+                  )}
+                </div>
+                {logs ? (
+                  <div className="border-t border-border/70 px-3 py-2">
+                    <PaginationToolbar
+                      totalItems={logs.total}
+                      currentPage={logs.pageNum}
+                      pageSize={logs.pageSize}
+                      onPageChange={handleLogPageChange}
+                      onPageSizeChange={handleLogPageSizeChange}
+                      pageSizeOptions={LOG_PAGE_SIZES}
+                      disabled={detailQuery.isFetching}
+                      className="justify-end"
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
@@ -447,121 +380,87 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
   );
 }
 
-interface InfoCardConfig {
-  label: string;
-  value: ReactNode;
-  description?: ReactNode;
-  icon: LucideIcon;
-}
-
-function InfoCard({ label, value, description, icon: Icon }: InfoCardConfig) {
-  return (
-    <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/80 p-4 shadow-sm">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground">
-        <Icon className="size-5" />
-      </div>
-      <div className="space-y-1">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
-        <div className="text-sm font-semibold text-foreground">{value}</div>
-        {description && (
-          <p className="text-xs text-muted-foreground">{description}</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function JobHero({ job, cronExpression }: { job: Job; cronExpression?: string }) {
-  const statusMeta = getJobStatusMeta(job.status);
-  const tone = getToneStyles(statusMeta.tone);
+function JobSummaryPanel({
+  job,
+  statusMeta,
+  tone,
+  nextExecution,
+  cronDescription,
+  upcomingExecutions,
+  formattedParams,
+}: {
+  job: Job;
+  statusMeta: JobStatusMeta;
+  tone: { bg: string; text: string; border: string };
+  nextExecution: string;
+  cronDescription: string;
+  upcomingExecutions: string[];
+  formattedParams: string | undefined;
+}) {
   const StatusIcon = statusMeta.icon;
 
   return (
-    <section className="rounded-2xl border border-border/70 bg-gradient-to-br from-background via-card to-muted/30 p-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
-          <div
-            className={cn(
-              'flex h-16 w-16 items-center justify-center rounded-2xl border-2',
-              tone.bg,
-              tone.text,
-              tone.border
-            )}
-          >
-            <StatusIcon className="size-7" />
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              {job.jobGroup || 'DEFAULT'} · ID #{job.jobId}
-            </p>
-            <p className="text-2xl font-semibold text-foreground">{job.jobName}</p>
-            <p className="text-sm text-muted-foreground">
-              {job.invokeTarget || '未配置调用目标'}
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-col items-start gap-2 md:items-end">
-          <Badge variant={STATUS_BADGE_VARIANT[job.status] ?? 'outline'}>
-            {resolveStatusLabel(job.status)}
-          </Badge>
-          <p className="text-xs text-muted-foreground text-left md:text-right">
-            {statusMeta.helperText}
-          </p>
-          {cronExpression && (
-            <span className="rounded-md bg-muted/50 px-2 py-1 text-xs font-mono text-muted-foreground">
-              {cronExpression}
-            </span>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function JobLogTimelineItem({ log, isLast }: { log: JobLog; isLast: boolean }) {
-  const meta = resolveLogStatusMeta(log.status);
-  const tone = getToneStyles(meta.tone);
-  const Icon = meta.icon;
-
-  return (
-    <div className="relative flex gap-4">
-      <div className="flex flex-col items-center">
+    <aside className="space-y-3 rounded-lg border border-border/70 bg-background p-4">
+      <div className="flex items-start gap-3">
         <div
           className={cn(
-            'flex h-10 w-10 items-center justify-center rounded-full border-2 bg-background',
+            'flex h-12 w-12 items-center justify-center rounded-xl border',
             tone.bg,
             tone.text,
             tone.border
           )}
         >
-          <Icon className="size-5" />
+          <StatusIcon className="size-6" />
         </div>
-        {!isLast && <div className="mt-1 w-px flex-1 bg-border/60" />}
-      </div>
-      <div className="flex-1 rounded-2xl border border-border/60 bg-card/70 p-4 shadow-sm">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={meta.badgeVariant}>{meta.label}</Badge>
-            <span className="text-xs text-muted-foreground">
-              日志 ID：#{log.jobLogId ?? '—'}
-            </span>
+            <p className="truncate text-lg font-semibold text-foreground">
+              {job.jobName}
+            </p>
+            <Badge variant={STATUS_BADGE_VARIANT[job.status] ?? 'outline'}>
+              {resolveStatusLabel(job.status)}
+            </Badge>
           </div>
-          <span className="text-xs text-muted-foreground">
-            {log.createTime || '—'}
-          </span>
+          <p className="mt-1 truncate text-xs text-muted-foreground">
+            {job.invokeTarget || '未配置调用目标'}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {job.jobGroup || 'DEFAULT'} · ID #{job.jobId}
+          </p>
+          {job.isRunning ? (
+            <span className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-2 py-1 text-[11px] font-semibold text-emerald-700 animate-pulse">
+              <Loader2 className="size-3.5 animate-spin" />
+              执行中
+              {job.currentLogId ? ` · 日志 #${job.currentLogId}` : ''}
+            </span>
+          ) : (
+            <p className="mt-2 text-xs text-muted-foreground">{statusMeta.helperText}</p>
+          )}
         </div>
-        <p className="mt-2 text-sm text-foreground">
-          {log.jobMessage || meta.description}
-        </p>
-        {log.exception ? (
-          <pre className="mt-3 whitespace-pre-wrap break-words rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            {log.exception}
-          </pre>
-        ) : null}
       </div>
-    </div>
+
+      <div className="grid gap-2 text-sm">
+        <MetaRow label="下一次执行" value={nextExecution} hint={upcomingExecutions.slice(1)} />
+        <MetaRow label="Cron 表达式" value={job.cronExpression || '未设置'} hint={cronDescription} />
+        <MetaRow label="调用目标" value={job.invokeTarget || '—'} />
+        <MetaRow label="调度策略" value={resolveMisfireLabel(job.misfirePolicy)} />
+        <MetaRow label="并发策略" value={resolveConcurrentLabel(job.concurrent)} />
+        {job.remark ? <MetaRow label="备注" value={job.remark} /> : null}
+        <MetaRow label="创建" value={job.createTime || '—'} hint={job.createBy || ''} />
+        <MetaRow label="更新" value={job.updateTime || '—'} hint={job.updateBy || ''} />
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground">调用参数</p>
+        {formattedParams ? (
+          <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-md bg-muted/40 px-3 py-2 text-xs font-mono text-foreground">
+            {formattedParams}
+          </pre>
+        ) : (
+          <p className="text-xs text-muted-foreground">未配置参数</p>
+        )}
+      </div>
+    </aside>
   );
 }
 
@@ -612,6 +511,35 @@ function getJobStatusMeta(status: string): JobStatusMeta {
   return JOB_STATUS_META[status] ?? DEFAULT_JOB_STATUS_META;
 }
 
-function resolveLogStatusMeta(status: string): LogStatusMeta {
-  return LOG_STATUS_META[status] ?? DEFAULT_LOG_STATUS_META;
+function MetaRow({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint?: string | string[];
+}) {
+  const hintText =
+    Array.isArray(hint) && hint.length > 0
+      ? `后续：${hint.join('，')}`
+      : typeof hint === 'string'
+        ? hint
+        : '';
+
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-md bg-muted/30 px-2 py-1.5">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <div className="flex-1 text-right">
+        <p className="truncate text-sm font-medium text-foreground" title={value}>
+          {value}
+        </p>
+        {hintText ? (
+          <p className="truncate text-[11px] text-muted-foreground" title={hintText}>
+            {hintText}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
 }

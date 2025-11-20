@@ -5,12 +5,11 @@ export const DEFAULT_STATUS: ServerStatus = {
     hostname: '',
     os: '',
     arch: '',
+    bootTime: '',
     platform: '',
     platformVersion: '',
     uptime: '',
     uptimeSeconds: 0,
-    goVersion: '',
-    kernelVersion: '',
     currentTime: '',
   },
   cpu: {
@@ -22,6 +21,7 @@ export const DEFAULT_STATUS: ServerStatus = {
   },
   memory: {
     total: 0,
+    limit: 0,
     free: 0,
     used: 0,
     usedPercent: 0,

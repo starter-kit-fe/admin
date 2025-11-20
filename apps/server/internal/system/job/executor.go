@@ -14,9 +14,10 @@ type Executor func(ctx context.Context, payload ExecutionPayload) error
 
 // ExecutionPayload carries metadata and raw parameters for a job invocation.
 type ExecutionPayload struct {
-	Job    Job             `json:"job"`
-	Params json.RawMessage `json:"params,omitempty"`
-	Logger *slog.Logger    `json:"-"`
+	Job        Job             `json:"job"`
+	Params     json.RawMessage `json:"params,omitempty"`
+	Logger     *slog.Logger    `json:"-"`
+	StepLogger *StepLogger     `json:"-"`
 }
 
 type executorRegistry struct {

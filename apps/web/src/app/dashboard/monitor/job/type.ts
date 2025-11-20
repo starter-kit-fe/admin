@@ -15,6 +15,8 @@ export interface Job {
   createTime?: string;
   updateBy?: string;
   updateTime?: string;
+  isRunning: boolean;
+  currentLogId?: number | null;
 }
 
 export interface JobListResponse {
@@ -35,6 +37,43 @@ export interface JobLog {
   status: string;
   exception?: string | null;
   createTime?: string;
+  startTime?: string;
+  endTime?: string;
+  durationMs?: number;
+  steps?: JobLogStep[];
+}
+
+export interface JobLogStep {
+  stepId: number;
+  jobLogId: number;
+  stepName: string;
+  stepOrder: number;
+  status: '0' | '1' | '2'; // 0=成功, 1=失败, 2=进行中
+  message?: string;
+  output?: string;
+  error?: string;
+  startTime: string;
+  endTime?: string;
+  durationMs?: number;
+  createTime: string;
+}
+
+export interface JobLogWithSteps extends JobLog {
+  steps?: JobLogStep[];
+}
+
+export interface StepEvent {
+  type: 'step_start' | 'step_log' | 'step_end' | 'complete' | 'heartbeat';
+  jobLogId: number;
+  stepId?: number;
+  stepOrder: number;
+  stepName?: string;
+  status?: '0' | '1' | '2';
+  message?: string;
+  output?: string;
+  error?: string;
+  timestamp: string;
+  data?: Record<string, any>;
 }
 
 export interface JobLogList {

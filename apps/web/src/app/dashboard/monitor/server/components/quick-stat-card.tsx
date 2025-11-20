@@ -4,6 +4,8 @@ import { useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 import type { LucideIcon } from 'lucide-react';
 
+import { NumberTicker } from '@/components/number-ticker';
+
 import { safeNumber } from '../lib/format';
 
 export interface QuickStatCardProps {
@@ -13,6 +15,7 @@ export interface QuickStatCardProps {
   hint: string;
   percent: number;
   formatValue: (value: number) => string;
+  className?: string;
 }
 
 export function QuickStatCard({
@@ -22,10 +25,9 @@ export function QuickStatCard({
   hint,
   percent,
   formatValue,
+  className,
 }: QuickStatCardProps) {
   const barRef = useRef<HTMLDivElement>(null);
-  const valueRef = useRef<HTMLSpanElement>(null);
-  const previousValueRef = useRef<number>(Number.isFinite(value) ? value : 0);
   const clampedPercent = safeNumber(percent);
 
   useLayoutEffect(() => {
@@ -36,7 +38,7 @@ export function QuickStatCard({
     const ctx = gsap.context(() => {
       gsap.to(node, {
         width: `${clampedPercent}%`,
-        duration: 0.8,
+        duration: 0.6,
         ease: 'power2.out',
       });
     }, node);
@@ -45,48 +47,14 @@ export function QuickStatCard({
     };
   }, [clampedPercent]);
 
-  useLayoutEffect(() => {
-    const node = valueRef.current;
-    if (!node) {
-      return;
-    }
-    const sanitizedValue = Number.isFinite(value) ? value : 0;
-    const startValue = previousValueRef.current ?? sanitizedValue;
-
-    if (startValue === sanitizedValue) {
-      node.textContent = formatValue(sanitizedValue);
-      previousValueRef.current = sanitizedValue;
-      return;
-    }
-
-    const ctx = gsap.context(() => {
-      const counter = { val: startValue };
-      const tween = gsap.to(counter, {
-        val: sanitizedValue,
-        duration: 0.8,
-        ease: 'power2.out',
-        onUpdate: () => {
-          node.textContent = formatValue(counter.val);
-        },
-      });
-      return () => {
-        tween.kill();
-      };
-    }, node);
-
-    previousValueRef.current = sanitizedValue;
-
-    return () => {
-      ctx.revert();
-    };
-  }, [value, formatValue]);
-
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 px-4 py-4 dark:border-border/30">
+    <div
+      className={`relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 px-4 py-4 dark:border-border/30 ${className ?? ''}`}
+    >
       <div
         aria-hidden
         ref={barRef}
-        className="pointer-events-none absolute inset-y-0 left-0 w-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent transition-[width]"
+        className="pointer-events-none absolute inset-y-0 left-0 w-0 bg-gradient-to-r from-primary/25 via-primary/10 to-transparent transition-[width]"
         style={{ width: `${clampedPercent}%` }}
       />
       <div className="relative flex items-center gap-3">
@@ -97,9 +65,11 @@ export function QuickStatCard({
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
             {label}
           </span>
-          <span ref={valueRef} className="text-lg font-semibold text-foreground">
-            {formatValue(Number.isFinite(value) ? value : 0)}
-          </span>
+          <NumberTicker
+            value={Number.isFinite(value) ? value : 0}
+            formatValue={formatValue}
+            className="text-lg font-semibold leading-none text-foreground"
+          />
           <span className="text-xs text-muted-foreground/80">{hint}</span>
         </div>
       </div>

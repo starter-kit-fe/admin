@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -24,22 +26,23 @@ import (
 
 // BackupExecutor 数据库备份执行器
 type BackupExecutor struct {
-	db     *gorm.DB
-	cfg    *config.Config
-	logger *slog.Logger
+	db         *gorm.DB
+	cfg        *config.Config
+	logger     *slog.Logger
+	stepLogger *StepLogger
 }
 
 // BackupParams 备份任务参数
 type BackupParams struct {
-	Database          string   `json:"database"`           // 数据库名称,可选,默认使用配置中的数据库
-	IncludeSchemas    []string `json:"includeSchemas"`     // 要包含的 schema,可选
-	ExcludeTables     []string `json:"excludeTables"`      // 要排除的表,可选
-	Compress          bool     `json:"compress"`           // 是否压缩,默认 true
-	UploadToS3        bool     `json:"uploadToS3"`         // 是否上传到 S3,默认 true
-	CleanupOldBackups bool     `json:"cleanupOldBackups"`  // 是否清理旧备份,默认 true
-	RetentionDays     int      `json:"retentionDays"`      // 保留天数,默认使用配置值
-	TempDir           string   `json:"tempDir"`            // 临时目录,可选,默认使用配置值
-	
+	Database          string   `json:"database"`          // 数据库名称,可选,默认使用配置中的数据库
+	IncludeSchemas    []string `json:"includeSchemas"`    // 要包含的 schema,可选
+	ExcludeTables     []string `json:"excludeTables"`     // 要排除的表,可选
+	Compress          bool     `json:"compress"`          // 是否压缩,默认 true
+	UploadToS3        bool     `json:"uploadToS3"`        // 是否上传到 S3,默认 true
+	CleanupOldBackups bool     `json:"cleanupOldBackups"` // 是否清理旧备份,默认 true
+	RetentionDays     int      `json:"retentionDays"`     // 保留天数,默认使用配置值
+	TempDir           string   `json:"tempDir"`           // 临时目录,可选,默认使用配置值
+
 	// S3 配置,可选,默认使用配置值
 	S3Endpoint     string `json:"s3Endpoint"`     // S3 端点
 	S3AccessKey    string `json:"s3AccessKey"`    // S3 访问密钥
@@ -53,9 +56,10 @@ type BackupParams struct {
 func NewBackupExecutor(db *gorm.DB, cfg *config.Config) Executor {
 	return func(ctx context.Context, payload ExecutionPayload) error {
 		executor := &BackupExecutor{
-			db:     db,
-			cfg:    cfg,
-			logger: payload.Logger,
+			db:         db,
+			cfg:        cfg,
+			logger:     payload.Logger,
+			stepLogger: payload.StepLogger,
 		}
 		return executor.execute(ctx, payload.Params)
 	}
@@ -89,25 +93,34 @@ func (e *BackupExecutor) execute(ctx context.Context, rawParams json.RawMessage)
 	}
 	backupPath := filepath.Join(tempDir, filename)
 
+	backupStep := e.startStep("生成备份文件")
+	e.logStep(backupStep, "输出目录: %s", backupPath)
+
 	// 执行备份
 	if e.logger != nil {
 		e.logger.Info("starting database backup", "database", dbName, "file", filename)
 	}
 
 	if err := e.performBackup(ctx, params, backupPath); err != nil {
+		e.failStep(backupStep, err)
 		return fmt.Errorf("perform backup: %w", err)
 	}
+	e.logStep(backupStep, "备份文件已生成: %s", backupPath)
+	e.successStep(backupStep)
 
 	// 上传到 S3
 	if params.UploadToS3 {
-		if err := e.uploadToS3(ctx, params, backupPath, filename); err != nil {
+		url, err := e.uploadToS3(ctx, params, backupPath, filename)
+		if err != nil {
 			// 清理本地文件
 			_ = os.Remove(backupPath)
 			return fmt.Errorf("upload to s3: %w", err)
 		}
 		if e.logger != nil {
-			e.logger.Info("backup uploaded to s3", "file", filename)
+			e.logger.Info("backup uploaded to s3", "file", filename, "url", url)
 		}
+	} else {
+		e.logStep(backupStep, "已禁用上传到 S3，跳过上传和远端存储路径记录")
 	}
 
 	// 清理本地临时文件
@@ -134,7 +147,7 @@ func (e *BackupExecutor) parseParams(raw json.RawMessage) (*BackupParams, error)
 	}
 
 	if len(raw) > 0 {
-		if err := json.Unmarshal(raw, params); err != nil {
+		if err := decodeBackupParams(raw, params); err != nil {
 			return nil, err
 		}
 	}
@@ -188,7 +201,7 @@ func (e *BackupExecutor) performBackup(ctx context.Context, params *BackupParams
 
 	// 创建命令
 	cmd := exec.CommandContext(ctx, "pg_dump", args...)
-	
+
 	// 设置环境变量(从 DSN 中提取连接信息)
 	env := e.buildPgEnv()
 	cmd.Env = append(os.Environ(), env...)
@@ -262,7 +275,9 @@ func (e *BackupExecutor) writeCompressed(data []byte, outputPath string) error {
 	return err
 }
 
-func (e *BackupExecutor) uploadToS3(ctx context.Context, params *BackupParams, filePath, filename string) error {
+func (e *BackupExecutor) uploadToS3(ctx context.Context, params *BackupParams, filePath, filename string) (string, error) {
+	prepareStep := e.startStep("准备存储配置")
+
 	// 获取 S3 配置,优先使用参数中的值
 	endpoint := params.S3Endpoint
 	if endpoint == "" {
@@ -272,11 +287,15 @@ func (e *BackupExecutor) uploadToS3(ctx context.Context, params *BackupParams, f
 	if bucket == "" {
 		bucket = e.cfg.S3.Bucket
 	}
-	
+
 	// 检查 S3 配置
 	if endpoint == "" || bucket == "" {
-		return errors.New("s3 configuration is incomplete")
+		err := errors.New("s3 configuration is incomplete")
+		e.failStep(prepareStep, err)
+		return "", err
 	}
+	objectKey := "backups/" + filename
+	e.logStep(prepareStep, "存储配置就绪: endpoint=%s, bucket=%s, key=%s", endpoint, bucket, objectKey)
 
 	accessKey := params.S3AccessKey
 	if accessKey == "" {
@@ -295,16 +314,30 @@ func (e *BackupExecutor) uploadToS3(ctx context.Context, params *BackupParams, f
 		usePathStyle = e.cfg.S3.UsePathStyle
 	}
 
+	e.logStep(prepareStep, "使用 %s 模式构建客户端", func() string {
+		if usePathStyle {
+			return "path-style"
+		}
+		return "virtual-hosted"
+	}())
+	e.successStep(prepareStep)
+
 	// 打开文件
+	readStep := e.startStep("读取备份文件")
 	file, err := os.Open(filePath)
 	if err != nil {
-		return err
+		e.failStep(readStep, err)
+		return "", err
 	}
 	defer file.Close()
+	e.logStep(readStep, "待上传文件: %s", filePath)
+	e.successStep(readStep)
+
+	uploadStep := e.startStep("上传备份文件")
 
 	// 创建 S3 客户端
 	s3Client := s3.New(s3.Options{
-		Region: region,
+		Region:       region,
 		BaseEndpoint: aws.String(endpoint),
 		Credentials: credentials.NewStaticCredentialsProvider(
 			accessKey,
@@ -314,14 +347,29 @@ func (e *BackupExecutor) uploadToS3(ctx context.Context, params *BackupParams, f
 		UsePathStyle: usePathStyle,
 	})
 
+	e.logStep(uploadStep, "客户端初始化完成，开始上传")
+
 	// 上传文件
 	_, err = s3Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
-		Key:    aws.String("backups/" + filename),
+		Key:    aws.String(objectKey),
 		Body:   file,
 	})
 
-	return err
+	if err != nil {
+		e.failStep(uploadStep, err)
+		return "", err
+	}
+
+	url := buildObjectURL(endpoint, bucket, objectKey, usePathStyle)
+	if url != "" {
+		e.logStep(uploadStep, "上传成功，访问地址: %s", url)
+	} else {
+		e.logStep(uploadStep, "上传成功")
+	}
+	e.successStep(uploadStep)
+
+	return url, nil
 }
 
 func (e *BackupExecutor) cleanupOldBackups(ctx context.Context, params *BackupParams) error {
@@ -334,7 +382,7 @@ func (e *BackupExecutor) cleanupOldBackups(ctx context.Context, params *BackupPa
 	if bucket == "" {
 		bucket = e.cfg.S3.Bucket
 	}
-	
+
 	if endpoint == "" || bucket == "" {
 		return nil
 	}
@@ -358,7 +406,7 @@ func (e *BackupExecutor) cleanupOldBackups(ctx context.Context, params *BackupPa
 
 	// 创建 S3 客户端
 	s3Client := s3.New(s3.Options{
-		Region: region,
+		Region:       region,
 		BaseEndpoint: aws.String(endpoint),
 		Credentials: credentials.NewStaticCredentialsProvider(
 			accessKey,
@@ -396,4 +444,58 @@ func (e *BackupExecutor) cleanupOldBackups(ctx context.Context, params *BackupPa
 	}
 
 	return nil
+}
+
+func (e *BackupExecutor) startStep(name string) *Step {
+	if e == nil || e.stepLogger == nil {
+		return nil
+	}
+	return e.stepLogger.StartStep(name)
+}
+
+func (e *BackupExecutor) logStep(step *Step, format string, args ...interface{}) {
+	if step != nil {
+		step.Log(format, args...)
+		return
+	}
+	if e != nil && e.logger != nil {
+		e.logger.Info(fmt.Sprintf(format, args...))
+	}
+}
+
+func (e *BackupExecutor) successStep(step *Step) {
+	if step == nil {
+		return
+	}
+	if err := step.Success(); err != nil && e.logger != nil {
+		e.logger.Warn("mark step success failed", "step", step.stepName, "error", err)
+	}
+}
+
+func (e *BackupExecutor) failStep(step *Step, err error) {
+	if step == nil {
+		return
+	}
+	if closeErr := step.Fail(err); closeErr != nil && e.logger != nil {
+		e.logger.Warn("mark step failed failed", "step", step.stepName, "error", closeErr)
+	}
+}
+
+func buildObjectURL(endpoint, bucket, key string, usePathStyle bool) string {
+	if endpoint == "" || bucket == "" || key == "" {
+		return ""
+	}
+	endpoint = strings.TrimSuffix(endpoint, "/")
+	if usePathStyle {
+		return fmt.Sprintf("%s/%s/%s", endpoint, bucket, key)
+	}
+
+	parsed, err := url.Parse(endpoint)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return ""
+	}
+
+	parsed.Host = bucket + "." + parsed.Host
+	parsed.Path = path.Join(parsed.Path, key)
+	return parsed.String()
 }

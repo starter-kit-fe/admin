@@ -341,11 +341,14 @@ func registerMonitorRoutes(group *gin.RouterGroup, opts Options) {
 	registerRouteWithPermissions(jobs, http.MethodDelete, "/:id", []string{"monitor:job:remove"}, opts.JobHandler.Delete, "delete job")
 	registerRouteWithPermissions(jobs, http.MethodPatch, "/:id/status", []string{"monitor:job:changeStatus"}, opts.JobHandler.ChangeStatus, "change job status")
 	registerRouteWithPermissions(jobs, http.MethodPost, "/:id/run", []string{"monitor:job:run"}, opts.JobHandler.Trigger, "run job")
+	registerRouteWithPermissions(jobs, http.MethodGet, "/logs/:id/stream", []string{"monitor:job:query"}, opts.JobHandler.StreamLog, "stream job log")
 
 	registerRouteWithPermissions(monitor, http.MethodGet, "/server", []string{"monitor:server:list"}, opts.ServerHandler.Status, "view server monitor")
+	registerRouteWithPermissions(monitor, http.MethodGet, "/server/stream", []string{"monitor:server:list"}, opts.ServerHandler.Stream, "stream server monitor")
 
 	cacheGroup := monitor.Group("/cache")
 	registerRouteWithPermissions(cacheGroup, http.MethodGet, "", []string{"monitor:cache:list"}, opts.CacheHandler.Overview, "view cache overview")
+	registerRouteWithPermissions(cacheGroup, http.MethodGet, "/stream", []string{"monitor:cache:list"}, opts.CacheHandler.Stream, "stream cache overview")
 	registerRouteWithPermissions(cacheGroup, http.MethodGet, "/list", []string{"monitor:cache:list"}, opts.CacheHandler.List, "list cache keys")
 
 	operLog := monitor.Group("/logs/operations")

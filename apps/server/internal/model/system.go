@@ -290,6 +290,29 @@ func (SysJobLog) TableName() string {
 	return tableName("sys_job_log")
 }
 
+
+
+// SysJobLogStep 定时任务执行步骤日志
+type SysJobLogStep struct {
+	StepID     int64      `gorm:"column:step_id;primaryKey;autoIncrement" json:"stepId"`
+	JobLogID   int64      `gorm:"column:job_log_id;not null;index" json:"jobLogId"`
+	StepName   string     `gorm:"column:step_name;type:varchar(200);not null" json:"stepName"`
+	StepOrder  int        `gorm:"column:step_order;not null;index:idx_job_log_step_order" json:"stepOrder"`
+	Status     string     `gorm:"column:status;type:varchar(10);not null;default:'2';index" json:"status"`
+	Message    string     `gorm:"column:message;type:text" json:"message,omitempty"`
+	Output     string     `gorm:"column:output;type:text" json:"output,omitempty"`
+	Error      string     `gorm:"column:error;type:text" json:"error,omitempty"`
+	StartTime  *time.Time `gorm:"column:start_time" json:"startTime"`
+	EndTime    *time.Time `gorm:"column:end_time" json:"endTime,omitempty"`
+	DurationMs *int64     `gorm:"column:duration_ms" json:"durationMs,omitempty"`
+	CreateTime *time.Time `gorm:"column:create_time;autoCreateTime" json:"createTime"`
+}
+
+// TableName 指定表名
+func (SysJobLogStep) TableName() string {
+	return "sys_job_log_step"
+}
+
 type SysNotice struct {
 	NoticeID      int64      `gorm:"column:notice_id;primaryKey;autoIncrement" json:"notice_id"`
 	NoticeTitle   string     `gorm:"column:notice_title" json:"notice_title"`

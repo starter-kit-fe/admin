@@ -203,3 +203,132 @@ func (r *Repository) ListJobLogs(ctx context.Context, jobID int64, pageNum, page
 
 	return records, total, nil
 }
+
+// GetJobLog 获取单条任务日志
+func (r *Repository) GetJobLog(ctx context.Context, logID int64) (*model.SysJobLog, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
+	}
+
+	var record model.SysJobLog
+	if err := r.db.WithContext(ctx).First(&record, logID).Error; err != nil {
+		return nil, err
+	}
+
+	return &record, nil
+}
+
+// CreateJobLogStep 创建步骤日志
+func (r *Repository) CreateJobLogStep(ctx context.Context, step *model.SysJobLogStep) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if step == nil {
+		return errors.New("job log step record is required")
+	}
+	return r.db.WithContext(ctx).Create(step).Error
+}
+
+// GetJobLogSteps 获取任务日志的所有步骤
+func (r *Repository) GetJobLogSteps(ctx context.Context, jobLogID int64) ([]model.SysJobLogStep, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
+	}
+	var steps []model.SysJobLogStep
+	err := r.db.WithContext(ctx).
+		Where("job_log_id = ?", jobLogID).
+		Order("step_order ASC").
+		Find(&steps).Error
+	return steps, err
+}
+
+// ListJobLogSteps 获取多个日志的步骤
+func (r *Repository) ListJobLogSteps(ctx context.Context, jobLogIDs []int64) (map[int64][]model.SysJobLogStep, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
+	}
+
+	if len(jobLogIDs) == 0 {
+		return map[int64][]model.SysJobLogStep{}, nil
+	}
+
+	var steps []model.SysJobLogStep
+	if err := r.db.WithContext(ctx).
+		Where("job_log_id IN ?", jobLogIDs).
+		Order("job_log_id ASC, step_order ASC").
+		Find(&steps).Error; err != nil {
+		return nil, err
+	}
+
+	result := make(map[int64][]model.SysJobLogStep)
+	for i := range steps {
+		step := steps[i]
+		result[step.JobLogID] = append(result[step.JobLogID], step)
+	}
+
+	return result, nil
+}
+
+// UpdateJobLogStep 更新步骤日志
+func (r *Repository) UpdateJobLogStep(ctx context.Context, stepID int64, updates map[string]interface{}) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if len(updates) == 0 {
+		return nil
+	}
+	return r.db.WithContext(ctx).
+		Model(&model.SysJobLogStep{}).
+		Where("step_id = ?", stepID).
+		Updates(updates).Error
+}
+
+// GetLatestLogsByStatus 获取指定状态的最新日志
+func (r *Repository) GetLatestLogsByStatus(ctx context.Context, jobIDs []int64, statuses []string) (map[int64]model.SysJobLog, error) {
+	if r == nil || r.db == nil {
+		return nil, ErrRepositoryUnavailable
+	}
+
+	if len(jobIDs) == 0 {
+		return map[int64]model.SysJobLog{}, nil
+	}
+
+	query := r.db.WithContext(ctx).
+		Model(&model.SysJobLog{}).
+		Where("job_id IN ?", jobIDs)
+	if len(statuses) > 0 {
+		query = query.Where("status IN ?", statuses)
+	}
+
+	var logs []model.SysJobLog
+	if err := query.
+		Order("job_id ASC, job_log_id DESC").
+		Find(&logs).Error; err != nil {
+		return nil, err
+	}
+
+	result := make(map[int64]model.SysJobLog)
+	for i := range logs {
+		log := logs[i]
+		if _, exists := result[log.JobID]; exists {
+			continue
+		}
+		result[log.JobID] = log
+	}
+
+	return result, nil
+}
+
+// UpdateJobLog 更新任务日志
+func (r *Repository) UpdateJobLog(ctx context.Context, jobLogID int64, updates map[string]interface{}) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+	if len(updates) == 0 {
+		return nil
+	}
+	return r.db.WithContext(ctx).
+		Model(&model.SysJobLog{}).
+		Where("job_log_id = ?", jobLogID).
+		Updates(updates).Error
+}

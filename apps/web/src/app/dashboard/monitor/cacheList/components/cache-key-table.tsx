@@ -16,6 +16,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -23,8 +28,8 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Clipboard, TimerReset } from 'lucide-react';
-import { useMemo } from 'react';
+import { Check, Clipboard, TimerReset } from 'lucide-react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { CacheKeyItem } from '../../cache/api/types';
@@ -45,37 +50,107 @@ export function CacheKeyTable({
 }: CacheKeyTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<CacheKeyItem>(), []);
 
+  const KeyCell = ({ value }: { value: string }) => {
+    const display = value || '-';
+    const [copied, setCopied] = useState(false);
+    const [isOverflowing, setIsOverflowing] = useState(false);
+    const textRef = useRef<HTMLSpanElement>(null);
+    const resetTimerRef = useRef<number | undefined>(null);
+
+    useLayoutEffect(() => {
+      const node = textRef.current;
+      if (!node) return;
+      const checkOverflow = () => {
+        if (!node) return;
+        setIsOverflowing(node.scrollWidth - node.clientWidth > 1);
+      };
+      checkOverflow();
+      const resizeObserver = new ResizeObserver(checkOverflow);
+      resizeObserver.observe(node);
+      window.addEventListener('resize', checkOverflow);
+      return () => {
+        resizeObserver.disconnect();
+        window.removeEventListener('resize', checkOverflow);
+      };
+    }, [display]);
+
+    useEffect(
+      () => () => {
+        if (resetTimerRef.current) {
+          window.clearTimeout(resetTimerRef.current);
+        }
+      },
+      [],
+    );
+
+    const handleCopy = () => {
+      void navigator.clipboard
+        .writeText(display)
+        .then(() => {
+          toast.success('已复制键名');
+          setCopied(true);
+          if (resetTimerRef.current) {
+            window.clearTimeout(resetTimerRef.current);
+          }
+          resetTimerRef.current = window.setTimeout(
+            () => setCopied(false),
+            2000,
+          );
+        })
+        .catch(() => toast.error('复制失败'));
+    };
+
+    const cellContent = (
+      <div className="flex min-w-0 items-center gap-2">
+        <span ref={textRef} className="min-w-0 truncate font-mono text-sm">
+          {display}
+        </span>
+        <Button
+          type="button"
+          size="icon-sm"
+          variant="ghost"
+          className="ml-auto text-muted-foreground hover:text-foreground"
+          aria-label="复制键名"
+          onClick={handleCopy}
+        >
+          {copied ? (
+            <Check className="size-4" />
+          ) : (
+            <Clipboard className="size-4" />
+          )}
+        </Button>
+      </div>
+    );
+
+    if (!isOverflowing) {
+      return cellContent;
+    }
+
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{cellContent}</TooltipTrigger>
+        <TooltipContent
+          side="top"
+          align="start"
+          className="max-w-xl break-all font-mono text-xs"
+        >
+          {display}
+        </TooltipContent>
+      </Tooltip>
+    );
+  };
+
   const columns = useMemo(
     () => [
       columnHelper.accessor('key', {
         header: '键名',
         cell: (info) => {
           const value = info.getValue();
-          const handleCopy = () => {
-            void navigator.clipboard
-              .writeText(value)
-              .then(() => toast.success('已复制键名'))
-              .catch(() => toast.error('复制失败'));
-          };
-          return (
-            <div className="flex items-center gap-2 truncate font-mono text-sm">
-              <span className="truncate">{value}</span>
-              <Button
-                type="button"
-                size="icon-sm"
-                variant="ghost"
-                className="ml-auto text-muted-foreground hover:text-foreground"
-                aria-label="复制键名"
-                onClick={handleCopy}
-              >
-                <Clipboard className="size-4" />
-              </Button>
-            </div>
-          );
+          return <KeyCell value={value} />;
         },
         meta: {
-          headerClassName: 'min-w-[240px]',
-          cellClassName: 'max-w-[420px]',
+          headerClassName: 'w-[360px] max-w-[360px]',
+          cellClassName: 'w-[360px] max-w-[360px]',
         },
       }),
       columnHelper.accessor('type', {
@@ -98,21 +173,24 @@ export function CacheKeyTable({
           </div>
         ),
         meta: {
-          headerClassName: 'min-w-[140px]',
+          headerClassName: 'w-[140px]',
+          cellClassName: 'w-[140px]',
         },
       }),
       columnHelper.accessor('idleSeconds', {
         header: '空闲时间',
         cell: (info) => <span>{formatDuration(info.getValue())}</span>,
         meta: {
-          headerClassName: 'min-w-[140px]',
+          headerClassName: 'w-[140px]',
+          cellClassName: 'w-[140px]',
         },
       }),
       columnHelper.accessor('sizeBytes', {
         header: '估算大小',
         cell: (info) => <span>{formatBytes(info.getValue())}</span>,
         meta: {
-          headerClassName: 'min-w-[140px]',
+          headerClassName: 'w-[140px]',
+          cellClassName: 'w-[140px]',
         },
       }),
       columnHelper.accessor('encoding', {
@@ -121,7 +199,8 @@ export function CacheKeyTable({
           <span className="uppercase">{info.getValue() ?? '-'}</span>
         ),
         meta: {
-          headerClassName: 'min-w-[120px]',
+          headerClassName: 'w-[120px]',
+          cellClassName: 'w-[120px]',
         },
       }),
     ],
@@ -139,7 +218,7 @@ export function CacheKeyTable({
     table.getVisibleLeafColumns().length || columns.length;
 
   return (
-    <Table>
+    <Table className="min-w-[960px] table-fixed">
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id} className="bg-muted/40">

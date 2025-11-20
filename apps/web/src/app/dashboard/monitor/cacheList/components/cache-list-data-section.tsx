@@ -101,14 +101,12 @@ export function CacheListDataSection() {
         </div>
       ) : null}
       <section className="overflow-hidden rounded-xl border border-border/70 bg-card/90 dark:border-border/40">
-        <div className="w-full overflow-x-auto">
-          <CacheKeyTable
-            rows={rows}
-            isLoading={isLoading}
-            isError={isError}
-            hasFilter={hasFilter}
-          />
-        </div>
+        <CacheKeyTable
+          rows={rows}
+          isLoading={isLoading}
+          isError={isError}
+          hasFilter={hasFilter}
+        />
       </section>
       {shouldShowPagination ? (
         <PaginationToolbar

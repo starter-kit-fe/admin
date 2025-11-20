@@ -1,8 +1,11 @@
 package cache
 
 import (
+	"encoding/json"
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -43,6 +46,62 @@ func (h *Handler) Overview(ctx *gin.Context) {
 	}
 
 	resp.OK(ctx, resp.WithData(status))
+}
+
+// Stream godoc
+// @Summary 缓存监控流
+// @Description 使用 SSE 推送缓存概览，首次返回全量数据，后续仅包含变化字段
+// @Tags Monitor/Cache
+// @Security BearerAuth
+// @Produce text/event-stream
+// @Success 200 {string} string "event stream"
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/cache/stream [get]
+func (h *Handler) Stream(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("cache monitor unavailable"))
+		return
+	}
+
+	flusher, ok := ctx.Writer.(http.Flusher)
+	if !ok {
+		resp.InternalServerError(ctx, resp.WithMessage("streaming unsupported"))
+		return
+	}
+
+	ctx.Writer.Header().Set("Content-Type", "text/event-stream")
+	ctx.Writer.Header().Set("Cache-Control", "no-cache")
+	ctx.Writer.Header().Set("Connection", "keep-alive")
+
+	overview, _, err := h.service.SnapAndDiff(ctx.Request.Context())
+	if err != nil {
+		resp.InternalServerError(ctx, resp.WithMessage("failed to fetch cache overview"))
+		return
+	}
+
+	if err := writeSSE(ctx, "snapshot", overview); err != nil {
+		return
+	}
+	flusher.Flush()
+
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			_, patch, err := h.service.SnapAndDiff(ctx.Request.Context())
+			if err == nil && patch != nil {
+				if err := writeSSE(ctx, "update", patch); err != nil {
+					return
+				}
+				flusher.Flush()
+			}
+		}
+	}
 }
 
 // List godoc
@@ -93,4 +152,22 @@ func parseQueryInt(raw string, fallback int) int {
 		return fallback
 	}
 	return value
+}
+
+func writeSSE(ctx *gin.Context, event string, payload interface{}) error {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	if _, err := ctx.Writer.Write([]byte("event: " + event + "\n")); err != nil {
+		return err
+	}
+	if _, err := ctx.Writer.Write([]byte("data: ")); err != nil {
+		return err
+	}
+	if _, err := ctx.Writer.Write(data); err != nil {
+		return err
+	}
+	_, err = ctx.Writer.Write([]byte("\n\n"))
+	return err
 }

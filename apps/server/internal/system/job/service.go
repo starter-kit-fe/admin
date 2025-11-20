@@ -20,6 +20,7 @@ import (
 
 var (
 	ErrServiceUnavailable = errors.New("job service is not initialized")
+	ErrJobRunningConflict = errors.New("job is running and concurrency is disabled")
 
 	validStatusValues      = map[string]struct{}{"0": {}, "1": {}}
 	validMisfirePolicies   = map[string]struct{}{"1": {}, "2": {}, "3": {}}
@@ -42,6 +43,7 @@ type Service struct {
 	logger         *slog.Logger
 	redis          *redis.Client
 	defaultLockTTL time.Duration
+	streams        *logStreamHub
 
 	mu         sync.RWMutex
 	scheduler  *cron.Cron
@@ -68,6 +70,10 @@ type jobRunContext struct {
 
 type jobRunContextKey struct{}
 
+type jobRunOptions struct {
+	logID int64
+}
+
 func NewService(repo *Repository, opts ServiceOptions) *Service {
 	if repo == nil {
 		return nil
@@ -89,6 +95,7 @@ func NewService(repo *Repository, opts ServiceOptions) *Service {
 		logger:         logger,
 		redis:          opts.Redis,
 		defaultLockTTL: lockTTL,
+		streams:        newLogStreamHub(),
 		jobs:           make(map[int64]*jobSchedule),
 		lockMisses:     make(map[int64]uint64),
 	}
@@ -123,6 +130,8 @@ type Job struct {
 	CreateTime     string          `json:"createTime,omitempty"`
 	UpdateBy       string          `json:"updateBy,omitempty"`
 	UpdateTime     string          `json:"updateTime,omitempty"`
+	IsRunning      bool            `json:"isRunning"`
+	CurrentLogID   *int64          `json:"currentLogId,omitempty"`
 }
 
 type JobLog struct {
@@ -136,6 +145,22 @@ type JobLog struct {
 	Status       string          `json:"status"`
 	Exception    string          `json:"exception,omitempty"`
 	CreateTime   string          `json:"createTime,omitempty"`
+	Steps        []JobLogStep    `json:"steps,omitempty"`
+}
+
+type JobLogStep struct {
+	StepID     int64  `json:"stepId"`
+	JobLogID   int64  `json:"jobLogId"`
+	StepName   string `json:"stepName"`
+	StepOrder  int    `json:"stepOrder"`
+	Status     string `json:"status"`
+	Message    string `json:"message,omitempty"`
+	Output     string `json:"output,omitempty"`
+	Error      string `json:"error,omitempty"`
+	StartTime  string `json:"startTime,omitempty"`
+	EndTime    string `json:"endTime,omitempty"`
+	DurationMs *int64 `json:"durationMs,omitempty"`
+	CreateTime string `json:"createTime,omitempty"`
 }
 
 type JobLogList struct {
@@ -229,6 +254,8 @@ func (s *Service) ListJobs(ctx context.Context, opts ListJobsOptions) (*ListResu
 		items = append(items, jobFromModel(&records[i]))
 	}
 
+	s.attachRunningState(ctx, items)
+
 	pageNum := opts.PageNum
 	if pageNum <= 0 {
 		pageNum = 1
@@ -258,10 +285,31 @@ func (s *Service) GetJob(ctx context.Context, id int64) (*Job, error) {
 	return &job, nil
 }
 
+func (s *Service) GetJobLog(ctx context.Context, id int64) (*JobLog, error) {
+	if s == nil || s.repo == nil {
+		return nil, ErrServiceUnavailable
+	}
+
+	record, err := s.repo.GetJobLog(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	log := jobLogFromModel(record)
+	return &log, nil
+}
+
 func (s *Service) GetJobDetail(ctx context.Context, id int64, opts ListJobLogsOptions) (*JobDetail, error) {
 	job, err := s.GetJob(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+
+	jobData := *job
+	jobSlice := []Job{jobData}
+	s.attachRunningState(ctx, jobSlice)
+	if len(jobSlice) > 0 {
+		jobData = jobSlice[0]
 	}
 
 	if opts.PageNum <= 0 {
@@ -276,14 +324,30 @@ func (s *Service) GetJobDetail(ctx context.Context, id int64, opts ListJobLogsOp
 		return nil, err
 	}
 
+	logIDs := make([]int64, 0, len(records))
+	for i := range records {
+		logIDs = append(logIDs, records[i].JobLogID)
+	}
+
+	stepsMap, stepsErr := s.repo.ListJobLogSteps(ctx, logIDs)
+	if stepsErr != nil && s.logger != nil {
+		s.logger.Warn("load job log steps failed", "jobID", id, "error", stepsErr)
+	}
+
 	logs := make([]JobLog, 0, len(records))
 	for i := range records {
-		logs = append(logs, jobLogFromModel(&records[i]))
+		log := jobLogFromModel(&records[i])
+		if stepRecords, ok := stepsMap[log.JobLogID]; ok {
+			for j := range stepRecords {
+				log.Steps = append(log.Steps, jobLogStepFromModel(&stepRecords[j]))
+			}
+		}
+		logs = append(logs, log)
 	}
 
 	return &JobDetail{
-		Job:              *job,
-		InvokeParamsText: rawJSONText(job.InvokeParams),
+		Job:              jobData,
+		InvokeParamsText: rawJSONText(jobData.InvokeParams),
 		Logs: JobLogList{
 			Items:    logs,
 			Total:    total,
@@ -431,22 +495,33 @@ func (s *Service) ChangeStatus(ctx context.Context, id int64, status, operator s
 	return nil
 }
 
-func (s *Service) TriggerJob(ctx context.Context, id int64, operator string) error {
+func (s *Service) TriggerJob(ctx context.Context, id int64, operator string) (int64, error) {
 	if s == nil || s.repo == nil {
-		return ErrServiceUnavailable
+		return 0, ErrServiceUnavailable
 	}
 
 	job, err := s.GetJob(ctx, id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	s.dispatchJob(*job, jobRunContext{
+	if s.isJobRunning(ctx, job.JobID) && strings.TrimSpace(job.Concurrent) == "1" {
+		return 0, ErrJobRunningConflict
+	}
+
+	meta := jobRunContext{
 		Source:  "manual",
 		Message: "手动触发",
-	})
+	}
 
-	return s.repo.UpdateJob(ctx, id, map[string]interface{}{
+	logID, err := s.createRunningLogRecord(ctx, *job, meta)
+	if err != nil {
+		return 0, err
+	}
+
+	s.dispatchJob(*job, meta, jobRunOptions{logID: logID})
+
+	return logID, s.repo.UpdateJob(ctx, id, map[string]interface{}{
 		"update_by":   sanitizeOperator(operator),
 		"update_time": time.Now(),
 	})
@@ -664,6 +739,27 @@ func jobLogFromModel(record *model.SysJobLog) JobLog {
 	}
 }
 
+func jobLogStepFromModel(record *model.SysJobLogStep) JobLogStep {
+	if record == nil {
+		return JobLogStep{}
+	}
+
+	return JobLogStep{
+		StepID:     record.StepID,
+		JobLogID:   record.JobLogID,
+		StepName:   record.StepName,
+		StepOrder:  record.StepOrder,
+		Status:     record.Status,
+		Message:    record.Message,
+		Output:     record.Output,
+		Error:      record.Error,
+		StartTime:  formatTime(record.StartTime),
+		EndTime:    formatTime(record.EndTime),
+		DurationMs: record.DurationMs,
+		CreateTime: formatTime(record.CreateTime),
+	}
+}
+
 func formatTime(value *time.Time) string {
 	if value == nil || value.IsZero() {
 		return ""
@@ -715,6 +811,23 @@ func runContextFrom(ctx context.Context) jobRunContext {
 		return meta
 	}
 	return jobRunContext{}
+}
+
+func resolveRunMessage(meta jobRunContext) string {
+	message := strings.TrimSpace(meta.Message)
+	if message != "" {
+		return message
+	}
+
+	source := strings.TrimSpace(meta.Source)
+	if source == "manual" {
+		return "手动触发"
+	}
+	if source == "cron" {
+		return "定时调度"
+	}
+
+	return "任务执行"
 }
 
 func (s *Service) Start(ctx context.Context) error {
@@ -802,7 +915,7 @@ func (s *Service) configureSchedule(job Job) error {
 		runner := s.newCronJob(job, jobRunContext{
 			Source:  "cron",
 			Message: "定时调度",
-		})
+		}, jobRunOptions{})
 		entryID, err := s.scheduler.AddJob(job.CronExpression, runner)
 		if err != nil {
 			return err
@@ -827,7 +940,7 @@ func (s *Service) detachLocked(jobID int64) {
 	}
 }
 
-func (s *Service) newCronJob(job Job, meta jobRunContext) cron.Job {
+func (s *Service) newCronJob(job Job, meta jobRunContext, opts jobRunOptions) cron.Job {
 	if s == nil {
 		return cron.FuncJob(func() {})
 	}
@@ -841,7 +954,7 @@ func (s *Service) newCronJob(job Job, meta jobRunContext) cron.Job {
 
 	runner := cron.FuncJob(func() {
 		ctx := withRunContext(context.Background(), meta)
-		s.executeJob(ctx, job)
+		s.executeJob(ctx, job, opts)
 	})
 
 	if strings.TrimSpace(job.Concurrent) == "1" {
@@ -850,7 +963,7 @@ func (s *Service) newCronJob(job Job, meta jobRunContext) cron.Job {
 	return runner
 }
 
-func (s *Service) dispatchJob(job Job, meta jobRunContext) {
+func (s *Service) dispatchJob(job Job, meta jobRunContext, opts jobRunOptions) {
 	if s == nil {
 		return
 	}
@@ -860,10 +973,10 @@ func (s *Service) dispatchJob(job Job, meta jobRunContext) {
 	if strings.TrimSpace(meta.Message) == "" {
 		meta.Message = "手动触发"
 	}
-	go s.newCronJob(job, meta).Run()
+	go s.newCronJob(job, meta, opts).Run()
 }
 
-func (s *Service) executeJob(ctx context.Context, job Job) {
+func (s *Service) executeJob(ctx context.Context, job Job, opts jobRunOptions) {
 	if s == nil {
 		return
 	}
@@ -871,26 +984,7 @@ func (s *Service) executeJob(ctx context.Context, job Job) {
 	runCtx := runContextFrom(ctx)
 	startTime := time.Now()
 	var execErr error
-	shouldRecord := true
-
-	defer func() {
-		if shouldRecord {
-			status := "0"
-			if execErr != nil {
-				status = "1"
-			}
-			s.recordJobLog(context.Background(), job, runCtx, status, time.Since(startTime), execErr)
-		}
-	}()
-
-	exec, ok := s.registry.Resolve(job.InvokeTarget)
-	if !ok {
-		if s.logger != nil {
-			s.logger.Warn("no executor registered", "jobID", job.JobID, "target", job.InvokeTarget)
-		}
-		execErr = fmt.Errorf("no executor registered for %s", job.InvokeTarget)
-		return
-	}
+	var logID int64 = opts.logID
 
 	var release func(context.Context) error
 	var proceed bool = true
@@ -899,9 +993,8 @@ func (s *Service) executeJob(ctx context.Context, job Job) {
 	if s.redis != nil && strings.TrimSpace(job.Concurrent) == "1" {
 		release, proceed, err = s.tryAcquireLock(ctx, job)
 		if err != nil {
-			if s.logger != nil {
-				s.logger.Error("acquire job lock failed", "jobID", job.JobID, "error", err)
-			}
+			execErr = fmt.Errorf("acquire job lock failed: %w", err)
+			s.finishJobRun(context.Background(), job, runCtx, logID, startTime, execErr)
 			return
 		}
 		if !proceed {
@@ -909,7 +1002,8 @@ func (s *Service) executeJob(ctx context.Context, job Job) {
 			if s.logger != nil {
 				s.logger.Info("job lock busy", "jobID", job.JobID, "misses", count)
 			}
-			shouldRecord = false
+			execErr = fmt.Errorf("job is already running")
+			s.finishJobRun(context.Background(), job, runCtx, logID, startTime, execErr)
 			return
 		}
 		defer func() {
@@ -921,9 +1015,33 @@ func (s *Service) executeJob(ctx context.Context, job Job) {
 		}()
 	}
 
+	logID, stepLogger, startErr := s.startJobRun(ctx, job, runCtx, opts)
+	if startErr != nil {
+		execErr = startErr
+		s.finishJobRun(context.Background(), job, runCtx, logID, startTime, execErr)
+		return
+	}
+
+	if stepLogger != nil {
+		defer stepLogger.Close()
+	}
+	defer func() {
+		s.finishJobRun(context.Background(), job, runCtx, logID, startTime, execErr)
+	}()
+
+	exec, ok := s.registry.Resolve(job.InvokeTarget)
+	if !ok {
+		if s.logger != nil {
+			s.logger.Warn("no executor registered", "jobID", job.JobID, "target", job.InvokeTarget)
+		}
+		execErr = fmt.Errorf("no executor registered for %s", job.InvokeTarget)
+		return
+	}
+
 	payload := ExecutionPayload{
-		Job:    job,
-		Logger: s.logger,
+		Job:        job,
+		Logger:     s.logger,
+		StepLogger: stepLogger,
 	}
 	if len(job.InvokeParams) > 0 {
 		payload.Params = cloneParams(job.InvokeParams)
@@ -939,28 +1057,85 @@ func (s *Service) executeJob(ctx context.Context, job Job) {
 	}
 }
 
-func (s *Service) recordJobLog(ctx context.Context, job Job, meta jobRunContext, status string, duration time.Duration, execErr error) {
+func (s *Service) startJobRun(ctx context.Context, job Job, meta jobRunContext, opts jobRunOptions) (int64, *StepLogger, error) {
 	if s == nil || s.repo == nil {
+		return 0, nil, ErrServiceUnavailable
+	}
+
+	if opts.logID > 0 {
+		return opts.logID, s.newStepLogger(opts.logID), nil
+	}
+
+	logID, err := s.createRunningLogRecord(ctx, job, meta)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return logID, s.newStepLogger(logID), nil
+}
+
+func (s *Service) finishJobRun(ctx context.Context, job Job, meta jobRunContext, logID int64, startTime time.Time, execErr error) {
+	if s == nil {
 		return
+	}
+
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	status := "0"
+	resultLabel := "成功"
+	if execErr != nil {
+		status = "1"
+		resultLabel = "失败"
+	}
+
+	if logID > 0 && s.streams != nil {
+		s.streams.Publish(logID, &StepEvent{
+			Type:      "complete",
+			JobLogID:  logID,
+			Status:    status,
+			Timestamp: time.Now().Format(time.RFC3339),
+			Data: map[string]interface{}{
+				"durationMs": time.Since(startTime).Milliseconds(),
+				"result":     resultLabel,
+			},
+		})
+		s.streams.Close(logID)
+	}
+
+	if s.repo == nil || logID == 0 {
+		return
+	}
+
+	message := resolveRunMessage(meta)
+	durationText := time.Since(startTime).Round(time.Millisecond)
+	detail := fmt.Sprintf("%s | %s | 用时 %s", message, resultLabel, durationText)
+
+	updates := map[string]interface{}{
+		"status":      status,
+		"job_message": detail,
+	}
+
+	if execErr != nil {
+		updates["exception_info"] = truncateString(execErr.Error(), maxExceptionInfoLen)
+	}
+
+	if err := s.repo.UpdateJobLog(ctx, logID, updates); err != nil && s.logger != nil {
+		s.logger.Error("update job log failed", "jobID", job.JobID, "jobLogID", logID, "error", err)
+	}
+}
+
+func (s *Service) createRunningLogRecord(ctx context.Context, job Job, meta jobRunContext) (int64, error) {
+	if s == nil || s.repo == nil {
+		return 0, ErrServiceUnavailable
 	}
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	message := strings.TrimSpace(meta.Message)
-	if message == "" {
-		if strings.TrimSpace(meta.Source) == "manual" {
-			message = "手动触发"
-		} else {
-			message = "定时调度"
-		}
-	}
-	durationText := duration.Round(time.Millisecond)
-	resultLabel := "成功"
-	if status != "0" {
-		resultLabel = "失败"
-	}
-	detail := fmt.Sprintf("%s | %s | 用时 %s", message, resultLabel, durationText)
+	message := resolveRunMessage(meta)
+	detail := fmt.Sprintf("%s | 执行中", message)
 
 	record := &model.SysJobLog{
 		JobID:        job.JobID,
@@ -968,20 +1143,94 @@ func (s *Service) recordJobLog(ctx context.Context, job Job, meta jobRunContext,
 		JobGroup:     job.JobGroup,
 		InvokeTarget: job.InvokeTarget,
 		InvokeParams: rawJSONText(job.InvokeParams),
-		Status:       status,
+		Status:       "2",
 		JobMessage:   &detail,
-	}
-
-	if execErr != nil {
-		record.ExceptionInfo = truncateString(execErr.Error(), maxExceptionInfoLen)
 	}
 
 	now := time.Now()
 	record.CreateTime = &now
 
-	if err := s.repo.CreateJobLog(ctx, record); err != nil && s.logger != nil {
-		s.logger.Error("record job log failed", "jobID", job.JobID, "error", err)
+	if err := s.repo.CreateJobLog(ctx, record); err != nil {
+		if s.logger != nil {
+			s.logger.Error("create running job log failed", "jobID", job.JobID, "error", err)
+		}
+		return 0, err
 	}
+
+	return record.JobLogID, nil
+}
+
+func (s *Service) newStepLogger(jobLogID int64) *StepLogger {
+	if s == nil || jobLogID == 0 {
+		return nil
+	}
+
+	return NewStepLogger(jobLogID, s.repo, func(event *StepEvent) {
+		if s.streams != nil && event != nil {
+			s.streams.Publish(jobLogID, event)
+		}
+	})
+}
+
+func (s *Service) attachRunningState(ctx context.Context, jobs []Job) {
+	if s == nil || s.repo == nil || len(jobs) == 0 {
+		return
+	}
+
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	ids := make([]int64, 0, len(jobs))
+	for i := range jobs {
+		ids = append(ids, jobs[i].JobID)
+	}
+
+	runningLogs, err := s.repo.GetLatestLogsByStatus(ctx, ids, []string{"2"})
+	if err != nil {
+		if s.logger != nil {
+			s.logger.Warn("load running job logs failed", "error", err)
+		}
+		return
+	}
+
+	for i := range jobs {
+		if log, ok := runningLogs[jobs[i].JobID]; ok {
+			jobs[i].IsRunning = true
+			logID := log.JobLogID
+			jobs[i].CurrentLogID = &logID
+		}
+	}
+}
+
+func (s *Service) isJobRunning(ctx context.Context, jobID int64) bool {
+	if s == nil || s.repo == nil || jobID == 0 {
+		return false
+	}
+
+	ids := []int64{jobID}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	logs, err := s.repo.GetLatestLogsByStatus(ctx, ids, []string{"2"})
+	if err != nil {
+		if s.logger != nil {
+			s.logger.Warn("check running job failed", "jobID", jobID, "error", err)
+		}
+		return false
+	}
+
+	_, ok := logs[jobID]
+	return ok
+}
+
+func (s *Service) SubscribeLogStream(jobLogID int64) (<-chan *StepEvent, func()) {
+	if s == nil || s.streams == nil || jobLogID <= 0 {
+		return nil, func() {}
+	}
+
+	return s.streams.Subscribe(jobLogID)
 }
 
 func (s *Service) tryAcquireLock(ctx context.Context, job Job) (func(context.Context) error, bool, error) {

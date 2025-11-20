@@ -5,11 +5,7 @@ import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import {
-  changeJobStatus,
-  listJobs,
-  runJob,
-} from '../../api';
+import { changeJobStatus, listJobs, runJob } from '../../api';
 import {
   BASE_QUERY_KEY,
   DEFAULT_PAGINATION,
@@ -112,8 +108,9 @@ export function JobDataSection() {
       beginMutation();
       setPendingRunId(jobId);
     },
-    onSuccess: () => {
-      toast.success('任务已提交执行');
+    onSuccess: (data) => {
+      const logIdText = data?.jobLogId ? `（日志 #${data.jobLogId}）` : '';
+      toast.success(`任务已提交执行${logIdText}`);
       refresh();
     },
     onError: (error) => {
@@ -157,11 +154,15 @@ export function JobDataSection() {
     },
   });
 
-  const handleRunJob = (jobId: number) => {
+  const handleRunJob = (job: Job) => {
     if (runJobMutation.isPending) {
       return;
     }
-    runJobMutation.mutate(jobId);
+    if (job.isRunning && job.concurrent === '1') {
+      toast.info('当前任务执行中且禁止并发，稍后再试');
+      return;
+    }
+    runJobMutation.mutate(job.jobId);
   };
 
   const handleToggleStatus = (jobId: number, nextStatus: string) => {

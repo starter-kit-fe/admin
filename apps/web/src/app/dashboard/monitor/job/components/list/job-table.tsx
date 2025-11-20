@@ -31,7 +31,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Clock, Edit2, MoreHorizontal, Play, Trash2 } from 'lucide-react';
+import { Clock, Edit2, Eye, MoreHorizontal, Play, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -50,7 +50,7 @@ interface JobTableProps {
   isError: boolean;
   pendingRunId: number | null;
   pendingStatusId: number | null;
-  onRunJob: (jobId: number) => void;
+  onRunJob: (job: Job) => void;
   onToggleStatus: (jobId: number, nextStatus: string) => void;
   onDelete: (job: Job) => void;
   onEdit: (job: Job) => void;
@@ -92,6 +92,12 @@ export function JobTable({
               <p className="text-xs font-mono uppercase text-muted-foreground">
                 {job.jobGroup || 'DEFAULT'}
               </p>
+              {job.isRunning ? (
+                <p className="flex items-center gap-1 text-[11px] text-emerald-600 animate-pulse">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  执行中
+                </p>
+              ) : null}
             </div>
           );
         },
@@ -154,9 +160,14 @@ export function JobTable({
         cell: ({ getValue }) => {
           const status = getValue() ?? '1';
           return (
-            <Badge variant={STATUS_BADGE_VARIANT[status] ?? 'outline'}>
-              {resolveStatusLabel(status)}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant={STATUS_BADGE_VARIANT[status] ?? 'outline'}>
+                {resolveStatusLabel(status)}
+              </Badge>
+              {status === '0' ? (
+                <span className="text-[11px] text-muted-foreground">调度中</span>
+              ) : null}
+            </div>
           );
         },
         meta: {
@@ -188,12 +199,33 @@ export function JobTable({
             cell: ({ row }) => {
               const job = row.original;
               const jobId = job.jobId;
-              const isRunning = pendingRunId === jobId;
+              const isRunPending = pendingRunId === jobId;
               const isUpdatingStatus = pendingStatusId === jobId;
               const nextStatus = job.status === '0' ? '1' : '0';
+              const concurrencyLocked = job.isRunning && job.concurrent === '1';
 
               return (
-                <div className="flex justify-end">
+                <div className="flex items-center justify-end gap-1">
+                  {canRunJob ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8"
+                      disabled={isRunPending || concurrencyLocked}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onRunJob(job);
+                      }}
+                      aria-label={`立即执行：${job.jobName}`}
+                    >
+                      {isRunPending ? (
+                        <Spinner className="size-4" />
+                      ) : (
+                        <Play className="size-4" />
+                      )}
+                    </Button>
+                  ) : null}
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -216,6 +248,7 @@ export function JobTable({
                             router.push(`/dashboard/monitor/job/${jobId}`);
                           }}
                         >
+                          <Eye className="mr-2 size-4" />
                           查看详情
                         </DropdownMenuItem>
                       ) : null}
@@ -234,19 +267,24 @@ export function JobTable({
                         <DropdownMenuItem
                           onSelect={(event) => {
                             event.preventDefault();
-                            onRunJob(jobId);
+                            onRunJob(job);
                           }}
-                          disabled={isRunning}
+                          disabled={isRunPending || concurrencyLocked}
                         >
-                          {isRunning ? (
+                          {isRunPending ? (
                             <>
                               <Spinner className="mr-2 size-3.5" />
                               触发中
                             </>
+                          ) : concurrencyLocked ? (
+                            <>
+                              <Spinner className="mr-2 size-3.5" />
+                              执行中
+                            </>
                           ) : (
                             <>
                               <Play className="mr-2 size-4" />
-                              立即触发
+                              立即执行
                             </>
                           )}
                         </DropdownMenuItem>
@@ -291,9 +329,9 @@ export function JobTable({
             },
             meta: {
               headerClassName:
-                'sticky right-0 z-20 w-[100px] bg-card/95 backdrop-blur-md text-right border-l border-border/60 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+                'sticky right-0 z-20 w-[120px] bg-card/95 backdrop-blur-md text-right border-l border-border/60 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)]',
               cellClassName:
-                'sticky right-0 z-10 w-[100px] bg-card/80 backdrop-blur-md text-right border-l border-border/60 group-hover:bg-muted/50 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+                'sticky right-0 z-10 w-[120px] bg-card/80 backdrop-blur-md text-right border-l border-border/60 group-hover:bg-muted/50 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)]',
             },
           }),
         ]

@@ -39,8 +39,12 @@ export function listJobs(params: JobListParams = {}) {
   return get<JobListResponse>('/v1/monitor/jobs', buildQuery(params));
 }
 
+export interface RunJobResponse {
+  jobLogId: number;
+}
+
 export function runJob(jobId: number) {
-  return post(`/v1/monitor/jobs/${jobId}/run`);
+  return post<RunJobResponse>(`/v1/monitor/jobs/${jobId}/run`);
 }
 
 export function changeJobStatus(jobId: number, status: string) {
