@@ -23,7 +23,7 @@ export default function Page({ children }: { children: ReactNode }) {
       <AppSidebar className="bg-border/35" />
       <SidebarInset className="bg-border/35">
         <Header />
-        <section className="mx-auto  w-full px-2 py-2 md:px-6 container">
+        <section className="app-container mx-auto w-full px-2 py-2 md:px-6 container">
           {children}
         </section>
       </SidebarInset>
