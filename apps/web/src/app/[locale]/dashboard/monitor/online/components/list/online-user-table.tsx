@@ -51,9 +51,8 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  TableLoadingSkeleton,
-} from '@/components/table/table-loading-skeleton';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
+import { useTranslations } from 'next-intl';
 
 import type { OnlineUser } from '../../type';
 import { getOnlineUserRowId, resolveStatusBadgeVariant } from '../../utils';
@@ -91,18 +90,19 @@ export function OnlineUserTable({
   canForceLogout,
   canViewDetail,
 }: OnlineUserTableProps) {
+  const t = useTranslations('OnlineUserManagement');
   const columnHelper = useMemo(() => createColumnHelper<OnlineUser>(), []);
 
   const columns = useMemo(() => {
     const baseColumns = [
       columnHelper.accessor('userName', {
-        header: () => '登录账号',
+        header: () => t('table.columns.account'),
         cell: ({ row }) => {
           const user = row.original;
           return (
             <div className="space-y-1">
               <EllipsisText
-                value={user.userName || '-'}
+                value={user.userName || t('table.defaultUser')}
                 className="max-w-[200px] text-sm font-medium text-foreground"
               />
               <EllipsisText
@@ -119,7 +119,7 @@ export function OnlineUserTable({
       }),
       columnHelper.display({
         id: 'ipaddr',
-        header: () => 'IP / 地点',
+        header: () => t('table.columns.ip'),
         cell: ({ row }) => {
           const user = row.original;
           return (
@@ -129,7 +129,7 @@ export function OnlineUserTable({
                 className="max-w-[200px] text-sm text-foreground"
               />
               <EllipsisText
-                value={user.loginLocation || '未知地点'}
+                value={user.loginLocation || t('table.rows.unknownLocation')}
                 className="max-w-[220px] text-xs text-muted-foreground"
               />
             </div>
@@ -142,7 +142,7 @@ export function OnlineUserTable({
       }),
       columnHelper.display({
         id: 'client',
-        header: () => '客户端',
+        header: () => t('table.columns.client'),
         cell: ({ row }) => {
           const user = row.original;
           return (
@@ -165,12 +165,14 @@ export function OnlineUserTable({
       }),
       columnHelper.display({
         id: 'status',
-        header: () => '状态',
+        header: () => t('table.columns.status'),
         cell: ({ row }) => {
           const user = row.original;
           return (
             <Badge variant={resolveStatusBadgeVariant(user.status)}>
-              {user.status === '0' || !user.status ? '在线' : '异常'}
+              {user.status === '0' || !user.status
+                ? t('status.online')
+                : t('status.abnormal')}
             </Badge>
           );
         },
@@ -181,7 +183,7 @@ export function OnlineUserTable({
       }),
       columnHelper.display({
         id: 'loginTime',
-        header: () => '登录时间',
+        header: () => t('table.columns.loginTime'),
         cell: ({ row }) => {
           const user = row.original;
           return (
@@ -192,7 +194,9 @@ export function OnlineUserTable({
               />
               {user.lastAccessTime ? (
                 <EllipsisText
-                  value={`最近活跃：${user.lastAccessTime}`}
+                  value={t('table.rows.lastActive', {
+                    time: user.lastAccessTime,
+                  })}
                   className="max-w-[220px] text-xs text-muted-foreground"
                 />
               ) : null}
@@ -210,7 +214,9 @@ export function OnlineUserTable({
       baseColumns.push(
         columnHelper.display({
           id: 'actions',
-          header: () => <span className="block text-right">操作</span>,
+          header: () => (
+            <span className="block text-right">{t('table.columns.actions')}</span>
+          ),
           cell: ({ row }) => {
             const user = row.original;
             const rowId = row.id;
@@ -250,7 +256,7 @@ export function OnlineUserTable({
                 : false;
             return (
               <Checkbox
-                aria-label="选择全部"
+                aria-label={t('table.selection.all')}
                 checked={checkedState}
                 onCheckedChange={(checked) =>
                   table.toggleAllPageRowsSelected(checked === true)
@@ -260,7 +266,9 @@ export function OnlineUserTable({
           },
           cell: ({ row }) => (
             <Checkbox
-              aria-label={`选择 ${row.original.userName || '用户'}`}
+              aria-label={t('table.selection.user', {
+                name: row.original.userName || t('table.defaultUser'),
+              })}
               checked={row.getIsSelected()}
               disabled={!row.getCanSelect()}
               onCheckedChange={(checked) =>
@@ -290,6 +298,7 @@ export function OnlineUserTable({
     onForceLogout,
     onViewDetail,
     pendingForceRowId,
+    t,
   ]);
 
   const table = useReactTable({
@@ -342,7 +351,7 @@ export function OnlineUserTable({
                 colSpan={visibleColumnCount}
                 className="h-24 text-center text-sm text-destructive"
               >
-                加载失败，请稍后重试。
+                {t('table.state.error')}
               </TableCell>
             </TableRow>
           ) : table.getRowModel().rows.length === 0 ? (
@@ -353,9 +362,9 @@ export function OnlineUserTable({
               >
                 <Empty className="border-0 bg-transparent p-4">
                   <EmptyHeader>
-                    <EmptyTitle>暂无在线用户</EmptyTitle>
+                    <EmptyTitle>{t('table.state.emptyTitle')}</EmptyTitle>
                     <EmptyDescription>
-                      当前无活跃会话，稍后或刷新系统查看最新在线情况。
+                      {t('table.state.emptyDescription')}
                     </EmptyDescription>
                   </EmptyHeader>
                 </Empty>
@@ -412,6 +421,7 @@ function OnlineRowActions({
   onForceLogout: (user: OnlineUser) => void;
   isPending: boolean;
 }) {
+  const t = useTranslations('OnlineUserManagement');
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
@@ -427,7 +437,7 @@ function OnlineRowActions({
             variant="ghost"
             size="icon-sm"
             className="text-muted-foreground"
-            aria-label="更多操作"
+            aria-label={t('table.actions.more')}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
           >
@@ -439,8 +449,8 @@ function OnlineRowActions({
           className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
         >
           <SheetHeader className="px-4 pb-2 pt-3 text-left">
-            <SheetTitle>在线会话</SheetTitle>
-            <SheetDescription>选择要对该用户执行的操作。</SheetDescription>
+            <SheetTitle>{t('table.columns.actions')}</SheetTitle>
+            <SheetDescription>{t('table.actions.more')}</SheetDescription>
           </SheetHeader>
           <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
             {canViewDetail ? (
@@ -454,9 +464,11 @@ function OnlineRowActions({
               >
                 <span className="flex items-center gap-2">
                   <Eye className="size-4" />
-                  查看详情
+                  {t('table.actions.view')}
                 </span>
-                <span className="text-xs text-muted-foreground">查看会话信息</span>
+                <span className="text-xs text-muted-foreground">
+                  {t('detail.description.generic')}
+                </span>
               </Button>
             ) : null}
             {canForceLogout ? (
@@ -472,12 +484,12 @@ function OnlineRowActions({
                 {isPending ? (
                   <>
                     <Spinner className="size-4" />
-                    处理中
+                    {t('table.actions.pending')}
                   </>
                 ) : (
                   <>
                     <LogOut className="size-4" />
-                    强退
+                    {t('table.actions.force')}
                   </>
                 )}
               </Button>
@@ -497,7 +509,7 @@ function OnlineRowActions({
           className="text-muted-foreground"
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
-          aria-label="更多操作"
+          aria-label={t('table.actions.more')}
         >
           <MoreHorizontal className="size-4" />
         </Button>
@@ -511,7 +523,7 @@ function OnlineRowActions({
             }}
           >
             <Eye className="mr-2 size-4" />
-            查看详情
+            {t('table.actions.view')}
           </DropdownMenuItem>
         ) : null}
         {canViewDetail && canForceLogout ? <DropdownMenuSeparator /> : null}
@@ -527,12 +539,12 @@ function OnlineRowActions({
             {isPending ? (
               <>
                 <Spinner className="mr-2 size-4" />
-                处理中
+                {t('table.actions.pending')}
               </>
             ) : (
               <>
                 <LogOut className="mr-2 size-4" />
-                强退
+                {t('table.actions.force')}
               </>
             )}
           </DropdownMenuItem>

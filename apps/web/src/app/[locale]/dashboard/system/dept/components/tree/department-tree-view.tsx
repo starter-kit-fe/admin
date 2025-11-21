@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import {
   ChevronDown,
   ChevronRight,
@@ -43,9 +44,11 @@ import {
 
 import type { DepartmentNode, DepartmentStatus } from '../../type';
 
-const STATUS_META: Partial<Record<DepartmentStatus, { label: string; className: string }>> = {
+const STATUS_META: Partial<
+  Record<DepartmentStatus, { labelKey: 'status.1'; className: string }>
+> = {
   '1': {
-    label: '停用',
+    labelKey: 'status.1',
     className:
       'border border-rose-400/40 bg-rose-500/10 text-rose-600 dark:border-rose-400/50 dark:bg-rose-500/20 dark:text-rose-100',
   },
@@ -104,6 +107,7 @@ export function DepartmentTreeView({
   onEdit,
   onDelete,
 }: DepartmentTreeViewProps) {
+  const t = useTranslations('DepartmentManagement');
   const isMobile = useIsMobile();
   const [mobileActionNode, setMobileActionNode] = useState<DepartmentNode | null>(null);
 
@@ -198,18 +202,24 @@ export function DepartmentTreeView({
                           statusMeta.className,
                         )}
                       >
-                        {statusMeta.label}
+                        {t(statusMeta.labelKey)}
                       </Badge>
                     ) : null}
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    {item.leader ? <span>负责人：{item.leader}</span> : null}
-                    {item.phone ? <span>电话：{item.phone}</span> : null}
-                    {item.email ? <span>邮箱：{item.email}</span> : null}
+                    {item.leader ? (
+                      <span>{t('tree.meta.leader', { value: item.leader })}</span>
+                    ) : null}
+                    {item.phone ? (
+                      <span>{t('tree.meta.phone', { value: item.phone })}</span>
+                    ) : null}
+                    {item.email ? (
+                      <span>{t('tree.meta.email', { value: item.email })}</span>
+                    ) : null}
                   </div>
                   {item.remark ? (
                     <div className="text-xs text-muted-foreground/80">
-                      备注：{item.remark}
+                      {t('tree.meta.remark', { value: item.remark })}
                     </div>
                   ) : null}
                 </div>
@@ -239,8 +249,8 @@ export function DepartmentTreeView({
     return (
       <Empty className="h-60 border border-dashed border-border/60">
         <EmptyHeader>
-          <EmptyTitle>暂无部门数据</EmptyTitle>
-          <EmptyDescription>创建组织结构后即可在此维护上下级关系。</EmptyDescription>
+          <EmptyTitle>{t('tree.emptyTitle')}</EmptyTitle>
+          <EmptyDescription>{t('tree.emptyDescription')}</EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
@@ -279,6 +289,7 @@ function DepartmentActions({
   isMobile: boolean;
   onOpenMobile: () => void;
 }) {
+  const t = useTranslations('DepartmentManagement');
   if (isMobile) {
     return (
       <Button
@@ -308,18 +319,18 @@ function DepartmentActions({
       <DropdownMenuContent align="end" className="w-36">
         <DropdownMenuItem onClick={() => onAddChild(node)}>
           <Plus className="mr-2 h-4 w-4" />
-          新增子部门
+          {t('tree.actions.addChild')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onEdit(node)}>
           <Pencil className="mr-2 h-4 w-4" />
-          编辑
+          {t('tree.actions.edit')}
         </DropdownMenuItem>
         <DropdownMenuItem
           className="text-destructive focus:bg-destructive/10 focus:text-destructive"
           onClick={() => onDelete(node)}
         >
           <Trash2 className="mr-2 h-4 w-4" />
-          删除
+          {t('tree.actions.delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -339,6 +350,7 @@ function MobileDepartmentActionSheet({
   onDelete: (node: DepartmentNode) => void;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useTranslations('DepartmentManagement');
   return (
     <Sheet open={Boolean(node)} onOpenChange={onOpenChange}>
       <SheetContent
@@ -346,8 +358,8 @@ function MobileDepartmentActionSheet({
         className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
       >
         <SheetHeader className="px-4 pb-2 pt-3 text-left">
-          <SheetTitle>操作</SheetTitle>
-          <SheetDescription>为该部门选择要执行的操作。</SheetDescription>
+          <SheetTitle>{t('tree.actions.more')}</SheetTitle>
+          <SheetDescription>{t('tree.actions.more')}</SheetDescription>
         </SheetHeader>
         <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
           <Button
@@ -362,9 +374,11 @@ function MobileDepartmentActionSheet({
           >
             <span className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              新增子部门
+              {t('tree.actions.addChild')}
             </span>
-            <span className="text-xs text-muted-foreground">添加下级节点</span>
+            <span className="text-xs text-muted-foreground">
+              {t('tree.actions.addChild')}
+            </span>
           </Button>
           <Button
             variant="outline"
@@ -378,9 +392,11 @@ function MobileDepartmentActionSheet({
           >
             <span className="flex items-center gap-2">
               <Pencil className="h-4 w-4" />
-              编辑
+              {t('tree.actions.edit')}
             </span>
-            <span className="text-xs text-muted-foreground">修改部门信息</span>
+            <span className="text-xs text-muted-foreground">
+              {t('tree.actions.edit')}
+            </span>
           </Button>
           <Button
             variant="destructive"
@@ -394,9 +410,11 @@ function MobileDepartmentActionSheet({
           >
             <span className="flex items-center gap-2">
               <Trash2 className="h-4 w-4" />
-              删除
+              {t('tree.actions.delete')}
             </span>
-            <span className="text-xs text-muted-foreground">删除并移除子部门</span>
+            <span className="text-xs text-muted-foreground">
+              {t('tree.actions.delete')}
+            </span>
           </Button>
         </SheetFooter>
       </SheetContent>

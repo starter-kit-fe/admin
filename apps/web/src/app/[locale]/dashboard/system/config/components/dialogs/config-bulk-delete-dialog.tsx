@@ -12,8 +12,10 @@ import {
   useConfigSelection,
 } from '@/app/dashboard/system/config/store';
 import { resolveErrorMessage } from '../../utils';
+import { useTranslations } from 'next-intl';
 
 export function ConfigBulkDeleteDialog() {
+  const t = useTranslations('ConfigManagement');
   const { bulkDeleteOpen, setBulkDeleteOpen } = useConfigBulkDeleteState();
   const { selectedIds, clearSelectedIds } = useConfigSelection();
   const refresh = useConfigManagementRefresh();
@@ -27,13 +29,13 @@ export function ConfigBulkDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('批量删除成功');
+      toast.success(t('toast.bulkDeleteSuccess'));
       setBulkDeleteOpen(false);
       clearSelectedIds();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '批量删除失败，请稍后再试'));
+      toast.error(resolveErrorMessage(error, t('toast.bulkDeleteError')));
     },
     onSettled: () => {
       endMutation();
@@ -46,13 +48,13 @@ export function ConfigBulkDeleteDialog() {
     <DeleteConfirmDialog
       open={bulkDeleteOpen}
       onOpenChange={setBulkDeleteOpen}
-      title="批量删除参数"
+      title={t('dialogs.bulkDeleteTitle')}
       description={
         selectedCount > 0
-          ? `将删除选中的 ${selectedCount} 个参数，操作不可恢复。`
-          : '确认删除所选参数吗？'
+          ? t('dialogs.bulkDeleteSelected', { count: selectedCount })
+          : t('dialogs.deleteFallback')
       }
-      confirmLabel="批量删除"
+      confirmLabel={t('dialogs.bulkDeleteConfirm')}
       loading={bulkDeleteMutation.isPending}
       onConfirm={() => {
         if (selectedCount > 0) {

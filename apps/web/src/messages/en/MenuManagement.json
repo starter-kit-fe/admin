@@ -38,11 +38,13 @@
       "permission": "Permission",
       "notConfigured": "Not configured",
       "addChild": "Add child",
+      "addChildHint": "Add submenu or button",
       "edit": "Edit",
       "delete": "Delete",
       "moveUp": "Move up",
       "moveDown": "Move down",
-      "more": "More actions"
+      "more": "More actions",
+      "actionsDescription": "Choose an action to perform for this menu."
     }
   },
   "toast": {

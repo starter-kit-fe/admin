@@ -48,6 +48,7 @@ import {
 } from '@tanstack/react-table';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { Role } from '../../type';
 
@@ -72,16 +73,16 @@ interface RoleTableProps {
 const STATUS_META: Record<
   Role['status'],
   {
-    label: string;
+    label: 'status.enabled' | 'status.disabled';
     badgeClass: string;
   }
 > = {
   '0': {
-    label: '正常',
+    label: 'status.enabled',
     badgeClass: 'bg-primary/10 text-primary',
   },
   '1': {
-    label: '停用',
+    label: 'status.disabled',
     badgeClass: 'bg-rose-500/10 text-rose-600 border-rose-500/30',
   },
 };
@@ -112,6 +113,7 @@ function RoleRowActions({
   canEdit: boolean;
   canDelete: boolean;
 }) {
+  const t = useTranslations('RoleManagement');
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
@@ -126,7 +128,7 @@ function RoleRowActions({
       className="size-7 sm:size-8"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
-      aria-label="更多操作"
+      aria-label={t('table.actions.more')}
       disabled={!canEdit && !canDelete}
     >
       <MoreHorizontal className="size-4" />
@@ -142,26 +144,26 @@ function RoleRowActions({
             side="bottom"
             className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
           >
-          <SheetHeader className="px-4 pb-2 pt-3 text-left">
-            <SheetTitle>操作</SheetTitle>
-            <SheetDescription>为该角色选择要执行的操作。</SheetDescription>
-          </SheetHeader>
-          <SheetFooter className="mt-0 flex-row items-center justify-between gap-3 px-4 pb-4">
-            {canEdit ? (
-              <Button
-                variant="secondary"
-                className="flex-1 justify-between"
-                onClick={() => {
-                  onEdit(role);
-                  setOpen(false);
-                }}
-              >
+            <SheetHeader className="px-4 pb-2 pt-3 text-left">
+              <SheetTitle>{t('table.columns.actions')}</SheetTitle>
+              <SheetDescription>{t('table.actions.description')}</SheetDescription>
+            </SheetHeader>
+            <SheetFooter className="mt-0 flex-row items-center justify-between gap-3 px-4 pb-4">
+              {canEdit ? (
+                <Button
+                  variant="secondary"
+                  className="flex-1 justify-between"
+                  onClick={() => {
+                    onEdit(role);
+                    setOpen(false);
+                  }}
+                >
                   <span className="flex items-center gap-2">
                     <Pencil className="size-4" />
-                    编辑
+                    {t('table.actions.edit')}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    修改角色
+                    {t('table.actions.editHint')}
                   </span>
                 </Button>
               ) : null}
@@ -174,7 +176,7 @@ function RoleRowActions({
                     setOpen(false);
                   }}
                 >
-                  <Trash2 className="size-4" /> 删除角色
+                  <Trash2 className="size-4" /> {t('table.actions.delete')}
                 </Button>
               ) : null}
             </SheetFooter>
@@ -192,7 +194,7 @@ function RoleRowActions({
                 }}
               >
                 <Pencil className="mr-2 size-4" />
-                编辑
+                {t('table.actions.edit')}
               </DropdownMenuItem>
             ) : null}
             {canDelete ? (
@@ -203,7 +205,7 @@ function RoleRowActions({
                   onDelete(role);
                 }}
               >
-                <Trash2 className="mr-2 size-4" /> 删除角色
+                <Trash2 className="mr-2 size-4" /> {t('table.actions.delete')}
               </DropdownMenuItem>
             ) : null}
           </DropdownMenuContent>
@@ -224,6 +226,7 @@ export function RoleTable({
   isLoading,
   isError,
 }: RoleTableProps) {
+  const t = useTranslations('RoleManagement');
   const columnHelper = useMemo(() => createColumnHelper<Role>(), []);
   const { hasPermission } = usePermissions();
   const canEditRole = hasPermission('system:role:edit');
@@ -236,7 +239,7 @@ export function RoleTable({
         id: 'select',
         header: () => (
           <Checkbox
-            aria-label="选择全部"
+            aria-label={t('table.selection.selectAll')}
             checked={headerCheckboxState}
             onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
           />
@@ -246,7 +249,9 @@ export function RoleTable({
           const isSelected = selectedIds.has(role.roleId);
           return (
             <Checkbox
-              aria-label={`选择 ${role.roleName}`}
+              aria-label={t('table.selection.selectRole', {
+                target: role.roleName,
+              })}
               checked={isSelected}
               onCheckedChange={(checked) =>
                 onToggleSelect(role.roleId, checked === true)
@@ -259,7 +264,7 @@ export function RoleTable({
         meta: { headerClassName: 'w-12', cellClassName: 'w-12 align-middle' },
       }),
       columnHelper.accessor('roleName', {
-        header: '角色名称',
+        header: t('table.columns.name'),
         cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="text-sm font-medium text-foreground">
@@ -273,7 +278,7 @@ export function RoleTable({
         meta: { headerClassName: 'min-w-[140px] md:min-w-[200px]' },
       }),
       columnHelper.accessor('roleKey', {
-        header: '权限字符',
+        header: t('table.columns.key'),
         cell: ({ getValue }) => (
           <span className="text-sm text-muted-foreground">{getValue()}</span>
         ),
@@ -283,7 +288,7 @@ export function RoleTable({
         },
       }),
       columnHelper.accessor('status', {
-        header: '状态',
+        header: t('table.columns.status'),
         cell: ({ getValue }) => {
           const meta = STATUS_META[getValue()] ?? STATUS_META['1'];
           return (
@@ -294,7 +299,7 @@ export function RoleTable({
                 meta.badgeClass,
               )}
             >
-              {meta.label}
+              {t(meta.label)}
             </Badge>
           );
         },
@@ -302,7 +307,7 @@ export function RoleTable({
         meta: { headerClassName: 'w-[120px]' },
       }),
       columnHelper.accessor('createTime', {
-        header: '创建时间',
+        header: t('table.columns.createdAt'),
         cell: ({ getValue }) => (
           <span className="text-sm text-muted-foreground">
             {getDateTimeLabel(getValue())}
@@ -320,7 +325,9 @@ export function RoleTable({
       baseColumns.push(
         columnHelper.display({
           id: 'actions',
-          header: () => <span className="block text-right">操作</span>,
+          header: () => (
+            <span className="block text-right">{t('table.columns.actions')}</span>
+          ),
           cell: ({ row }) => (
             <RoleRowActions
               role={row.original}
@@ -348,6 +355,7 @@ export function RoleTable({
     onToggleSelectAll,
     selectedIds,
     showRowActions,
+    t,
   ]);
 
   const table = useReactTable({
@@ -395,7 +403,7 @@ export function RoleTable({
                 colSpan={visibleColumnCount}
                 className="h-24 text-center text-sm text-destructive"
               >
-                加载失败，请稍后再试。
+                {t('table.state.error')}
               </TableCell>
             </TableRow>
           ) : table.getRowModel().rows.length === 0 ? (
@@ -406,9 +414,9 @@ export function RoleTable({
               >
                 <Empty className="border-0 bg-transparent p-4">
                   <EmptyHeader>
-                    <EmptyTitle>暂无角色数据</EmptyTitle>
+                    <EmptyTitle>{t('table.state.emptyTitle')}</EmptyTitle>
                     <EmptyDescription>
-                      创建角色后即可在此配置权限和成员。
+                      {t('table.state.emptyDescription')}
                     </EmptyDescription>
                   </EmptyHeader>
                 </Empty>

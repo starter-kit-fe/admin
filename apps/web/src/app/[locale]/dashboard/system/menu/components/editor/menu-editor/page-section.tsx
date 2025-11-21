@@ -15,19 +15,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { UseFormReturn } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
 
 import type { MenuFormValues } from '@/app/dashboard/system/menu/type';
 import { SectionHeader } from './section-header';
 import { MenuIconSelect } from '../menu-icon-select';
 
 export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
+  const t = useTranslations('MenuManagement');
   const { control } = form;
 
   return (
     <div className="space-y-4">
       <SectionHeader
-        title="菜单配置"
-        description="配置菜单路由、参数及权限信息。"
+        title={t('form.sections.menu.title')}
+        description={t('form.sections.menu.description')}
       />
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
@@ -35,9 +37,12 @@ export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
           name="path"
           render={({ field }) => (
             <FormItem className="md:col-span-2">
-              <FormLabel>路由地址</FormLabel>
+              <FormLabel>{t('form.sections.menu.fields.path')}</FormLabel>
               <FormControl>
-                <Input placeholder="例如 system/user" {...field} />
+                <Input
+                  placeholder={t('form.sections.menu.fields.pathPlaceholder')}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -48,9 +53,12 @@ export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
           name="query"
           render={({ field }) => (
             <FormItem className="md:col-span-2">
-              <FormLabel>路由参数</FormLabel>
+              <FormLabel>{t('form.sections.menu.fields.query')}</FormLabel>
               <FormControl>
-                <Input placeholder="可选，例如 role=admin" {...field} />
+                <Input
+                  placeholder={t('form.sections.menu.fields.queryPlaceholder')}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -64,8 +72,12 @@ export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
           render={({ field }) => (
             <FormItem className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-4 py-3">
               <div>
-                <FormLabel className="font-medium">外链跳转</FormLabel>
-                <p className="text-xs text-muted-foreground">开启后点击菜单将直接访问外部链接。</p>
+                <FormLabel className="font-medium">
+                  {t('form.sections.menu.fields.external.label')}
+                </FormLabel>
+                <p className="text-xs text-muted-foreground">
+                  {t('form.sections.menu.fields.external.description')}
+                </p>
               </div>
               <FormControl>
                 <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -79,8 +91,12 @@ export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
           render={({ field }) => (
             <FormItem className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-4 py-3">
               <div>
-                <FormLabel className="font-medium">禁用缓存</FormLabel>
-                <p className="text-xs text-muted-foreground">关闭后使用 keepalive，保留页面状态。</p>
+                <FormLabel className="font-medium">
+                  {t('form.sections.menu.fields.cache.label')}
+                </FormLabel>
+                <p className="text-xs text-muted-foreground">
+                  {t('form.sections.menu.fields.cache.description')}
+                </p>
               </div>
               <FormControl>
                 <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -95,12 +111,12 @@ export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
           name="icon"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>菜单图标</FormLabel>
+              <FormLabel>{t('form.sections.menu.fields.icon')}</FormLabel>
               <FormControl>
                 <MenuIconSelect
                   value={field.value}
                   onChange={field.onChange}
-                  placeholder="搜索 Lucide 图标"
+                  placeholder={t('form.sections.menu.fields.iconPlaceholder')}
                 />
               </FormControl>
               <FormMessage />
@@ -112,16 +128,16 @@ export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
           name="visible"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>显示状态</FormLabel>
+              <FormLabel>{t('form.sections.menu.fields.visible')}</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择显示状态" />
+                    <SelectValue placeholder={t('form.sections.menu.fields.visible')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="0">显示</SelectItem>
-                  <SelectItem value="1">隐藏</SelectItem>
+                  <SelectItem value="0">{t('visibility.visible')}</SelectItem>
+                  <SelectItem value="1">{t('visibility.hidden')}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -133,16 +149,16 @@ export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>菜单状态</FormLabel>
+              <FormLabel>{t('form.sections.menu.fields.status')}</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择状态" />
+                    <SelectValue placeholder={t('form.sections.menu.fields.status')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="0">正常</SelectItem>
-                  <SelectItem value="1">停用</SelectItem>
+                  <SelectItem value="0">{t('status.enabled')}</SelectItem>
+                  <SelectItem value="1">{t('status.disabled')}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -154,9 +170,12 @@ export function PageSection({ form }: { form: UseFormReturn<MenuFormValues> }) {
           name="perms"
           render={({ field }) => (
             <FormItem className="md:col-span-2">
-              <FormLabel>权限标识</FormLabel>
+              <FormLabel>{t('form.sections.menu.fields.perms')}</FormLabel>
               <FormControl>
-                <Input placeholder="用于按钮或页面权限控制，例如 system:user:list" {...field} />
+                <Input
+                  placeholder={t('form.sections.menu.fields.permsPlaceholder')}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

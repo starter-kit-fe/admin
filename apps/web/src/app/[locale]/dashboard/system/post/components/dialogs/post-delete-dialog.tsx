@@ -11,8 +11,10 @@ import {
   usePostManagementStore,
 } from '@/app/dashboard/system/post/store';
 import { resolveErrorMessage } from '../../utils';
+import { useTranslations } from 'next-intl';
 
 export function PostDeleteDialog() {
+  const t = useTranslations('PostManagement');
   const { deleteTarget, setDeleteTarget } = usePostManagementStore();
   const refresh = usePostManagementRefresh();
   const { beginMutation, endMutation } = usePostManagementMutationCounter();
@@ -23,12 +25,12 @@ export function PostDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('岗位已删除');
+      toast.success(t('toast.deleteSuccess'));
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '删除岗位失败，请稍后再试'));
+      toast.error(resolveErrorMessage(error, t('toast.deleteError')));
     },
     onSettled: () => {
       endMutation();
@@ -43,11 +45,11 @@ export function PostDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title="删除岗位"
+      title={t('delete.single.title')}
       description={
         deleteTarget
-          ? `确定要删除岗位「${deleteTarget.postName}」吗？该操作无法撤销。`
-          : '确认删除所选岗位吗？'
+          ? t('delete.single.description', { name: deleteTarget.postName })
+          : t('delete.single.fallback')
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

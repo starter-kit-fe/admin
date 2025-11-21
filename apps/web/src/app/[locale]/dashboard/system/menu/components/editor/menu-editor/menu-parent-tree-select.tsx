@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
+import { useTranslations } from 'next-intl';
 import type { MenuParentOption } from './types';
 import type { MenuType } from '@/app/dashboard/system/menu/type';
 
@@ -29,6 +29,7 @@ export function MenuParentTreeSelect({
   disabled,
   menuType,
 }: MenuParentTreeSelectProps) {
+  const t = useTranslations('MenuManagement');
   const formattedOptions = useMemo(
     () =>
       options.map((option) => ({
@@ -95,7 +96,7 @@ export function MenuParentTreeSelect({
   return (
     <Select value={resolvedValue} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="w-full justify-between">
-        <SelectValue placeholder="请选择父级菜单" />
+        <SelectValue placeholder={t('parentSelect.placeholder')} />
       </SelectTrigger>
       <SelectContent
         align="start"

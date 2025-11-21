@@ -5,6 +5,7 @@ import { RefreshCcw } from 'lucide-react';
 import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from 'next-intl';
 
 import {
   useOnlineUserManagementRefresh,
@@ -12,13 +13,14 @@ import {
 } from '../../store';
 
 export function OnlineUserManagementHeader() {
+  const t = useTranslations('OnlineUserManagement');
   const { isRefreshing, isMutating } = useOnlineUserManagementStatus();
   const refresh = useOnlineUserManagementRefresh();
 
   return (
     <ManagementHeader
-      title="在线用户"
-      description="实时查看活跃会话，支持按账号、IP 和活跃时间筛选。"
+      title={t('header.title')}
+      description={t('header.description')}
       actions={
         <>
           <PermissionButton
@@ -30,12 +32,12 @@ export function OnlineUserManagementHeader() {
             {isRefreshing ? (
               <>
                 <Spinner className="mr-2 size-4" />
-                刷新中
+                {t('header.actions.refreshing')}
               </>
             ) : (
               <>
                 <RefreshCcw className="mr-2 size-4" />
-                刷新
+                {t('header.actions.refresh')}
               </>
             )}
           </PermissionButton>

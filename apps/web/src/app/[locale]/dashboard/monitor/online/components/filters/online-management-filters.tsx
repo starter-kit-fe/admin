@@ -11,6 +11,7 @@ import {
   OnlineAppliedFilters,
   type OnlineFilterChip,
 } from './online-applied-filters';
+import { useTranslations } from 'next-intl';
 
 interface OnlineManagementFiltersProps {
   userName: string;
@@ -31,6 +32,8 @@ export function OnlineManagementFilters({
   onRemoveFilter,
   onClearFilters,
 }: OnlineManagementFiltersProps) {
+  const t = useTranslations('OnlineUserManagement');
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
@@ -39,7 +42,7 @@ export function OnlineManagementFilters({
             <UserRound className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="按登录账号筛选"
+            placeholder={t('filters.userPlaceholder')}
             value={userName}
             onChange={(event) => onUserNameChange(event.target.value)}
           />
@@ -47,7 +50,7 @@ export function OnlineManagementFilters({
             <InputGroupButton
               variant="ghost"
               size="icon-sm"
-              aria-label="清空账号筛选"
+              aria-label={t('filters.userClear')}
               onClick={() => onUserNameChange('')}
             >
               <X className="size-3.5" />
@@ -60,7 +63,7 @@ export function OnlineManagementFilters({
             <Globe className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="按 IP 地址筛选"
+            placeholder={t('filters.ipPlaceholder')}
             value={ipaddr}
             onChange={(event) => onIpChange(event.target.value)}
           />
@@ -68,7 +71,7 @@ export function OnlineManagementFilters({
             <InputGroupButton
               variant="ghost"
               size="icon-sm"
-              aria-label="清空 IP 筛选"
+              aria-label={t('filters.ipClear')}
               onClick={() => onIpChange('')}
             >
               <X className="size-3.5" />

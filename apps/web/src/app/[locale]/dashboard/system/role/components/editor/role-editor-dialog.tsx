@@ -15,39 +15,41 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useTranslations } from 'next-intl';
 
 import type { RoleFormValues } from '../../type';
 import { MenuPermissionTree } from './menu-permission-tree';
 
-const roleFormSchema = z.object({
-  roleName: z
-    .string()
-    .trim()
-    .min(1, '请输入角色名称')
-    .max(50, '角色名称不能超过 50 个字符'),
-  roleKey: z
-    .string()
-    .trim()
-    .min(1, '请输入权限字符')
-    .max(100, '权限字符不能超过 100 个字符'),
-  roleSort: z
-    .string()
-    .trim()
-    .refine((value) => {
-      if (value === '') return true;
-      const parsed = Number(value);
-      return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999;
-    }, '排序需为 0 到 9999 之间的整数'),
-  dataScope: z.enum(['1', '2', '3', '4', '5']),
-  menuCheckStrictly: z.boolean(),
-  deptCheckStrictly: z.boolean(),
-  status: z.enum(['0', '1']),
-  remark: z.string().trim().max(256, '备注最长 256 个字符'),
-  menuIds: z.array(z.number().int().nonnegative()),
-});
+const createRoleFormSchema = (t: ReturnType<typeof useTranslations>) =>
+  z.object({
+    roleName: z
+      .string()
+      .trim()
+      .min(1, t('form.validation.name.required'))
+      .max(50, t('form.validation.name.max')),
+    roleKey: z
+      .string()
+      .trim()
+      .min(1, t('form.validation.key.required'))
+      .max(100, t('form.validation.key.max')),
+    roleSort: z
+      .string()
+      .trim()
+      .refine((value) => {
+        if (value === '') return true;
+        const parsed = Number(value);
+        return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999;
+      }, t('form.validation.sort.range')),
+    dataScope: z.enum(['1', '2', '3', '4', '5']),
+    menuCheckStrictly: z.boolean(),
+    deptCheckStrictly: z.boolean(),
+    status: z.enum(['0', '1']),
+    remark: z.string().trim().max(256, t('form.validation.remark.max')),
+    menuIds: z.array(z.number().int().nonnegative()),
+  });
 
 const DEFAULT_VALUES: RoleFormValues = {
   roleName: '',
@@ -84,8 +86,11 @@ export function RoleEditorDialog({
   onOpenChange,
   onSubmit,
 }: RoleEditorDialogProps) {
+  const t = useTranslations('RoleManagement');
+  const formSchema = useMemo(() => createRoleFormSchema(t), [t]);
+
   const form = useForm<RoleFormValues, Record<string, never>, RoleFormValues>({
-    resolver: zodResolver(roleFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -104,16 +109,16 @@ export function RoleEditorDialog({
     });
   });
 
-  const title = mode === 'create' ? '新增角色' : '编辑角色';
+  const title = mode === 'create' ? t('form.createTitle') : t('form.editTitle');
   const description =
     mode === 'create'
-      ? '创建一个新的系统角色并配置基础权限。'
-      : '更新角色的基本信息和权限范围。';
+      ? t('form.createDescription')
+      : t('form.editDescription');
   const submitText = submitting
-    ? '提交中...'
+    ? t('form.submit.creating')
     : mode === 'create'
-      ? '创建'
-      : '保存';
+      ? t('form.submit.create')
+      : t('form.submit.save');
 
   const disabled = submitting || loading;
   const formId = 'role-editor-form';
@@ -133,7 +138,7 @@ export function RoleEditorDialog({
               disabled={disabled}
               className="flex-1 sm:flex-none sm:min-w-[96px]"
             >
-              取消
+              {t('dialogs.bulkDeleteCancel')}
             </Button>
             <Button
               type="submit"
@@ -154,7 +159,7 @@ export function RoleEditorDialog({
           >
             {loading ? (
               <div className="flex min-h-[160px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/40">
-                <InlineLoading label="正在加载角色信息..." />
+                <InlineLoading label={t('form.loading')} />
               </div>
             ) : null}
 
@@ -166,11 +171,11 @@ export function RoleEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <span className="mr-1 text-destructive">*</span>
-                      角色名称
+                      {t('form.fields.name')}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="请输入角色名称"
+                        placeholder={t('form.fields.namePlaceholder')}
                         disabled={disabled}
                         {...field}
                       />
@@ -186,11 +191,11 @@ export function RoleEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <span className="mr-1 text-destructive">*</span>
-                      权限字符
+                      {t('form.fields.key')}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="请输入权限字符"
+                        placeholder={t('form.fields.keyPlaceholder')}
                         disabled={disabled}
                         {...field}
                       />
@@ -204,11 +209,11 @@ export function RoleEditorDialog({
                 name="roleSort"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>显示顺序</FormLabel>
+                    <FormLabel>{t('form.fields.sort')}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        placeholder="默认 0"
+                        placeholder={t('form.fields.sortPlaceholder')}
                         disabled={disabled}
                         value={field.value}
                         onChange={(event) => field.onChange(event.target.value)}
@@ -223,7 +228,7 @@ export function RoleEditorDialog({
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>角色状态</FormLabel>
+                    <FormLabel>{t('form.fields.status')}</FormLabel>
                     <FormControl>
                       <RadioGroup
                         className="flex gap-4"
@@ -235,13 +240,17 @@ export function RoleEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="0" />
                           </FormControl>
-                          <FormLabel className="font-normal">正常</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('status.enabled')}
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center gap-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="1" />
                           </FormControl>
-                          <FormLabel className="font-normal">停用</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('status.disabled')}
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -256,11 +265,11 @@ export function RoleEditorDialog({
               name="remark"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>备注</FormLabel>
+                  <FormLabel>{t('form.fields.remark')}</FormLabel>
                   <FormControl>
                     <Textarea
                       className="min-h-[96px] resize-none"
-                      placeholder="请输入备注（可选）"
+                      placeholder={t('form.fields.remarkPlaceholder')}
                       disabled={disabled}
                       {...field}
                     />

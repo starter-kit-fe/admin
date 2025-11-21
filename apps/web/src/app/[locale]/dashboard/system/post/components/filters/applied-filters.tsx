@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export type PostFilterChip = {
   key: string;
@@ -16,6 +17,7 @@ interface AppliedFiltersProps {
 }
 
 export function AppliedFilters({ items, onRemove }: AppliedFiltersProps) {
+  const t = useTranslations('PostManagement');
   if (items.length === 0) {
     return null;
   }
@@ -38,7 +40,7 @@ export function AppliedFilters({ items, onRemove }: AppliedFiltersProps) {
             className={cn(
               'text-muted-foreground/70 transition-colors hover:text-muted-foreground',
             )}
-            aria-label={`移除 ${item.label}`}
+            aria-label={t('filters.chips.remove', { target: item.label })}
           >
             <X className="size-3.5" />
           </button>

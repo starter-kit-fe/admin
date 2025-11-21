@@ -10,8 +10,10 @@ import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function ConfigManagementHeader() {
+  const t = useTranslations('ConfigManagement');
   const { configs } = useConfigsState();
   const { openCreate } = useConfigEditorActions();
   const { isRefreshing, isMutating } = useConfigManagementStatus();
@@ -21,8 +23,8 @@ export function ConfigManagementHeader() {
   return (
     <section className="space-y-2">
       <ManagementHeader
-        title="参数设置"
-        description="管理系统运行时配置，支持按关键字筛选、编辑和同步缓存。"
+        title={t('header.title')}
+        description={t('header.description')}
         actions={
           <>
             <PermissionButton
@@ -38,7 +40,7 @@ export function ConfigManagementHeader() {
               ) : (
                 <RefreshCw className="size-4" />
               )}
-              刷新
+              {t('header.refresh')}
             </PermissionButton>
             <PermissionButton
               required="system:config:add"
@@ -48,13 +50,13 @@ export function ConfigManagementHeader() {
               className="gap-2"
             >
               <Plus className="size-4" />
-              新增参数
+              {t('header.create')}
             </PermissionButton>
           </>
         }
       />
       <p className="text-xs text-muted-foreground">
-        当前共 {configs.length} 条参数，请谨慎修改系统内置项。
+        {t('header.summary', { count: configs.length })}
       </p>
     </section>
   );

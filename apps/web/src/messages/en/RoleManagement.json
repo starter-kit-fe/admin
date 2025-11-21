@@ -29,7 +29,9 @@
     "actions": {
       "edit": "Edit",
       "delete": "Delete role",
-      "more": "More actions"
+      "more": "More actions",
+      "description": "Select an action to perform for this role.",
+      "editHint": "Update role"
     },
     "selection": {
       "selectAll": "Select all roles",

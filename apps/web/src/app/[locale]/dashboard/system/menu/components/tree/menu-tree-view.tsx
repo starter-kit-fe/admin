@@ -38,6 +38,7 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   type CSSProperties,
   type ReactElement,
@@ -47,29 +48,10 @@ import {
   useState,
 } from 'react';
 
-const TYPE_META: Record<
-  string,
-  { label: string; variant: 'default' | 'outline' | 'secondary' }
-> = {
-  M: { label: '目录', variant: 'secondary' },
-  C: { label: '菜单', variant: 'default' },
-  F: { label: '按钮', variant: 'outline' },
-};
-
 const TYPE_BADGE_CLASSES: Record<string, string> = {
   M: 'border border-slate-300/70 bg-slate-100 text-slate-700 dark:border-slate-400/50 dark:bg-slate-500/20 dark:text-slate-100',
   C: 'border border-sky-300/70 bg-sky-100 text-sky-700 dark:border-sky-400/50 dark:bg-sky-500/20 dark:text-sky-100',
   F: 'border border-amber-300/70 bg-amber-100 text-amber-700 dark:border-amber-400/50 dark:bg-amber-500/25 dark:text-amber-100',
-};
-
-const STATUS_META: Record<string, { label: string }> = {
-  '0': { label: '正常' },
-  '1': { label: '停用' },
-};
-
-const VISIBLE_META: Record<string, string> = {
-  '0': '显示',
-  '1': '隐藏',
 };
 
 interface MenuTreeViewProps {
@@ -136,6 +118,7 @@ export function MenuTreeView({
   canDelete = true,
   canReorder = true,
 }: MenuTreeViewProps) {
+  const t = useTranslations('MenuManagement');
   const isMobile = useIsMobile();
   if (loading && nodes.length === 0) {
     return (
@@ -239,16 +222,21 @@ export function MenuTreeView({
       return items.map((node, index) => {
         const hasChildren = Boolean(node.children?.length);
         const isExpanded = hasChildren ? expanded.has(node.menuId) : false;
-        const typeMeta = TYPE_META[node.menuType] ?? {
-          label: node.menuType,
-          variant: 'default',
-        };
+        const typeLabel =
+          node.menuType === 'M'
+            ? t('types.directory')
+            : node.menuType === 'F'
+              ? t('types.button')
+              : t('types.menu');
         const badgeTone =
           TYPE_BADGE_CLASSES[node.menuType] ??
           'border border-muted/60 bg-muted/20 text-foreground/80 dark:border-border/40 dark:bg-muted/20 dark:text-muted-foreground';
-        const statusMeta = STATUS_META[node.status] ?? {
-          label: node.status,
-        };
+        const statusLabel =
+          node.status === '0'
+            ? t('status.enabled')
+            : node.status === '1'
+              ? t('status.disabled')
+              : node.status;
         const isButton = node.menuType === 'F';
         const canMoveUp = index > 0;
         const canMoveDown = index < items.length - 1;
@@ -317,11 +305,13 @@ export function MenuTreeView({
                           badgeTone,
                         )}
                       >
-                        {typeMeta.label}
+                        {typeLabel}
                       </Badge>
                       {node.visible !== '0' ? (
                         <Badge className="border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/20 dark:text-amber-100">
-                          {VISIBLE_META[node.visible] ?? node.visible}
+                          {node.visible === '1'
+                            ? t('visibility.hidden')
+                            : t('visibility.visible')}
                         </Badge>
                       ) : null}
                       {node.status !== '0' ? (
@@ -329,7 +319,7 @@ export function MenuTreeView({
                           variant="destructive"
                           className="px-2 py-0.5 text-[11px]"
                         >
-                          {statusMeta.label}
+                          {statusLabel}
                         </Badge>
                       ) : null}
                     </div>
@@ -337,7 +327,7 @@ export function MenuTreeView({
                       {!isButton ? (
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
                           <span className="text-[11px] text-muted-foreground/70">
-                            路由
+                            {t('tree.labels.route')}
                           </span>
                           {displayRoute ? (
                             <code className="rounded bg-muted px-1.5 py-[1px] font-mono text-[11px] text-foreground">
@@ -345,7 +335,7 @@ export function MenuTreeView({
                             </code>
                           ) : (
                             <span className="text-muted-foreground/45">
-                              未配置
+                              {t('tree.labels.notConfigured')}
                             </span>
                           )}
                         </span>
@@ -353,7 +343,7 @@ export function MenuTreeView({
                       {!isRoot ? (
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
                           <span className="text-[11px] text-muted-foreground/70">
-                            权限
+                            {t('tree.labels.permission')}
                           </span>
                           {hasPerms ? (
                             <code className="rounded bg-muted px-1.5 py-[1px] font-mono text-[11px] text-foreground">
@@ -361,7 +351,7 @@ export function MenuTreeView({
                             </code>
                           ) : (
                             <span className="text-muted-foreground/45">
-                              未配置
+                              {t('tree.labels.notConfigured')}
                             </span>
                           )}
                 </span>
@@ -421,7 +411,7 @@ export function MenuTreeView({
   if (loading) {
     return (
       <div className="flex min-h-[200px] items-center justify-center text-sm text-muted-foreground">
-        菜单加载中...
+        {t('tree.loading')}
       </div>
     );
   }
@@ -430,9 +420,9 @@ export function MenuTreeView({
     return (
       <Empty className="h-60 border border-dashed border-border/60">
         <EmptyHeader>
-          <EmptyTitle>暂无菜单数据</EmptyTitle>
+          <EmptyTitle>{t('tree.emptyTitle')}</EmptyTitle>
           <EmptyDescription>
-            请先创建目录或菜单，完成后可在此拖拽调整。
+            {t('tree.emptyDescription')}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -472,6 +462,7 @@ function MenuActions({
   const hasActions =
     canAddChild || canEdit || canDelete || canMoveUp || canMoveDown;
   const [sheetOpen, setSheetOpen] = useState(false);
+  const t = useTranslations('MenuManagement');
 
   if (!hasActions) {
     return null;
@@ -489,7 +480,7 @@ function MenuActions({
             onClick={(event) => event.stopPropagation()}
           >
             <MoreHorizontal className="h-4 w-4" />
-            <span className="sr-only">更多操作</span>
+            <span className="sr-only">{t('tree.labels.more')}</span>
           </Button>
         </SheetTrigger>
         <SheetContent
@@ -497,8 +488,8 @@ function MenuActions({
           className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
         >
           <SheetHeader className="px-4 pb-2 pt-3 text-left">
-            <SheetTitle>操作</SheetTitle>
-            <SheetDescription>选择要对该菜单执行的操作。</SheetDescription>
+            <SheetTitle>{t('tree.labels.more')}</SheetTitle>
+            <SheetDescription>{t('tree.labels.actionsDescription')}</SheetDescription>
           </SheetHeader>
           <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
             {canMoveUp ? (
@@ -511,7 +502,7 @@ function MenuActions({
                 }}
               >
                 <ArrowUp className="h-4 w-4" />
-                上移
+                {t('tree.labels.moveUp')}
               </Button>
             ) : null}
             {canMoveDown ? (
@@ -524,7 +515,7 @@ function MenuActions({
                 }}
               >
                 <ArrowDown className="h-4 w-4" />
-                下移
+                {t('tree.labels.moveDown')}
               </Button>
             ) : null}
             {canAddChild ? (
@@ -538,10 +529,10 @@ function MenuActions({
               >
                 <span className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
-                  新增子菜单
+                  {t('tree.labels.addChild')}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  添加下级或按钮
+                  {t('tree.labels.addChildHint')}
                 </span>
               </Button>
             ) : null}
@@ -555,7 +546,7 @@ function MenuActions({
                 }}
               >
                 <Pencil className="h-4 w-4" />
-                编辑
+                {t('tree.labels.edit')}
               </Button>
             ) : null}
             {canDelete ? (
@@ -568,7 +559,7 @@ function MenuActions({
                 }}
               >
                 <Trash2 className="h-4 w-4" />
-                删除
+                {t('tree.labels.delete')}
               </Button>
             ) : null}
           </SheetFooter>
@@ -590,7 +581,7 @@ function MenuActions({
             onClick={onMoveUp}
           >
             <ArrowUp className="h-4 w-4" />
-            <span className="sr-only">上移</span>
+            <span className="sr-only">{t('tree.labels.moveUp')}</span>
           </Button>
           <Button
             type="button"
@@ -601,7 +592,7 @@ function MenuActions({
             onClick={onMoveDown}
           >
             <ArrowDown className="h-4 w-4" />
-            <span className="sr-only">下移</span>
+            <span className="sr-only">{t('tree.labels.moveDown')}</span>
           </Button>
         </>
       ) : null}
@@ -614,7 +605,7 @@ function MenuActions({
           onClick={onAddChild}
         >
           <Plus className="h-4 w-4" />
-          <span className="sr-only">新增子菜单</span>
+          <span className="sr-only">{t('tree.labels.addChild')}</span>
         </Button>
       ) : null}
       {canEdit ? (
@@ -626,7 +617,7 @@ function MenuActions({
           onClick={onEdit}
         >
           <Pencil className="h-4 w-4" />
-          <span className="sr-only">编辑</span>
+          <span className="sr-only">{t('tree.labels.edit')}</span>
         </Button>
       ) : null}
       {canEdit || canDelete ? (
@@ -638,14 +629,14 @@ function MenuActions({
               className="h-7 w-7 text-muted-foreground"
             >
               <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">更多操作</span>
+              <span className="sr-only">{t('tree.labels.more')}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-36">
             {canEdit ? (
               <DropdownMenuItem onSelect={onEdit}>
                 <Pencil className="mr-2 h-4 w-4" />
-                编辑
+                {t('tree.labels.edit')}
               </DropdownMenuItem>
             ) : null}
             {canDelete ? (
@@ -654,7 +645,7 @@ function MenuActions({
                 className="text-destructive focus:text-destructive"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                删除
+                {t('tree.labels.delete')}
               </DropdownMenuItem>
             ) : null}
           </DropdownMenuContent>

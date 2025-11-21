@@ -13,7 +13,13 @@
     "userPlaceholder": "按登录账号筛选",
     "userClear": "清空账号筛选",
     "ipPlaceholder": "按 IP 地址筛选",
-    "ipClear": "清空 IP 筛选"
+    "ipClear": "清空 IP 筛选",
+    "chips": {
+      "account": "账号",
+      "ip": "IP",
+      "remove": "移除 {target} 筛选"
+    },
+    "clearAll": "清除筛选"
   },
   "guard": {
     "title": "暂无访问权限",
@@ -42,6 +48,7 @@
     },
     "actions": {
       "view": "查看",
+      "more": "更多操作",
       "force": "强退",
       "pending": "处理中"
     },

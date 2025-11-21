@@ -13,7 +13,13 @@
     "userPlaceholder": "Filter by username",
     "userClear": "Clear username filter",
     "ipPlaceholder": "Filter by IP address",
-    "ipClear": "Clear IP filter"
+    "ipClear": "Clear IP filter",
+    "chips": {
+      "account": "Account",
+      "ip": "IP address",
+      "remove": "Remove {target} filter"
+    },
+    "clearAll": "Clear filters"
   },
   "guard": {
     "title": "No access",
@@ -42,6 +48,7 @@
     },
     "actions": {
       "view": "View",
+      "more": "More actions",
       "force": "Force logout",
       "pending": "Processing..."
     },

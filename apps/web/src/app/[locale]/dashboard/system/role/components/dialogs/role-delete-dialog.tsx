@@ -10,8 +10,10 @@ import {
   useRoleManagementRefresh,
   useRoleManagementStore,
 } from '@/app/dashboard/system/role/store';
+import { useTranslations } from 'next-intl';
 
 export function RoleDeleteDialog() {
+  const t = useTranslations('RoleManagement');
   const { deleteTarget, setDeleteTarget } = useRoleManagementStore();
   const refresh = useRoleManagementRefresh();
   const { beginMutation, endMutation } = useRoleManagementMutationCounter();
@@ -22,13 +24,13 @@ export function RoleDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('角色已删除');
+      toast.success(t('toast.deleteSuccess'));
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '删除角色失败，请稍后再试';
+        error instanceof Error ? error.message : t('toast.deleteError');
       toast.error(message);
     },
     onSettled: () => {
@@ -44,11 +46,11 @@ export function RoleDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title="删除角色"
+      title={t('dialogs.deleteTitle')}
       description={
         deleteTarget
-          ? `确定要删除角色「${deleteTarget.roleName}」吗？该操作无法撤销。`
-          : '确认删除所选角色吗？'
+          ? t('dialogs.deleteMessage', { name: deleteTarget.roleName })
+          : t('dialogs.deleteFallback')
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

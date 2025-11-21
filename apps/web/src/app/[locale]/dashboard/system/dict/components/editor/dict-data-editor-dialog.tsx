@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 
 import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-import { dictDataFormSchema, type DictDataFormValues } from '../../type';
+import { createDictDataFormSchema, type DictDataFormValues } from '../../type';
 
 const DEFAULT_VALUES: DictDataFormValues = {
   dictLabel: '',
@@ -54,12 +55,15 @@ export function DictDataEditorDialog({
   onOpenChange,
   onSubmit,
 }: DictDataEditorDialogProps) {
+  const t = useTranslations('DictManagement');
+  const tCommon = useTranslations('Common');
+  const schema = useMemo(() => createDictDataFormSchema(t), [t]);
   const form = useForm<
     DictDataFormValues,
     DictDataFormResolverContext,
     DictDataFormValues
   >({
-    resolver: zodResolver(dictDataFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -80,9 +84,10 @@ export function DictDataEditorDialog({
     });
   });
 
-  const title = mode === 'create' ? '新增字典数据' : '编辑字典数据';
-  const description = '维护当前字典类型的取值列表，标签与键值需要保持唯一。';
-  const submitText = submitting ? '保存中...' : '保存';
+  const title = mode === 'create' ? t('dataEditor.createTitle') : t('dataEditor.editTitle');
+  const description = t('dataEditor.description');
+  const submitText = submitting ? t('dataEditor.actions.saving') : t('dataEditor.actions.save');
+  const cancelText = tCommon('dialogs.cancel');
   const formId = 'dict-data-editor-form';
 
   return (
@@ -100,7 +105,7 @@ export function DictDataEditorDialog({
               disabled={submitting}
               className="flex-1 sm:flex-none sm:min-w-[96px]"
             >
-              取消
+              {cancelText}
             </Button>
             <Button
               type="submit"
@@ -123,10 +128,13 @@ export function DictDataEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      字典标签
+                      {t('dataEditor.fields.dictLabel.label')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入字典标签" {...field} />
+                      <Input
+                        placeholder={t('dataEditor.fields.dictLabel.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -139,10 +147,13 @@ export function DictDataEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      字典键值
+                      {t('dataEditor.fields.dictValue.label')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入字典键值" {...field} />
+                      <Input
+                        placeholder={t('dataEditor.fields.dictValue.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -155,7 +166,7 @@ export function DictDataEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      显示排序
+                      {t('dataEditor.fields.dictSort.label')}
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -185,7 +196,7 @@ export function DictDataEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      状态
+                      {t('dataEditor.fields.status.label')}
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -197,13 +208,17 @@ export function DictDataEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="0" />
                           </FormControl>
-                          <FormLabel className="font-normal">正常</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('dataEditor.fields.status.options.0')}
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center gap-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="1" />
                           </FormControl>
-                          <FormLabel className="font-normal">停用</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('dataEditor.fields.status.options.1')}
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -218,7 +233,7 @@ export function DictDataEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      是否默认
+                      {t('dataEditor.fields.isDefault.label')}
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -230,13 +245,17 @@ export function DictDataEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="Y" />
                           </FormControl>
-                          <FormLabel className="font-normal">默认</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('dataEditor.fields.isDefault.options.Y')}
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center gap-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="N" />
                           </FormControl>
-                          <FormLabel className="font-normal">否</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('dataEditor.fields.isDefault.options.N')}
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -249,9 +268,13 @@ export function DictDataEditorDialog({
                 name="remark"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>备注</FormLabel>
+                    <FormLabel>{t('dataEditor.fields.remark.label')}</FormLabel>
                     <FormControl>
-                      <Textarea rows={3} placeholder="可填写数值说明" {...field} />
+                      <Textarea
+                        rows={3}
+                        placeholder={t('dataEditor.fields.remark.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

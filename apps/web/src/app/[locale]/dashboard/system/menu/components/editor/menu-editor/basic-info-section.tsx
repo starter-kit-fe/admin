@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useWatch, type UseFormReturn } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
 
 import type { MenuFormValues } from '@/app/dashboard/system/menu/type';
 import type { MenuParentOption } from './types';
@@ -23,6 +24,7 @@ export function BasicInfoSection({
   form,
   parentOptions,
 }: BasicInfoSectionProps) {
+  const t = useTranslations('MenuManagement');
   const { control } = form;
   const menuType = useWatch({
     control,
@@ -38,21 +40,27 @@ export function BasicInfoSection({
   const isDirectory = currentMenuType === 'M';
   const nameLabel =
     currentMenuType === 'M'
-      ? '目录名称'
+      ? t('form.sections.basic.fields.name.directory')
       : currentMenuType === 'F'
-        ? '按钮名称'
-        : '菜单名称';
-  const parentLabel = currentMenuType === 'M' ? '父级目录' : '父级菜单';
-  const orderLabel = currentMenuType === 'M' ? '目录排序' : '显示顺序';
+        ? t('form.sections.basic.fields.name.button')
+        : t('form.sections.basic.fields.name.menu');
+  const parentLabel =
+    currentMenuType === 'M'
+      ? t('form.sections.basic.fields.parent.directory')
+      : t('form.sections.basic.fields.parent.menu');
+  const orderLabel =
+    currentMenuType === 'M'
+      ? t('form.sections.basic.fields.order.directory')
+      : t('form.sections.basic.fields.order.default');
 
   return (
     <div className="space-y-4">
       <SectionHeader
-        title="基础信息"
+        title={t('form.sections.basic.title')}
         description={
           currentMenuType === 'M'
-            ? '设置目录的层级与排序，只需维护名称与父级关系。'
-            : '设置菜单或按钮的层级、名称与基础类型。'
+            ? t('form.sections.basic.description.directory')
+            : t('form.sections.basic.description.default')
         }
       />
       <div className="grid gap-4 md:grid-cols-2">
@@ -66,7 +74,12 @@ export function BasicInfoSection({
                 {nameLabel}
               </FormLabel>
               <FormControl>
-                <Input placeholder={`请输入${nameLabel}`} {...field} />
+                <Input
+                  placeholder={t('form.sections.basic.fields.name.placeholder', {
+                    target: nameLabel,
+                  })}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -102,7 +115,7 @@ export function BasicInfoSection({
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="请输入排序（0-9999）"
+                  placeholder={t('form.sections.basic.fields.order.placeholder')}
                   value={field.value}
                   onChange={(event) => field.onChange(event.target.value)}
                 />

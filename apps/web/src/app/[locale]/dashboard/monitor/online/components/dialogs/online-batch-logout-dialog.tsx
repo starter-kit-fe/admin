@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 import { DeleteConfirmDialog } from '../../../../system/user/components/delete-confirm-dialog';
 import { batchForceLogoutOnlineUsers } from '../../api';
@@ -13,6 +14,7 @@ import {
 import { extractOnlineUserIdentifiers } from '../../utils';
 
 export function OnlineUserBatchLogoutDialog() {
+  const t = useTranslations('OnlineUserManagement');
   const {
     batchDialogOpen,
     setBatchDialogOpen,
@@ -27,7 +29,7 @@ export function OnlineUserBatchLogoutDialog() {
     mutationFn: async () => {
       const { ids, skipped } = extractOnlineUserIdentifiers(selectedUsers);
       if (ids.length === 0) {
-        throw new Error('未找到可用的会话，无法执行批量强退');
+        throw new Error(t('errors.missingBatch'));
       }
       await batchForceLogoutOnlineUsers(ids);
       return { count: ids.length, skipped };
@@ -36,10 +38,10 @@ export function OnlineUserBatchLogoutDialog() {
       beginMutation();
     },
     onSuccess: (result) => {
-      toast.success(`已强制下线 ${result.count} 名用户`);
+      toast.success(t('toast.batchSuccess', { count: result.count }));
       if (result.skipped > 0) {
         toast.warning(
-          `另有 ${result.skipped} 名用户缺少会话标识，未能处理`,
+          t('toast.batchSkipped', { count: result.skipped }),
         );
       }
       clearSelectedUsers();
@@ -50,9 +52,7 @@ export function OnlineUserBatchLogoutDialog() {
     },
     onError: (error) => {
       const message =
-        error instanceof Error
-          ? error.message
-          : '批量强退失败，请稍后重试';
+        error instanceof Error ? error.message : t('toast.batchError');
       toast.error(message);
     },
     onSettled: () => {
@@ -77,13 +77,15 @@ export function OnlineUserBatchLogoutDialog() {
           setBatchDialogOpen(false);
         }
       }}
-      title="批量强退"
+      title={t('dialogs.batch.title')}
       description={
         selectedCount > 0
-          ? `确定要强制下线已选的 ${selectedCount} 名用户吗？`
-          : '请选择至少一名用户后再尝试批量强退。'
+          ? t('dialogs.batch.description.selected', {
+              count: selectedCount,
+            })
+          : t('dialogs.batch.description.empty')
       }
-      confirmLabel="批量强退"
+      confirmLabel={t('dialogs.batch.confirm')}
       loading={mutation.isPending}
       onConfirm={handleConfirm}
     />

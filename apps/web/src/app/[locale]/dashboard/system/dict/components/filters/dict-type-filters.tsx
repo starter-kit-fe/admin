@@ -1,6 +1,6 @@
 'use client';
 
-import { type StatusTabItem, StatusTabs } from '@/components/status-tabs';
+import { StatusTabs } from '@/components/status-tabs';
 import {
   InputGroup,
   InputGroupAddon,
@@ -8,10 +8,11 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group';
 import { BookText, Code2, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface DictTypeFiltersProps {
   status: string;
-  statusTabs: StatusTabItem[];
+  statusTabs: Array<{ value: string; labelKey: string }>;
   dictName: string;
   dictType: string;
   onStatusChange: (value: string) => void;
@@ -28,12 +29,16 @@ export function DictTypeFilters({
   onDictNameChange,
   onDictTypeChange,
 }: DictTypeFiltersProps) {
+  const t = useTranslations('DictManagement');
   return (
     <div className="space-y-4 rounded-xl border border-border/60 bg-card/95 p-4 sm:p-5">
       <StatusTabs
         value={status}
         onValueChange={onStatusChange}
-        tabs={statusTabs}
+        tabs={statusTabs.map((tab) => ({
+          value: tab.value,
+          label: t(tab.labelKey),
+        }))}
       />
       <div className="flex flex-wrap gap-3">
         <InputGroup className="border-muted bg-muted/60 sm:max-w-xs">
@@ -41,7 +46,7 @@ export function DictTypeFilters({
             <BookText className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="输入字典名称"
+            placeholder={t('typeFilters.dictNamePlaceholder')}
             value={dictName}
             onChange={(event) => onDictNameChange(event.target.value)}
           />
@@ -49,7 +54,7 @@ export function DictTypeFilters({
             <InputGroupButton
               size="icon-sm"
               variant="ghost"
-              aria-label="清空字典名称"
+              aria-label={t('typeFilters.dictNameClear')}
               onClick={() => onDictNameChange('')}
             >
               <X className="size-3.5" />
@@ -61,7 +66,7 @@ export function DictTypeFilters({
             <Code2 className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="输入字典类型"
+            placeholder={t('typeFilters.dictTypePlaceholder')}
             value={dictType}
             onChange={(event) => onDictTypeChange(event.target.value)}
           />
@@ -69,7 +74,7 @@ export function DictTypeFilters({
             <InputGroupButton
               size="icon-sm"
               variant="ghost"
-              aria-label="清空字典类型"
+              aria-label={t('typeFilters.dictTypeClear')}
               onClick={() => onDictTypeChange('')}
             >
               <X className="size-3.5" />

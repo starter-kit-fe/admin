@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 
 import {
   type NoticeStatusValue,
@@ -19,6 +20,7 @@ import {
 } from '../filters/notice-management-filters';
 
 export function NoticeFiltersSection() {
+  const t = useTranslations('NoticeManagement');
   const {
     status,
     setStatus,
@@ -92,35 +94,42 @@ export function NoticeFiltersSection() {
     () =>
       NOTICE_STATUS_TABS.map((tab) => ({
         value: tab.value,
-        label: tab.label,
+        label: t(tab.labelKey),
         activeColor: tab.color,
       })),
-    [],
+    [t],
   );
 
-  const noticeTypeOptions = useMemo(() => [...NOTICE_TYPE_OPTIONS], []);
+  const noticeTypeOptions = useMemo(
+    () =>
+      NOTICE_TYPE_OPTIONS.map((option) => ({
+        value: option.value,
+        label: t(option.labelKey),
+      })),
+    [t],
+  );
 
   const appliedFilterChips = useMemo<FilterChip[]>(() => {
     const chips: FilterChip[] = [];
     if (noticeType !== 'all') {
-      const label =
-        noticeTypeOptions.find((option) => option.value === noticeType)
-          ?.label ?? noticeType;
-      chips.push({
-        key: 'noticeType',
-        label: '类型',
-        value: label,
-      });
-    }
-    if (appliedFilters.noticeTitle) {
-      chips.push({
-        key: 'noticeTitle',
-        label: '标题',
-        value: appliedFilters.noticeTitle,
-      });
-    }
-    return chips;
-  }, [appliedFilters.noticeTitle, noticeType, noticeTypeOptions]);
+        const label =
+          noticeTypeOptions.find((option) => option.value === noticeType)
+            ?.label ?? noticeType;
+        chips.push({
+          key: 'noticeType',
+          label: t('filters.chips.noticeType'),
+          value: label,
+        });
+      }
+      if (appliedFilters.noticeTitle) {
+        chips.push({
+          key: 'noticeTitle',
+          label: t('filters.chips.noticeTitle'),
+          value: appliedFilters.noticeTitle,
+        });
+      }
+      return chips;
+  }, [appliedFilters.noticeTitle, noticeType, noticeTypeOptions, t]);
 
   return (
     <NoticeManagementFilters

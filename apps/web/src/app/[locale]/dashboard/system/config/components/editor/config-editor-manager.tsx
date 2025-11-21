@@ -19,8 +19,10 @@ import {
 import { resolveErrorMessage, toFormValues } from '../../utils';
 import type { ConfigFormValues } from '../../type';
 import { ConfigEditorDialog } from './config-editor-dialog';
+import { useTranslations } from 'next-intl';
 
 export function ConfigEditorManager() {
+  const t = useTranslations('ConfigManagement');
   const editorState = useConfigEditorState();
   const { closeEditor } = useConfigEditorActions();
   const refresh = useConfigManagementRefresh();
@@ -33,12 +35,12 @@ export function ConfigEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('新增参数成功');
+      toast.success(t('toast.createSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '新增参数失败'));
+      toast.error(resolveErrorMessage(error, t('toast.createError')));
     },
     onSettled: () => {
       endMutation();
@@ -57,12 +59,12 @@ export function ConfigEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('参数更新成功');
+      toast.success(t('toast.updateSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '更新参数失败'));
+      toast.error(resolveErrorMessage(error, t('toast.updateError')));
     },
     onSettled: () => {
       endMutation();

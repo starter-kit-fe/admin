@@ -1,7 +1,7 @@
 export const STATUS_TABS = [
-  { value: 'all', label: '全部', activeColor: 'bg-slate-900 text-white' },
-  { value: '0', label: '在岗', activeColor: 'bg-emerald-500 text-white' },
-  { value: '1', label: '停用', activeColor: 'bg-rose-500 text-white' },
+  { value: 'all', labelKey: 'status.all', activeColor: 'bg-slate-900 text-white' },
+  { value: '0', labelKey: 'status.0', activeColor: 'bg-emerald-500 text-white' },
+  { value: '1', labelKey: 'status.1', activeColor: 'bg-rose-500 text-white' },
 ] as const;
 
 export const DEFAULT_PAGINATION = {

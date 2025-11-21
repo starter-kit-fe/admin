@@ -14,8 +14,10 @@ import {
 } from '@/app/dashboard/system/role/store';
 import type { RoleFormValues } from '../../type';
 import { toCreatePayload, toFormValues, toUpdatePayload } from '../../utils';
+import { useTranslations } from 'next-intl';
 
 export function RoleEditorManager() {
+  const t = useTranslations('RoleManagement');
   const { editorState, closeEditor } = useRoleManagementStore();
   const refresh = useRoleManagementRefresh();
   const { beginMutation, endMutation } = useRoleManagementMutationCounter();
@@ -54,13 +56,13 @@ export function RoleEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('角色创建成功');
+      toast.success(t('toast.createSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '创建角色失败，请稍后重试';
+        error instanceof Error ? error.message : t('toast.createError');
       toast.error(message);
     },
     onSettled: () => {
@@ -80,13 +82,13 @@ export function RoleEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('角色信息已更新');
+      toast.success(t('toast.updateSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '更新角色失败，请稍后再试';
+        error instanceof Error ? error.message : t('toast.updateError');
       toast.error(message);
     },
     onSettled: () => {

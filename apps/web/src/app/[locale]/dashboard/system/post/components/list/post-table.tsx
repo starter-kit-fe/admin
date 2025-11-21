@@ -32,6 +32,7 @@ import {
 } from '@tanstack/react-table';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import {
   PINNED_ACTION_COLUMN_META,
@@ -67,16 +68,16 @@ interface PostTableProps {
 const STATUS_META: Record<
   Post['status'],
   {
-    label: string;
+    labelKey: 'status.0' | 'status.1';
     badgeClass: string;
   }
 > = {
   '0': {
-    label: '在岗',
+    labelKey: 'status.0',
     badgeClass: 'bg-primary/10 text-primary border-primary/20',
   },
   '1': {
-    label: '停用',
+    labelKey: 'status.1',
     badgeClass: 'bg-rose-100 text-rose-700 border-rose-200',
   },
 };
@@ -94,6 +95,7 @@ function PostActions({
   canEdit: boolean;
   canDelete: boolean;
 }) {
+  const t = useTranslations('PostManagement');
   if (!canEdit && !canDelete) {
     return null;
   }
@@ -111,7 +113,7 @@ function PostActions({
             className="size-8"
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
-            aria-label="更多操作"
+            aria-label={t('table.actions.more')}
           >
             <MoreHorizontal className="size-4" />
           </Button>
@@ -121,10 +123,8 @@ function PostActions({
           className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
         >
           <SheetHeader className="px-4 pb-2 pt-3 text-left">
-            <SheetTitle>操作</SheetTitle>
-            <SheetDescription>
-              选择要对该岗位执行的操作。
-            </SheetDescription>
+            <SheetTitle>{t('table.columns.actions')}</SheetTitle>
+            <SheetDescription>{t('table.actions.more')}</SheetDescription>
           </SheetHeader>
           <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
             {canEdit ? (
@@ -138,10 +138,10 @@ function PostActions({
               >
                 <span className="flex items-center gap-2">
                   <Pencil className="size-4" />
-                  编辑
+                  {t('table.actions.edit')}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  修改岗位信息
+                  {t('table.actions.edit')}
                 </span>
               </Button>
             ) : null}
@@ -154,7 +154,7 @@ function PostActions({
                   setSheetOpen(false);
                 }}
               >
-                <Trash2 className="size-4" /> 删除岗位
+                <Trash2 className="size-4" /> {t('table.actions.delete')}
               </Button>
             ) : null}
           </SheetFooter>
@@ -174,7 +174,7 @@ function PostActions({
             className="size-8"
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
-            aria-label="更多操作"
+            aria-label={t('table.actions.more')}
           >
             <MoreHorizontal className="size-4" />
           </Button>
@@ -188,7 +188,7 @@ function PostActions({
               }}
             >
               <Pencil className="mr-2 size-4" />
-              编辑
+              {t('table.actions.edit')}
             </DropdownMenuItem>
           ) : null}
           {canDelete ? (
@@ -199,7 +199,7 @@ function PostActions({
                 onDelete(post);
               }}
             >
-              <Trash2 className="mr-2 size-4" /> 删除岗位
+              <Trash2 className="mr-2 size-4" /> {t('table.actions.delete')}
             </DropdownMenuItem>
           ) : null}
         </DropdownMenuContent>
@@ -219,6 +219,7 @@ export function PostTable({
   loading,
   isError,
 }: PostTableProps) {
+  const t = useTranslations('PostManagement');
   const columnHelper = createColumnHelper<Post>();
   const { hasPermission } = usePermissions();
   const canEditPost = hasPermission('system:post:edit');
@@ -229,8 +230,8 @@ export function PostTable({
     columnHelper.display({
       id: 'select',
       header: () => (
-        <Checkbox
-          aria-label="选择全部"
+         <Checkbox
+          aria-label={t('table.selection.selectAll')}
           checked={headerCheckboxState}
           onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
         />
@@ -240,7 +241,9 @@ export function PostTable({
         const isSelected = selectedIds.has(post.postId);
         return (
           <Checkbox
-            aria-label={`选择 ${post.postName}`}
+            aria-label={t('table.selection.selectPost', {
+              target: post.postName || t('table.defaultName'),
+            })}
             checked={isSelected}
             onCheckedChange={(checked) =>
               onToggleSelect(post.postId, checked === true)
@@ -253,14 +256,14 @@ export function PostTable({
       meta: { headerClassName: 'w-12', cellClassName: 'w-12 align-middle' },
     }),
     columnHelper.accessor('postName', {
-      header: '岗位名称',
+      header: t('table.columns.postName'),
       cell: ({ getValue }) => (
         <span className="text-sm text-muted-foreground">{getValue()}</span>
       ),
       meta: { headerClassName: 'min-w-[140px] md:min-w-[160px]' },
     }),
     columnHelper.accessor('postCode', {
-      header: '岗位编码',
+      header: t('table.columns.postCode'),
       cell: ({ getValue }) => (
         <span className="text-sm text-muted-foreground">{getValue()}</span>
       ),
@@ -268,19 +271,19 @@ export function PostTable({
     }),
 
     columnHelper.accessor('postSort', {
-      header: '排序',
+      header: t('table.columns.postSort'),
       cell: ({ getValue }) => (
         <span className="text-sm text-muted-foreground">{getValue()}</span>
       ),
       meta: { headerClassName: 'w-[80px]', cellClassName: 'w-[80px]' },
     }),
     columnHelper.accessor('status', {
-      header: '状态',
+      header: t('table.columns.status'),
       cell: ({ getValue }) => {
         const meta = STATUS_META[getValue()] ?? STATUS_META['1'];
         return (
           <Badge variant="outline" className={cn(meta.badgeClass)}>
-            {meta.label}
+            {meta.labelKey ? t(meta.labelKey) : getValue()}
           </Badge>
         );
       },
@@ -291,7 +294,11 @@ export function PostTable({
       ? [
           columnHelper.display({
             id: 'actions',
-            header: () => <span className="block text-right">操作</span>,
+            header: () => (
+              <span className="block text-right">
+                {t('table.columns.actions')}
+              </span>
+            ),
             cell: ({ row }) => (
               <PostActions
                 post={row.original}
@@ -352,7 +359,7 @@ export function PostTable({
                 colSpan={visibleColumnCount}
                 className="h-24 text-center text-sm text-destructive"
               >
-                加载失败，请稍后再试。
+                {t('table.state.error')}
               </TableCell>
             </TableRow>
           ) : rowsModel.length === 0 ? (
@@ -363,9 +370,9 @@ export function PostTable({
               >
                 <Empty className="border-0 bg-transparent p-4">
                   <EmptyHeader>
-                    <EmptyTitle>暂无岗位数据</EmptyTitle>
+                    <EmptyTitle>{t('table.state.emptyTitle')}</EmptyTitle>
                     <EmptyDescription>
-                      点击“新建岗位”即可开始维护岗位信息。
+                      {t('table.state.emptyDescription')}
                     </EmptyDescription>
                   </EmptyHeader>
                 </Empty>

@@ -3,6 +3,7 @@
 import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCcw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import {
   useDepartmentEditorActions,
@@ -11,21 +12,25 @@ import {
 } from '@/app/dashboard/system/dept/store';
 
 export function DepartmentManagementHeader() {
+  const t = useTranslations('DepartmentManagement');
   const { openCreate } = useDepartmentEditorActions();
   const { isRefreshing, isMutating } = useDepartmentManagementStatus();
   const refresh = useDepartmentManagementRefresh();
   const refreshDisabled = isRefreshing || isMutating;
+  const descriptions = t.raw('header.description');
+  const descriptionLines = Array.isArray(descriptions) ? descriptions : [t('header.description')];
 
   return (
     <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">部门管理</h1>
-        <p className="text-sm text-muted-foreground">
-          统一在顶部查看说明，快速掌握组织层级与维护准则。
-        </p>
-        <p className="text-sm text-muted-foreground">
-          使用下方筛选定位部门，并配合树视图完成新增或调整。
-        </p>
+        <h1 className="text-2xl font-semibold text-foreground">
+          {t('header.title')}
+        </h1>
+        {descriptionLines.map((line, index) => (
+          <p key={index} className="text-sm text-muted-foreground">
+            {line}
+          </p>
+        ))}
       </div>
       <div className="flex items-center gap-2">
         <PermissionButton
@@ -41,7 +46,7 @@ export function DepartmentManagementHeader() {
           ) : (
             <RefreshCcw className="size-4" />
           )}
-          刷新
+          {t('header.actions.refresh')}
         </PermissionButton>
         <PermissionButton
           required="system:dept:add"
@@ -51,7 +56,7 @@ export function DepartmentManagementHeader() {
           className="flex items-center gap-2"
         >
           <Plus className="size-4" />
-          新增部门
+          {t('header.actions.create')}
         </PermissionButton>
       </div>
     </section>

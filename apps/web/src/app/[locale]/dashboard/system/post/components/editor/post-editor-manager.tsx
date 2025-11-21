@@ -22,8 +22,10 @@ import {
   toUpdatePayload,
 } from '../../utils';
 import { PostEditorDialog } from './post-editor-dialog';
+import { useTranslations } from 'next-intl';
 
 export function PostEditorManager() {
+  const t = useTranslations('PostManagement');
   const {
     editorState,
     closeEditor,
@@ -43,12 +45,12 @@ export function PostEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('岗位创建成功');
+      toast.success(t('toast.createSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '创建岗位失败，请稍后重试'));
+      toast.error(resolveErrorMessage(error, t('toast.createError')));
     },
     onSettled: () => {
       endMutation();
@@ -73,12 +75,12 @@ export function PostEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('岗位信息已更新');
+      toast.success(t('toast.updateSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '更新岗位失败，请稍后重试'));
+      toast.error(resolveErrorMessage(error, t('toast.updateError')));
     },
     onSettled: () => {
       endMutation();

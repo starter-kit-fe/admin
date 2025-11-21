@@ -10,8 +10,10 @@ import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { BookMarked, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function DictManagementHeader() {
+  const t = useTranslations('DictManagement');
   const { dictTypes } = useDictTypesState();
   const { openTypeCreate } = useDictTypeEditorActions();
   const { isRefreshing, isMutating } = useDictManagementStatus();
@@ -21,8 +23,8 @@ export function DictManagementHeader() {
 
   return (
     <ManagementHeader
-      title="字典管理"
-      description={`统一维护系统字典类型与字典项，当前共 ${count} 个字典类型。`}
+      title={t('header.title')}
+      description={t('header.description', { count })}
       actions={
         <>
           <PermissionButton
@@ -37,7 +39,7 @@ export function DictManagementHeader() {
             ) : (
               <RefreshCw className="size-4" />
             )}
-            刷新
+            {t('header.actions.refresh')}
           </PermissionButton>
           <PermissionButton
             required="system:dict:add"
@@ -46,7 +48,7 @@ export function DictManagementHeader() {
             disabled={isMutating}
           >
             <BookMarked className="size-4" />
-            新建字典
+            {t('header.actions.create')}
           </PermissionButton>
         </>
       }

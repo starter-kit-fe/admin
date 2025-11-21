@@ -1,6 +1,37 @@
 {
-  "ariaLabel": "Toggle theme",
+  "ariaLabel": "Appearance settings",
   "menuLabel": "Appearance",
+  "drawerTitle": "Appearance & theme",
+  "description": "Choose theme, primary color, radius, font size, and layout.",
+  "sections": {
+    "color": "Primary color",
+    "radius": "Radius",
+    "fontSize": "Font size",
+    "theme": "Theme mode",
+    "layout": "Content layout"
+  },
+  "colorOptions": {
+    "default": "Default",
+    "zinc": "Zinc",
+    "red": "Red",
+    "rose": "Rose",
+    "orange": "Orange",
+    "green": "Green",
+    "blue": "Blue",
+    "yellow": "Amber",
+    "violet": "Violet"
+  },
+  "fontSizeOptions": {
+    "default": "Default",
+    "sm": "Compact",
+    "md": "Standard",
+    "lg": "Large"
+  },
+  "layoutOptions": {
+    "full": "Full width",
+    "centered": "Centered"
+  },
+  "reset": "Reset to default",
   "current": "Current",
   "items": {
     "light": "Light",

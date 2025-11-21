@@ -6,12 +6,14 @@ import {
   useRef,
   type MutableRefObject,
 } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { OnlineFilterChip } from '../filters/online-applied-filters';
 import { OnlineManagementFilters } from '../filters/online-management-filters';
 import { useOnlineUserManagementStore } from '../../store';
 
 export function OnlineUserFiltersSection() {
+  const t = useTranslations('OnlineUserManagement');
   const {
     filterForm,
     appliedFilters,
@@ -63,12 +65,12 @@ export function OnlineUserFiltersSection() {
     [
       {
         key: 'userName' as const,
-        label: '账号',
+        label: t('filters.chips.account'),
         value: appliedFilters.userName.trim(),
       },
       {
         key: 'ipaddr' as const,
-        label: 'IP',
+        label: t('filters.chips.ip'),
         value: appliedFilters.ipaddr.trim(),
       },
     ] satisfies OnlineFilterChip[]

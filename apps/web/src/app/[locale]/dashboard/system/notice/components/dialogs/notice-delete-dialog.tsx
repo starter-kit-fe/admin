@@ -11,8 +11,10 @@ import {
   useNoticeManagementStore,
 } from '@/app/dashboard/system/notice/store';
 import { resolveErrorMessage } from '../../utils';
+import { useTranslations } from 'next-intl';
 
 export function NoticeDeleteDialog() {
+  const t = useTranslations('NoticeManagement');
   const { deleteTarget, setDeleteTarget } = useNoticeManagementStore();
   const refresh = useNoticeManagementRefresh();
   const { beginMutation, endMutation } =
@@ -24,12 +26,12 @@ export function NoticeDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('公告已删除');
+      toast.success(t('toast.deleteSuccess'));
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '删除公告失败'));
+      toast.error(resolveErrorMessage(error, t('toast.deleteError')));
     },
     onSettled: () => {
       endMutation();
@@ -44,11 +46,11 @@ export function NoticeDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title="删除公告"
+      title={t('dialogs.deleteTitle')}
       description={
         deleteTarget
-          ? `确定要删除公告「${deleteTarget.noticeTitle}」吗？`
-          : '确认删除所选公告吗？'
+          ? t('dialogs.deleteMessage', { name: deleteTarget.noticeTitle })
+          : t('dialogs.deleteFallback')
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

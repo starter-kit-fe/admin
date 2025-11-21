@@ -11,8 +11,10 @@ import {
   useDepartmentManagementRefresh,
 } from '@/app/dashboard/system/dept/store';
 import { resolveErrorMessage } from '../../utils';
+import { useTranslations } from 'next-intl';
 
 export function DepartmentDeleteDialog() {
+  const t = useTranslations('DepartmentManagement');
   const { deleteTarget, setDeleteTarget } = useDepartmentDeleteState();
   const refresh = useDepartmentManagementRefresh();
   const { beginMutation, endMutation } =
@@ -24,12 +26,12 @@ export function DepartmentDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('删除部门成功');
+      toast.success(t('toast.deleteSuccess'));
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '删除部门失败，请稍后再试'));
+      toast.error(resolveErrorMessage(error, t('toast.deleteError')));
     },
     onSettled: () => {
       endMutation();
@@ -44,11 +46,11 @@ export function DepartmentDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title="删除部门"
+      title={t('delete.title')}
       description={
         deleteTarget
-          ? `确定要删除部门「${deleteTarget.deptName}」吗？将同时移除其所有子部门。`
-          : '确认删除所选部门吗？'
+          ? t('delete.description', { name: deleteTarget.deptName })
+          : t('delete.fallback')
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

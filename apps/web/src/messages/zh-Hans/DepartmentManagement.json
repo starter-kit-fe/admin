@@ -40,7 +40,8 @@
     "actions": {
       "addChild": "新增子部门",
       "edit": "编辑",
-      "delete": "删除"
+      "delete": "删除",
+      "more": "操作"
     },
     "badge": {
       "1": "停用"

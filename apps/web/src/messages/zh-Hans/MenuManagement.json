@@ -38,11 +38,13 @@
       "permission": "权限",
       "notConfigured": "未配置",
       "addChild": "新增子菜单",
+      "addChildHint": "添加下级或按钮",
       "edit": "编辑",
       "delete": "删除",
       "moveUp": "上移",
       "moveDown": "下移",
-      "more": "更多操作"
+      "more": "更多操作",
+      "actionsDescription": "选择要对该菜单执行的操作。"
     }
   },
   "toast": {

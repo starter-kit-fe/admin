@@ -29,7 +29,9 @@
     "actions": {
       "edit": "编辑",
       "delete": "删除角色",
-      "more": "更多操作"
+      "more": "更多操作",
+      "description": "为该角色选择要执行的操作。",
+      "editHint": "修改角色"
     },
     "selection": {
       "selectAll": "选择全部角色",

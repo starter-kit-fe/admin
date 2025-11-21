@@ -39,13 +39,16 @@ export function toCreatePayload(values: MenuFormValues): CreateMenuPayload {
   };
 }
 
-export function buildParentOptions(nodes: MenuTreeNode[]): MenuParentOption[] {
+export function buildParentOptions(
+  nodes: MenuTreeNode[],
+  rootLabel = 'Root',
+): MenuParentOption[] {
   const options: MenuParentOption[] = [
     {
       value: '0',
-      label: '根目录',
+      label: rootLabel,
       level: 0,
-      path: ['根目录'],
+      path: [rootLabel],
       disabled: false,
       menuType: 'M',
     },

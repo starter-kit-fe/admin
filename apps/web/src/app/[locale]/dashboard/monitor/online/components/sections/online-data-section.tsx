@@ -12,6 +12,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 import {
   listOnlineUsers,
@@ -37,6 +38,8 @@ import {
 import { OnlineUserTable } from '../list/online-user-table';
 
 export function OnlineUserDataSection() {
+  const t = useTranslations('OnlineUserManagement');
+  const tSelection = useTranslations('SelectionBanner');
   const {
     appliedFilters,
     pagination,
@@ -183,7 +186,7 @@ export function OnlineUserDataSection() {
       {showSelectionBar ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-100/70 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-50">
           <div className="font-medium">
-            已选择 {selectedCount} 个会话，可批量强退。
+            {t('selection.summary', { count: selectedCount })}
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -193,7 +196,7 @@ export function OnlineUserDataSection() {
               className="border-transparent bg-transparent text-emerald-900 hover:bg-emerald-200 dark:text-emerald-50 dark:hover:bg-emerald-500/25"
               onClick={() => clearSelectedUsers()}
             >
-              取消选择
+              {tSelection('clear')}
             </Button>
             <Button
               type="button"
@@ -203,7 +206,9 @@ export function OnlineUserDataSection() {
               onClick={() => setBatchDialogOpen(true)}
               disabled={isMutating}
             >
-              {isMutating ? '处理中...' : '批量强退'}
+              {isMutating
+                ? t('header.actions.batchPending')
+                : t('header.actions.batch')}
             </Button>
           </div>
         </div>
@@ -231,9 +236,11 @@ export function OnlineUserDataSection() {
           <div className="flex h-48 flex-col items-center justify-center px-4 text-center">
             <Empty className="border-0 bg-transparent p-4">
               <EmptyHeader>
-                <EmptyTitle>暂无访问权限</EmptyTitle>
+                <EmptyTitle>{t('guard.title')}</EmptyTitle>
                 <EmptyDescription>
-                  需要 {ONLINE_PERMISSION_CODES.list} 权限才能查看在线用户。
+                  {t('guard.description', {
+                    code: ONLINE_PERMISSION_CODES.list,
+                  })}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

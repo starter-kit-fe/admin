@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export type ConfigFilterKey = 'configName' | 'configKey';
 
@@ -20,6 +21,8 @@ export function ConfigAppliedFilters({
   items,
   onRemove,
 }: ConfigAppliedFiltersProps) {
+  const t = useTranslations('ConfigManagement');
+
   if (items.length === 0) {
     return null;
   }
@@ -40,7 +43,7 @@ export function ConfigAppliedFilters({
             type="button"
             onClick={() => onRemove(item.key)}
             className="text-muted-foreground/70 transition-colors hover:text-foreground"
-            aria-label={`移除 ${item.label}`}
+            aria-label={t('filters.removeAria', { target: item.label })}
           >
             <X className="size-3.5" />
           </button>

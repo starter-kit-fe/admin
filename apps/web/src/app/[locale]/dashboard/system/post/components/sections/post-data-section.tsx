@@ -22,8 +22,10 @@ import {
 } from '../../constants';
 import type { Post, PostListResponse } from '../../type';
 import { PostTable } from '../list/post-table';
+import { useTranslations } from 'next-intl';
 
 export function PostDataSection() {
+  const t = useTranslations('PostManagement');
   const {
     status,
     appliedFilters,
@@ -189,7 +191,7 @@ export function PostDataSection() {
 
   const handleBulkDelete = () => {
     if (selectedCount === 0) {
-      toast.info('请先选择需要删除的岗位');
+      toast.info(t('toast.bulkDeleteEmpty'));
       return;
     }
     setBulkDeleteOpen(true);

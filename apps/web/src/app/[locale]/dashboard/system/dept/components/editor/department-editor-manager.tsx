@@ -25,8 +25,10 @@ import {
   toUpdatePayload,
 } from '../../utils';
 import { DepartmentEditorDialog } from './department-editor-dialog';
+import { useTranslations } from 'next-intl';
 
 export function DepartmentEditorManager() {
+  const t = useTranslations('DepartmentManagement');
   const editorState = useDepartmentEditorState();
   const { closeEditor } = useDepartmentEditorActions();
   const { departmentTree } = useDepartmentTreeState();
@@ -41,12 +43,12 @@ export function DepartmentEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('新增部门成功');
+      toast.success(t('toast.createSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '新增部门失败'));
+      toast.error(resolveErrorMessage(error, t('toast.createError')));
     },
     onSettled: () => {
       endMutation();
@@ -65,12 +67,12 @@ export function DepartmentEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('更新部门成功');
+      toast.success(t('toast.updateSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '更新部门失败'));
+      toast.error(resolveErrorMessage(error, t('toast.updateError')));
     },
     onSettled: () => {
       endMutation();

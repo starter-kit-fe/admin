@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Trash2, X } from 'lucide-react';
 
 import { STATUS_TABS } from '../../constants';
+import { useTranslations } from 'next-intl';
 
 interface DepartmentAppliedFiltersProps {
   keyword: string;
@@ -20,12 +21,13 @@ export function DepartmentAppliedFilters({
   onClearStatus,
   onClearAll,
 }: DepartmentAppliedFiltersProps) {
+  const t = useTranslations('DepartmentManagement');
   const chips: Array<{ key: string; label: string; value: string; onRemove: () => void }> = [];
   const trimmedKeyword = keyword.trim();
   if (trimmedKeyword) {
     chips.push({
       key: 'keyword',
-      label: '关键词',
+      label: t('filters.chips.keyword'),
       value: trimmedKeyword,
       onRemove: onClearKeyword,
     });
@@ -34,8 +36,8 @@ export function DepartmentAppliedFilters({
     const statusMeta = STATUS_TABS.find((tab) => tab.value === status);
     chips.push({
       key: 'status',
-      label: '状态',
-      value: statusMeta?.label ?? status,
+      label: t('filters.chips.status'),
+      value: statusMeta ? t(statusMeta.labelKey) : status,
       onRemove: onClearStatus,
     });
   }
@@ -60,7 +62,7 @@ export function DepartmentAppliedFilters({
             type="button"
             onClick={chip.onRemove}
             className={cn('text-muted-foreground/70 transition-colors hover:text-muted-foreground')}
-            aria-label={`移除 ${chip.label}`}
+            aria-label={t('filters.chips.remove', { target: chip.label })}
           >
             <X className="size-3.5" />
           </button>
@@ -72,7 +74,7 @@ export function DepartmentAppliedFilters({
         className="inline-flex items-center gap-1 px-0 text-sm text-destructive hover:text-destructive dark:text-destructive dark:hover:text-destructive/80"
         onClick={onClearAll}
       >
-        <Trash2 className="size-4" /> 清除
+        <Trash2 className="size-4" /> {t('filters.clearAll')}
       </Button>
     </div>
   );

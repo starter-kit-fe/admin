@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 import { DeleteConfirmDialog } from '../../../../system/user/components/delete-confirm-dialog';
 import { forceLogoutOnlineUser } from '../../api';
@@ -16,6 +17,7 @@ import {
 } from '../../utils';
 
 export function OnlineUserForceLogoutDialog() {
+  const t = useTranslations('OnlineUserManagement');
   const {
     forceDialog,
     closeForceDialog,
@@ -32,7 +34,7 @@ export function OnlineUserForceLogoutDialog() {
       }
       const identifier = resolveOnlineUserIdentifier(forceDialog.user);
       if (!identifier) {
-        throw new Error('未找到用户会话标识，无法强制下线');
+        throw new Error(t('errors.missingIdentifier'));
       }
       await forceLogoutOnlineUser(identifier);
     },
@@ -44,7 +46,7 @@ export function OnlineUserForceLogoutDialog() {
       setPendingForceRowId(getOnlineUserRowId(forceDialog.user));
     },
     onSuccess: () => {
-      toast.success('已强制下线该用户');
+      toast.success(t('toast.forceSuccess'));
       closeForceDialog();
       void queryClient.invalidateQueries({
         queryKey: ONLINE_USERS_QUERY_KEY,
@@ -52,7 +54,7 @@ export function OnlineUserForceLogoutDialog() {
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '操作失败，请稍后重试';
+        error instanceof Error ? error.message : t('toast.forceError');
       toast.error(message);
     },
     onSettled: () => {
@@ -76,15 +78,15 @@ export function OnlineUserForceLogoutDialog() {
           closeForceDialog();
         }
       }}
-      title="强制下线"
+      title={t('dialogs.force.title')}
       description={
         forceDialog.open
-          ? `确定要强制下线账号“${
-              forceDialog.user.userName || '未命名'
-            }”吗？`
-          : '确定要强制下线该用户吗？'
+          ? t('dialogs.force.description.target', {
+              name: forceDialog.user.userName || t('detail.unnamed'),
+            })
+          : t('dialogs.force.description.generic')
       }
-      confirmLabel="确认强退"
+      confirmLabel={t('dialogs.force.confirm')}
       loading={mutation.isPending}
       onConfirm={handleConfirm}
     />

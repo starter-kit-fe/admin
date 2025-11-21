@@ -11,8 +11,10 @@ import {
   useConfigManagementRefresh,
 } from '@/app/dashboard/system/config/store';
 import { resolveErrorMessage } from '../../utils';
+import { useTranslations } from 'next-intl';
 
 export function ConfigDeleteDialog() {
+  const t = useTranslations('ConfigManagement');
   const { deleteTarget, setDeleteTarget } = useConfigDeleteState();
   const refresh = useConfigManagementRefresh();
   const { beginMutation, endMutation } =
@@ -24,12 +26,12 @@ export function ConfigDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('参数已删除');
+      toast.success(t('toast.deleteSuccess'));
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '删除参数失败'));
+      toast.error(resolveErrorMessage(error, t('toast.deleteError')));
     },
     onSettled: () => {
       endMutation();
@@ -44,11 +46,11 @@ export function ConfigDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title="删除参数"
+      title={t('dialogs.deleteTitle')}
       description={
         deleteTarget
-          ? `确定要删除参数「${deleteTarget.configName}」吗？`
-          : '确认删除所选参数吗？'
+          ? t('dialogs.deleteMessage', { name: deleteTarget.configName })
+          : t('dialogs.deleteFallback')
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

@@ -40,7 +40,8 @@
     "actions": {
       "addChild": "Add child department",
       "edit": "Edit",
-      "delete": "Delete"
+      "delete": "Delete",
+      "more": "Actions"
     },
     "badge": {
       "1": "Disabled"

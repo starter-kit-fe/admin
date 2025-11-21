@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 
 import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-import { dictTypeFormSchema, type DictTypeFormValues } from '../../type';
+import { createDictTypeFormSchema, type DictTypeFormValues } from '../../type';
 
 const DEFAULT_VALUES: DictTypeFormValues = {
   dictName: '',
@@ -51,12 +52,15 @@ export function DictTypeEditorDialog({
   onOpenChange,
   onSubmit,
 }: DictTypeEditorDialogProps) {
+  const t = useTranslations('DictManagement');
+  const tCommon = useTranslations('Common');
+  const schema = useMemo(() => createDictTypeFormSchema(t), [t]);
   const form = useForm<
     DictTypeFormValues,
     DictTypeFormResolverContext,
     DictTypeFormValues
   >({
-    resolver: zodResolver(dictTypeFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -75,9 +79,10 @@ export function DictTypeEditorDialog({
     });
   });
 
-  const title = mode === 'create' ? '新增字典类型' : '编辑字典类型';
-  const description = '配置系统字典类型，字典类型需保持唯一。';
-  const submitText = submitting ? '保存中...' : '保存';
+  const title = mode === 'create' ? t('typeEditor.createTitle') : t('typeEditor.editTitle');
+  const description = t('typeEditor.description');
+  const submitText = submitting ? t('typeEditor.actions.saving') : t('typeEditor.actions.save');
+  const cancelText = tCommon('dialogs.cancel');
   const formId = 'dict-type-editor-form';
 
   return (
@@ -95,7 +100,7 @@ export function DictTypeEditorDialog({
               disabled={submitting}
               className="flex-1 sm:flex-none sm:min-w-[96px]"
             >
-              取消
+              {cancelText}
             </Button>
             <Button
               type="submit"

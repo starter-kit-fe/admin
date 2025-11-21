@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 
 import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-import { configFormSchema, type ConfigFormValues } from '../../type';
+import { createConfigFormSchema, type ConfigFormValues } from '../../type';
 
 const DEFAULT_VALUES: ConfigFormValues = {
   configName: '',
@@ -52,8 +53,11 @@ export function ConfigEditorDialog({
   onOpenChange,
   onSubmit,
 }: ConfigEditorDialogProps) {
+  const t = useTranslations('ConfigManagement');
+  const tCommon = useTranslations('Common');
+  const schema = useMemo(() => createConfigFormSchema(t), [t]);
   const form = useForm<ConfigFormValues, ConfigFormResolverContext, ConfigFormValues>({
-    resolver: zodResolver(configFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -73,9 +77,15 @@ export function ConfigEditorDialog({
     });
   });
 
-  const title = mode === 'create' ? '新增参数' : '编辑参数';
-  const description = '配置系统运行时参数，参数键名需保持唯一。';
+  const title = mode === 'create' ? t('form.title.create') : t('form.title.edit');
+  const description = t('form.description');
   const formId = 'config-editor-form';
+  const cancelLabel = tCommon('dialogs.cancel');
+  const submitLabel = submitting
+    ? t('form.submit.creating')
+    : mode === 'create'
+      ? t('form.submit.create')
+      : t('form.submit.save');
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
@@ -92,7 +102,7 @@ export function ConfigEditorDialog({
               disabled={submitting}
               className="flex-1 sm:flex-none sm:min-w-[96px]"
             >
-              取消
+              {cancelLabel}
             </Button>
             <Button
               type="submit"
@@ -100,7 +110,7 @@ export function ConfigEditorDialog({
               disabled={submitting}
               className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
             >
-              {submitting ? '保存中...' : mode === 'create' ? '创建' : '保存'}
+              {submitLabel}
             </Button>
           </>
         }
@@ -115,10 +125,13 @@ export function ConfigEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <Required />
-                      参数名称
+                      {t('form.fields.name')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入参数名称" {...field} />
+                      <Input
+                        placeholder={t('form.fields.namePlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -131,10 +144,13 @@ export function ConfigEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <Required />
-                      参数键名
+                      {t('form.fields.key')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="例如 sys.account.registerUser" {...field} />
+                      <Input
+                        placeholder={t('form.fields.keyPlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -147,10 +163,14 @@ export function ConfigEditorDialog({
                   <FormItem className="sm:col-span-2">
                     <FormLabel>
                       <Required />
-                      参数键值
+                      {t('form.fields.value')}
                     </FormLabel>
                     <FormControl>
-                      <Textarea rows={3} placeholder="请输入参数键值" {...field} />
+                      <Textarea
+                        rows={3}
+                        placeholder={t('form.fields.valuePlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -163,7 +183,7 @@ export function ConfigEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <Required />
-                      参数类型
+                      {t('form.fields.type')}
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -175,13 +195,17 @@ export function ConfigEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="Y" />
                           </FormControl>
-                          <FormLabel className="font-normal">系统内置</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('form.fields.typeSystem')}
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center gap-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="N" />
                           </FormControl>
-                          <FormLabel className="font-normal">自定义</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('form.fields.typeCustom')}
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -194,9 +218,13 @@ export function ConfigEditorDialog({
                 name="remark"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>备注</FormLabel>
+                    <FormLabel>{t('form.fields.remark')}</FormLabel>
                     <FormControl>
-                      <Textarea rows={3} placeholder="可填写参数用途说明" {...field} />
+                      <Textarea
+                        rows={3}
+                        placeholder={t('form.fields.remarkPlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

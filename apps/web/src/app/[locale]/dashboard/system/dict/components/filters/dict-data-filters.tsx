@@ -7,6 +7,7 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group';
 import { Tag, Hash, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface DictDataFiltersProps {
   dictLabel: string;
@@ -21,6 +22,7 @@ export function DictDataFilters({
   onDictLabelChange,
   onDictValueChange,
 }: DictDataFiltersProps) {
+  const t = useTranslations('DictManagement');
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
@@ -29,7 +31,7 @@ export function DictDataFilters({
             <Tag className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="输入字典标签"
+            placeholder={t('data.filters.labelPlaceholder')}
             value={dictLabel}
             onChange={(event) => onDictLabelChange(event.target.value)}
           />
@@ -37,7 +39,7 @@ export function DictDataFilters({
             <InputGroupButton
               size="icon-sm"
               variant="ghost"
-              aria-label="清空字典标签"
+              aria-label={t('data.filters.labelClear')}
               onClick={() => onDictLabelChange('')}
             >
               <X className="size-3.5" />
@@ -49,7 +51,7 @@ export function DictDataFilters({
             <Hash className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="输入字典键值"
+            placeholder={t('data.filters.valuePlaceholder')}
             value={dictValue}
             onChange={(event) => onDictValueChange(event.target.value)}
           />
@@ -57,7 +59,7 @@ export function DictDataFilters({
             <InputGroupButton
               size="icon-sm"
               variant="ghost"
-              aria-label="清空字典键值"
+              aria-label={t('data.filters.valueClear')}
               onClick={() => onDictValueChange('')}
             >
               <X className="size-3.5" />

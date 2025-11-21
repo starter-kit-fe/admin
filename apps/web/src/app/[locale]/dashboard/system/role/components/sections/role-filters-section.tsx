@@ -5,11 +5,13 @@ import {
   useRoleManagementStore,
 } from '@/app/dashboard/system/role/store';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { STATUS_TABS } from '../../constants';
 import { RoleManagementFilters } from '../filters/role-management-filters';
 
 export function RoleFiltersSection() {
+  const t = useTranslations('RoleManagement');
   const {
     status,
     setStatus,
@@ -38,9 +40,9 @@ export function RoleFiltersSection() {
     () =>
       STATUS_TABS.map((tab) => ({
         value: tab.value,
-        label: tab.label,
+        label: t(tab.labelKey),
       })),
-    [],
+    [t],
   );
 
   const handleStatusChange = (value: string) => {

@@ -7,6 +7,7 @@ import {
   useConfigType,
 } from '@/app/dashboard/system/config/store';
 import { useEffect, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { CONFIG_TYPE_TABS } from '../../constants';
 import type {
@@ -16,6 +17,7 @@ import type {
 import { ConfigManagementFilters } from '../filters/config-management-filters';
 
 export function ConfigFiltersSection() {
+  const t = useTranslations('ConfigManagement');
   const { configType, setConfigType } = useConfigType();
   const { filterForm, setFilterForm } = useConfigFilterForm();
   const { appliedFilters, applyFilters } = useConfigAppliedFilters();
@@ -45,19 +47,19 @@ export function ConfigFiltersSection() {
     if (appliedFilters.configName) {
       chips.push({
         key: 'configName',
-        label: '参数名称',
+        label: t('filters.chips.configName'),
         value: appliedFilters.configName,
       });
     }
     if (appliedFilters.configKey) {
       chips.push({
         key: 'configKey',
-        label: '参数键名',
+        label: t('filters.chips.configKey'),
         value: appliedFilters.configKey,
       });
     }
     return chips;
-  }, [appliedFilters.configKey, appliedFilters.configName]);
+  }, [appliedFilters.configKey, appliedFilters.configName, t]);
 
   const handleRemoveFilter = (key: ConfigFilterKey) => {
     const nextFilters = {

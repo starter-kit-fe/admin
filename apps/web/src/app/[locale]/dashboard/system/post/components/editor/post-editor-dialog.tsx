@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 
 import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 import { Button } from '@/components/ui/button';
@@ -22,23 +23,21 @@ import { Textarea } from '@/components/ui/textarea';
 
 import type { PostFormValues } from '../../type';
 
-const postFormSchema = z.object({
-  postCode: z
-    .string()
-    .trim()
-    .min(1, '请输入岗位编码')
-    .max(50, '岗位编码不能超过 50 个字符'),
-  postName: z
-    .string()
-    .trim()
-    .min(1, '请输入岗位名称')
-    .max(50, '岗位名称不能超过 50 个字符'),
-  status: z.enum(['0', '1']),
-  remark: z
-    .string()
-    .trim()
-    .max(255, '备注不能超过 255 个字符'),
-});
+const createPostFormSchema = (t: ReturnType<typeof useTranslations>) =>
+  z.object({
+    postCode: z
+      .string()
+      .trim()
+      .min(1, t('editor.validation.postCode.required'))
+      .max(50, t('editor.validation.postCode.max')),
+    postName: z
+      .string()
+      .trim()
+      .min(1, t('editor.validation.postName.required'))
+      .max(50, t('editor.validation.postName.max')),
+    status: z.enum(['0', '1']),
+    remark: z.string().trim().max(255, t('editor.validation.remark.max')),
+  });
 
 const DEFAULT_VALUES: PostFormValues = {
   postCode: '',
@@ -68,8 +67,11 @@ export function PostEditorDialog({
   onOpenChange,
   onSubmit,
 }: PostEditorDialogProps) {
+  const t = useTranslations('PostManagement');
+  const tCommon = useTranslations('Common');
+  const formSchema = useMemo(() => createPostFormSchema(t), [t]);
   const form = useForm<PostFormValues>({
-    resolver: zodResolver(postFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -88,9 +90,9 @@ export function PostEditorDialog({
     });
   });
 
-  const title = mode === 'create' ? '新增岗位' : '编辑岗位';
-  const description = '维护岗位信息，岗位编码与名称需保持唯一性。';
-  const submitText = submitting ? '保存中...' : '保存';
+  const title = mode === 'create' ? t('editor.createTitle') : t('editor.editTitle');
+  const description = t('editor.description');
+  const submitText = submitting ? t('editor.actions.saving') : t('editor.actions.save');
   const formId = 'post-editor-form';
 
   return (
@@ -108,7 +110,7 @@ export function PostEditorDialog({
               disabled={submitting}
               className="flex-1 sm:flex-none sm:min-w-[96px]"
             >
-              取消
+              {tCommon('cancel')}
             </Button>
             <Button
               type="submit"
@@ -130,10 +132,14 @@ export function PostEditorDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      <RequiredMark />岗位编码
+                      <RequiredMark />
+                      {t('editor.fields.postCode.label')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入岗位编码" {...field} />
+                      <Input
+                        placeholder={t('editor.fields.postCode.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -145,10 +151,14 @@ export function PostEditorDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      <RequiredMark />岗位名称
+                      <RequiredMark />
+                      {t('editor.fields.postName.label')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入岗位名称" {...field} />
+                      <Input
+                        placeholder={t('editor.fields.postName.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -160,7 +170,8 @@ export function PostEditorDialog({
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
                     <FormLabel>
-                      <RequiredMark />岗位状态
+                      <RequiredMark />
+                      {t('editor.fields.status.label')}
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -172,13 +183,17 @@ export function PostEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="0" />
                           </FormControl>
-                          <FormLabel className="font-normal">在岗</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('editor.fields.status.options.0')}
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center gap-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="1" />
                           </FormControl>
-                          <FormLabel className="font-normal">停用</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('editor.fields.status.options.1')}
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -192,10 +207,10 @@ export function PostEditorDialog({
               name="remark"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>备注</FormLabel>
+                  <FormLabel>{t('editor.fields.remark.label')}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="请输入备注信息（可选）"
+                      placeholder={t('editor.fields.remark.placeholder')}
                       className="min-h-[72px]"
                       {...field}
                     />

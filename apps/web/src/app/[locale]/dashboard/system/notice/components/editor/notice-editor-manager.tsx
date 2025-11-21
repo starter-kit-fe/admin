@@ -18,8 +18,10 @@ import {
 import { resolveErrorMessage, toFormValues } from '../../utils';
 import type { NoticeFormValues } from '../../type';
 import { NoticeEditorDialog } from './notice-editor-dialog';
+import { useTranslations } from 'next-intl';
 
 export function NoticeEditorManager() {
+  const t = useTranslations('NoticeManagement');
   const { editorState, closeEditor } = useNoticeManagementStore();
   const refresh = useNoticeManagementRefresh();
   const { beginMutation, endMutation } =
@@ -31,12 +33,12 @@ export function NoticeEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('公告创建成功');
+      toast.success(t('toast.createSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '新建公告失败'));
+      toast.error(resolveErrorMessage(error, t('toast.createError')));
     },
     onSettled: () => {
       endMutation();
@@ -55,12 +57,12 @@ export function NoticeEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('公告已更新');
+      toast.success(t('toast.updateSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '更新公告失败'));
+      toast.error(resolveErrorMessage(error, t('toast.updateError')));
     },
     onSettled: () => {
       endMutation();

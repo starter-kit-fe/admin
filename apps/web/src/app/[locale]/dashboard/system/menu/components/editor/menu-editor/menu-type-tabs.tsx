@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import gsap from 'gsap';
 import { Info } from 'lucide-react';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { MenuType } from '@/app/dashboard/system/menu/type';
 import { MENU_TYPE_HINTS, MENU_TYPE_OPTIONS } from './constants';
@@ -15,20 +16,28 @@ interface MenuTypeTabsProps {
 }
 
 export function MenuTypeTabs({ value, onChange, allowedTypes }: MenuTypeTabsProps) {
+  const t = useTranslations('MenuManagement');
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const hasInitializedRef = useRef(false);
   const previousRectRef = useRef<{ left: number; width: number } | null>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const options = useMemo(() => {
+    const mapOptions = (source = MENU_TYPE_OPTIONS) =>
+      source.map((option) => ({
+        ...option,
+        label: t(option.labelKey),
+        description: t(option.descriptionKey),
+      }));
+
     if (!allowedTypes || allowedTypes.length === 0) {
-      return MENU_TYPE_OPTIONS;
+      return mapOptions();
     }
     const filtered = MENU_TYPE_OPTIONS.filter((option) =>
       allowedTypes.includes(option.value),
     );
-    return filtered.length > 0 ? filtered : MENU_TYPE_OPTIONS;
-  }, [allowedTypes]);
+    return filtered.length > 0 ? mapOptions(filtered) : mapOptions();
+  }, [allowedTypes, t]);
   const showTabs = options.length > 1;
 
   useEffect(() => {
@@ -196,6 +205,8 @@ export function MenuTypeTabs({ value, onChange, allowedTypes }: MenuTypeTabsProp
     [options, value],
   );
   const hint = MENU_TYPE_HINTS[currentOption.value];
+  const hintTitle = t(hint.titleKey);
+  const hintHelper = t(hint.helperKey);
 
   return (
     <div className="space-y-4">
@@ -264,10 +275,10 @@ export function MenuTypeTabs({ value, onChange, allowedTypes }: MenuTypeTabsProp
             {currentOption.label} · {currentOption.description}
           </div>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            {hint.title}
+            {hintTitle}
           </p>
           <p className="text-xs leading-relaxed text-muted-foreground/80">
-            {hint.helper}
+            {hintHelper}
           </p>
         </div>
       </div>

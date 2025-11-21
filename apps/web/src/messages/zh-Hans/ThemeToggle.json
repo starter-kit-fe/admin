@@ -1,6 +1,37 @@
 {
-  "ariaLabel": "切换主题",
+  "ariaLabel": "外观设置",
   "menuLabel": "外观模式",
+  "drawerTitle": "外观与主题",
+  "description": "选择主题、主色、圆角、字体与布局。",
+  "sections": {
+    "color": "主色",
+    "radius": "圆角",
+    "fontSize": "字体大小",
+    "theme": "主题模式",
+    "layout": "内容布局"
+  },
+  "colorOptions": {
+    "default": "跟随站点默认",
+    "zinc": "雾灰",
+    "red": "红色",
+    "rose": "玫红",
+    "orange": "橙色",
+    "green": "绿色",
+    "blue": "蓝色",
+    "yellow": "琥珀",
+    "violet": "紫罗兰"
+  },
+  "fontSizeOptions": {
+    "default": "默认",
+    "sm": "小号",
+    "md": "标准",
+    "lg": "大号"
+  },
+  "layoutOptions": {
+    "full": "全宽",
+    "centered": "居中"
+  },
+  "reset": "恢复默认",
   "current": "当前",
   "items": {
     "light": "浅色模式",

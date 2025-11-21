@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Trash2, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export type OnlineFilterChip = {
   key: 'userName' | 'ipaddr';
@@ -20,6 +21,8 @@ export function OnlineAppliedFilters({
   onRemove,
   onClear,
 }: OnlineAppliedFiltersProps) {
+  const t = useTranslations('OnlineUserManagement');
+
   if (items.length === 0) {
     return null;
   }
@@ -42,7 +45,7 @@ export function OnlineAppliedFilters({
             className={cn(
               'text-muted-foreground/70 transition-colors hover:text-muted-foreground',
             )}
-            aria-label={`移除 ${item.label}`}
+            aria-label={t('filters.chips.remove', { target: item.label })}
           >
             <X className="size-3.5" />
           </button>
@@ -54,7 +57,7 @@ export function OnlineAppliedFilters({
         className=""
         onClick={onClear}
       >
-        <Trash2 className="size-4" /> 清除
+        <Trash2 className="size-4" /> {t('filters.clearAll')}
       </Button>
     </div>
   );

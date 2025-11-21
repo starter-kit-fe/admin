@@ -20,8 +20,10 @@ import {
 } from '../../constants';
 import type { Role } from '../../type';
 import { RoleTable } from '../list/role-table';
+import { useTranslations } from 'next-intl';
 
 export function RoleDataSection() {
+  const t = useTranslations('RoleManagement');
   const {
     status,
     appliedFilters,
@@ -130,7 +132,7 @@ export function RoleDataSection() {
 
   const handleBulkDelete = () => {
     if (selectedCount === 0) {
-      toast.info('请先选择需要删除的角色');
+      toast.info(t('toast.bulkDeleteEmpty'));
       return;
     }
     setBulkDeleteOpen(true);

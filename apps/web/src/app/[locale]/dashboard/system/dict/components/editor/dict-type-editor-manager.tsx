@@ -19,8 +19,10 @@ import {
 import { resolveErrorMessage, toDictTypeFormValues } from '../../utils';
 import type { DictTypeFormValues } from '../../type';
 import { DictTypeEditorDialog } from './dict-type-editor-dialog';
+import { useTranslations } from 'next-intl';
 
 export function DictTypeEditorManager() {
+  const t = useTranslations('DictManagement');
   const typeEditorState = useDictTypeEditorState();
   const { closeTypeEditor } = useDictTypeEditorActions();
   const refresh = useDictManagementRefresh();
@@ -33,12 +35,12 @@ export function DictTypeEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('新增字典类型成功');
+      toast.success(t('toast.type.createSuccess'));
       closeTypeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '新增字典类型失败'));
+      toast.error(resolveErrorMessage(error, t('toast.type.createError')));
     },
     onSettled: () => {
       endMutation();
@@ -57,12 +59,12 @@ export function DictTypeEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('字典类型已更新');
+      toast.success(t('toast.type.updateSuccess'));
       closeTypeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '更新字典类型失败'));
+      toast.error(resolveErrorMessage(error, t('toast.type.updateError')));
     },
     onSettled: () => {
       endMutation();
