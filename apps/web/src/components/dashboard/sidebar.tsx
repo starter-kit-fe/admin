@@ -15,12 +15,13 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from '@/i18n/navigation';
+import type { AppLocale } from '@/i18n/routing';
 import { resolveLucideIcon } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';
 import { MenuNode } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from '@/i18n/navigation';
-import type { AppLocale } from '@/i18n/routing';
 import { useLocale } from 'next-intl';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
@@ -93,6 +94,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const shouldShowLoading = !isHydrated || isLoading;
   const hasNavItems = navItems.length > 0;
 
+  const renderLoading = () => (
+    <div className="space-y-2 px-3 py-4">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div
+          key={index}
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-2 py-2',
+            isCollapsed ? 'justify-center px-0' : 'bg-muted/40',
+          )}
+        >
+          <Skeleton className="h-8 w-8 rounded-lg" />
+          {!isCollapsed ? (
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-3 w-32 rounded" />
+              <Skeleton className="h-3 w-20 rounded" />
+            </div>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -122,9 +145,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         {shouldShowLoading ? (
-          <div className="px-4 py-6 text-sm text-muted-foreground">
-            {locale === 'en' ? 'Loading menus…' : '菜单加载中...'}
-          </div>
+          renderLoading()
         ) : hasNavItems ? (
           <NavMain items={navItems} />
         ) : (

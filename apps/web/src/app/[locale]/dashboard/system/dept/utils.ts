@@ -65,14 +65,13 @@ export function collectDescendantIds(node?: DepartmentNode): number[] {
 export function buildParentOptions(
   nodes: DepartmentNode[],
   excludeIds: Set<number>,
-  topLevelLabel: string,
 ): DepartmentParentOption[] {
   const options: DepartmentParentOption[] = [
     {
       value: '0',
-      label: topLevelLabel,
+      label: '顶级部门',
       level: 0,
-      path: [topLevelLabel],
+      path: ['顶级部门'],
       disabled: excludeIds.has(0),
     },
   ];

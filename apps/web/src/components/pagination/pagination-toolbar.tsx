@@ -1,9 +1,19 @@
-import { useMemo } from 'react';
-import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from 'lucide-react';
+import { useMemo } from 'react';
 
 interface PaginationToolbarProps {
   totalItems: number;
@@ -20,7 +30,9 @@ function formatPageSizeOptions(options?: ReadonlyArray<number>) {
   if (!options || options.length === 0) {
     return [];
   }
-  return Array.from(new Set(options)).filter((item) => Number.isFinite(item) && item > 0).sort((a, b) => a - b);
+  return Array.from(new Set(options))
+    .filter((item) => Number.isFinite(item) && item > 0)
+    .sort((a, b) => a - b);
 }
 
 export function PaginationToolbar({
@@ -47,7 +59,8 @@ export function PaginationToolbar({
   const hasPrevious = displayPage > 1;
   const hasNext = displayPage < totalPages;
   const sizeOptions = formatPageSizeOptions(pageSizeOptions);
-  const pageSizeDisabled = disabled || !onPageSizeChange || sizeOptions.length === 0;
+  const pageSizeDisabled =
+    disabled || !onPageSizeChange || sizeOptions.length === 0;
 
   const handlePageChange = (page: number) => {
     if (disabled || page === displayPage || page < 1 || page > totalPages) {
@@ -57,7 +70,12 @@ export function PaginationToolbar({
   };
 
   return (
-    <div className={cn('flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between', className)}>
+    <div
+      className={cn(
+        'flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between',
+        className,
+      )}
+    >
       <div className="text-muted-foreground">共 {totalItems} 条记录</div>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
@@ -68,25 +86,33 @@ export function PaginationToolbar({
             onValueChange={(value) => {
               if (onPageSizeChange) {
                 const nextSize = Number(value);
-                if (!Number.isNaN(nextSize) && nextSize > 0 && nextSize !== safePageSize) {
+                if (
+                  !Number.isNaN(nextSize) &&
+                  nextSize > 0 &&
+                  nextSize !== safePageSize
+                ) {
                   onPageSizeChange(nextSize);
                 }
               }
             }}
           >
-            <SelectTrigger className="h-8 w-[80px]">
+            <SelectTrigger className="h-8 w-[110px]">
               <SelectValue placeholder={`${safePageSize} 条`} />
             </SelectTrigger>
             <SelectContent>
-              {(sizeOptions.length > 0 ? sizeOptions : [safePageSize]).map((option) => (
-                <SelectItem key={option} value={String(option)}>
-                  {option} 条/页
-                </SelectItem>
-              ))}
+              {(sizeOptions.length > 0 ? sizeOptions : [safePageSize]).map(
+                (option) => (
+                  <SelectItem key={option} value={String(option)}>
+                    {option} 条/页
+                  </SelectItem>
+                ),
+              )}
             </SelectContent>
           </Select>
         </div>
-        <div className="text-muted-foreground">第 {displayPage} / {totalPages} 页</div>
+        <div className="text-muted-foreground">
+          第 {displayPage} / {totalPages} 页
+        </div>
         <div className="flex items-center gap-2">
           <Button
             type="button"

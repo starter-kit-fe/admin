@@ -1,10 +1,8 @@
-'use client';
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Trash2, X } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 type FilterChip = {
   key: string;
@@ -23,9 +21,8 @@ export function AppliedFilters({
   onRemove,
   onClear,
 }: AppliedFiltersProps) {
-  const t = useTranslations('UserManagement.filters');
-  const locale = useLocale();
-  const separator = locale.startsWith('zh') ? '：' : ':';
+  const t = useTranslations('UserManagement');
+
   if (items.length === 0) {
     return null;
   }
@@ -39,8 +36,7 @@ export function AppliedFilters({
           className="flex items-center gap-2 rounded-full px-3 py-1 text-sm  dark:bg-secondary/30 dark:text-secondary-foreground"
         >
           <span className="font-medium text-muted-foreground">
-            {item.label}
-            {separator}
+            {item.label}：
           </span>
           <span className="text-foreground">{item.value}</span>
           <button
@@ -49,7 +45,7 @@ export function AppliedFilters({
             className={cn(
               'text-muted-foreground/70 transition-colors hover:text-muted-foreground',
             )}
-            aria-label={t('removeAria', { target: item.label })}
+            aria-label={t('filters.removeAria', { target: item.label })}
           >
             <X className="size-3.5" />
           </button>
@@ -57,11 +53,11 @@ export function AppliedFilters({
       ))}
       <Button
         type="button"
-        variant="link"
-        className="inline-flex items-center gap-1 px-0 text-sm text-destructive hover:text-destructive dark:text-destructive dark:hover:text-destructive/80"
+        variant="destructive"
+        className=""
         onClick={onClear}
       >
-        <Trash2 className="size-4" /> {t('clearAll')}
+        <Trash2 className="size-4" /> {t('filters.clearAll')}
       </Button>
     </div>
   );

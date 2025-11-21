@@ -1,6 +1,12 @@
-import { del, get, patch, post } from '@/lib/request';
+import { del, get, patch, post, put } from '@/lib/request';
 
-import type { Job, JobListResponse } from './type';
+import type {
+  Job,
+  JobDetailParams,
+  JobDetailResponse,
+  JobListResponse,
+  JobLogStep,
+} from './type';
 
 export interface JobListParams {
   pageNum?: number;
@@ -34,8 +40,12 @@ export function listJobs(params: JobListParams = {}) {
   return get<JobListResponse>('/v1/monitor/jobs', buildQuery(params));
 }
 
+export interface RunJobResponse {
+  jobLogId: number;
+}
+
 export function runJob(jobId: number) {
-  return post(`/v1/monitor/jobs/${jobId}/run`);
+  return post<RunJobResponse>(`/v1/monitor/jobs/${jobId}/run`);
 }
 
 export function changeJobStatus(jobId: number, status: string) {
@@ -48,4 +58,43 @@ export function deleteJob(jobId: number) {
 
 export function getJob(jobId: number) {
   return get<Job>(`/v1/monitor/jobs/${jobId}`);
+}
+
+export function getJobDetail(jobId: number, params: JobDetailParams = {}) {
+  const query: Record<string, string> = {};
+  if (params.logPageNum) {
+    query.logPageNum = String(params.logPageNum);
+  }
+  if (params.logPageSize) {
+    query.logPageSize = String(params.logPageSize);
+  }
+  return get<JobDetailResponse>(`/v1/monitor/jobs/${jobId}/detail`, query);
+}
+
+export interface JobPayload {
+  jobName: string;
+  jobGroup: string;
+  invokeTarget: string;
+  cronExpression: string;
+  misfirePolicy: string;
+  concurrent: string;
+  status: string;
+  remark?: string;
+  invokeParams?: string;
+}
+
+export function createJob(payload: JobPayload) {
+  return post('/v1/monitor/jobs', payload);
+}
+
+export function updateJob(jobId: number, payload: JobPayload) {
+  return put(`/v1/monitor/jobs/${jobId}`, payload);
+}
+
+export function clearJobLogs(jobId: number) {
+  return del(`/v1/monitor/jobs/${jobId}/logs`);
+}
+
+export function getJobLogSteps(jobLogId: number) {
+  return get<JobLogStep[]>(`/v1/monitor/jobs/logs/${jobLogId}/steps`);
 }

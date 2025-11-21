@@ -59,6 +59,15 @@ export interface CacheOverview {
   keyspace: CacheKeyspaceInfo[];
 }
 
+export interface CacheOverviewPatch {
+  server?: Partial<CacheServerInfo>;
+  clients?: Partial<CacheClientsInfo>;
+  memory?: Partial<CacheMemoryInfo>;
+  stats?: Partial<CacheStatsInfo>;
+  persistence?: Partial<CachePersistenceInfo>;
+  keyspace?: CacheKeyspaceInfo[];
+}
+
 export interface CacheKeyItem {
   key: string;
   type?: string;

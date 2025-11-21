@@ -2,12 +2,11 @@ export interface HostInfo {
   hostname: string;
   os: string;
   arch: string;
+  bootTime?: string;
   platform?: string;
   platformVersion?: string;
   uptime: string;
   uptimeSeconds: number;
-  goVersion: string;
-  kernelVersion?: string;
   currentTime: string;
 }
 
@@ -21,6 +20,7 @@ export interface CPUInfo {
 
 export interface MemoryInfo {
   total: number;
+  limit: number;
   free: number;
   used: number;
   usedPercent: number;
@@ -61,4 +61,12 @@ export interface ServerStatus {
   memory: MemoryInfo;
   disks: DiskInfo[];
   process: ProcessInfo;
+}
+
+export interface ServerStatusPatch {
+  host?: Partial<HostInfo>;
+  cpu?: Partial<CPUInfo>;
+  memory?: Partial<MemoryInfo>;
+  disks?: DiskInfo[];
+  process?: Partial<ProcessInfo>;
 }

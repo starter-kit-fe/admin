@@ -9,9 +9,7 @@ import {
 } from '@tanstack/react-table';
 import { Clipboard, TimerReset } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
-import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -28,6 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 
 import type { CacheKeyItem } from '../api/types';
 import { formatBytes, formatDuration } from '../utils';
@@ -46,27 +45,18 @@ export function CacheKeyTable({
   hasFilter,
 }: CacheKeyTableProps) {
   const columnHelper = useMemo(() => createColumnHelper<CacheKeyItem>(), []);
-  const tTable = useTranslations('CacheMonitor.table');
-  const tCommon = useTranslations('CacheMonitor.common');
-  const durationLabels = useMemo(
-    () => ({
-      unknown: tCommon('unknown'),
-      permanent: tCommon('permanent'),
-    }),
-    [tCommon],
-  );
 
   const columns = useMemo(
     () => [
       columnHelper.accessor('key', {
-        header: tTable('columns.key'),
+        header: '键名',
         cell: (info) => {
           const value = info.getValue();
           const handleCopy = () => {
             void navigator.clipboard
               .writeText(value)
-              .then(() => toast.success(tTable('copy.success')))
-              .catch(() => toast.error(tTable('copy.error')));
+              .then(() => toast.success('已复制键名'))
+              .catch(() => toast.error('复制失败'));
           };
           return (
             <div className="flex items-center gap-2 truncate font-mono text-sm">
@@ -76,7 +66,7 @@ export function CacheKeyTable({
                 size="icon-sm"
                 variant="ghost"
                 className="ml-auto text-muted-foreground hover:text-foreground"
-                aria-label={tTable('aria.copy')}
+                aria-label="复制键名"
                 onClick={handleCopy}
               >
                 <Clipboard className="size-4" />
@@ -90,7 +80,7 @@ export function CacheKeyTable({
         },
       }),
       columnHelper.accessor('type', {
-        header: tTable('columns.type'),
+        header: '类型',
         cell: (info) => (
           <span className="rounded-full bg-muted px-2 py-0.5 text-xs uppercase">
             {info.getValue() ?? '-'}
@@ -101,11 +91,11 @@ export function CacheKeyTable({
         },
       }),
       columnHelper.accessor('ttlSeconds', {
-        header: tTable('columns.ttl'),
+        header: 'TTL',
         cell: (info) => (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <TimerReset className="size-4 text-muted-foreground/70" />
-            <span>{formatDuration(info.getValue(), durationLabels)}</span>
+            <span>{formatDuration(info.getValue())}</span>
           </div>
         ),
         meta: {
@@ -113,16 +103,14 @@ export function CacheKeyTable({
         },
       }),
       columnHelper.accessor('idleSeconds', {
-        header: tTable('columns.idle'),
-        cell: (info) => (
-          <span>{formatDuration(info.getValue(), durationLabels)}</span>
-        ),
+        header: '空闲时间',
+        cell: (info) => <span>{formatDuration(info.getValue())}</span>,
         meta: {
           headerClassName: 'min-w-[140px]',
         },
       }),
       columnHelper.accessor('sizeBytes', {
-        header: tTable('columns.size'),
+        header: '估算大小',
         cell: (info) => (
           <span>{formatBytes(info.getValue(), { decimals: 2 })}</span>
         ),
@@ -131,7 +119,7 @@ export function CacheKeyTable({
         },
       }),
       columnHelper.accessor('encoding', {
-        header: tTable('columns.encoding'),
+        header: '编码',
         cell: (info) => (
           <span className="uppercase">{info.getValue() ?? '-'}</span>
         ),
@@ -140,7 +128,7 @@ export function CacheKeyTable({
         },
       }),
     ],
-    [columnHelper, durationLabels, tTable],
+    [columnHelper],
   );
 
   const table = useReactTable({
@@ -180,21 +168,14 @@ export function CacheKeyTable({
       </TableHeader>
       <TableBody>
         {isLoading ? (
-          <TableRow>
-            <TableCell
-              colSpan={visibleColumnCount}
-              className="h-32 text-center align-middle"
-            >
-              <InlineLoading label={tTable('loading')} />
-            </TableCell>
-          </TableRow>
+          <TableLoadingSkeleton columns={visibleColumnCount} />
         ) : isError ? (
           <TableRow>
             <TableCell
               colSpan={visibleColumnCount}
               className="h-24 text-center text-sm text-destructive"
             >
-              {tTable('error')}
+              加载失败，请稍后重试。
             </TableCell>
           </TableRow>
         ) : tableRows.length === 0 ? (
@@ -205,11 +186,11 @@ export function CacheKeyTable({
             >
               <Empty className="border-0 bg-transparent p-4">
                 <EmptyHeader>
-                  <EmptyTitle>{tTable('emptyTitle')}</EmptyTitle>
+                  <EmptyTitle>未找到匹配的缓存键</EmptyTitle>
                   <EmptyDescription>
                     {hasFilter
-                      ? tTable('emptyDescription.filtered')
-                      : tTable('emptyDescription.noFilter')}
+                      ? '尝试调整匹配模式以获取更多结果。'
+                      : '暂时没有可展示的缓存数据。'}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>

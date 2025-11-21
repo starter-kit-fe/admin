@@ -18,14 +18,12 @@ import {
 import { resolveErrorMessage, toFormValues } from '../../utils';
 import type { NoticeFormValues } from '../../type';
 import { NoticeEditorDialog } from './notice-editor-dialog';
-import { useTranslations } from 'next-intl';
 
 export function NoticeEditorManager() {
   const { editorState, closeEditor } = useNoticeManagementStore();
   const refresh = useNoticeManagementRefresh();
   const { beginMutation, endMutation } =
     useNoticeManagementMutationCounter();
-  const tToast = useTranslations('NoticeManagement.toast');
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateNoticePayload) => createNotice(payload),
@@ -33,12 +31,12 @@ export function NoticeEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('createSuccess'));
+      toast.success('公告创建成功');
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('createError')));
+      toast.error(resolveErrorMessage(error, '新建公告失败'));
     },
     onSettled: () => {
       endMutation();
@@ -57,12 +55,12 @@ export function NoticeEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('updateSuccess'));
+      toast.success('公告已更新');
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('updateError')));
+      toast.error(resolveErrorMessage(error, '更新公告失败'));
     },
     onSettled: () => {
       endMutation();

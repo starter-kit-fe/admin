@@ -4,7 +4,10 @@ import { useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { createPost, updatePost } from '../../api';
+import {
+  createPost,
+  updatePost,
+} from '../../api';
 import {
   usePostManagementMutationCounter,
   usePostManagementRefresh,
@@ -19,10 +22,8 @@ import {
   toUpdatePayload,
 } from '../../utils';
 import { PostEditorDialog } from './post-editor-dialog';
-import { useTranslations } from 'next-intl';
 
 export function PostEditorManager() {
-  const tToast = useTranslations('PostManagement.toast');
   const {
     editorState,
     closeEditor,
@@ -42,12 +43,12 @@ export function PostEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('createSuccess'));
+      toast.success('岗位创建成功');
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('createError')));
+      toast.error(resolveErrorMessage(error, '创建岗位失败，请稍后重试'));
     },
     onSettled: () => {
       endMutation();
@@ -72,12 +73,12 @@ export function PostEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('updateSuccess'));
+      toast.success('岗位信息已更新');
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('updateError')));
+      toast.error(resolveErrorMessage(error, '更新岗位失败，请稍后重试'));
     },
     onSettled: () => {
       endMutation();

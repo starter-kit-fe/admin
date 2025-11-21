@@ -36,7 +36,9 @@ const filterFormAtom = atom<FiltersFormState>(defaultFilters);
 const appliedFiltersAtom = atom<FiltersFormState>(defaultFilters);
 const paginationAtom = atom<PaginationState>({ ...DEFAULT_PAGINATION });
 const selectedIdsAtom = atom<Set<number>>(new Set<number>());
-const roleOptionsAtom = atom<RoleOption[]>([]);
+const roleOptionsAtom = atom<RoleOption[]>([
+  { label: '', value: DEFAULT_ROLE_VALUE },
+]);
 const editorStateAtom = atom<EditorState>({ open: false });
 const deleteTargetAtom = atom<User | null>(null);
 const resetPasswordTargetAtom = atom<User | null>(null);

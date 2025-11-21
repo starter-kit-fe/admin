@@ -7,9 +7,8 @@ import {
   useDictTypeStatus,
 } from '@/app/dashboard/system/dict/store';
 import { useCallback, useEffect, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
 
-import { DEFAULT_DEBOUNCE_MS, STATUS_VALUES } from '../../constants';
+import { DEFAULT_DEBOUNCE_MS, TYPE_STATUS_TABS } from '../../constants';
 import { DictTypeAppliedFilters } from '../filters/dict-type-applied-filters';
 import { DictTypeFilters } from '../filters/dict-type-filters';
 
@@ -18,16 +17,8 @@ export function DictTypeFiltersSection() {
   const { typeFilterForm, setTypeFilterForm } = useDictTypeFilterForm();
   const { typeAppliedFilters, applyTypeFilters, resetTypeFilters } =
     useDictTypeAppliedFilters();
-  const tStatus = useTranslations('DictManagement.status');
 
-  const statusTabs = useMemo(
-    () =>
-      STATUS_VALUES.map((value) => ({
-        value,
-        label: tStatus(value),
-      })),
-    [tStatus],
-  );
+  const statusTabs = useMemo(() => TYPE_STATUS_TABS, []);
 
   const handleStatusChange = (value: string) => {
     setTypeStatus(value as TypeStatusValue);

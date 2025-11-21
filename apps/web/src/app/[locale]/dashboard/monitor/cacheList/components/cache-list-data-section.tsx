@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 
@@ -11,7 +10,6 @@ import {
   type CacheKeyListParams,
 } from '../../cache/api';
 import type { CacheKeyListResponse } from '../../cache/api/types';
-import { formatNumber } from '../../cache/utils';
 import {
   CACHE_LIST_PAGE_SIZE_OPTIONS,
   CACHE_LIST_QUERY_KEY,
@@ -29,7 +27,6 @@ export function CacheListDataSection() {
   const setRefreshing = useCacheListSetRefreshing();
   const setRefreshHandler = useCacheListSetRefreshHandler();
 
-  const tFilters = useTranslations('CacheMonitor.list.filters');
   const queryParams = useMemo<CacheKeyListParams>(() => {
     const params: CacheKeyListParams = {
       pageNum: pagination.pageNum,
@@ -61,7 +58,7 @@ export function CacheListDataSection() {
 
   const limitedTip =
     data.limited && data.scanned
-      ? tFilters('limitedTip', { count: formatNumber(data.scanned) })
+      ? `出于性能考虑仅展示前 ${data.scanned} 条匹配结果`
       : null;
 
   const isLoading = query.isLoading && rows.length === 0;
@@ -104,14 +101,12 @@ export function CacheListDataSection() {
         </div>
       ) : null}
       <section className="overflow-hidden rounded-xl border border-border/70 bg-card/90 dark:border-border/40">
-        <div className="w-full overflow-x-auto">
-          <CacheKeyTable
-            rows={rows}
-            isLoading={isLoading}
-            isError={isError}
-            hasFilter={hasFilter}
-          />
-        </div>
+        <CacheKeyTable
+          rows={rows}
+          isLoading={isLoading}
+          isError={isError}
+          hasFilter={hasFilter}
+        />
       </section>
       {shouldShowPagination ? (
         <PaginationToolbar

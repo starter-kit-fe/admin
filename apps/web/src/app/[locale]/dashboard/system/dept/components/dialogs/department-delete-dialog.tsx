@@ -2,7 +2,6 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
 import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
 import { removeDepartment } from '../../api';
@@ -18,8 +17,6 @@ export function DepartmentDeleteDialog() {
   const refresh = useDepartmentManagementRefresh();
   const { beginMutation, endMutation } =
     useDepartmentManagementMutationCounter();
-  const tToast = useTranslations('DepartmentManagement.toast');
-  const tDelete = useTranslations('DepartmentManagement.delete');
 
   const deleteMutation = useMutation({
     mutationFn: (deptId: number) => removeDepartment(deptId),
@@ -27,12 +24,12 @@ export function DepartmentDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('deleteSuccess'));
+      toast.success('删除部门成功');
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('deleteError')));
+      toast.error(resolveErrorMessage(error, '删除部门失败，请稍后再试'));
     },
     onSettled: () => {
       endMutation();
@@ -47,11 +44,11 @@ export function DepartmentDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title={tDelete('title')}
+      title="删除部门"
       description={
         deleteTarget
-          ? tDelete('description', { name: deleteTarget.deptName })
-          : tDelete('fallback')
+          ? `确定要删除部门「${deleteTarget.deptName}」吗？将同时移除其所有子部门。`
+          : '确认删除所选部门吗？'
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

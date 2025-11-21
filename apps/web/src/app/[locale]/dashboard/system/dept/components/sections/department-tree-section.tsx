@@ -11,9 +11,9 @@ import {
 import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
 
 import { listDepartmentTree } from '../../api';
 import { BASE_QUERY_KEY } from '../../constants';
@@ -39,7 +39,6 @@ export function DepartmentTreeSection() {
   const setRefreshing = useDepartmentManagementSetRefreshing();
   const setRefreshHandler = useDepartmentManagementSetRefreshHandler();
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 400);
-  const tTree = useTranslations('DepartmentManagement.tree');
 
   const departmentQuery = useQuery({
     queryKey: [...BASE_QUERY_KEY, status, debouncedKeyword],
@@ -86,18 +85,18 @@ export function DepartmentTreeSection() {
     <Card className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-card py-0 shadow-none dark:border-border/40">
       {departmentQuery.isLoading && departmentTree.length === 0 ? (
         <div className="flex flex-1 items-center justify-center">
-          <InlineLoading label={tTree('loading')} />
+          <InlineLoading label="加载部门数据..." />
         </div>
       ) : departmentQuery.isError ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-sm text-destructive">
-          {tTree('error')}
+          加载部门数据失败，请稍后再试。
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => departmentQuery.refetch()}
           >
-            {tTree('retry')}
+            重新加载
           </Button>
         </div>
       ) : (

@@ -4,7 +4,6 @@ import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { Megaphone, RefreshCw, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   useNoticeManagementRefresh,
@@ -13,7 +12,6 @@ import {
 } from '@/app/dashboard/system/notice/store';
 
 export function NoticeManagementHeader() {
-  const t = useTranslations('NoticeManagement.header');
   const { notices, openCreate, selectedIds, setBulkDeleteOpen } =
     useNoticeManagementStore();
   const { isRefreshing, isMutating } = useNoticeManagementStatus();
@@ -24,8 +22,8 @@ export function NoticeManagementHeader() {
   return (
     <section className="flex flex-col gap-2">
       <ManagementHeader
-        title={t('title')}
-        description={t('description')}
+        title="通知公告"
+        description="管理系统通知与公告内容，可快速筛选、创建与下线。"
         actions={
           <>
             <PermissionButton
@@ -37,10 +35,10 @@ export function NoticeManagementHeader() {
               disabled={selectedCount === 0 || isMutating}
             >
               <Trash2 className="size-4" />
-              {t('bulkDelete')}
+              批量删除
               {selectedCount > 0 ? (
                 <span className="ml-1 text-xs text-muted-foreground">
-                  {t('selectedCount', { count: selectedCount })}
+                  ({selectedCount})
                 </span>
               ) : null}
             </PermissionButton>
@@ -56,7 +54,7 @@ export function NoticeManagementHeader() {
               ) : (
                 <RefreshCw className="size-4" />
               )}
-              {t('refresh')}
+              刷新
             </PermissionButton>
             <PermissionButton
               required="system:notice:add"
@@ -65,13 +63,13 @@ export function NoticeManagementHeader() {
               disabled={isMutating}
             >
               <Megaphone className="size-4" />
-              {t('create')}
+              新建公告
             </PermissionButton>
           </>
         }
       />
       <p className="text-xs text-muted-foreground">
-        {t('summary', { total: notices.length, selected: selectedCount })}
+        当前共 {notices.length} 条记录，已选择 {selectedCount} 条。
       </p>
     </section>
   );

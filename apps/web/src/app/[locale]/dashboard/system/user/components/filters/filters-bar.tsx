@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Search, X } from 'lucide-react';
 
 import { DEFAULT_ROLE_VALUE } from '../utils';
 
@@ -39,12 +39,22 @@ export function FiltersBar({
   onKeywordChange,
   roleOptions,
 }: FiltersBarProps) {
-  const t = useTranslations('UserManagement.filters');
+  const t = useTranslations('UserManagement');
+
   const handleKeywordClear = () => {
     if (value.keyword) {
       onKeywordChange('');
     }
   };
+
+  const normalizedRoleOptions = roleOptions.map((option) =>
+    option.value === DEFAULT_ROLE_VALUE
+      ? {
+          ...option,
+          label: option.label || t('filters.allRoles'),
+        }
+      : option,
+  );
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -55,7 +65,7 @@ export function FiltersBar({
               <Search className="size-4 text-muted-foreground" />
             </InputGroupAddon>
             <InputGroupInput
-              placeholder={t('searchPlaceholder')}
+              placeholder={t('filters.searchPlaceholder')}
               value={value.keyword}
               onChange={(event) => onKeywordChange(event.target.value)}
             />
@@ -63,7 +73,7 @@ export function FiltersBar({
               <InputGroupButton
                 variant="ghost"
                 size="icon-sm"
-                aria-label={t('clearSearch')}
+                aria-label={t('filters.clearSearch')}
                 className="text-muted-foreground hover:text-foreground"
                 onClick={handleKeywordClear}
                 disabled={!value.keyword}
@@ -77,11 +87,10 @@ export function FiltersBar({
       <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
         <Select value={value.role} onValueChange={onRoleChange}>
           <SelectTrigger className="h-10 w-full bg-muted flex-1 rounded-lg border-muted sm:w-48">
-            <SelectValue placeholder={t('rolePlaceholder')} />
+            <SelectValue placeholder={t('filters.rolePlaceholder')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={DEFAULT_ROLE_VALUE}>{t('allRoles')}</SelectItem>
-            {roleOptions.map((option) => (
+            {normalizedRoleOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>

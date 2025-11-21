@@ -1,14 +1,5 @@
 'use client';
 
-import { listPosts } from '../../api';
-import {
-  BASE_QUERY_KEY,
-  DEFAULT_PAGINATION,
-  PAGE_SIZE_OPTIONS,
-  STATUS_TABS,
-} from '../../constants';
-import type { Post, PostListResponse } from '../../type';
-import { PostTable } from '../list/post-table';
 import {
   type StatusValue,
   usePostManagementSetRefreshHandler,
@@ -20,11 +11,19 @@ import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { SelectionBanner } from '@/components/selection-banner';
 import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { listPosts } from '../../api';
+import {
+  BASE_QUERY_KEY,
+  DEFAULT_PAGINATION,
+  PAGE_SIZE_OPTIONS,
+  STATUS_TABS,
+} from '../../constants';
+import type { Post, PostListResponse } from '../../type';
+import { PostTable } from '../list/post-table';
+
 export function PostDataSection() {
-  const tToast = useTranslations('PostManagement.toast');
   const {
     status,
     appliedFilters,
@@ -190,7 +189,7 @@ export function PostDataSection() {
 
   const handleBulkDelete = () => {
     if (selectedCount === 0) {
-      toast.info(tToast('selectRequired'));
+      toast.info('请先选择需要删除的岗位');
       return;
     }
     setBulkDeleteOpen(true);

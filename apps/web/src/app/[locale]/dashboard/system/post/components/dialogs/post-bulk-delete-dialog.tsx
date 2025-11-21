@@ -11,7 +11,6 @@ import {
   usePostManagementStore,
 } from '@/app/dashboard/system/post/store';
 import { resolveErrorMessage } from '../../utils';
-import { useTranslations } from 'next-intl';
 
 export function PostBulkDeleteDialog() {
   const {
@@ -22,8 +21,6 @@ export function PostBulkDeleteDialog() {
   } = usePostManagementStore();
   const refresh = usePostManagementRefresh();
   const { beginMutation, endMutation } = usePostManagementMutationCounter();
-  const tDelete = useTranslations('PostManagement.delete');
-  const tToast = useTranslations('PostManagement.toast');
 
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: number[]) => {
@@ -33,13 +30,13 @@ export function PostBulkDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('bulkDeleteSuccess'));
+      toast.success('批量删除成功');
       setBulkDeleteOpen(false);
       clearSelectedIds();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('bulkDeleteError')));
+      toast.error(resolveErrorMessage(error, '批量删除失败，请稍后再试'));
     },
     onSettled: () => {
       endMutation();
@@ -52,13 +49,13 @@ export function PostBulkDeleteDialog() {
     <DeleteConfirmDialog
       open={bulkDeleteOpen}
       onOpenChange={setBulkDeleteOpen}
-      title={tDelete('bulk.title')}
+      title="批量删除岗位"
       description={
         selectedCount > 0
-          ? tDelete('bulk.description', { count: selectedCount })
-          : tDelete('bulk.fallback')
+          ? `将删除选中的 ${selectedCount} 个岗位，操作不可恢复。`
+          : '确认删除所选岗位吗？'
       }
-      confirmLabel={tDelete('bulk.confirm')}
+      confirmLabel="批量删除"
       loading={bulkDeleteMutation.isPending}
       onConfirm={() => {
         if (selectedCount > 0) {

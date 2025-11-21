@@ -1,9 +1,12 @@
 package job
 
 import (
+	"encoding/json"
 	"errors"
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -33,29 +36,36 @@ type listJobQuery struct {
 }
 
 type createJobRequest struct {
-	JobName        string  `json:"jobName" binding:"required"`
-	JobGroup       string  `json:"jobGroup"`
-	InvokeTarget   string  `json:"invokeTarget" binding:"required"`
-	CronExpression string  `json:"cronExpression" binding:"required"`
-	MisfirePolicy  string  `json:"misfirePolicy"`
-	Concurrent     string  `json:"concurrent"`
-	Status         string  `json:"status"`
-	Remark         *string `json:"remark"`
+	JobName        string          `json:"jobName" binding:"required"`
+	JobGroup       string          `json:"jobGroup"`
+	InvokeTarget   string          `json:"invokeTarget" binding:"required"`
+	InvokeParams   json.RawMessage `json:"invokeParams"`
+	CronExpression string          `json:"cronExpression" binding:"required"`
+	MisfirePolicy  string          `json:"misfirePolicy"`
+	Concurrent     string          `json:"concurrent"`
+	Status         string          `json:"status"`
+	Remark         *string         `json:"remark"`
 }
 
 type updateJobRequest struct {
-	JobName        *string `json:"jobName"`
-	JobGroup       *string `json:"jobGroup"`
-	InvokeTarget   *string `json:"invokeTarget"`
-	CronExpression *string `json:"cronExpression"`
-	MisfirePolicy  *string `json:"misfirePolicy"`
-	Concurrent     *string `json:"concurrent"`
-	Status         *string `json:"status"`
-	Remark         *string `json:"remark"`
+	JobName        *string          `json:"jobName"`
+	JobGroup       *string          `json:"jobGroup"`
+	InvokeTarget   *string          `json:"invokeTarget"`
+	InvokeParams   *json.RawMessage `json:"invokeParams"`
+	CronExpression *string          `json:"cronExpression"`
+	MisfirePolicy  *string          `json:"misfirePolicy"`
+	Concurrent     *string          `json:"concurrent"`
+	Status         *string          `json:"status"`
+	Remark         *string          `json:"remark"`
 }
 
 type changeStatusRequest struct {
 	Status string `json:"status" binding:"required"`
+}
+
+type jobDetailQuery struct {
+	LogPageNum  int `form:"logPageNum"`
+	LogPageSize int `form:"logPageSize"`
 }
 
 // List godoc
@@ -134,6 +144,7 @@ func (h *Handler) Create(ctx *gin.Context) {
 		JobName:        payload.JobName,
 		JobGroup:       payload.JobGroup,
 		InvokeTarget:   payload.InvokeTarget,
+		InvokeParams:   payload.InvokeParams,
 		CronExpression: payload.CronExpression,
 		MisfirePolicy:  payload.MisfirePolicy,
 		Concurrent:     payload.Concurrent,
@@ -187,6 +198,55 @@ func (h *Handler) Get(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(job))
 }
 
+// Detail godoc
+// @Summary 获取定时任务详情
+// @Description 返回任务及执行日志
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "任务ID"
+// @Param logPageNum query int false "日志页码"
+// @Param logPageSize query int false "日志页大小"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/{id}/detail [get]
+func (h *Handler) Detail(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
+		return
+	}
+
+	id, err := parseID(ctx.Param("id"))
+	if err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid job id"))
+		return
+	}
+
+	var query jobDetailQuery
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid query parameters"))
+		return
+	}
+
+	detail, err := h.service.GetJobDetail(ctx.Request.Context(), id, ListJobLogsOptions{
+		PageNum:  query.LogPageNum,
+		PageSize: query.LogPageSize,
+	})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			resp.NotFound(ctx, resp.WithMessage("job not found"))
+			return
+		}
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load job detail"))
+		return
+	}
+
+	resp.OK(ctx, resp.WithData(detail))
+}
+
 // Update godoc
 // @Summary 修改定时任务
 // @Description 更新任务及调度信息
@@ -225,6 +285,7 @@ func (h *Handler) Update(ctx *gin.Context) {
 		JobName:        payload.JobName,
 		JobGroup:       payload.JobGroup,
 		InvokeTarget:   payload.InvokeTarget,
+		InvokeParams:   payload.InvokeParams,
 		CronExpression: payload.CronExpression,
 		MisfirePolicy:  payload.MisfirePolicy,
 		Concurrent:     payload.Concurrent,
@@ -275,6 +336,51 @@ func (h *Handler) Delete(ctx *gin.Context) {
 			return
 		}
 		resp.InternalServerError(ctx, resp.WithMessage("failed to delete job"))
+		return
+	}
+
+	resp.NoContent(ctx)
+}
+
+// ClearLogs godoc
+// @Summary 清空定时任务日志
+// @Description 删除指定任务的全部执行日志
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "任务ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/{id}/logs [delete]
+func (h *Handler) ClearLogs(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
+		return
+	}
+
+	id, err := parseID(ctx.Param("id"))
+	if err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid job id"))
+		return
+	}
+
+	if err := h.service.ClearJobLogs(ctx.Request.Context(), id, currentOperator(ctx)); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			resp.NotFound(ctx, resp.WithMessage("job not found"))
+			return
+		}
+		if errors.Is(err, ErrJobRunningActive) || errors.Is(err, ErrJobRunningConflict) {
+			resp.BadRequest(ctx, resp.WithMessage(err.Error()))
+			return
+		}
+		if errors.Is(err, ErrServiceUnavailable) {
+			resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
+			return
+		}
+		resp.InternalServerError(ctx, resp.WithMessage("failed to clear job logs"))
 		return
 	}
 
@@ -351,16 +457,153 @@ func (h *Handler) Trigger(ctx *gin.Context) {
 		return
 	}
 
-	if err := h.service.TriggerJob(ctx.Request.Context(), id, currentOperator(ctx)); err != nil {
+	logID, err := h.service.TriggerJob(ctx.Request.Context(), id, currentOperator(ctx))
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			resp.NotFound(ctx, resp.WithMessage("job not found"))
+			return
+		}
+		if errors.Is(err, ErrJobRunningConflict) {
+			resp.BadRequest(ctx, resp.WithMessage(err.Error()))
 			return
 		}
 		resp.InternalServerError(ctx, resp.WithMessage("failed to trigger job"))
 		return
 	}
 
-	resp.OK(ctx, resp.WithData(true))
+	resp.OK(ctx, resp.WithData(gin.H{"jobLogId": logID}))
+}
+
+// GetLogSteps godoc
+// @Summary 获取执行日志的步骤
+// @Description 按日志 ID 返回步骤明细
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "日志ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/logs/{id}/steps [get]
+func (h *Handler) GetLogSteps(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
+		return
+	}
+
+	logID, err := parseID(ctx.Param("id"))
+	if err != nil || logID <= 0 {
+		resp.BadRequest(ctx, resp.WithMessage("invalid job log id"))
+		return
+	}
+
+	steps, err := h.service.GetJobLogSteps(ctx.Request.Context(), logID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			resp.NotFound(ctx, resp.WithMessage("job log not found"))
+			return
+		}
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load job log steps"))
+		return
+	}
+
+	resp.OK(ctx, resp.WithData(steps))
+}
+
+// StreamLog godoc
+// @Summary 查看任务执行实时日志
+// @Description 通过 SSE 订阅指定日志的步骤流
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce text/event-stream
+// @Param id path int true "日志ID"
+// @Success 200 {string} string
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/logs/{id}/stream [get]
+func (h *Handler) StreamLog(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
+		return
+	}
+
+	logID, err := parseID(ctx.Param("id"))
+	if err != nil || logID <= 0 {
+		resp.BadRequest(ctx, resp.WithMessage("invalid job log id"))
+		return
+	}
+
+	if _, err := h.service.GetJobLog(ctx.Request.Context(), logID); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			resp.NotFound(ctx, resp.WithMessage("job log not found"))
+			return
+		}
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load job log"))
+		return
+	}
+
+	stream, cleanup := h.service.SubscribeLogStream(logID)
+	if stream == nil {
+		resp.InternalServerError(ctx, resp.WithMessage("log stream unavailable"))
+		return
+	}
+	defer cleanup()
+
+	flusher, ok := ctx.Writer.(http.Flusher)
+	if !ok {
+		resp.InternalServerError(ctx, resp.WithMessage("streaming unsupported"))
+		return
+	}
+
+	ctx.Header("Content-Type", "text/event-stream")
+	ctx.Header("Cache-Control", "no-cache")
+	ctx.Header("Connection", "keep-alive")
+	ctx.Writer.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	sendEvent := func(eventType string, payload interface{}) {
+		data, err := json.Marshal(payload)
+		if err != nil {
+			return
+		}
+		_, _ = ctx.Writer.Write([]byte("event: " + eventType + "\n"))
+		_, _ = ctx.Writer.Write([]byte("data: " + string(data) + "\n\n"))
+		flusher.Flush()
+	}
+
+	sendEvent("connected", StepEvent{
+		Type:      "connected",
+		JobLogID:  logID,
+		Timestamp: time.Now().Format(time.RFC3339),
+	})
+
+	heartbeat := time.NewTicker(15 * time.Second)
+	defer heartbeat.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case evt, ok := <-stream:
+			if !ok {
+				return
+			}
+			if evt == nil {
+				continue
+			}
+			sendEvent(evt.Type, evt)
+		case t := <-heartbeat.C:
+			sendEvent("heartbeat", StepEvent{
+				Type:      "heartbeat",
+				JobLogID:  logID,
+				Timestamp: t.UTC().Format(time.RFC3339),
+			})
+		}
+	}
 }
 
 func parseID(value string) (int64, error) {

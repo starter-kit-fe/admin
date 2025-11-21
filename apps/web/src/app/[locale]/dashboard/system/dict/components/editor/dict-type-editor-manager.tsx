@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
 import {
   createDictType,
@@ -27,7 +26,6 @@ export function DictTypeEditorManager() {
   const refresh = useDictManagementRefresh();
   const { beginMutation, endMutation } =
     useDictManagementMutationCounter();
-  const tToast = useTranslations('DictManagement.toast.type');
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateDictTypePayload) => createDictType(payload),
@@ -35,12 +33,12 @@ export function DictTypeEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('createSuccess'));
+      toast.success('新增字典类型成功');
       closeTypeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('createError')));
+      toast.error(resolveErrorMessage(error, '新增字典类型失败'));
     },
     onSettled: () => {
       endMutation();
@@ -59,12 +57,12 @@ export function DictTypeEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('updateSuccess'));
+      toast.success('字典类型已更新');
       closeTypeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('updateError')));
+      toast.error(resolveErrorMessage(error, '更新字典类型失败'));
     },
     onSettled: () => {
       endMutation();

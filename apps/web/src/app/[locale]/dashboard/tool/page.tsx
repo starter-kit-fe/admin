@@ -1,7 +1,5 @@
-import {redirect} from '@/i18n/navigation';
-import {getLocale} from 'next-intl/server';
+import { redirect } from 'next/navigation';
 
-export default async function Page() {
-  const locale = await getLocale();
-  redirect({href: '/dashboard/tool/swagger', locale});
+export default function Page() {
+  redirect('/dashboard/tool/swagger');
 }

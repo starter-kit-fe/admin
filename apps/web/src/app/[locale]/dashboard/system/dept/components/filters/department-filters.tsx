@@ -9,7 +9,6 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group';
 import { Search, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 interface DepartmentFiltersProps {
   status: string;
@@ -26,8 +25,6 @@ export function DepartmentFilters({
   keyword,
   onKeywordChange,
 }: DepartmentFiltersProps) {
-  const t = useTranslations('DepartmentManagement.filters');
-
   return (
     <Card className="rounded-xl border border-border/60 bg-card p-4 shadow-none dark:border-border/40 sm:p-5">
       <div className="flex flex-col gap-4">
@@ -37,7 +34,7 @@ export function DepartmentFilters({
             <Search className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder={t('searchPlaceholder')}
+            placeholder="搜索部门名称"
             value={keyword}
             onChange={(event) => onKeywordChange(event.target.value)}
           />
@@ -46,7 +43,7 @@ export function DepartmentFilters({
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label={t('clearSearch')}
+              aria-label="清空搜索"
               className="text-muted-foreground hover:text-foreground"
               onClick={() => onKeywordChange('')}
             >

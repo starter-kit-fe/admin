@@ -3,9 +3,11 @@
 import { useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
-import { createDepartment, updateDepartment } from '../../api';
+import {
+  createDepartment,
+  updateDepartment,
+} from '../../api';
 import {
   useDepartmentEditorActions,
   useDepartmentEditorState,
@@ -31,8 +33,6 @@ export function DepartmentEditorManager() {
   const refresh = useDepartmentManagementRefresh();
   const { beginMutation, endMutation } =
     useDepartmentManagementMutationCounter();
-  const tToast = useTranslations('DepartmentManagement.toast');
-  const tEditor = useTranslations('DepartmentManagement.editor');
 
   const createMutation = useMutation({
     mutationFn: (values: DepartmentFormValues) =>
@@ -41,12 +41,12 @@ export function DepartmentEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('createSuccess'));
+      toast.success('新增部门成功');
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('createError')));
+      toast.error(resolveErrorMessage(error, '新增部门失败'));
     },
     onSettled: () => {
       endMutation();
@@ -65,12 +65,12 @@ export function DepartmentEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('updateSuccess'));
+      toast.success('更新部门成功');
       closeEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('updateError')));
+      toast.error(resolveErrorMessage(error, '更新部门失败'));
     },
     onSettled: () => {
       endMutation();
@@ -105,12 +105,8 @@ export function DepartmentEditorManager() {
       exclude.add(editorState.node.deptId);
       collectDescendantIds(editorState.node).forEach((id) => exclude.add(id));
     }
-    return buildParentOptions(
-      departmentTree,
-      exclude,
-      tEditor('fields.parent.topLevel'),
-    );
-  }, [departmentTree, editorState, tEditor]);
+    return buildParentOptions(departmentTree, exclude);
+  }, [departmentTree, editorState]);
 
   const handleSubmit = (values: DepartmentFormValues) => {
     if (!editorState.open) return;

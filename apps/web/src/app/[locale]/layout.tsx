@@ -33,11 +33,7 @@ export default async function LocaleLayout(props: LocaleLayoutProps) {
   const messages = loadMessages(locale);
 
   return (
-    <NextIntlClientProvider
-      key={locale}
-      locale={locale}
-      messages={messages}
-    >
+    <NextIntlClientProvider key={locale} locale={locale} messages={messages}>
       <Providers>
         <>
           {children}

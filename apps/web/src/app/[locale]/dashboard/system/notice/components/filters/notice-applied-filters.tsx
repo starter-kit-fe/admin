@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Trash2, X } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
 
 export interface FilterChip {
   key: string;
@@ -23,9 +22,6 @@ export function NoticeAppliedFilters({
   onRemove,
   onClear,
 }: NoticeAppliedFiltersProps) {
-  const t = useTranslations('NoticeManagement.filters');
-  const locale = useLocale();
-  const separator = locale.startsWith('zh') ? '：' : ':';
   if (items.length === 0) {
     return null;
   }
@@ -39,17 +35,16 @@ export function NoticeAppliedFilters({
           className="flex items-center gap-2 rounded-full px-3 py-1 text-sm dark:bg-secondary/30 dark:text-secondary-foreground"
         >
           <span className="font-medium text-muted-foreground">
-            {item.label}
-            {separator}
+            {item.label}：
           </span>
           <span className="text-foreground">{item.value}</span>
           <button
             type="button"
             onClick={() => onRemove(item.key)}
-          className={cn(
-            'text-muted-foreground/70 transition-colors hover:text-muted-foreground',
-          )}
-            aria-label={t('removeAria', { target: item.label })}
+            className={cn(
+              'text-muted-foreground/70 transition-colors hover:text-muted-foreground',
+            )}
+            aria-label={`移除 ${item.label}`}
           >
             <X className="size-3.5" />
           </button>
@@ -62,7 +57,7 @@ export function NoticeAppliedFilters({
         onClick={onClear}
       >
         <Trash2 className="size-4" />
-        {t('clearAll')}
+        清除
       </Button>
     </div>
   );

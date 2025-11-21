@@ -100,7 +100,7 @@ export function ProfileSessionsCard({
                     <TableCell>
                       <div>{session.ipaddr || '未知 IP'}</div>
                       <div className="text-xs text-muted-foreground">
-                        {session.loginLocation || '未知地区'}
+                        {session.loginLocation || ''}
                       </div>
                     </TableCell>
                     <TableCell>

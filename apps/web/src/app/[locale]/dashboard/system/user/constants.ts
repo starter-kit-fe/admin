@@ -1,7 +1,7 @@
 export const STATUS_TABS = [
-  { value: 'all', labelKey: 'statusTabs.all', color: 'bg-slate-900 text-white' },
-  { value: '0', labelKey: 'statusTabs.0', color: 'bg-primary text-white' },
-  { value: '1', labelKey: 'statusTabs.1', color: 'bg-rose-500 text-white' },
+  { value: 'all', color: 'bg-slate-900 text-white' },
+  { value: '0', color: 'bg-primary text-white' },
+  { value: '1', color: 'bg-rose-500 text-white' },
 ] as const;
 
 export const DEFAULT_PAGINATION = {

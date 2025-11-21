@@ -2,7 +2,6 @@
 
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +26,7 @@ type IconEntry = LucideIconEntry & {
 
 type IconCategory = {
   id: string;
+  label: string;
   count: number;
 };
 
@@ -53,6 +53,13 @@ function categorizeIcon(label: string) {
   return '#';
 }
 
+function formatCategoryLabel(category: string) {
+  if (category === '#') {
+    return '其他';
+  }
+  return category;
+}
+
 function buildIconCategories(entries: IconEntry[]): IconCategory[] {
   const counts = entries.reduce<Record<string, number>>((acc, entry) => {
     acc[entry.category] = (acc[entry.category] ?? 0) + 1;
@@ -62,6 +69,7 @@ function buildIconCategories(entries: IconEntry[]): IconCategory[] {
   return [
     {
       id: 'all',
+      label: '全部图标',
       count: entries.length,
     },
     ...Object.entries(counts)
@@ -72,6 +80,7 @@ function buildIconCategories(entries: IconEntry[]): IconCategory[] {
       })
       .map(([id, count]) => ({
         id,
+        label: formatCategoryLabel(id),
         count,
       })),
   ];
@@ -79,12 +88,11 @@ function buildIconCategories(entries: IconEntry[]): IconCategory[] {
 
 export function MenuIconSelect({
   value,
-  placeholder,
+  placeholder = '选择图标',
   allowEmpty = true,
   disabled,
   onChange,
 }: MenuIconSelectProps) {
-  const tIcon = useTranslations('MenuManagement.iconSelect');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -149,8 +157,6 @@ export function MenuIconSelect({
     setOpen(false);
   };
 
-  const resolvedPlaceholder = placeholder ?? tIcon('placeholder');
-  const summaryText = tIcon('summary', { count: filteredIcons.length });
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -171,7 +177,7 @@ export function MenuIconSelect({
             ) : normalizedValue ? (
               <span className="truncate">{normalizedValue}</span>
             ) : (
-              <span className="text-muted-foreground">{resolvedPlaceholder}</span>
+              <span className="text-muted-foreground">{placeholder}</span>
             )}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -182,7 +188,7 @@ export function MenuIconSelect({
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={tIcon('searchPlaceholder')}
+            placeholder="搜索图标（支持拼音/英文）"
           />
           {allowEmpty ? (
             <Button
@@ -195,17 +201,17 @@ export function MenuIconSelect({
               )}
               onClick={() => handleSelect('')}
             >
-              {tIcon('clear')}
+              不使用图标
               <Check className={cn('h-4 w-4', normalizedValue ? 'opacity-0' : 'opacity-100')} />
             </Button>
           ) : null}
           <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
-            <span>{summaryText}</span>
-            <span>{tIcon('virtualized')}</span>
+            <span>共 {filteredIcons.length} 个匹配</span>
+            <span>虚拟列表已开启</span>
           </div>
           {filteredIcons.length === 0 ? (
             <p className="rounded-md border border-dashed px-3 py-6 text-center text-sm text-muted-foreground">
-              {tIcon('empty')}
+              没有匹配的图标
             </p>
           ) : (
             <div className="flex gap-3">
@@ -213,12 +219,6 @@ export function MenuIconSelect({
                 <div className="h-[420px] overflow-auto py-1">
                   {ICON_CATEGORIES.map((category) => {
                     const isActive = activeCategory === category.id;
-                    const categoryLabel =
-                      category.id === 'all'
-                        ? tIcon('categories.all')
-                        : category.id === '#'
-                          ? tIcon('categories.other')
-                          : category.id;
                     return (
                       <button
                         key={category.id}
@@ -231,7 +231,7 @@ export function MenuIconSelect({
                         )}
                         onClick={() => setActiveCategory(category.id)}
                       >
-                        <span>{categoryLabel}</span>
+                        <span>{category.label}</span>
                         <span className="text-xs text-muted-foreground">{category.count}</span>
                       </button>
                     );

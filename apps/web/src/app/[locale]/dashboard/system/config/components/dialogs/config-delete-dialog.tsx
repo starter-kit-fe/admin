@@ -11,15 +11,12 @@ import {
   useConfigManagementRefresh,
 } from '@/app/dashboard/system/config/store';
 import { resolveErrorMessage } from '../../utils';
-import { useTranslations } from 'next-intl';
 
 export function ConfigDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = useConfigDeleteState();
   const refresh = useConfigManagementRefresh();
   const { beginMutation, endMutation } =
     useConfigManagementMutationCounter();
-  const tToast = useTranslations('ConfigManagement.toast');
-  const tDialogs = useTranslations('ConfigManagement.dialogs');
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => removeConfig(id),
@@ -27,12 +24,12 @@ export function ConfigDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('deleteSuccess'));
+      toast.success('参数已删除');
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('deleteError')));
+      toast.error(resolveErrorMessage(error, '删除参数失败'));
     },
     onSettled: () => {
       endMutation();
@@ -47,11 +44,11 @@ export function ConfigDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title={tDialogs('deleteTitle')}
+      title="删除参数"
       description={
         deleteTarget
-          ? tDialogs('deleteMessage', { name: deleteTarget.configName })
-          : tDialogs('deleteFallback')
+          ? `确定要删除参数「${deleteTarget.configName}」吗？`
+          : '确认删除所选参数吗？'
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

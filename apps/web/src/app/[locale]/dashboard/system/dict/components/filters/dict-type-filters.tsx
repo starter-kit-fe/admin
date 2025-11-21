@@ -8,7 +8,6 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group';
 import { BookText, Code2, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 interface DictTypeFiltersProps {
   status: string;
@@ -29,8 +28,6 @@ export function DictTypeFilters({
   onDictNameChange,
   onDictTypeChange,
 }: DictTypeFiltersProps) {
-  const t = useTranslations('DictManagement.typeFilters');
-
   return (
     <div className="space-y-4 rounded-xl border border-border/60 bg-card/95 p-4 sm:p-5">
       <StatusTabs
@@ -44,7 +41,7 @@ export function DictTypeFilters({
             <BookText className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder={t('dictNamePlaceholder')}
+            placeholder="输入字典名称"
             value={dictName}
             onChange={(event) => onDictNameChange(event.target.value)}
           />
@@ -52,7 +49,7 @@ export function DictTypeFilters({
             <InputGroupButton
               size="icon-sm"
               variant="ghost"
-              aria-label={t('dictNameClear')}
+              aria-label="清空字典名称"
               onClick={() => onDictNameChange('')}
             >
               <X className="size-3.5" />
@@ -64,7 +61,7 @@ export function DictTypeFilters({
             <Code2 className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder={t('dictTypePlaceholder')}
+            placeholder="输入字典类型"
             value={dictType}
             onChange={(event) => onDictTypeChange(event.target.value)}
           />
@@ -72,7 +69,7 @@ export function DictTypeFilters({
             <InputGroupButton
               size="icon-sm"
               variant="ghost"
-              aria-label={t('dictTypeClear')}
+              aria-label="清空字典类型"
               onClick={() => onDictTypeChange('')}
             >
               <X className="size-3.5" />

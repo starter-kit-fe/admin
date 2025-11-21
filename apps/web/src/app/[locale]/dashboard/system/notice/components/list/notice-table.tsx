@@ -1,5 +1,10 @@
 'use client';
 
+import { EllipsisText } from '@/components/table/ellipsis-text';
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,7 +28,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { usePermissions } from '@/hooks/use-permissions';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -33,9 +48,9 @@ import {
 } from '@tanstack/react-table';
 import { format, isValid, parse, parseISO } from 'date-fns';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useMemo, useState } from 'react';
 
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import type { Notice } from '../../type';
 
 interface NoticeTableProps {
@@ -50,26 +65,30 @@ interface NoticeTableProps {
   onDelete: (notice: Notice) => void;
 }
 
-const STATUS_BADGE_META: Record<
+const STATUS_META: Record<
   Notice['status'],
-  { className: string }
+  { label: string; className: string }
 > = {
   '0': {
+    label: '正常',
     className: 'bg-primary/10 text-primary border-transparent',
   },
   '1': {
+    label: '停用',
     className: 'bg-destructive/10 text-destructive border-transparent',
   },
 };
 
-const TYPE_BADGE_META: Record<
+const TYPE_META: Record<
   Notice['noticeType'],
-  { className: string }
+  { label: string; className: string }
 > = {
   '1': {
+    label: '通知',
     className: 'bg-secondary/70 text-secondary-foreground border-transparent',
   },
   '2': {
+    label: '公告',
     className: 'bg-muted text-muted-foreground border-transparent',
   },
 };
@@ -115,33 +134,91 @@ function NoticeActions({
   onDelete,
   canEdit,
   canDelete,
-  labels,
 }: {
   notice: Notice;
   onEdit: (notice: Notice) => void;
   onDelete: (notice: Notice) => void;
   canEdit: boolean;
   canDelete: boolean;
-  labels: {
-    edit: string;
-    delete: string;
-    moreAria: (target: string) => string;
-  };
 }) {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+
   if (!canEdit && !canDelete) {
     return null;
   }
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground"
+            aria-label="更多操作"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+        >
+          <SheetHeader className="px-4 pb-2 pt-3 text-left">
+            <SheetTitle>公告操作</SheetTitle>
+            <SheetDescription>选择要执行的操作。</SheetDescription>
+          </SheetHeader>
+          <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+            {canEdit ? (
+              <Button
+                variant="secondary"
+                className="w-full justify-between"
+                onClick={() => {
+                  onEdit(notice);
+                  setOpen(false);
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <Pencil className="size-4" />
+                  编辑公告
+                </span>
+                <span className="text-xs text-muted-foreground">修改标题或内容</span>
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <Button
+                variant="destructive"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onDelete(notice);
+                  setOpen(false);
+                }}
+              >
+                <Trash2 className="size-4" />
+                删除
+              </Button>
+            ) : null}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
           variant="ghost"
-          size="icon"
-          className="size-8 hover:text-primary"
+          size="icon-sm"
+          className="text-muted-foreground"
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
-          aria-label={labels.moreAria(notice.noticeTitle)}
+          aria-label="更多操作"
         >
           <MoreHorizontal className="size-4" />
         </Button>
@@ -149,8 +226,8 @@ function NoticeActions({
       <DropdownMenuContent align="end" className="w-36">
         {canEdit ? (
           <DropdownMenuItem onSelect={() => onEdit(notice)}>
-            <Pencil className="mr-2 size-4" />
-            {labels.edit}
+            <Pencil className="mr-2 size-3.5" />
+            编辑
           </DropdownMenuItem>
         ) : null}
         {canDelete ? (
@@ -161,8 +238,8 @@ function NoticeActions({
               onDelete(notice);
             }}
           >
-            <Trash2 className="mr-2 size-4" />
-            {labels.delete}
+            <Trash2 className="mr-2 size-3.5" />
+            删除
           </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>
@@ -181,42 +258,11 @@ export function NoticeTable({
   onEdit,
   onDelete,
 }: NoticeTableProps) {
-  const tTable = useTranslations('NoticeManagement.table');
-  const tStatus = useTranslations('NoticeManagement.status');
-  const tTypes = useTranslations('NoticeManagement.types');
   const columnHelper = useMemo(() => createColumnHelper<Notice>(), []);
   const { hasPermission } = usePermissions();
   const canEditNotice = hasPermission('system:notice:edit');
   const canDeleteNotice = hasPermission('system:notice:remove');
   const showActions = canEditNotice || canDeleteNotice;
-
-  const statusMeta = useMemo(
-    () => ({
-      '0': {
-        label: tStatus('0'),
-        className: STATUS_BADGE_META['0'].className,
-      },
-      '1': {
-        label: tStatus('1'),
-        className: STATUS_BADGE_META['1'].className,
-      },
-    }),
-    [tStatus],
-  );
-
-  const typeMeta = useMemo(
-    () => ({
-      '1': {
-        label: tTypes('1'),
-        className: TYPE_BADGE_META['1'].className,
-      },
-      '2': {
-        label: tTypes('2'),
-        className: TYPE_BADGE_META['2'].className,
-      },
-    }),
-    [tTypes],
-  );
 
   const columns = useMemo(() => {
     const baseColumns = [
@@ -224,7 +270,7 @@ export function NoticeTable({
         id: 'select',
         header: () => (
           <Checkbox
-            aria-label={tTable('selection.selectAll')}
+            aria-label="选择全部公告"
             checked={headerCheckboxState}
             onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
           />
@@ -234,9 +280,7 @@ export function NoticeTable({
           const isSelected = selectedIds.has(notice.noticeId);
           return (
             <Checkbox
-              aria-label={tTable('selection.selectItem', {
-                target: notice.noticeTitle,
-              })}
+              aria-label={`选择 ${notice.noticeTitle}`}
               checked={isSelected}
               onCheckedChange={(checked) =>
                 onToggleSelect(notice.noticeId, checked === true)
@@ -250,60 +294,63 @@ export function NoticeTable({
       }),
       columnHelper.display({
         id: 'title',
-        header: () => tTable('columns.title'),
+        header: () => '标题',
         cell: ({ row }) => {
           const notice = row.original;
-          const typeInfo = typeMeta[notice.noticeType] ?? typeMeta['1'];
-          const statusInfo = statusMeta[notice.status] ?? statusMeta['1'];
+          const typeMeta = TYPE_META[notice.noticeType] ?? TYPE_META['1'];
+          const statusMeta = STATUS_META[notice.status] ?? STATUS_META['1'];
           return (
             <div className="flex flex-col gap-2">
-              <span className="font-medium text-foreground">
-                {notice.noticeTitle}
-              </span>
+              <EllipsisText
+                value={notice.noticeTitle}
+                className="w-full max-w-[260px] font-medium text-foreground"
+                tooltipClassName="max-w-lg text-sm leading-relaxed text-foreground"
+              />
               <div className="flex flex-wrap items-center gap-2">
                 <Badge
                   variant="secondary"
-                  className={cn(MINI_BADGE_CLASS, typeInfo.className)}
+                  className={cn(MINI_BADGE_CLASS, typeMeta.className)}
                 >
-                  {typeInfo.label}
+                  {typeMeta.label}
                 </Badge>
                 <Badge
                   variant="secondary"
-                  className={cn(MINI_BADGE_CLASS, statusInfo.className)}
+                  className={cn(MINI_BADGE_CLASS, statusMeta.className)}
                 >
-                  {statusInfo.label}
+                  {statusMeta.label}
                 </Badge>
               </div>
             </div>
           );
         },
-        meta: { headerClassName: 'min-w-[220px]' },
+        meta: { headerClassName: 'w-[260px]', cellClassName: 'w-[260px]' },
       }),
       columnHelper.display({
         id: 'content',
-        header: () => tTable('columns.content'),
+        header: () => '内容',
         cell: ({ row }) => (
-          <p className="line-clamp-2 text-sm text-muted-foreground">
-            {row.original.noticeContent}
-          </p>
+          <EllipsisText
+            value={row.original.noticeContent}
+            className="w-full max-w-[360px] text-sm text-muted-foreground"
+            tooltipClassName="max-w-xl whitespace-pre-wrap text-left text-sm leading-relaxed"
+          />
         ),
-        meta: { headerClassName: 'min-w-[240px]' },
+        meta: { headerClassName: 'w-[360px]', cellClassName: 'w-[360px]' },
       }),
       columnHelper.accessor('remark', {
-        header: () => tTable('columns.remark'),
-        cell: ({ getValue }) => {
-          const value = getValue();
-          return (
-            <span className="text-sm text-muted-foreground">
-              {value?.trim() ? value : '—'}
-            </span>
-          );
-        },
-        meta: { headerClassName: 'w-[160px]', cellClassName: 'w-[160px]' },
+        header: () => '备注',
+        cell: ({ getValue }) => (
+          <EllipsisText
+            value={getValue()}
+            className="max-w-[200px] text-xs text-muted-foreground"
+            tooltipClassName="text-left"
+          />
+        ),
+        meta: { headerClassName: 'w-[200px]', cellClassName: 'w-[200px]' },
       }),
       columnHelper.display({
         id: 'updatedAt',
-        header: () => tTable('columns.updatedAt'),
+        header: () => '更新时间',
         cell: ({ row }) => {
           const timeLabel = row.original.updateTime ?? row.original.createTime;
           return (
@@ -320,11 +367,7 @@ export function NoticeTable({
       baseColumns.push(
         columnHelper.display({
           id: 'actions',
-          header: () => (
-            <span className="block text-right">
-              {tTable('columns.actions')}
-            </span>
-          ),
+          header: () => <span className="block text-right">操作</span>,
           cell: ({ row }) => (
             <div className="flex justify-end">
               <NoticeActions
@@ -333,18 +376,11 @@ export function NoticeTable({
                 onDelete={onDelete}
                 canEdit={canEditNotice}
                 canDelete={canDeleteNotice}
-                labels={{
-                  edit: tTable('actions.edit'),
-                  delete: tTable('actions.delete'),
-                  moreAria: (target: string) =>
-                    tTable('actions.moreAria', { target }),
-                }}
               />
             </div>
           ),
           meta: {
-            headerClassName: 'w-[120px] text-right',
-            cellClassName: 'text-right',
+            ...PINNED_ACTION_COLUMN_META,
           },
         }),
       );
@@ -362,9 +398,6 @@ export function NoticeTable({
     onToggleSelectAll,
     selectedIds,
     showActions,
-    statusMeta,
-    tTable,
-    typeMeta,
   ]);
 
   const table = useReactTable({
@@ -378,7 +411,7 @@ export function NoticeTable({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border/60 bg-card dark:border-border/40">
-      <Table>
+      <Table className={cn(PINNED_TABLE_CLASS, 'min-w-[960px]')}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-muted/40">
@@ -404,21 +437,14 @@ export function NoticeTable({
         </TableHeader>
         <TableBody>
           {loading ? (
-            <TableRow>
-              <TableCell
-                colSpan={visibleColumnCount}
-                className="h-24 text-center text-sm text-muted-foreground"
-              >
-                {tTable('feedback.loading')}
-              </TableCell>
-            </TableRow>
+            <TableLoadingSkeleton columns={visibleColumnCount} />
           ) : isError ? (
             <TableRow>
               <TableCell
                 colSpan={visibleColumnCount}
                 className="h-24 text-center text-sm text-destructive"
               >
-                {tTable('feedback.error')}
+                加载失败，请稍后重试。
               </TableCell>
             </TableRow>
           ) : rows.length === 0 ? (
@@ -426,9 +452,9 @@ export function NoticeTable({
               <TableCell colSpan={visibleColumnCount} className="h-48">
                 <Empty className="border-0 bg-transparent p-6">
                   <EmptyHeader>
-                    <EmptyTitle>{tTable('feedback.emptyTitle')}</EmptyTitle>
+                    <EmptyTitle>暂无公告记录</EmptyTitle>
                     <EmptyDescription>
-                      {tTable('feedback.emptyDescription')}
+                      发布公告后即可在此查看与管理。
                     </EmptyDescription>
                   </EmptyHeader>
                 </Empty>
@@ -438,7 +464,7 @@ export function NoticeTable({
             rows.map((row) => (
               <TableRow
                 key={row.id}
-                className="transition-colors hover:bg-muted/60"
+                className="group transition-colors hover:bg-muted/60"
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell

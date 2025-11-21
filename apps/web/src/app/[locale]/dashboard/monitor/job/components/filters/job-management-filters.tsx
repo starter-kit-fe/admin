@@ -1,9 +1,8 @@
-'use client';
-
 import { StatusTabs, type StatusTabItem } from '@/components/status-tabs';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { useTranslations } from 'next-intl';
+import {
+  InputGroup,
+  InputGroupInput,
+} from '@/components/ui/input-group';
 
 import type { JobStatusFilter } from '../../constants';
 
@@ -26,8 +25,6 @@ export function JobManagementFilters({
   onStatusChange,
   statusTabs,
 }: JobManagementFiltersProps) {
-  const tFilters = useTranslations('JobManagement.filters');
-
   return (
     <div className="rounded-xl bg-card p-4">
       <div className="flex flex-col gap-4">
@@ -37,27 +34,21 @@ export function JobManagementFilters({
           tabs={statusTabs}
         />
 
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="job-name-filter">{tFilters('jobNameLabel')}</Label>
-            <Input
-              id="job-name-filter"
-              placeholder={tFilters('jobNamePlaceholder')}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <InputGroup className="w-full bg-muted/60 sm:w-[280px]">
+            <InputGroupInput
+              placeholder="按名称筛选"
               value={jobName}
               onChange={(event) => onJobNameChange(event.target.value)}
             />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="job-group-filter">
-              {tFilters('jobGroupLabel')}
-            </Label>
-            <Input
-              id="job-group-filter"
-              placeholder={tFilters('jobGroupPlaceholder')}
+          </InputGroup>
+          <InputGroup className="w-full bg-muted/60 sm:w-[280px]">
+            <InputGroupInput
+              placeholder="按分组筛选"
               value={jobGroup}
               onChange={(event) => onJobGroupChange(event.target.value)}
             />
-          </div>
+          </InputGroup>
         </div>
       </div>
     </div>

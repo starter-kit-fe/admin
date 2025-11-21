@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useTranslations } from 'next-intl';
 
 import {
   type NoticeStatusValue,
@@ -31,7 +30,6 @@ export function NoticeFiltersSection() {
     applyFilters,
     resetFilters,
   } = useNoticeManagementStore();
-  const tFilters = useTranslations('NoticeManagement.filters');
 
   const keywordDebounceRef = useRef<number | null>(null);
 
@@ -94,20 +92,13 @@ export function NoticeFiltersSection() {
     () =>
       NOTICE_STATUS_TABS.map((tab) => ({
         value: tab.value,
-        label: tFilters(tab.labelKey),
+        label: tab.label,
         activeColor: tab.color,
       })),
-    [tFilters],
+    [],
   );
 
-  const noticeTypeOptions = useMemo(
-    () =>
-      NOTICE_TYPE_OPTIONS.map((option) => ({
-        value: option.value,
-        label: tFilters(option.labelKey),
-      })),
-    [tFilters],
-  );
+  const noticeTypeOptions = useMemo(() => [...NOTICE_TYPE_OPTIONS], []);
 
   const appliedFilterChips = useMemo<FilterChip[]>(() => {
     const chips: FilterChip[] = [];
@@ -117,24 +108,19 @@ export function NoticeFiltersSection() {
           ?.label ?? noticeType;
       chips.push({
         key: 'noticeType',
-        label: tFilters('chips.noticeType'),
+        label: '类型',
         value: label,
       });
     }
     if (appliedFilters.noticeTitle) {
       chips.push({
         key: 'noticeTitle',
-        label: tFilters('chips.noticeTitle'),
+        label: '标题',
         value: appliedFilters.noticeTitle,
       });
     }
     return chips;
-  }, [
-    appliedFilters.noticeTitle,
-    noticeType,
-    noticeTypeOptions,
-    tFilters,
-  ]);
+  }, [appliedFilters.noticeTitle, noticeType, noticeTypeOptions]);
 
   return (
     <NoticeManagementFilters

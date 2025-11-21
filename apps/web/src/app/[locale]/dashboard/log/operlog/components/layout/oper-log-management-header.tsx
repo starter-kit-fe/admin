@@ -4,7 +4,6 @@ import { RefreshCcw } from 'lucide-react';
 
 import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
-import { useTranslations } from 'next-intl';
 
 import {
   useOperLogManagementRefresh,
@@ -13,7 +12,6 @@ import {
 } from '../../store';
 
 export function OperLogManagementHeader() {
-  const tHeader = useTranslations('OperLogManagement.header');
   const { total } = useOperLogManagementStore();
   const { isRefreshing, isMutating } = useOperLogManagementStatus();
   const refresh = useOperLogManagementRefresh();
@@ -23,13 +21,13 @@ export function OperLogManagementHeader() {
     <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">
-          {tHeader('title')}
+          操作日志
         </h1>
         <p className="text-sm text-muted-foreground">
-          {tHeader('description')}
+          追踪系统操作，支持按业务类型、状态与请求信息筛选。
         </p>
         <p className="text-xs text-muted-foreground">
-          {tHeader('total', { count: total })}
+          当前共 {total} 条记录。
         </p>
       </div>
       <div>
@@ -46,7 +44,7 @@ export function OperLogManagementHeader() {
           ) : (
             <RefreshCcw className="size-4" />
           )}
-          {tHeader('actions.refresh')}
+          刷新
         </PermissionButton>
       </div>
     </section>

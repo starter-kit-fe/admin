@@ -3,11 +3,11 @@
 import { useCallback } from 'react';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 
-import { STATUS_VALUES } from './constants';
+import { DATA_STATUS_TABS, TYPE_STATUS_TABS } from './constants';
 import type { DictData, DictType } from './type';
 
-export type TypeStatusValue = (typeof STATUS_VALUES)[number];
-export type DataStatusValue = TypeStatusValue;
+export type TypeStatusValue = (typeof TYPE_STATUS_TABS)[number]['value'];
+export type DataStatusValue = (typeof DATA_STATUS_TABS)[number]['value'];
 
 type TypeFilterState = {
   dictName: string;

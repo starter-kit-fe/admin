@@ -14,7 +14,7 @@ export function DictManagement() {
     <div className="mx-auto flex w-full flex-col gap-6 sm:gap-6">
       <DictManagementHeader />
       <DictTypeFiltersSection />
-      <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)]">
         <DictTypeSection />
         <DictDataSection />
       </div>

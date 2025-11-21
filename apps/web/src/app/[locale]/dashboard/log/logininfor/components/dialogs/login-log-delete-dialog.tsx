@@ -12,15 +12,12 @@ import {
   useLoginLogManagementStore,
 } from '../../store';
 import { resolveErrorMessage } from '../../utils';
-import { useTranslations } from 'next-intl';
 
 export function LoginLogDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = useLoginLogManagementStore();
   const refresh = useLoginLogManagementRefresh();
   const { beginMutation, endMutation } =
     useLoginLogManagementMutationCounter();
-  const tDialogs = useTranslations('LoginLogManagement.dialogs');
-  const tToast = useTranslations('LoginLogManagement.toast');
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => removeLoginLog(id),
@@ -28,13 +25,13 @@ export function LoginLogDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('deleteSuccess'));
+      toast.success('登录日志已删除');
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
       toast.error(
-        resolveErrorMessage(error, tToast('deleteError')),
+        resolveErrorMessage(error, '删除登录日志失败，请稍后再试'),
       );
     },
     onSettled: () => {
@@ -50,13 +47,11 @@ export function LoginLogDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title={tDialogs('deleteTitle')}
+      title="删除登录日志"
       description={
         deleteTarget
-          ? tDialogs('deleteDescription', {
-              name: deleteTarget.userName || tDialogs('deleteUnnamed'),
-            })
-          : tDialogs('deleteFallback')
+          ? `确定删除账号「${deleteTarget.userName || '未命名'}」的登录日志吗？`
+          : '确定要删除该登录日志吗？'
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

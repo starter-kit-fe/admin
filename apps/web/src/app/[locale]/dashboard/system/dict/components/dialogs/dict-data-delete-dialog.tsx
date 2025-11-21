@@ -2,7 +2,6 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
 import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
 import { removeDictData } from '../../api';
@@ -18,8 +17,6 @@ export function DictDataDeleteDialog() {
   const refresh = useDictManagementRefresh();
   const { beginMutation, endMutation } =
     useDictManagementMutationCounter();
-  const tToast = useTranslations('DictManagement.toast.data');
-  const tDelete = useTranslations('DictManagement.delete.data');
 
   const deleteMutation = useMutation({
     mutationFn: ({
@@ -33,12 +30,12 @@ export function DictDataDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('deleteSuccess'));
+      toast.success('字典项已删除');
       setDataDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('deleteError')));
+      toast.error(resolveErrorMessage(error, '删除字典项失败'));
     },
     onSettled: () => {
       endMutation();
@@ -53,13 +50,11 @@ export function DictDataDeleteDialog() {
           setDataDeleteTarget(null);
         }
       }}
-      title={tDelete('title')}
+      title="删除字典项"
       description={
         dataDeleteTarget
-          ? tDelete('description', {
-              name: dataDeleteTarget.dictData.dictLabel,
-            })
-          : tDelete('fallback')
+          ? `确定要删除字典项「${dataDeleteTarget.dictData.dictLabel}」吗？`
+          : '确认删除所选字典项吗？'
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

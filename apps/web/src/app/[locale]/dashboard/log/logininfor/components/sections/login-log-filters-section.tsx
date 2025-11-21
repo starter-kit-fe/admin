@@ -1,21 +1,18 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 
 import {
   DEFAULT_DEBOUNCE_MS,
-  LOGIN_LOG_STATUS_VALUES,
+  LOGIN_LOG_STATUS_TABS,
 } from '../../constants';
 import {
   type LoginLogStatusValue,
   useLoginLogManagementStore,
 } from '../../store';
 import { LoginLogManagementFilters } from '../filters/login-log-management-filters';
-import { useTranslations } from 'next-intl';
 
 export function LoginLogFiltersSection() {
-  const tFilters = useTranslations('LoginLogManagement.filters');
-  const tStatus = useTranslations('LoginLogManagement.status');
   const {
     status,
     setStatus,
@@ -50,20 +47,6 @@ export function LoginLogFiltersSection() {
     setFilterForm((prev) => ({ ...prev, ipaddr: value }));
   };
 
-  const statusTabs = useMemo(
-    () =>
-      LOGIN_LOG_STATUS_VALUES.map((value) => ({
-        value,
-        label:
-          value === 'all'
-            ? tFilters('statusTabs.all')
-            : value === '0'
-              ? tStatus('success')
-              : tStatus('failed'),
-      })),
-    [tFilters, tStatus],
-  );
-
   return (
     <section>
       <LoginLogManagementFilters
@@ -73,7 +56,7 @@ export function LoginLogFiltersSection() {
         onUserNameChange={handleUserNameChange}
         ipaddr={filterForm.ipaddr}
         onIpaddrChange={handleIpaddrChange}
-        statusTabs={statusTabs}
+        statusTabs={LOGIN_LOG_STATUS_TABS}
         onReset={() => resetFilters()}
       />
     </section>

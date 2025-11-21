@@ -1,7 +1,7 @@
 export const STATUS_TABS = [
-  { value: 'all', labelKey: 'statusTabs.all' },
-  { value: '0', labelKey: 'statusTabs.0' },
-  { value: '1', labelKey: 'statusTabs.1' },
+  { value: 'all', label: '全部' },
+  { value: '0', label: '启用' },
+  { value: '1', label: '停用' },
 ] as const;
 
 export const DEFAULT_PAGINATION = {

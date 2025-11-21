@@ -12,6 +12,7 @@
 package router
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -123,6 +124,35 @@ func notImplemented(feature string) gin.HandlerFunc {
 	}
 }
 
+func registerRouteWithPermissions(
+	group *gin.RouterGroup,
+	method string,
+	relativePath string,
+	permissions []string,
+	handler gin.HandlerFunc,
+	description string,
+) {
+	if group == nil {
+		return
+	}
+	if handler == nil {
+		handler = notImplemented(description)
+	}
+
+	var handlers []gin.HandlerFunc
+	if len(permissions) > 0 {
+		handlers = append(handlers, middleware.RequirePermissions(permissions...))
+	}
+	handlers = append(handlers, handler)
+	group.Handle(method, relativePath, handlers...)
+}
+
+func requireHandler(name string, handler interface{}) {
+	if handler == nil {
+		panic(fmt.Sprintf("%s is not configured", name))
+	}
+}
+
 func registerDocsRoutes(engine *gin.Engine, opts Options) {
 	if opts.DocsHandler == nil {
 		return
@@ -197,120 +227,141 @@ func registerProtectedAuthRoutes(group *gin.RouterGroup, opts Options) {
 }
 
 func registerSystemRoutes(group *gin.RouterGroup, opts Options) {
+	requireHandler("UserHandler", opts.UserHandler)
+	requireHandler("RoleHandler", opts.RoleHandler)
+	requireHandler("MenuHandler", opts.MenuHandler)
+	requireHandler("DeptHandler", opts.DeptHandler)
+	requireHandler("PostHandler", opts.PostHandler)
+	requireHandler("DictHandler", opts.DictHandler)
+	requireHandler("ConfigHandler", opts.ConfigHandler)
+	requireHandler("NoticeHandler", opts.NoticeHandler)
+
 	system := group.Group("/system")
 
 	registerSystemUserRoutes(system, opts)
 
 	profile := group.Group("/profile")
-	profile.GET("", opts.UserHandler.GetProfile)
-	profile.PUT("", opts.UserHandler.UpdateProfile)
-	profile.PUT("/password", opts.UserHandler.ChangePassword)
-	profile.GET("/sessions", opts.UserHandler.ListSelfSessions)
-	profile.POST("/sessions/:id/force-logout", opts.UserHandler.ForceLogoutSelfSession)
+	registerRouteWithPermissions(profile, http.MethodGet, "", nil, opts.UserHandler.GetProfile, "get profile")
+	registerRouteWithPermissions(profile, http.MethodPut, "", nil, opts.UserHandler.UpdateProfile, "update profile")
+	registerRouteWithPermissions(profile, http.MethodPut, "/password", nil, opts.UserHandler.ChangePassword, "change password")
+	registerRouteWithPermissions(profile, http.MethodGet, "/sessions", nil, opts.UserHandler.ListSelfSessions, "list own sessions")
+	registerRouteWithPermissions(profile, http.MethodPost, "/sessions/:id/force-logout", nil, opts.UserHandler.ForceLogoutSelfSession, "force logout own session")
 
 	roles := system.Group("/roles")
-	roles.GET("", middleware.RequirePermissions("system:role:list"), opts.RoleHandler.List)
-	roles.POST("", middleware.RequirePermissions("system:role:add"), opts.RoleHandler.Create)
-	roles.GET("/:id", middleware.RequirePermissions("system:role:query"), opts.RoleHandler.Get)
-	roles.PUT("/:id", middleware.RequirePermissions("system:role:edit"), opts.RoleHandler.Update)
-	roles.DELETE("/:id", middleware.RequirePermissions("system:role:remove"), opts.RoleHandler.Delete)
+	registerRouteWithPermissions(roles, http.MethodGet, "", []string{"system:role:list"}, opts.RoleHandler.List, "list roles")
+	registerRouteWithPermissions(roles, http.MethodPost, "", []string{"system:role:add"}, opts.RoleHandler.Create, "create role")
+	registerRouteWithPermissions(roles, http.MethodGet, "/:id", []string{"system:role:query"}, opts.RoleHandler.Get, "get role")
+	registerRouteWithPermissions(roles, http.MethodPut, "/:id", []string{"system:role:edit"}, opts.RoleHandler.Update, "update role")
+	registerRouteWithPermissions(roles, http.MethodDelete, "/:id", []string{"system:role:remove"}, opts.RoleHandler.Delete, "delete role")
 
 	menus := system.Group("/menus")
-	menus.GET("/tree", middleware.RequirePermissions("system:menu:list"), opts.MenuHandler.Tree)
-	menus.POST("", middleware.RequirePermissions("system:menu:add"), opts.MenuHandler.Create)
-	menus.GET("/:id", middleware.RequirePermissions("system:menu:query"), opts.MenuHandler.Get)
-	menus.PUT("/:id", middleware.RequirePermissions("system:menu:edit"), opts.MenuHandler.Update)
-	menus.PUT("/reorder", middleware.RequirePermissions("system:menu:edit"), opts.MenuHandler.Reorder)
-	menus.DELETE("/:id", middleware.RequirePermissions("system:menu:remove"), opts.MenuHandler.Delete)
+	registerRouteWithPermissions(menus, http.MethodGet, "/tree", []string{"system:menu:list"}, opts.MenuHandler.Tree, "list menu tree")
+	registerRouteWithPermissions(menus, http.MethodPost, "", []string{"system:menu:add"}, opts.MenuHandler.Create, "create menu")
+	registerRouteWithPermissions(menus, http.MethodGet, "/:id", []string{"system:menu:query"}, opts.MenuHandler.Get, "get menu")
+	registerRouteWithPermissions(menus, http.MethodPut, "/:id", []string{"system:menu:edit"}, opts.MenuHandler.Update, "update menu")
+	registerRouteWithPermissions(menus, http.MethodPut, "/reorder", []string{"system:menu:edit"}, opts.MenuHandler.Reorder, "reorder menus")
+	registerRouteWithPermissions(menus, http.MethodDelete, "/:id", []string{"system:menu:remove"}, opts.MenuHandler.Delete, "delete menu")
 
 	departments := system.Group("/departments")
-	departments.GET("/tree", middleware.RequirePermissions("system:dept:list"), opts.DeptHandler.Tree)
-	departments.GET("", middleware.RequirePermissions("system:dept:list"), opts.DeptHandler.List)
-	departments.POST("", middleware.RequirePermissions("system:dept:add"), opts.DeptHandler.Create)
-	departments.GET("/:id", middleware.RequirePermissions("system:dept:query"), opts.DeptHandler.Get)
-	departments.PUT("/:id", middleware.RequirePermissions("system:dept:edit"), opts.DeptHandler.Update)
-	departments.DELETE("/:id", middleware.RequirePermissions("system:dept:remove"), opts.DeptHandler.Delete)
+	registerRouteWithPermissions(departments, http.MethodGet, "/tree", []string{"system:dept:list"}, opts.DeptHandler.Tree, "list department tree")
+	registerRouteWithPermissions(departments, http.MethodGet, "", []string{"system:dept:list"}, opts.DeptHandler.List, "list departments")
+	registerRouteWithPermissions(departments, http.MethodPost, "", []string{"system:dept:add"}, opts.DeptHandler.Create, "create department")
+	registerRouteWithPermissions(departments, http.MethodGet, "/:id", []string{"system:dept:query"}, opts.DeptHandler.Get, "get department")
+	registerRouteWithPermissions(departments, http.MethodPut, "/:id", []string{"system:dept:edit"}, opts.DeptHandler.Update, "update department")
+	registerRouteWithPermissions(departments, http.MethodDelete, "/:id", []string{"system:dept:remove"}, opts.DeptHandler.Delete, "delete department")
 
 	posts := system.Group("/posts")
-	posts.GET("", middleware.RequirePermissions("system:post:list"), opts.PostHandler.List)
-	posts.POST("", middleware.RequirePermissions("system:post:add"), opts.PostHandler.Create)
-	posts.GET("/:id", middleware.RequirePermissions("system:post:query"), notImplemented("get post"))
-	posts.PUT("/:id", middleware.RequirePermissions("system:post:edit"), opts.PostHandler.Update)
-	posts.DELETE("/:id", middleware.RequirePermissions("system:post:remove"), opts.PostHandler.Delete)
+	registerRouteWithPermissions(posts, http.MethodGet, "", []string{"system:post:list"}, opts.PostHandler.List, "list posts")
+	registerRouteWithPermissions(posts, http.MethodPost, "", []string{"system:post:add"}, opts.PostHandler.Create, "create post")
+	registerRouteWithPermissions(posts, http.MethodGet, "/:id", []string{"system:post:query"}, notImplemented("get post"), "get post")
+	registerRouteWithPermissions(posts, http.MethodPut, "/:id", []string{"system:post:edit"}, opts.PostHandler.Update, "update post")
+	registerRouteWithPermissions(posts, http.MethodDelete, "/:id", []string{"system:post:remove"}, opts.PostHandler.Delete, "delete post")
 
 	dicts := system.Group("/dicts")
-	dicts.GET("", middleware.RequirePermissions("system:dict:list"), opts.DictHandler.List)
-	dicts.POST("", middleware.RequirePermissions("system:dict:add"), opts.DictHandler.Create)
-	dicts.GET("/:id", middleware.RequirePermissions("system:dict:query"), opts.DictHandler.Get)
-	dicts.PUT("/:id", middleware.RequirePermissions("system:dict:edit"), opts.DictHandler.Update)
-	dicts.DELETE("/:id", middleware.RequirePermissions("system:dict:remove"), opts.DictHandler.Delete)
-	dicts.GET("/:id/data", middleware.RequirePermissions("system:dict:list"), opts.DictHandler.ListData)
-	dicts.POST("/:id/data", middleware.RequirePermissions("system:dict:add"), opts.DictHandler.CreateData)
-	dicts.PUT("/:id/data/:itemId", middleware.RequirePermissions("system:dict:edit"), opts.DictHandler.UpdateData)
-	dicts.DELETE("/:id/data/:itemId", middleware.RequirePermissions("system:dict:remove"), opts.DictHandler.DeleteData)
+	registerRouteWithPermissions(dicts, http.MethodGet, "", []string{"system:dict:list"}, opts.DictHandler.List, "list dictionaries")
+	registerRouteWithPermissions(dicts, http.MethodPost, "", []string{"system:dict:add"}, opts.DictHandler.Create, "create dictionary")
+	registerRouteWithPermissions(dicts, http.MethodGet, "/:id", []string{"system:dict:query"}, opts.DictHandler.Get, "get dictionary")
+	registerRouteWithPermissions(dicts, http.MethodPut, "/:id", []string{"system:dict:edit"}, opts.DictHandler.Update, "update dictionary")
+	registerRouteWithPermissions(dicts, http.MethodDelete, "/:id", []string{"system:dict:remove"}, opts.DictHandler.Delete, "delete dictionary")
+	registerRouteWithPermissions(dicts, http.MethodGet, "/:id/data", []string{"system:dict:list"}, opts.DictHandler.ListData, "list dictionary data")
+	registerRouteWithPermissions(dicts, http.MethodPost, "/:id/data", []string{"system:dict:add"}, opts.DictHandler.CreateData, "create dictionary data")
+	registerRouteWithPermissions(dicts, http.MethodPut, "/:id/data/:itemId", []string{"system:dict:edit"}, opts.DictHandler.UpdateData, "update dictionary data")
+	registerRouteWithPermissions(dicts, http.MethodDelete, "/:id/data/:itemId", []string{"system:dict:remove"}, opts.DictHandler.DeleteData, "delete dictionary data")
 
 	configs := system.Group("/configs")
-	configs.GET("", middleware.RequirePermissions("system:config:list"), opts.ConfigHandler.List)
-	configs.POST("", middleware.RequirePermissions("system:config:add"), opts.ConfigHandler.Create)
-	configs.GET("/:id", middleware.RequirePermissions("system:config:query"), opts.ConfigHandler.Get)
-	configs.PUT("/:id", middleware.RequirePermissions("system:config:edit"), opts.ConfigHandler.Update)
-	configs.DELETE("/:id", middleware.RequirePermissions("system:config:remove"), opts.ConfigHandler.Delete)
+	registerRouteWithPermissions(configs, http.MethodGet, "", []string{"system:config:list"}, opts.ConfigHandler.List, "list configs")
+	registerRouteWithPermissions(configs, http.MethodPost, "", []string{"system:config:add"}, opts.ConfigHandler.Create, "create config")
+	registerRouteWithPermissions(configs, http.MethodGet, "/:id", []string{"system:config:query"}, opts.ConfigHandler.Get, "get config")
+	registerRouteWithPermissions(configs, http.MethodPut, "/:id", []string{"system:config:edit"}, opts.ConfigHandler.Update, "update config")
+	registerRouteWithPermissions(configs, http.MethodDelete, "/:id", []string{"system:config:remove"}, opts.ConfigHandler.Delete, "delete config")
 
 	notices := system.Group("/notices")
-	notices.GET("", middleware.RequirePermissions("system:notice:list"), opts.NoticeHandler.List)
-	notices.POST("", middleware.RequirePermissions("system:notice:add"), opts.NoticeHandler.Create)
-	notices.GET("/:id", middleware.RequirePermissions("system:notice:query"), opts.NoticeHandler.Get)
-	notices.PUT("/:id", middleware.RequirePermissions("system:notice:edit"), opts.NoticeHandler.Update)
-
+	registerRouteWithPermissions(notices, http.MethodGet, "", []string{"system:notice:list"}, opts.NoticeHandler.List, "list notices")
+	registerRouteWithPermissions(notices, http.MethodPost, "", []string{"system:notice:add"}, opts.NoticeHandler.Create, "create notice")
+	registerRouteWithPermissions(notices, http.MethodGet, "/:id", []string{"system:notice:query"}, opts.NoticeHandler.Get, "get notice")
+	registerRouteWithPermissions(notices, http.MethodPut, "/:id", []string{"system:notice:edit"}, opts.NoticeHandler.Update, "update notice")
+	registerRouteWithPermissions(notices, http.MethodDelete, "/:id", []string{"system:notice:remove"}, opts.NoticeHandler.Delete, "delete notice")
 }
 
 func registerSystemUserRoutes(system *gin.RouterGroup, opts Options) {
+	requireHandler("UserHandler", opts.UserHandler)
+
 	users := system.Group("/users")
-
-	users.GET("", middleware.RequirePermissions("system:user:list"), opts.UserHandler.List)
-	users.POST("", middleware.RequirePermissions("system:user:add"), opts.UserHandler.Create)
-	users.GET("/:id", middleware.RequirePermissions("system:user:query"), opts.UserHandler.Get)
-	users.PUT("/:id", middleware.RequirePermissions("system:user:edit"), opts.UserHandler.Update)
-	users.DELETE("/:id", middleware.RequirePermissions("system:user:remove"), opts.UserHandler.Delete)
-	users.GET("/options/departments", middleware.RequirePermissions("system:user:list"), opts.UserHandler.ListDepartmentOptions)
-	users.GET("/options/roles", middleware.RequirePermissions("system:user:list"), opts.UserHandler.ListRoleOptions)
-	users.GET("/options/posts", middleware.RequirePermissions("system:user:list"), opts.UserHandler.ListPostOptions)
-	users.POST("/:id/reset-password", middleware.RequirePermissions("system:user:resetPwd"), opts.UserHandler.ResetPassword)
-
+	registerRouteWithPermissions(users, http.MethodGet, "", []string{"system:user:list"}, opts.UserHandler.List, "list users")
+	registerRouteWithPermissions(users, http.MethodPost, "", []string{"system:user:add"}, opts.UserHandler.Create, "create user")
+	registerRouteWithPermissions(users, http.MethodGet, "/:id", []string{"system:user:query"}, opts.UserHandler.Get, "get user")
+	registerRouteWithPermissions(users, http.MethodPut, "/:id", []string{"system:user:edit"}, opts.UserHandler.Update, "update user")
+	registerRouteWithPermissions(users, http.MethodDelete, "/:id", []string{"system:user:remove"}, opts.UserHandler.Delete, "delete user")
+	registerRouteWithPermissions(users, http.MethodGet, "/options/departments", []string{"system:user:list"}, opts.UserHandler.ListDepartmentOptions, "list department options")
+	registerRouteWithPermissions(users, http.MethodGet, "/options/roles", []string{"system:user:list"}, opts.UserHandler.ListRoleOptions, "list role options")
+	registerRouteWithPermissions(users, http.MethodGet, "/options/posts", []string{"system:user:list"}, opts.UserHandler.ListPostOptions, "list post options")
+	registerRouteWithPermissions(users, http.MethodPost, "/:id/reset-password", []string{"system:user:resetPwd"}, opts.UserHandler.ResetPassword, "reset user password")
 }
 
 func registerMonitorRoutes(group *gin.RouterGroup, opts Options) {
+	requireHandler("OnlineHandler", opts.OnlineHandler)
+	requireHandler("JobHandler", opts.JobHandler)
+	requireHandler("ServerHandler", opts.ServerHandler)
+	requireHandler("CacheHandler", opts.CacheHandler)
+	requireHandler("OperLogHandler", opts.OperLogHandler)
+	requireHandler("LoginLogHandler", opts.LoginLogHandler)
+
 	monitor := group.Group("/monitor")
 
 	online := monitor.Group("/online/users")
-	online.GET("", middleware.RequirePermissions("monitor:online:list"), opts.OnlineHandler.List)
-	online.POST("/batch-logout", middleware.RequirePermissions("monitor:online:batchLogout"), opts.OnlineHandler.BatchForceLogout)
-	online.GET("/:id", middleware.RequirePermissions("monitor:online:query"), opts.OnlineHandler.Get)
-	online.POST("/:id/force-logout", middleware.RequirePermissions("monitor:online:forceLogout"), opts.OnlineHandler.ForceLogout)
+	registerRouteWithPermissions(online, http.MethodGet, "", []string{"monitor:online:list"}, opts.OnlineHandler.List, "list online users")
+	registerRouteWithPermissions(online, http.MethodPost, "/batch-logout", []string{"monitor:online:batchLogout"}, opts.OnlineHandler.BatchForceLogout, "batch logout online users")
+	registerRouteWithPermissions(online, http.MethodGet, "/:id", []string{"monitor:online:query"}, opts.OnlineHandler.Get, "get online user")
+	registerRouteWithPermissions(online, http.MethodPost, "/:id/force-logout", []string{"monitor:online:forceLogout"}, opts.OnlineHandler.ForceLogout, "force logout online user")
 
 	jobs := monitor.Group("/jobs")
-	jobs.GET("", middleware.RequirePermissions("monitor:job:list"), opts.JobHandler.List)
-	jobs.POST("", middleware.RequirePermissions("monitor:job:add"), opts.JobHandler.Create)
-	jobs.GET("/:id", middleware.RequirePermissions("monitor:job:query"), opts.JobHandler.Get)
-	jobs.PUT("/:id", middleware.RequirePermissions("monitor:job:edit"), opts.JobHandler.Update)
-	jobs.DELETE("/:id", middleware.RequirePermissions("monitor:job:remove"), opts.JobHandler.Delete)
-	jobs.PATCH("/:id/status", middleware.RequirePermissions("monitor:job:changeStatus"), opts.JobHandler.ChangeStatus)
-	jobs.POST("/:id/run", middleware.RequirePermissions("monitor:job:run"), opts.JobHandler.Trigger)
+	registerRouteWithPermissions(jobs, http.MethodGet, "", []string{"monitor:job:list"}, opts.JobHandler.List, "list jobs")
+	registerRouteWithPermissions(jobs, http.MethodPost, "", []string{"monitor:job:add"}, opts.JobHandler.Create, "create job")
+	registerRouteWithPermissions(jobs, http.MethodGet, "/:id", []string{"monitor:job:query"}, opts.JobHandler.Get, "get job")
+	registerRouteWithPermissions(jobs, http.MethodGet, "/:id/detail", []string{"monitor:job:query"}, opts.JobHandler.Detail, "get job detail")
+	registerRouteWithPermissions(jobs, http.MethodPut, "/:id", []string{"monitor:job:edit"}, opts.JobHandler.Update, "update job")
+	registerRouteWithPermissions(jobs, http.MethodDelete, "/:id", []string{"monitor:job:remove"}, opts.JobHandler.Delete, "delete job")
+	registerRouteWithPermissions(jobs, http.MethodDelete, "/:id/logs", []string{"monitor:job:remove"}, opts.JobHandler.ClearLogs, "clear job logs")
+	registerRouteWithPermissions(jobs, http.MethodPatch, "/:id/status", []string{"monitor:job:changeStatus"}, opts.JobHandler.ChangeStatus, "change job status")
+	registerRouteWithPermissions(jobs, http.MethodPost, "/:id/run", []string{"monitor:job:run"}, opts.JobHandler.Trigger, "run job")
+	registerRouteWithPermissions(jobs, http.MethodGet, "/logs/:id/steps", []string{"monitor:job:query"}, opts.JobHandler.GetLogSteps, "get job log steps")
+	registerRouteWithPermissions(jobs, http.MethodGet, "/logs/:id/stream", []string{"monitor:job:query"}, opts.JobHandler.StreamLog, "stream job log")
 
-	monitor.GET("/server", middleware.RequirePermissions("monitor:server:list"), opts.ServerHandler.Status)
+	registerRouteWithPermissions(monitor, http.MethodGet, "/server", []string{"monitor:server:list"}, opts.ServerHandler.Status, "view server monitor")
+	registerRouteWithPermissions(monitor, http.MethodGet, "/server/stream", []string{"monitor:server:list"}, opts.ServerHandler.Stream, "stream server monitor")
 
 	cacheGroup := monitor.Group("/cache")
-	cacheGroup.GET("", middleware.RequirePermissions("monitor:cache:list"), opts.CacheHandler.Overview)
-	cacheGroup.GET("/list", middleware.RequirePermissions("monitor:cache:list"), opts.CacheHandler.List)
+	registerRouteWithPermissions(cacheGroup, http.MethodGet, "", []string{"monitor:cache:list"}, opts.CacheHandler.Overview, "view cache overview")
+	registerRouteWithPermissions(cacheGroup, http.MethodGet, "/stream", []string{"monitor:cache:list"}, opts.CacheHandler.Stream, "stream cache overview")
+	registerRouteWithPermissions(cacheGroup, http.MethodGet, "/list", []string{"monitor:cache:list"}, opts.CacheHandler.List, "list cache keys")
 
 	operLog := monitor.Group("/logs/operations")
-	operLog.GET("", middleware.RequirePermissions("monitor:operlog:list"), opts.OperLogHandler.List)
-	operLog.GET("/:id", middleware.RequirePermissions("monitor:operlog:query"), opts.OperLogHandler.Get)
-	operLog.DELETE("/:id", middleware.RequirePermissions("monitor:operlog:remove"), opts.OperLogHandler.Delete)
+	registerRouteWithPermissions(operLog, http.MethodGet, "", []string{"monitor:operlog:list"}, opts.OperLogHandler.List, "list operation logs")
+	registerRouteWithPermissions(operLog, http.MethodGet, "/:id", []string{"monitor:operlog:query"}, opts.OperLogHandler.Get, "get operation log")
+	registerRouteWithPermissions(operLog, http.MethodDelete, "/:id", []string{"monitor:operlog:remove"}, opts.OperLogHandler.Delete, "delete operation log")
 
 	loginLog := monitor.Group("/logs/login")
-	loginLog.GET("", middleware.RequirePermissions("monitor:logininfor:list"), opts.LoginLogHandler.List)
-	loginLog.GET("/:id", middleware.RequirePermissions("monitor:logininfor:query"), opts.LoginLogHandler.Get)
-	loginLog.DELETE("/:id", middleware.RequirePermissions("monitor:logininfor:remove"), opts.LoginLogHandler.Delete)
-
+	registerRouteWithPermissions(loginLog, http.MethodGet, "", []string{"monitor:logininfor:list"}, opts.LoginLogHandler.List, "list login logs")
+	registerRouteWithPermissions(loginLog, http.MethodGet, "/:id", []string{"monitor:logininfor:query"}, opts.LoginLogHandler.Get, "get login log")
+	registerRouteWithPermissions(loginLog, http.MethodDelete, "/:id", []string{"monitor:logininfor:remove"}, opts.LoginLogHandler.Delete, "delete login log")
 }

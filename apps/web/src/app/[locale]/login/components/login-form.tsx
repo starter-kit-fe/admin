@@ -1,6 +1,4 @@
-'use client';
-
-import {Button} from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -14,7 +12,8 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group';
-import {Spinner} from '@/components/ui/spinner';
+import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Eye,
   EyeOff,
@@ -24,12 +23,11 @@ import {
   ShieldAlert,
   User,
 } from 'lucide-react';
-import {Link} from '@/i18n/navigation';
-import {useTranslations} from 'next-intl';
-import type {BaseSyntheticEvent, FC} from 'react';
-import type {FieldErrors, UseFormRegister} from 'react-hook-form';
+import Link from 'next/link';
+import type { BaseSyntheticEvent, FC } from 'react';
+import type { FieldErrors, UseFormRegister } from 'react-hook-form';
 
-import type {LoginValues} from '../schema';
+import type { LoginValues } from '../schema';
 
 interface LoginFormProps {
   register: UseFormRegister<LoginValues>;
@@ -60,18 +58,15 @@ export const LoginForm: FC<LoginFormProps> = ({
   onRefreshCaptcha,
   isCaptchaExpired,
 }) => {
-  const t = useTranslations('Login.Form');
   const captchaInvalid =
     captchaError || isCaptchaExpired || !captchaImage || captchaFetching;
 
   return (
     <Card className="border-none bg-transparent md:bg-card  shadow-none  ">
       <CardHeader className="space-y-2 text-center">
-        <CardTitle className="mb-1 text-2xl font-semibold">
-          {t('title')}
-        </CardTitle>
+        <CardTitle className="mb-1 text-2xl font-semibold">账号登录</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
-          {t('description')}
+          输入账号信息，以便访问仪表盘
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -86,8 +81,8 @@ export const LoginForm: FC<LoginFormProps> = ({
               </InputGroupAddon>
               <InputGroupInput
                 id="username"
-                placeholder={t('username.placeholder')}
-                title={t('username.aria')}
+                placeholder="输入用户名"
+                title="输入用户名"
                 autoComplete="username"
                 tabIndex={1}
                 {...register('username')}
@@ -112,8 +107,8 @@ export const LoginForm: FC<LoginFormProps> = ({
               <InputGroupInput
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder={t('password.placeholder')}
-                title={t('password.aria')}
+                placeholder="输入密码"
+                title="输入密码"
                 tabIndex={2}
                 autoComplete="current-password"
                 {...register('password')}
@@ -123,9 +118,7 @@ export const LoginForm: FC<LoginFormProps> = ({
                 <InputGroupButton
                   size="icon-sm"
                   variant="ghost"
-                  aria-label={
-                    showPassword ? t('password.hide') : t('password.show')
-                  }
+                  aria-label={showPassword ? '隐藏密码' : '显示密码'}
                   onClick={onTogglePassword}
                 >
                   {showPassword ? (
@@ -147,7 +140,7 @@ export const LoginForm: FC<LoginFormProps> = ({
             <div className="flex flex-wrap items-center justify-end gap-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                  {countdownLabel ?? t('captcha.expired')}
+                  {countdownLabel}
                 </span>
                 <Button
                   type="button"
@@ -156,10 +149,10 @@ export const LoginForm: FC<LoginFormProps> = ({
                   className="inline-flex p-0 m-0 text-[11px] gap-0.5 cursor-pointer"
                   onClick={onRefreshCaptcha}
                   disabled={captchaFetching}
-                  title={t('captcha.refresh')}
+                  title="刷新验证码"
                 >
                   <RefreshCw className="size-3" />
-                  {t('captcha.refresh')}
+                  换一张
                 </Button>
               </div>
             </div>
@@ -172,8 +165,8 @@ export const LoginForm: FC<LoginFormProps> = ({
               </InputGroupAddon>
               <InputGroupInput
                 id="captcha"
-                placeholder={t('captcha.placeholder')}
-                title={t('captcha.aria')}
+                placeholder="输入验证码"
+                title="输入验证码"
                 tabIndex={3}
                 autoComplete="one-time-code"
                 {...register('captcha')}
@@ -188,7 +181,7 @@ export const LoginForm: FC<LoginFormProps> = ({
                   variant="ghost"
                   className="flex h-[30px] w-[100px]  items-center justify-center mr-2"
                   onClick={onRefreshCaptcha}
-                  title={t('captcha.refresh')}
+                  title="点击刷新验证码"
                   disabled={captchaFetching}
                 >
                   {captchaFetching ? (
@@ -196,12 +189,12 @@ export const LoginForm: FC<LoginFormProps> = ({
                   ) : captchaInvalid ? (
                     <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
                       <ShieldAlert className="h-3.5 w-3.5" />
-                      {t('captcha.tapToRefresh')}
+                      点击刷新
                     </span>
                   ) : (
                     <img
                       src={captchaImage}
-                      alt={t('captcha.alt')}
+                      alt="验证码"
                       className="h-[40px] w-full rounded-md object-cover"
                     />
                   )}
@@ -228,12 +221,12 @@ export const LoginForm: FC<LoginFormProps> = ({
           >
             {loginPending ? (
               <>
-                <Spinner /> {t('submit.pending')}
+                <Spinner /> 登录中...
               </>
             ) : (
               <>
                 <LogIn className="mr-2 h-4 w-4" />
-                {t('submit.idle')}
+                登录
               </>
             )}
           </Button>
@@ -241,32 +234,28 @@ export const LoginForm: FC<LoginFormProps> = ({
       </CardContent>
       <CardContent className="pt-0">
         <p className="text-center text-xs leading-relaxed text-muted-foreground">
-          {t.rich('agreements.notice', {
-            terms: (chunks) => (
-              <Link
-                href="/terms"
-                className="font-medium text-primary underline-offset-4 hover:underline"
-              >
-                {chunks}
-              </Link>
-            ),
-            privacy: (chunks) => (
-              <Link
-                href="/privacy"
-                className="font-medium text-primary underline-offset-4 hover:underline"
-              >
-                {chunks}
-              </Link>
-            ),
-            cookies: (chunks) => (
-              <Link
-                href="/cookies"
-                className="font-medium text-primary underline-offset-4 hover:underline"
-              >
-                {chunks}
-              </Link>
-            ),
-          })}
+          登录即表示你同意{' '}
+          <Link
+            href="/terms"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            服务条款
+          </Link>
+          、{' '}
+          <Link
+            href="/privacy"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            隐私政策
+          </Link>{' '}
+          以及{' '}
+          <Link
+            href="/cookies"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Cookie 政策
+          </Link>
+          。
         </p>
       </CardContent>
     </Card>

@@ -1,10 +1,7 @@
-'use client';
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Trash2, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 interface DictTypeAppliedFiltersProps {
   dictName: string;
@@ -19,28 +16,12 @@ export function DictTypeAppliedFilters({
   onRemove,
   onClear,
 }: DictTypeAppliedFiltersProps) {
-  const t = useTranslations('DictManagement.typeFilters');
-
-  const chips: Array<{
-    key: 'dictName' | 'dictType';
-    label: string;
-    value: string;
-  }> = [];
-
+  const chips = [] as Array<{ key: 'dictName' | 'dictType'; label: string; value: string }>;
   if (dictName.trim()) {
-    chips.push({
-      key: 'dictName',
-      label: t('chips.dictName'),
-      value: dictName.trim(),
-    });
+    chips.push({ key: 'dictName', label: '字典名称', value: dictName.trim() });
   }
-
   if (dictType.trim()) {
-    chips.push({
-      key: 'dictType',
-      label: t('chips.dictType'),
-      value: dictType.trim(),
-    });
+    chips.push({ key: 'dictType', label: '字典类型', value: dictType.trim() });
   }
 
   if (chips.length === 0) {
@@ -63,7 +44,7 @@ export function DictTypeAppliedFilters({
             type="button"
             onClick={() => onRemove(chip.key)}
             className={cn('text-muted-foreground/70 transition-colors hover:text-muted-foreground')}
-            aria-label={t('chips.remove', { target: chip.label })}
+            aria-label={`移除 ${chip.label}`}
           >
             <X className="size-3.5" />
           </button>
@@ -75,7 +56,7 @@ export function DictTypeAppliedFilters({
         className="inline-flex items-center gap-1 px-0 text-sm text-destructive hover:text-destructive dark:text-destructive dark:hover:text-destructive/80"
         onClick={onClear}
       >
-        <Trash2 className="size-4" /> {t('clearAll')}
+        <Trash2 className="size-4" /> 清除
       </Button>
     </div>
   );

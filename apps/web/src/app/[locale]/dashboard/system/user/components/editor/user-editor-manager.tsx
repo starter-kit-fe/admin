@@ -1,9 +1,9 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
 import { useMemo, useRef } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 import { createUser, updateUser } from '../../api';
 import {
@@ -16,11 +16,11 @@ import { sanitizeDeptId, sanitizeIdList, toFormValues } from '../utils';
 import { UserEditorDialog } from '../dialogs/user-editor-dialog';
 
 export function UserEditorManager() {
+  const t = useTranslations('UserManagement');
   const {
     editorState,
     closeEditor,
   } = useUserManagementStore();
-  const t = useTranslations('UserManagement.toast');
   const refresh = useUserManagementRefresh();
   const { beginMutation, endMutation } = useUserManagementMutationCounter();
   const submitLockRef = useRef(false);
@@ -49,13 +49,13 @@ export function UserEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(t('createSuccess'));
+      toast.success(t('toast.createSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : t('createError');
+        error instanceof Error ? error.message : t('toast.createError');
       toast.error(message);
     },
     onSettled: () => {
@@ -88,13 +88,13 @@ export function UserEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(t('updateSuccess'));
+      toast.success(t('toast.updateSuccess'));
       closeEditor();
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : t('updateError');
+        error instanceof Error ? error.message : t('toast.updateError');
       toast.error(message);
     },
     onSettled: () => {

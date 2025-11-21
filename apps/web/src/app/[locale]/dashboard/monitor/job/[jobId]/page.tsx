@@ -1,0 +1,21 @@
+import { notFound } from 'next/navigation';
+
+import { JobDetailContent } from './job-detail-content';
+
+interface JobDetailPageProps {
+  params: Promise<{ jobId: string }>;
+}
+
+export default async function JobDetailPage({ params }: JobDetailPageProps) {
+  const { jobId: jobIdParam } = await params;
+  const jobId = Number(jobIdParam);
+  if (!Number.isFinite(jobId) || jobId <= 0) {
+    notFound();
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6">
+      <JobDetailContent jobId={jobId} />
+    </div>
+  );
+}

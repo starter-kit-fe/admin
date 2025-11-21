@@ -1,8 +1,6 @@
-'use client';
-
+import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
+import { Button } from '@/components/ui/button';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
-import { useMediaQuery } from '@/hooks/use-media-query';
-import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
@@ -13,42 +11,6 @@ import { useTranslations } from 'next-intl';
 import { listDeptOptions, listPostOptions, listRoleOptions } from '../../api';
 import type { DeptOption, User, UserFormValues } from '../../type';
 import { type OptionItem, UserEditorForm } from '../editor/user-editor-form';
-
-const buildUserFormSchema = (tForm: ReturnType<typeof useTranslations>) =>
-  z.object({
-    userName: z
-      .string()
-      .trim()
-      .min(2, tForm('validation.account.min'))
-      .max(30, tForm('validation.account.max')),
-    nickName: z.string().trim().min(1, tForm('validation.nickname.required')),
-    email: z
-      .string()
-      .trim()
-      .refine(
-        (value) => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
-        tForm('validation.email.invalid'),
-      ),
-    phonenumber: z
-      .string()
-      .trim()
-      .refine(
-        (value) => value === '' || /^1\d{10}$/.test(value),
-        tForm('validation.phone.invalid'),
-      ),
-    sex: z.enum(['0', '1', '2']),
-    status: z.enum(['0', '1']),
-    deptId: z
-      .string()
-      .trim()
-      .refine((value) => value === '' || /^\d+$/.test(value), tForm('validation.dept.numeric')),
-    roleIds: z
-      .array(z.string().trim().min(1, tForm('validation.role.invalid')))
-      .min(1, tForm('validation.role.required')),
-    postIds: z.array(z.string().trim().min(1, tForm('validation.post.invalid'))),
-    remark: z.string().trim(),
-    password: z.string(),
-  });
 
 const DEFAULT_VALUES: UserFormValues = {
   userName: '',
@@ -85,19 +47,57 @@ export function UserEditorDialog({
   onOpenChange,
   onSubmit,
 }: UserEditorDialogProps) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  const tForm = useTranslations('UserManagement.form');
-  const tDialogs = useTranslations('UserManagement.dialogs');
-  const userFormSchema = useMemo(() => buildUserFormSchema(tForm), [tForm]);
+  const t = useTranslations('UserManagement');
+  const userFormSchema = useMemo(
+    () =>
+      z.object({
+        userName: z
+          .string()
+          .trim()
+          .min(2, t('form.validation.account.min'))
+          .max(30, t('form.validation.account.max')),
+        nickName: z
+          .string()
+          .trim()
+          .min(1, t('form.validation.nickname.required')),
+        email: z
+          .string()
+          .trim()
+          .refine(
+            (value) => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+            t('form.validation.email.invalid'),
+          ),
+        phonenumber: z
+          .string()
+          .trim()
+          .refine(
+            (value) => value === '' || /^1\d{10}$/.test(value),
+            t('form.validation.phone.invalid'),
+          ),
+        sex: z.enum(['0', '1', '2']),
+        status: z.enum(['0', '1']),
+        deptId: z
+          .string()
+          .trim()
+          .refine(
+            (value) => value === '' || /^\d+$/.test(value),
+            t('form.validation.dept.numeric'),
+          ),
+        roleIds: z
+          .array(z.string().trim().min(1, t('form.validation.role.invalid')))
+          .min(1, t('form.validation.role.required')),
+        postIds: z.array(
+          z.string().trim().min(1, t('form.validation.post.invalid')),
+        ),
+        remark: z.string().trim(),
+        password: z.string(),
+      }),
+    [t],
+  );
   const form = useForm<UserFormValues, UserFormResolverContext>({
     resolver: zodResolver(userFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
-  useEffect(() => {
-    if (open) {
-      form.reset(defaultValues ?? DEFAULT_VALUES);
-    }
-  }, [defaultValues, form, open]);
 
   useEffect(() => {
     if (open) {
@@ -114,9 +114,15 @@ export function UserEditorDialog({
   const debouncedRoleSearch = useDebouncedValue(roleSearch, 300);
   const debouncedPostSearch = useDebouncedValue(postSearch, 300);
 
-  const fallbackDeptOption = buildFallbackDeptOption(editingUser);
-  const fallbackRoleOptions = buildFallbackRoleOptions(editingUser);
-  const fallbackPostOptions = buildFallbackPostOptions(editingUser);
+  const fallbackDeptOption = buildFallbackDeptOption(editingUser, t('form.dept'));
+  const fallbackRoleOptions = buildFallbackRoleOptions(
+    editingUser,
+    t('form.roles'),
+  );
+  const fallbackPostOptions = buildFallbackPostOptions(
+    editingUser,
+    t('form.posts'),
+  );
 
   useEffect(() => {
     if (!open) {
@@ -167,12 +173,13 @@ export function UserEditorDialog({
     }
     const fetched = roleQuery.data.map<OptionItem>((role) => ({
       value: String(role.roleId),
-      label: role.roleName || role.roleKey || `Role ${role.roleId}`,
+      label:
+        role.roleName || role.roleKey || `${t('form.roles')} ${role.roleId}`,
     }));
     if (fetched.length > 0) {
       setRoleOptionCache((prev) => mergeOptionLists(prev, fetched));
     }
-  }, [open, roleQuery.data]);
+  }, [open, roleQuery.data, t]);
 
   useEffect(() => {
     if (!open || !postQuery.data) {
@@ -180,14 +187,19 @@ export function UserEditorDialog({
     }
     const fetched = postQuery.data.map<OptionItem>((post) => ({
       value: String(post.postId),
-      label: post.postName || post.postCode || `Post ${post.postId}`,
+      label:
+        post.postName || post.postCode || `${t('form.posts')} ${post.postId}`,
     }));
     if (fetched.length > 0) {
       setPostOptionCache((prev) => mergeOptionLists(prev, fetched));
     }
-  }, [open, postQuery.data]);
+  }, [open, postQuery.data, t]);
 
-  const deptOptions = buildDeptOptions(deptQuery.data, fallbackDeptOption);
+  const deptOptions = buildDeptOptions(
+    deptQuery.data,
+    fallbackDeptOption,
+    t('form.dept'),
+  );
 
   const roleOptions = roleOptionCache;
   const postOptions = postOptionCache;
@@ -198,7 +210,7 @@ export function UserEditorDialog({
     if (mode === 'create' && trimmedPassword.length === 0) {
       form.setError('password', {
         type: 'manual',
-        message: tForm('validation.password.required'),
+        message: t('form.validation.password.required'),
       });
       return;
     }
@@ -206,7 +218,7 @@ export function UserEditorDialog({
     if (trimmedPassword.length > 0 && trimmedPassword.length < 6) {
       form.setError('password', {
         type: 'manual',
-        message: tForm('validation.password.min'),
+        message: t('form.validation.password.min'),
       });
       return;
     }
@@ -224,60 +236,84 @@ export function UserEditorDialog({
   });
 
   const title =
-    mode === 'create'
-      ? tDialogs('createTitle')
-      : tDialogs('editTitle');
+    mode === 'create' ? t('dialogs.createTitle') : t('dialogs.editTitle');
   const description =
     mode === 'create'
-      ? tDialogs('createDescription')
-      : tDialogs('editDescription');
+      ? t('dialogs.createDescription')
+      : t('dialogs.editDescription');
+  const formId = 'user-editor-form';
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialog.Content className="sm:max-w-xl">
-        <ResponsiveDialog.Header className={cn(isMobile && '!text-left')}>
-          <ResponsiveDialog.Title>{title}</ResponsiveDialog.Title>
-          <ResponsiveDialog.Description>
-            {description}
-          </ResponsiveDialog.Description>
-        </ResponsiveDialog.Header>
-        <div
-          className={cn(
-            'max-h-[70vh] space-y-5 overflow-y-auto pr-1',
-            isMobile && 'max-h-none space-y-4 overflow-y-visible pr-0',
-          )}
+      <FormDialogLayout
+        title={title}
+        description={description}
+        contentClassName="sm:max-w-xl"
+          footer={
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={submitting}
+                className="flex-1 sm:flex-none sm:min-w-[96px]"
+              >
+                {t('dialogs.bulkDeleteCancel')}
+              </Button>
+              <Button
+                type="submit"
+                form={formId}
+                disabled={submitting}
+                className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
+              >
+                {submitting
+                  ? t('form.submit.creating')
+                  : mode === 'create'
+                    ? t('form.submit.create')
+                    : t('form.submit.save')}
+              </Button>
+            </>
+          }
         >
-          <UserEditorForm
-            form={form}
-            isMobile={isMobile}
-            mode={mode}
-            submitting={submitting}
-            deptOptions={deptOptions}
-            roleOptions={roleOptions}
-            postOptions={postOptions}
-            deptLoading={deptQuery.isFetching}
-            roleLoading={roleQuery.isFetching}
-            postLoading={postQuery.isFetching}
-            onDeptSearch={setDeptSearch}
-            onRoleSearch={setRoleSearch}
-            onPostSearch={setPostSearch}
-            onCancel={() => onOpenChange(false)}
-            onSubmit={handleSubmit}
-          />
-        </div>
-      </ResponsiveDialog.Content>
+        <UserEditorForm
+          className="flex-1 min-h-0"
+          formId={formId}
+          form={form}
+          mode={mode}
+          submitting={submitting}
+          deptOptions={deptOptions}
+          roleOptions={roleOptions}
+          postOptions={postOptions}
+          deptLoading={deptQuery.isFetching}
+          roleLoading={roleQuery.isFetching}
+          postLoading={postQuery.isFetching}
+          onDeptSearch={setDeptSearch}
+          onRoleSearch={setRoleSearch}
+          onPostSearch={setPostSearch}
+          onSubmit={handleSubmit}
+        />
+      </FormDialogLayout>
     </ResponsiveDialog>
   );
 }
 
-function buildFallbackDeptOption(user?: User | null): OptionItem | null {
+function buildFallbackDeptOption(
+  user?: User | null,
+  fallbackLabel?: string,
+): OptionItem | null {
   if (!user?.deptId || !user?.deptName) {
     return null;
   }
-  return { value: String(user.deptId), label: user.deptName };
+  return {
+    value: String(user.deptId),
+    label: user.deptName || `${fallbackLabel ?? 'Dept'} ${user.deptId}`,
+  };
 }
 
-function buildFallbackRoleOptions(user?: User | null): OptionItem[] {
+function buildFallbackRoleOptions(
+  user?: User | null,
+  fallbackLabel?: string,
+): OptionItem[] {
   if (!Array.isArray(user?.roles) || user.roles.length === 0) {
     return [];
   }
@@ -294,13 +330,19 @@ function buildFallbackRoleOptions(user?: User | null): OptionItem[] {
     seen.add(value);
     items.push({
       value,
-      label: role.roleName || role.roleKey || `Role ${role.roleId}`,
+      label:
+        role.roleName ||
+        role.roleKey ||
+        `${fallbackLabel ?? 'Role'} ${role.roleId}`,
     });
   });
   return items;
 }
 
-function buildFallbackPostOptions(user?: User | null): OptionItem[] {
+function buildFallbackPostOptions(
+  user?: User | null,
+  fallbackLabel?: string,
+): OptionItem[] {
   if (!Array.isArray(user?.posts) || user.posts.length === 0) {
     return [];
   }
@@ -317,7 +359,10 @@ function buildFallbackPostOptions(user?: User | null): OptionItem[] {
     seen.add(value);
     items.push({
       value,
-      label: post.postName || post.postCode || `Post ${post.postId}`,
+      label:
+        post.postName ||
+        post.postCode ||
+        `${fallbackLabel ?? 'Post'} ${post.postId}`,
     });
   });
   return items;
@@ -326,10 +371,11 @@ function buildFallbackPostOptions(user?: User | null): OptionItem[] {
 function buildDeptOptions(
   data: DeptOption[] | undefined,
   fallback: OptionItem | null,
+  fallbackLabel?: string,
 ): OptionItem[] {
   const fetched = (data ?? []).map<OptionItem>((dept) => ({
     value: String(dept.deptId),
-    label: dept.deptName || `Dept ${dept.deptId}`,
+    label: dept.deptName || `${fallbackLabel ?? 'Dept'} ${dept.deptId}`,
   }));
   if (
     fallback &&

@@ -8,7 +8,6 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group';
 import { KeyRound, Search, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   ConfigAppliedFilters,
@@ -39,8 +38,6 @@ export function ConfigManagementFilters({
   appliedFilters,
   onRemoveFilter,
 }: ConfigManagementFiltersProps) {
-  const t = useTranslations('ConfigManagement.filters');
-
   return (
     <div className="flex flex-col gap-4 rounded-xl bg-card p-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -55,7 +52,7 @@ export function ConfigManagementFilters({
               <Search className="size-4 text-muted-foreground" />
             </InputGroupAddon>
             <InputGroupInput
-              placeholder={t('namePlaceholder')}
+              placeholder="按名称搜索参数"
               value={configName}
               onChange={(event) => onConfigNameChange(event.target.value)}
             />
@@ -66,7 +63,6 @@ export function ConfigManagementFilters({
                 size="icon-sm"
                 className="text-muted-foreground hover:text-foreground"
                 onClick={() => onConfigNameChange('')}
-                aria-label={t('clearSearch')}
               >
                 <X className="size-3.5" />
               </InputGroupButton>
@@ -77,7 +73,7 @@ export function ConfigManagementFilters({
               <KeyRound className="size-4 text-muted-foreground" />
             </InputGroupAddon>
             <InputGroupInput
-              placeholder={t('keyPlaceholder')}
+              placeholder="按配置键搜索"
               value={configKey}
               onChange={(event) => onConfigKeyChange(event.target.value)}
             />
@@ -88,7 +84,6 @@ export function ConfigManagementFilters({
                 size="icon-sm"
                 className="text-muted-foreground hover:text-foreground"
                 onClick={() => onConfigKeyChange('')}
-                aria-label={t('clearSearch')}
               >
                 <X className="size-3.5" />
               </InputGroupButton>

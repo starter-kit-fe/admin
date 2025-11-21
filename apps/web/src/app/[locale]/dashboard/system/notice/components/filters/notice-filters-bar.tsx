@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 interface NoticeFiltersBarProps {
   keyword: string;
@@ -31,7 +30,6 @@ export function NoticeFiltersBar({
   noticeTypeOptions,
   onNoticeTypeChange,
 }: NoticeFiltersBarProps) {
-  const t = useTranslations('NoticeManagement.filters');
   const handleKeywordClear = () => {
     if (keyword) {
       onKeywordChange('');
@@ -47,7 +45,7 @@ export function NoticeFiltersBar({
               <Search className="size-4 text-muted-foreground" />
             </InputGroupAddon>
             <InputGroupInput
-              placeholder={t('keywordPlaceholder')}
+              placeholder="搜索公告标题"
               value={keyword}
               onChange={(event) => onKeywordChange(event.target.value)}
             />
@@ -55,7 +53,7 @@ export function NoticeFiltersBar({
               <InputGroupButton
                 variant="ghost"
                 size="icon-sm"
-                aria-label={t('clearKeyword')}
+                aria-label="清空标题搜索"
                 className="text-muted-foreground hover:text-foreground"
                 onClick={handleKeywordClear}
               >
@@ -68,7 +66,7 @@ export function NoticeFiltersBar({
       <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
         <Select value={noticeType} onValueChange={onNoticeTypeChange}>
           <SelectTrigger className="h-10 w-full flex-1 rounded-lg border-muted bg-muted/60 sm:w-48">
-            <SelectValue placeholder={t('typePlaceholder')} />
+            <SelectValue placeholder="选择类型" />
           </SelectTrigger>
           <SelectContent>
             {noticeTypeOptions.map((option) => (

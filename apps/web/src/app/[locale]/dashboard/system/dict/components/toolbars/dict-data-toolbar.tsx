@@ -3,7 +3,6 @@
 import { type StatusTabItem, StatusTabs } from '@/components/status-tabs';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 interface DictDataToolbarProps {
   status: string;
@@ -18,11 +17,13 @@ export function DictDataToolbar({
   onStatusChange,
   onAdd,
 }: DictDataToolbarProps) {
-  const t = useTranslations('DictManagement.data.toolbar');
-
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      <StatusTabs value={status} onValueChange={onStatusChange} tabs={statusTabs} />
+    <div className="flex w-full  gap-3 lg:flex-row items-center justify-between">
+      <StatusTabs
+        value={status}
+        onValueChange={onStatusChange}
+        tabs={statusTabs}
+      />
       <Button
         type="button"
         size="sm"
@@ -30,7 +31,7 @@ export function DictDataToolbar({
         className="self-start lg:self-auto"
       >
         <Plus className="mr-2 size-4" />
-        {t('add')}
+        新增字典项
       </Button>
     </div>
   );

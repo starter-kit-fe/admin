@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +21,7 @@ import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { cn } from '@/lib/utils';
 
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { useTranslations } from 'next-intl';
 
 import { resetUserPassword } from '../../api';
 import {
@@ -41,6 +41,7 @@ const DEFAULT_VALUES: ResetPasswordFormValues = {
 };
 
 export function UserResetPasswordDialog() {
+  const t = useTranslations('UserManagement');
   const {
     resetPasswordTarget,
     setResetPasswordTarget,
@@ -48,28 +49,22 @@ export function UserResetPasswordDialog() {
   const refresh = useUserManagementRefresh();
   const { beginMutation, endMutation } = useUserManagementMutationCounter();
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const tDialogs = useTranslations('UserManagement.dialogs');
-  const tToast = useTranslations('UserManagement.toast');
-  const tForm = useTranslations('UserManagement.form');
-
-  const validationMessages = useMemo(() => ({
-    min: tForm('validation.password.min'),
-    max: tForm('validation.password.max'),
-    mismatch: tForm('validation.password.mismatch'),
-  }), [tForm]);
-
   const resetPasswordSchema = useMemo(
     () =>
       z
         .object({
-          password: z.string().trim().min(6, validationMessages.min).max(64, validationMessages.max),
+          password: z
+            .string()
+            .trim()
+            .min(6, t('form.validation.password.min'))
+            .max(64, t('form.validation.password.max')),
           confirmPassword: z.string().trim(),
         })
         .refine((values) => values.password === values.confirmPassword, {
-          message: validationMessages.mismatch,
+          message: t('form.validation.password.mismatch'),
           path: ['confirmPassword'],
         }),
-    [validationMessages],
+    [t],
   );
 
   const form = useForm<ResetPasswordFormValues>({
@@ -93,13 +88,13 @@ export function UserResetPasswordDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('resetSuccess'));
+      toast.success(t('toast.resetSuccess'));
       setResetPasswordTarget(null);
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : tToast('resetError');
+        error instanceof Error ? error.message : t('toast.resetError');
       toast.error(message);
     },
     onSettled: () => {
@@ -110,7 +105,7 @@ export function UserResetPasswordDialog() {
   const handleSubmit = form.handleSubmit((values) => {
     const userId = resetPasswordTarget?.userId;
     if (!userId) {
-      toast.error(tToast('resetMissing'));
+      toast.error(t('toast.resetMissing'));
       return;
     }
     mutation.mutate({
@@ -121,7 +116,7 @@ export function UserResetPasswordDialog() {
 
   const displayName = resetPasswordTarget
     ? resetPasswordTarget.nickName || resetPasswordTarget.userName
-    : '';
+    : t('table.defaultName');
 
   return (
     <ResponsiveDialog
@@ -134,57 +129,64 @@ export function UserResetPasswordDialog() {
     >
       <ResponsiveDialog.Content className="sm:max-w-md">
         <ResponsiveDialog.Header className={cn(isMobile && 'hidden')}>
-          <ResponsiveDialog.Title>{tDialogs('resetPasswordTitle')}</ResponsiveDialog.Title>
+          <ResponsiveDialog.Title>
+            {t('dialogs.resetPasswordTitle')}
+          </ResponsiveDialog.Title>
           <ResponsiveDialog.Description>
-            {tDialogs('resetPasswordDescription', { name: displayName })}
+            {t('dialogs.resetPasswordDescription', { name: displayName })}
           </ResponsiveDialog.Description>
         </ResponsiveDialog.Header>
         <Form {...form}>
-          <form className={cn('space-y-4', isMobile && 'pb-24')} onSubmit={handleSubmit}>
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{tForm('newPassword')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      autoComplete="new-password"
-                      placeholder={tForm('newPasswordPlaceholder')}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{tForm('confirmPassword')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      autoComplete="new-password"
-                      placeholder={tForm('confirmPasswordPlaceholder')}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <p className="text-sm text-muted-foreground">
-              {tDialogs('resetPasswordNote')}
-            </p>
+          <form
+            className={cn('flex h-full min-h-0 flex-col', isMobile && 'pt-2')}
+            onSubmit={handleSubmit}
+          >
+            <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 sm:pr-0">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('form.newPassword')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder={t('form.newPasswordPlaceholder')}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('form.confirmPassword')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder={t('form.confirmPasswordPlaceholder')}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <p className="text-sm text-muted-foreground">
+                {t('dialogs.resetPasswordNote')}
+              </p>
+            </div>
             <ResponsiveDialog.Footer
               className={cn(
-                'flex flex-col gap-2 sm:flex-row sm:justify-end',
+                'mt-2 flex flex-col gap-2 sm:flex-row sm:justify-end',
                 isMobile &&
-                  'sticky bottom-0 left-0 right-0 w-full rounded-none border-t border-border/60 bg-card/95 px-4 py-3 backdrop-blur sm:static sm:border-none sm:bg-transparent sm:px-0 sm:py-0',
+                  'sticky bottom-0 left-0 right-0 z-10 w-full flex-row items-center justify-between gap-3 rounded-none border-t border-border/60 bg-card/95 px-4 py-4 backdrop-blur sm:static sm:justify-end sm:border-none sm:bg-transparent sm:px-0 sm:py-0',
               )}
             >
               <Button
@@ -192,18 +194,18 @@ export function UserResetPasswordDialog() {
                 variant="outline"
                 onClick={() => setResetPasswordTarget(null)}
                 disabled={mutation.isPending}
-                className={cn(isMobile && 'flex-1 basis-2/5')}
+                className={cn(isMobile && 'flex-1')}
               >
-                {tDialogs('resetPasswordCancel')}
+                {t('dialogs.resetPasswordCancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={mutation.isPending}
-                className={cn(isMobile && 'flex-1 basis-3/5')}
+                className={cn(isMobile && 'flex-1')}
               >
                 {mutation.isPending
-                  ? tForm('submit.creating')
-                  : tDialogs('resetPasswordConfirm')}
+                  ? t('form.submit.creating')
+                  : t('dialogs.resetPasswordConfirm')}
               </Button>
             </ResponsiveDialog.Footer>
           </form>

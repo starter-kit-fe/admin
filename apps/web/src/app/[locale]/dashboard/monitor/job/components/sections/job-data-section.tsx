@@ -4,13 +4,8 @@ import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
-import {
-  changeJobStatus,
-  listJobs,
-  runJob,
-} from '../../api';
+import { changeJobStatus, listJobs, runJob } from '../../api';
 import {
   BASE_QUERY_KEY,
   DEFAULT_PAGINATION,
@@ -33,6 +28,7 @@ export function JobDataSection() {
     pagination,
     setPagination,
     setDeleteTarget,
+    openEditEditor,
   } = useJobManagementStore();
   const refresh = useJobManagementRefresh();
   const setRefreshing = useJobManagementSetRefreshing();
@@ -42,7 +38,6 @@ export function JobDataSection() {
 
   const [pendingRunId, setPendingRunId] = useState<number | null>(null);
   const [pendingStatusId, setPendingStatusId] = useState<number | null>(null);
-  const tToast = useTranslations('JobManagement.toast');
 
   const queryParams = useMemo(
     () => ({
@@ -103,6 +98,9 @@ export function JobDataSection() {
   const handleSelectDelete = (job: Job) => {
     setDeleteTarget(job);
   };
+  const handleEditJob = (job: Job) => {
+    openEditEditor(job);
+  };
 
   const runJobMutation = useMutation({
     mutationFn: (jobId: number) => runJob(jobId),
@@ -110,13 +108,14 @@ export function JobDataSection() {
       beginMutation();
       setPendingRunId(jobId);
     },
-    onSuccess: () => {
-      toast.success(tToast('runSuccess'));
+    onSuccess: (data) => {
+      const logIdText = data?.jobLogId ? `（日志 #${data.jobLogId}）` : '';
+      toast.success(`任务已提交执行${logIdText}`);
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : tToast('runError');
+        error instanceof Error ? error.message : '操作失败，请稍后重试';
       toast.error(message);
     },
     onSettled: () => {
@@ -141,16 +140,12 @@ export function JobDataSection() {
       setPendingStatusId(jobId);
     },
     onSuccess: ({ nextStatus }) => {
-      toast.success(
-        nextStatus === '0'
-          ? tToast('statusResume')
-          : tToast('statusPause'),
-      );
+      toast.success(nextStatus === '0' ? '任务已恢复' : '任务已暂停');
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : tToast('statusError');
+        error instanceof Error ? error.message : '更新任务状态失败，请稍后重试';
       toast.error(message);
     },
     onSettled: () => {
@@ -159,11 +154,15 @@ export function JobDataSection() {
     },
   });
 
-  const handleRunJob = (jobId: number) => {
+  const handleRunJob = (job: Job) => {
     if (runJobMutation.isPending) {
       return;
     }
-    runJobMutation.mutate(jobId);
+    if (job.isRunning && job.concurrent === '1') {
+      toast.info('当前任务执行中且禁止并发，稍后再试');
+      return;
+    }
+    runJobMutation.mutate(job.jobId);
   };
 
   const handleToggleStatus = (jobId: number, nextStatus: string) => {
@@ -189,6 +188,7 @@ export function JobDataSection() {
           onRunJob={handleRunJob}
           onToggleStatus={handleToggleStatus}
           onDelete={handleSelectDelete}
+          onEdit={handleEditJob}
         />
       </section>
 

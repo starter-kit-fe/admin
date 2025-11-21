@@ -9,7 +9,6 @@ import { type ReactNode } from 'react';
 export default function Page({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
-      {/* <RouteProgressBar /> */}
       <NextTopLoader
         color="var(--primary)" // Your primary color
         initialPosition={0.08}
@@ -24,7 +23,7 @@ export default function Page({ children }: { children: ReactNode }) {
       <AppSidebar className="bg-border/35" />
       <SidebarInset className="bg-border/35">
         <Header />
-        <section className="mx-auto  w-full px-2 py-2 md:px-6 container">
+        <section className="app-container mx-auto w-full px-2 py-2 md:px-6 container">
           {children}
         </section>
       </SidebarInset>

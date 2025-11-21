@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -25,8 +27,10 @@ const (
 )
 
 type Service struct {
-	client      *redis.Client
-	maxScanKeys int
+	client       *redis.Client
+	maxScanKeys  int
+	cacheMu      sync.Mutex
+	lastOverview *Overview
 }
 
 type Option func(*Service)
@@ -170,6 +174,74 @@ func (s *Service) Overview(ctx context.Context) (*Overview, error) {
 		Persistence: persistInfo,
 		Keyspace:    keyspaceInfo,
 	}, nil
+}
+
+// SnapAndDiff returns the latest overview and a patch that only includes updated sections.
+func (s *Service) SnapAndDiff(ctx context.Context) (*Overview, *OverviewPatch, error) {
+	current, err := s.Overview(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	s.cacheMu.Lock()
+	prev := s.lastOverview
+	s.lastOverview = current
+	s.cacheMu.Unlock()
+
+	if prev == nil {
+		return current, nil, nil
+	}
+
+	patch := diffOverview(prev, current)
+	return current, patch, nil
+}
+
+type OverviewPatch struct {
+	ServerInfo  *ServerInfo      `json:"server,omitempty"`
+	Clients     *ClientsInfo     `json:"clients,omitempty"`
+	Memory      *MemoryInfo      `json:"memory,omitempty"`
+	Stats       *StatsInfo       `json:"stats,omitempty"`
+	Persistence *PersistenceInfo `json:"persistence,omitempty"`
+	Keyspace    []KeyspaceInfo   `json:"keyspace,omitempty"`
+}
+
+func diffOverview(prev, next *Overview) *OverviewPatch {
+	if prev == nil || next == nil {
+		return nil
+	}
+
+	patch := &OverviewPatch{}
+
+	if !reflect.DeepEqual(prev.ServerInfo, next.ServerInfo) {
+		value := next.ServerInfo
+		patch.ServerInfo = &value
+	}
+	if !reflect.DeepEqual(prev.Clients, next.Clients) {
+		value := next.Clients
+		patch.Clients = &value
+	}
+	if !reflect.DeepEqual(prev.Memory, next.Memory) {
+		value := next.Memory
+		patch.Memory = &value
+	}
+	if !reflect.DeepEqual(prev.Stats, next.Stats) {
+		value := next.Stats
+		patch.Stats = &value
+	}
+	if !reflect.DeepEqual(prev.Persistence, next.Persistence) {
+		value := next.Persistence
+		patch.Persistence = &value
+	}
+	if !reflect.DeepEqual(prev.Keyspace, next.Keyspace) {
+		patch.Keyspace = next.Keyspace
+	}
+
+	if patch.ServerInfo == nil && patch.Clients == nil && patch.Memory == nil &&
+		patch.Stats == nil && patch.Persistence == nil && patch.Keyspace == nil {
+		return nil
+	}
+
+	return patch
 }
 
 func (s *Service) ListKeys(ctx context.Context, opts ListOptions) (*ListResult, error) {

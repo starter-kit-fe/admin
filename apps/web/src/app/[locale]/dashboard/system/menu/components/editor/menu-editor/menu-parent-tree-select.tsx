@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
 
 import {
   Select,
@@ -30,23 +29,15 @@ export function MenuParentTreeSelect({
   disabled,
   menuType,
 }: MenuParentTreeSelectProps) {
-  const tParent = useTranslations('MenuManagement.parentSelect');
-  const rootLabel = tParent('root');
-  const placeholder = tParent('placeholder');
   const formattedOptions = useMemo(
     () =>
       options.map((option) => ({
         ...option,
         displayLabel:
-          option.value === '0'
-            ? rootLabel
-            : option.path.join(' / '),
-        fullPath:
-          option.value === '0'
-            ? rootLabel
-            : option.path.join(' / '),
+          option.value === '0' ? option.label : option.path.join(' / '),
+        fullPath: option.path.join(' / '),
       })),
-    [options, rootLabel],
+    [options],
   );
 
   const filteredOptions = useMemo(() => {
@@ -104,7 +95,7 @@ export function MenuParentTreeSelect({
   return (
     <Select value={resolvedValue} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="w-full justify-between">
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder="请选择父级菜单" />
       </SelectTrigger>
       <SelectContent
         align="start"

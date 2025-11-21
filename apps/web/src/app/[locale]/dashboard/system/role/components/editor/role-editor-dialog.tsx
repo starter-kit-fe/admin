@@ -1,4 +1,5 @@
 import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
+import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,41 +15,39 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useTranslations } from 'next-intl';
 
 import type { RoleFormValues } from '../../type';
 import { MenuPermissionTree } from './menu-permission-tree';
 
-const buildRoleFormSchema = (t: ReturnType<typeof useTranslations>) =>
-  z.object({
-    roleName: z
-      .string()
-      .trim()
-      .min(1, t('validation.name.required'))
-      .max(50, t('validation.name.max')),
-    roleKey: z
-      .string()
-      .trim()
-      .min(1, t('validation.key.required'))
-      .max(100, t('validation.key.max')),
-    roleSort: z
-      .string()
-      .trim()
-      .refine((value) => {
-        if (value === '') return true;
-        const parsed = Number(value);
-        return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999;
-      }, t('validation.sort.range')),
-    dataScope: z.enum(['1', '2', '3', '4', '5']),
-    menuCheckStrictly: z.boolean(),
-    deptCheckStrictly: z.boolean(),
-    status: z.enum(['0', '1']),
-    remark: z.string().trim().max(256, t('validation.remark.max')),
-    menuIds: z.array(z.number().int().nonnegative()),
-  });
+const roleFormSchema = z.object({
+  roleName: z
+    .string()
+    .trim()
+    .min(1, '请输入角色名称')
+    .max(50, '角色名称不能超过 50 个字符'),
+  roleKey: z
+    .string()
+    .trim()
+    .min(1, '请输入权限字符')
+    .max(100, '权限字符不能超过 100 个字符'),
+  roleSort: z
+    .string()
+    .trim()
+    .refine((value) => {
+      if (value === '') return true;
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999;
+    }, '排序需为 0 到 9999 之间的整数'),
+  dataScope: z.enum(['1', '2', '3', '4', '5']),
+  menuCheckStrictly: z.boolean(),
+  deptCheckStrictly: z.boolean(),
+  status: z.enum(['0', '1']),
+  remark: z.string().trim().max(256, '备注最长 256 个字符'),
+  menuIds: z.array(z.number().int().nonnegative()),
+});
 
 const DEFAULT_VALUES: RoleFormValues = {
   roleName: '',
@@ -85,12 +84,8 @@ export function RoleEditorDialog({
   onOpenChange,
   onSubmit,
 }: RoleEditorDialogProps) {
-  const tForm = useTranslations('RoleManagement.form');
-  const tStatus = useTranslations('RoleManagement.status');
-  const tCommon = useTranslations('Common.dialogs');
-  const formSchema = useMemo(() => buildRoleFormSchema(tForm), [tForm]);
   const form = useForm<RoleFormValues, Record<string, never>, RoleFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(roleFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -109,202 +104,190 @@ export function RoleEditorDialog({
     });
   });
 
-  const title =
-    mode === 'create'
-      ? tForm('createTitle')
-      : tForm('editTitle');
+  const title = mode === 'create' ? '新增角色' : '编辑角色';
   const description =
     mode === 'create'
-      ? tForm('createDescription')
-      : tForm('editDescription');
+      ? '创建一个新的系统角色并配置基础权限。'
+      : '更新角色的基本信息和权限范围。';
   const submitText = submitting
-    ? tForm('submit.creating')
+    ? '提交中...'
     : mode === 'create'
-      ? tForm('submit.create')
-      : tForm('submit.save');
+      ? '创建'
+      : '保存';
 
   const disabled = submitting || loading;
+  const formId = 'role-editor-form';
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialog.Content className="sm:max-w-2xl max-h-[90vh] overflow-hidden p-0">
-        <div className="flex h-full max-h-[90vh] flex-col min-h-0">
-          <ResponsiveDialog.Header className="flex-shrink-0 border-b border-border/60 px-6 py-5">
-            <ResponsiveDialog.Title>{title}</ResponsiveDialog.Title>
-            <ResponsiveDialog.Description>
-              {description}
-            </ResponsiveDialog.Description>
-          </ResponsiveDialog.Header>
-
-          <Form {...form}>
-            <form
-              className="flex h-full flex-1 flex-col min-h-0"
-              onSubmit={handleSubmit}
+      <FormDialogLayout
+        title={title}
+        description={description}
+        contentClassName="sm:max-w-2xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={disabled}
+              className="flex-1 sm:flex-none sm:min-w-[96px]"
             >
-              <div className="flex-1 overflow-y-auto px-6 py-5">
-                <div className="space-y-5 pb-4">
-                  {loading ? (
-                    <div className="flex min-h-[160px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/40">
-                      <InlineLoading label={tForm('loading')} />
-                    </div>
-                  ) : null}
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="roleName"
-                      render={({ field }) => (
-                    <FormItem>
-                          <FormLabel>
-                            <RequiredMark /> {tForm('fields.name')}
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder={tForm('fields.namePlaceholder')}
-                              disabled={disabled}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="roleKey"
-                      render={({ field }) => (
-                    <FormItem>
-                          <FormLabel>
-                            <RequiredMark /> {tForm('fields.key')}
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder={tForm('fields.keyPlaceholder')}
-                              disabled={disabled}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="roleSort"
-                      render={({ field }) => (
-                    <FormItem>
-                          <FormLabel>{tForm('fields.sort')}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder={tForm('fields.sortPlaceholder')}
-                              disabled={disabled}
-                              value={field.value}
-                              onChange={(event) =>
-                                field.onChange(event.target.value)
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                    <FormItem>
-                          <FormLabel>{tForm('fields.status')}</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              className="flex gap-4"
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              disabled={disabled}
-                            >
-                              <FormItem className="flex items-center gap-2 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="0" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  {tStatus('enabled')}
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center gap-2 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="1" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  {tStatus('disabled')}
-                                </FormLabel>
-                              </FormItem>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="remark"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{tForm('fields.remark')}</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            className="min-h-[96px] resize-none"
-                            placeholder={tForm('fields.remarkPlaceholder')}
-                            disabled={disabled}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="menuIds"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{tForm('fields.menu')}</FormLabel>
-                        <MenuPermissionTree
-                          nodes={menuTree ?? []}
-                          value={field.value}
-                          onChange={field.onChange}
-                          disabled={disabled || menuTreeLoading}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+              取消
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              disabled={disabled}
+              className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
+            >
+              {submitText}
+            </Button>
+          </>
+        }
+      >
+        <Form {...form}>
+          <form
+            id={formId}
+            className="flex flex-col gap-5 pb-4"
+            onSubmit={handleSubmit}
+          >
+            {loading ? (
+              <div className="flex min-h-[160px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/40">
+                <InlineLoading label="正在加载角色信息..." />
               </div>
+            ) : null}
 
-              <ResponsiveDialog.Footer className="flex-shrink-0 gap-2 border-t border-border/60 bg-background px-6 py-4 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={disabled}
-                >
-                  {tCommon('cancel')}
-                </Button>
-                <Button type="submit" disabled={disabled}>
-                  {submitText}
-                </Button>
-              </ResponsiveDialog.Footer>
-            </form>
-          </Form>
-        </div>
-      </ResponsiveDialog.Content>
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="roleName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      <span className="mr-1 text-destructive">*</span>
+                      角色名称
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="请输入角色名称"
+                        disabled={disabled}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="roleKey"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      <span className="mr-1 text-destructive">*</span>
+                      权限字符
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="请输入权限字符"
+                        disabled={disabled}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="roleSort"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>显示顺序</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="默认 0"
+                        disabled={disabled}
+                        value={field.value}
+                        onChange={(event) => field.onChange(event.target.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>角色状态</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        className="flex gap-4"
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={disabled}
+                      >
+                        <FormItem className="flex items-center gap-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">正常</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center gap-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">停用</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="remark"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>备注</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      className="min-h-[96px] resize-none"
+                      placeholder="请输入备注（可选）"
+                      disabled={disabled}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="menuIds"
+              render={({ field }) => (
+                <FormItem>
+                  <MenuPermissionTree
+                    nodes={menuTree ?? []}
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={disabled || menuTreeLoading}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
+      </FormDialogLayout>
     </ResponsiveDialog>
   );
-}
-
-function RequiredMark() {
-  return <span className="mr-1 text-destructive">*</span>;
 }

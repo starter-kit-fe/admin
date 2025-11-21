@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 export type PostStatus = '0' | '1';
 
 export interface Post {
@@ -24,22 +22,6 @@ export interface PostFormValues {
   status: PostStatus;
   remark: string;
 }
-
-export const buildPostFormSchema = (t: (path: string) => string) =>
-  z.object({
-    postCode: z
-      .string()
-      .trim()
-      .min(1, t('validation.postCode.required'))
-      .max(50, t('validation.postCode.max')),
-    postName: z
-      .string()
-      .trim()
-      .min(1, t('validation.postName.required'))
-      .max(50, t('validation.postName.max')),
-    status: z.enum(['0', '1']),
-    remark: z.string().trim().max(255, t('validation.remark.max')),
-  });
 
 export interface CreatePostPayload {
   postCode: string;

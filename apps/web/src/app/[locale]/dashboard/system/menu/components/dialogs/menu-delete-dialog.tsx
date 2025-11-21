@@ -2,7 +2,6 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
 import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
 import { removeMenu } from '@/app/dashboard/system/menu/api';
@@ -16,8 +15,6 @@ export function MenuDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = useMenuManagementStore();
   const refresh = useMenuManagementRefresh();
   const { beginMutation, endMutation } = useMenuManagementMutationCounter();
-  const tDialogs = useTranslations('MenuManagement.dialogs');
-  const tToast = useTranslations('MenuManagement.toast');
 
   const deleteMutation = useMutation({
     mutationFn: (menuId: number) => removeMenu(menuId),
@@ -25,13 +22,13 @@ export function MenuDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('deleteSuccess'));
+      toast.success('菜单已删除');
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : tToast('deleteError');
+        error instanceof Error ? error.message : '删除菜单失败，请稍后再试';
       toast.error(message);
     },
     onSettled: () => {
@@ -42,11 +39,11 @@ export function MenuDeleteDialog() {
   return (
     <DeleteConfirmDialog
       open={deleteTarget !== null}
-      title={tDialogs('deleteTitle')}
+      title="删除菜单"
       description={
         deleteTarget
-          ? tDialogs('deleteMessage', { name: deleteTarget.menuName })
-          : tDialogs('deleteFallback')
+          ? `确定要删除菜单「${deleteTarget.menuName}」吗？如有子菜单将同时删除。`
+          : '确认删除所选菜单吗？'
       }
       loading={deleteMutation.isPending}
       onOpenChange={(open) => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 
+import { Button } from '@/components/ui/button';
 import { STATUS_TABS } from '../../constants';
 import {
   usePostManagementStore,
@@ -9,12 +10,8 @@ import {
 } from '@/app/dashboard/system/post/store';
 import { AppliedFilters } from '../filters/applied-filters';
 import { PostManagementFilters } from '../filters/post-management-filters';
-import { Button } from '@/components/ui/button';
-import { useTranslations } from 'next-intl';
 
 export function PostFiltersSection() {
-  const tFilters = useTranslations('PostManagement.filters');
-  const tStatus = useTranslations('PostManagement.status');
   const {
     status,
     setStatus,
@@ -30,11 +27,10 @@ export function PostFiltersSection() {
     () =>
       STATUS_TABS.map((tab) => ({
         value: tab.value,
-        label: tStatus(tab.value),
+        label: tab.label,
         activeColor: tab.activeColor,
-        count: statusCounts[tab.value as StatusValue],
       })),
-    [statusCounts, tStatus],
+    [],
   );
 
   const handleStatusChange = (value: string) => {
@@ -66,12 +62,12 @@ export function PostFiltersSection() {
     if (appliedFilters.postName) {
       chips.push({
         key: 'postName',
-        label: tFilters('chips.postName'),
+        label: '岗位名称',
         value: appliedFilters.postName,
       });
     }
     return chips;
-  }, [appliedFilters.postName, tFilters]);
+  }, [appliedFilters.postName]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -91,7 +87,7 @@ export function PostFiltersSection() {
             size="sm"
             onClick={() => resetFilters()}
           >
-            {tFilters('reset')}
+            重置
           </Button>
         </div>
       ) : null}

@@ -1,12 +1,11 @@
 'use client';
 
-import { OnlineUserBatchLogoutDialog } from './components/online-batch-logout-dialog';
-import { OnlineUserDataSection } from './components/online-data-section';
-import { OnlineUserDetailDialog } from './components/online-detail-dialog';
-import { OnlineUserFiltersSection } from './components/online-filters-section';
-import { OnlineUserForceLogoutDialog } from './components/online-force-logout-dialog';
-import { OnlineUserManagementHeader } from './components/online-management-header';
-import { OnlineUserSelectionMeta } from './components/online-selection-meta';
+import { OnlineUserBatchLogoutDialog } from './components/dialogs/online-batch-logout-dialog';
+import { OnlineUserDetailDialog } from './components/dialogs/online-detail-dialog';
+import { OnlineUserForceLogoutDialog } from './components/dialogs/online-force-logout-dialog';
+import { OnlineUserManagementHeader } from './components/layout/online-management-header';
+import { OnlineUserDataSection } from './components/sections/online-data-section';
+import { OnlineUserFiltersSection } from './components/sections/online-filters-section';
 import { useOnlinePermissionFlags } from './hooks';
 
 export function OnlineUserManagement() {
@@ -16,10 +15,7 @@ export function OnlineUserManagement() {
   return (
     <div className="mx-auto flex w-full flex-col gap-6 sm:gap-6">
       <OnlineUserManagementHeader />
-      <section className="space-y-4 rounded-xl border border-border/50 bg-card p-4">
-        <OnlineUserFiltersSection />
-        <OnlineUserSelectionMeta />
-      </section>
+      <OnlineUserFiltersSection />
       <OnlineUserDataSection />
       {canQuery ? <OnlineUserDetailDialog /> : null}
       {canForceLogout ? <OnlineUserForceLogoutDialog /> : null}

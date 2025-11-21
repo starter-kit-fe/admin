@@ -107,7 +107,7 @@ export function DictTypeSection() {
   };
 
   return (
-    <Card className="border py-0 lg:h-[600px] overflow-auto shadow-none ">
+    <Card className="border py-0 shadow-none lg:h-[600px]">
       <CardContent className="px-0 py-0">
         <DictTypeList
           items={dictTypes}

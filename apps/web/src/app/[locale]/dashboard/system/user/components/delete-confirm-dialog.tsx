@@ -1,5 +1,3 @@
-'use client';
-
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
@@ -10,8 +8,6 @@ interface DeleteConfirmDialogProps {
   title: string;
   description: string;
   confirmLabel?: string;
-  cancelLabel?: string;
-  processingLabel?: string;
   loading?: boolean;
   onConfirm: () => void;
 }
@@ -22,15 +18,11 @@ export function DeleteConfirmDialog({
   title,
   description,
   confirmLabel,
-  cancelLabel,
-  processingLabel,
   loading,
   onConfirm,
 }: DeleteConfirmDialogProps) {
-  const t = useTranslations('Common.dialogs');
-  const resolvedCancel = cancelLabel ?? t('cancel');
-  const resolvedConfirm = confirmLabel ?? t('confirm');
-  const resolvedProcessing = processingLabel ?? t('processing');
+  const t = useTranslations('UserManagement');
+  const resolvedConfirmLabel = confirmLabel ?? t('table.actions.delete');
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
@@ -41,10 +33,10 @@ export function DeleteConfirmDialog({
         </ResponsiveDialog.Header>
         <ResponsiveDialog.Footer className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            {resolvedCancel}
+            {t('dialogs.bulkDeleteCancel')}
           </Button>
           <Button type="button" variant="destructive" onClick={onConfirm} disabled={loading}>
-            {loading ? resolvedProcessing : resolvedConfirm}
+            {loading ? t('form.submit.creating') : resolvedConfirmLabel}
           </Button>
         </ResponsiveDialog.Footer>
       </ResponsiveDialog.Content>

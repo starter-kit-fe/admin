@@ -2,7 +2,6 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
 import { DeleteConfirmDialog } from '../delete-confirm-dialog';
 import { removeUser } from '../../api';
@@ -11,13 +10,13 @@ import {
   useUserManagementRefresh,
   useUserManagementStore,
 } from '../../store';
+import { useTranslations } from 'next-intl';
 
 export function UserDeleteDialog() {
+  const t = useTranslations('UserManagement');
   const { deleteTarget, setDeleteTarget } = useUserManagementStore();
   const refresh = useUserManagementRefresh();
   const { beginMutation, endMutation } = useUserManagementMutationCounter();
-  const tDialogs = useTranslations('UserManagement.dialogs');
-  const tToast = useTranslations('UserManagement.toast');
 
   const deleteMutation = useMutation({
     mutationFn: (userId: number) => removeUser(userId),
@@ -25,13 +24,13 @@ export function UserDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('deleteSuccess'));
+      toast.success(t('toast.deleteSuccess'));
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : tToast('deleteError');
+        error instanceof Error ? error.message : t('toast.deleteError');
       toast.error(message);
     },
     onSettled: () => {
@@ -47,15 +46,14 @@ export function UserDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title={tDialogs('deleteTitle')}
+      title={t('dialogs.deleteTitle')}
       description={
         deleteTarget
-          ? tDialogs('deleteMessage', {
+          ? t('dialogs.deleteMessage', {
               name: deleteTarget.nickName || deleteTarget.userName,
             })
-          : tDialogs('deleteMessage', { name: '' })
+          : t('dialogs.bulkDeleteTitle')
       }
-      confirmLabel={tDialogs('deleteTitle')}
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (deleteTarget) {

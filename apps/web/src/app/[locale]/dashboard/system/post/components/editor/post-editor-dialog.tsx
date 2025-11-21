@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -17,9 +19,26 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { useTranslations } from 'next-intl';
 
-import { buildPostFormSchema, type PostFormValues } from '../../type';
+import type { PostFormValues } from '../../type';
+
+const postFormSchema = z.object({
+  postCode: z
+    .string()
+    .trim()
+    .min(1, '请输入岗位编码')
+    .max(50, '岗位编码不能超过 50 个字符'),
+  postName: z
+    .string()
+    .trim()
+    .min(1, '请输入岗位名称')
+    .max(50, '岗位名称不能超过 50 个字符'),
+  status: z.enum(['0', '1']),
+  remark: z
+    .string()
+    .trim()
+    .max(255, '备注不能超过 255 个字符'),
+});
 
 const DEFAULT_VALUES: PostFormValues = {
   postCode: '',
@@ -49,10 +68,8 @@ export function PostEditorDialog({
   onOpenChange,
   onSubmit,
 }: PostEditorDialogProps) {
-  const t = useTranslations('PostManagement.editor');
-  const formSchema = useMemo(() => buildPostFormSchema(t), [t]);
   const form = useForm<PostFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(postFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -71,19 +88,41 @@ export function PostEditorDialog({
     });
   });
 
+  const title = mode === 'create' ? '新增岗位' : '编辑岗位';
+  const description = '维护岗位信息，岗位编码与名称需保持唯一性。';
+  const submitText = submitting ? '保存中...' : '保存';
+  const formId = 'post-editor-form';
+
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialog.Content className="sm:max-w-xl">
-        <ResponsiveDialog.Header>
-          <ResponsiveDialog.Title>
-            {mode === 'create' ? t('createTitle') : t('editTitle')}
-          </ResponsiveDialog.Title>
-          <ResponsiveDialog.Description>
-            {t('description')}
-          </ResponsiveDialog.Description>
-        </ResponsiveDialog.Header>
+      <FormDialogLayout
+        title={title}
+        description={description}
+        contentClassName="sm:max-w-xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+              className="flex-1 sm:flex-none sm:min-w-[96px]"
+            >
+              取消
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              disabled={submitting}
+              className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
+            >
+              {submitText}
+            </Button>
+          </>
+        }
+      >
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-6 pb-2">
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -91,14 +130,10 @@ export function PostEditorDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      <RequiredMark />
-                      {t('fields.postCode.label')}
+                      <RequiredMark />岗位编码
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={t('fields.postCode.placeholder')}
-                        {...field}
-                      />
+                      <Input placeholder="请输入岗位编码" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -110,14 +145,10 @@ export function PostEditorDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      <RequiredMark />
-                      {t('fields.postName.label')}
+                      <RequiredMark />岗位名称
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={t('fields.postName.placeholder')}
-                        {...field}
-                      />
+                      <Input placeholder="请输入岗位名称" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -129,8 +160,7 @@ export function PostEditorDialog({
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
                     <FormLabel>
-                      <RequiredMark />
-                      {t('fields.status.label')}
+                      <RequiredMark />岗位状态
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -142,17 +172,13 @@ export function PostEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="0" />
                           </FormControl>
-                          <FormLabel className="font-normal">
-                            {t('fields.status.options.0')}
-                          </FormLabel>
+                          <FormLabel className="font-normal">在岗</FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center gap-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="1" />
                           </FormControl>
-                          <FormLabel className="font-normal">
-                            {t('fields.status.options.1')}
-                          </FormLabel>
+                          <FormLabel className="font-normal">停用</FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -166,11 +192,10 @@ export function PostEditorDialog({
               name="remark"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('fields.remark.label')}</FormLabel>
+                  <FormLabel>备注</FormLabel>
                   <FormControl>
                     <Textarea
-                      rows={3}
-                      placeholder={t('fields.remark.placeholder')}
+                      placeholder="请输入备注信息（可选）"
                       className="min-h-[72px]"
                       {...field}
                     />
@@ -179,22 +204,9 @@ export function PostEditorDialog({
                 </FormItem>
               )}
             />
-            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={submitting}
-              >
-                {t('actions.cancel')}
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? t('actions.saving') : t('actions.save')}
-              </Button>
-            </div>
           </form>
         </Form>
-      </ResponsiveDialog.Content>
+      </FormDialogLayout>
     </ResponsiveDialog>
   );
 }

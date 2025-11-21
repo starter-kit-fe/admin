@@ -1,14 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useEffect, useRef } from 'react';
 
 import { STATUS_TABS, type JobFilterState } from '../../constants';
 import { useJobManagementStore } from '../../store';
 import { JobManagementFilters } from '../filters/job-management-filters';
 
 export function JobFiltersSection() {
-  const tFilters = useTranslations('JobManagement.filters');
   const { filterForm, setFilterForm, appliedFilters, applyFilters } =
     useJobManagementStore();
   const debounceRef = useRef<number | null>(null);
@@ -59,15 +57,6 @@ export function JobFiltersSection() {
     applyFilters(next, { force: true });
   };
 
-  const statusTabs = useMemo(
-    () =>
-      STATUS_TABS.map((tab) => ({
-        value: tab.value,
-        label: tFilters(tab.labelKey),
-      })),
-    [tFilters],
-  );
-
   return (
     <JobManagementFilters
       jobName={filterForm.jobName}
@@ -76,7 +65,7 @@ export function JobFiltersSection() {
       onJobGroupChange={handleJobGroupChange}
       status={filterForm.status}
       onStatusChange={handleStatusChange}
-      statusTabs={statusTabs}
+      statusTabs={STATUS_TABS}
     />
   );
 }

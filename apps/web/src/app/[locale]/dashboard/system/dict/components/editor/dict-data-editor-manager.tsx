@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
 import { createDictData, updateDictData } from '../../api';
 import {
@@ -20,18 +19,12 @@ import {
 import type { DictDataFormValues } from '../../type';
 import { DictDataEditorDialog } from './dict-data-editor-dialog';
 
-const resolveSortValue = (value: string) => {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isNaN(parsed) ? 0 : parsed;
-};
-
 export function DictDataEditorManager() {
   const dataEditorState = useDictDataEditorState();
   const { closeDataEditor } = useDictDataEditorActions();
   const refresh = useDictManagementRefresh();
   const { beginMutation, endMutation } =
     useDictManagementMutationCounter();
-  const tToast = useTranslations('DictManagement.toast.data');
 
   const createMutation = useMutation({
     mutationFn: ({
@@ -53,12 +46,12 @@ export function DictDataEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('createSuccess'));
+      toast.success('新增字典项成功');
       closeDataEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('createError')));
+      toast.error(resolveErrorMessage(error, '新增字典项失败'));
     },
     onSettled: () => {
       endMutation();
@@ -87,12 +80,12 @@ export function DictDataEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('updateSuccess'));
+      toast.success('字典项已更新');
       closeDataEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('updateError')));
+      toast.error(resolveErrorMessage(error, '更新字典项失败'));
     },
     onSettled: () => {
       endMutation();
@@ -146,3 +139,7 @@ export function DictDataEditorManager() {
     />
   );
 }
+  const resolveSortValue = (value: string) => {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  };

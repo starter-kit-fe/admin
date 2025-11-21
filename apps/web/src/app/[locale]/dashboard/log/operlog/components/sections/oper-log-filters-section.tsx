@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useTranslations } from 'next-intl';
 
 import {
   DEFAULT_DEBOUNCE_MS,
@@ -22,10 +21,6 @@ import {
 } from '../filters/oper-log-management-filters';
 
 export function OperLogFiltersSection() {
-  const tFilters = useTranslations('OperLogManagement.filters');
-  const tFilterTabs = useTranslations('OperLogManagement.filters.statusTabs');
-  const tBusinessTypes = useTranslations('OperLogManagement.businessTypes');
-  const tRequestMethods = useTranslations('OperLogManagement.requestMethods');
   const { filterForm, setFilterForm, appliedFilters, applyFilters, resetFilters } =
     useOperLogManagementStore();
   const debounceRef = useRef<number | null>(null);
@@ -141,27 +136,19 @@ export function OperLogFiltersSection() {
     () =>
       OPER_LOG_STATUS_TABS.map((tab) => ({
         value: tab.value,
-        label: tFilterTabs(tab.value),
+        label: tab.label,
         activeColor: tab.color,
       })),
-    [tFilterTabs],
+    [],
   );
 
   const businessTypeOptions = useMemo(
-    () =>
-      OPER_LOG_BUSINESS_TYPE_OPTIONS.map((option) => ({
-        value: option.value,
-        label: tBusinessTypes(option.value),
-      })),
-    [tBusinessTypes],
+    () => [...OPER_LOG_BUSINESS_TYPE_OPTIONS],
+    [],
   );
   const requestMethodOptions = useMemo(
-    () =>
-      OPER_LOG_REQUEST_METHOD_OPTIONS.map((option) => ({
-        value: option.value,
-        label: tRequestMethods(option.value),
-      })),
-    [tRequestMethods],
+    () => [...OPER_LOG_REQUEST_METHOD_OPTIONS],
+    [],
   );
 
   const appliedFilterChips = useMemo<FilterChip[]>(() => {
@@ -169,29 +156,37 @@ export function OperLogFiltersSection() {
     if (appliedFilters.title) {
       chips.push({
         key: 'title',
-        label: tFilters('title.chip'),
+        label: '标题',
         value: appliedFilters.title,
       });
     }
     if (appliedFilters.operName) {
       chips.push({
         key: 'operName',
-        label: tFilters('operator.chip'),
+        label: '操作人',
         value: appliedFilters.operName,
       });
     }
     if (appliedFilters.businessType !== 'all') {
+      const label =
+        businessTypeOptions.find(
+          (option) => option.value === appliedFilters.businessType,
+        )?.label ?? appliedFilters.businessType;
       chips.push({
         key: 'businessType',
-        label: tFilters('businessType.chip'),
-        value: tBusinessTypes(appliedFilters.businessType),
+        label: '业务类型',
+        value: label,
       });
     }
     if (appliedFilters.requestMethod !== 'all') {
+      const label =
+        requestMethodOptions.find(
+          (option) => option.value === appliedFilters.requestMethod,
+        )?.label ?? appliedFilters.requestMethod;
       chips.push({
         key: 'requestMethod',
-        label: tFilters('requestMethod.chip'),
-        value: tRequestMethods(appliedFilters.requestMethod),
+        label: '请求方式',
+        value: label,
       });
     }
     return chips;
@@ -200,9 +195,8 @@ export function OperLogFiltersSection() {
     appliedFilters.operName,
     appliedFilters.requestMethod,
     appliedFilters.title,
-    tFilters,
-    tBusinessTypes,
-    tRequestMethods,
+    businessTypeOptions,
+    requestMethodOptions,
   ]);
 
   return (

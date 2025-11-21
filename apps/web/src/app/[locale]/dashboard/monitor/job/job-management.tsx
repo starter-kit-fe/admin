@@ -1,6 +1,7 @@
 'use client';
 
 import { JobDeleteDialog } from './components/dialogs/job-delete-dialog';
+import { JobEditorDialog } from './components/dialogs/job-editor-dialog';
 import { JobManagementHeader } from './components/layout/job-management-header';
 import { JobDataSection } from './components/sections/job-data-section';
 import { JobFiltersSection } from './components/sections/job-filters-section';
@@ -12,6 +13,7 @@ export function JobManagement() {
       <JobFiltersSection />
       <JobDataSection />
       <JobDeleteDialog />
+      <JobEditorDialog />
     </div>
   );
 }

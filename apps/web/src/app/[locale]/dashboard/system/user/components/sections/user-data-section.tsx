@@ -22,12 +22,11 @@ import {
   useUserManagementStore,
 } from '../../store';
 import type { User } from '../../type';
-import { UserMobileList } from '../list/user-mobile-list';
 import { UserTable } from '../list/user-table';
 import { DEFAULT_ROLE_VALUE, getRoleLabel } from '../utils';
 
 export function UserDataSection() {
-  const tTable = useTranslations('UserManagement.table');
+  const t = useTranslations('UserManagement');
   const {
     status,
     appliedFilters,
@@ -167,13 +166,16 @@ export function UserDataSection() {
   const computedRoleOptions = useMemo(() => {
     const labels = new Set<string>();
     rows.forEach((user) => {
-      const roleLabel = getRoleLabel(user, tTable('defaultRole'));
+      const roleLabel = getRoleLabel(user, t('table.defaultRole'));
       if (roleLabel) {
         labels.add(roleLabel);
       }
     });
-    return Array.from(labels).map((label) => ({ label, value: label }));
-  }, [rows, tTable]);
+    return [
+      { label: t('filters.allRoles'), value: DEFAULT_ROLE_VALUE },
+      ...Array.from(labels).map((label) => ({ label, value: label })),
+    ];
+  }, [rows, t]);
 
   useEffect(() => {
     const sameLength = roleOptions.length === computedRoleOptions.length;
@@ -193,8 +195,10 @@ export function UserDataSection() {
     if (appliedFilters.role === DEFAULT_ROLE_VALUE) {
       return rows;
     }
-    return rows.filter((user) => getRoleLabel(user) === appliedFilters.role);
-  }, [appliedFilters.role, rows]);
+    return rows.filter(
+      (user) => getRoleLabel(user, t('table.defaultRole')) === appliedFilters.role,
+    );
+  }, [appliedFilters.role, rows, t]);
 
   useEffect(() => {
     setSelectedIds((prev) => {
@@ -271,66 +275,31 @@ export function UserDataSection() {
       />
 
       <section className="overflow-hidden rounded-xl border border-border/60 bg-card  dark:border-border/40">
-        {isMobile ? (
-          <div className="flex flex-col p-2">
-            <UserMobileList
-              rows={filteredRows}
-              selectedIds={selectedIds}
-              onToggleSelect={handleToggleSelectRow}
-              onEdit={openEdit}
-              onResetPassword={handleResetPassword}
-              onDelete={setDeleteTarget}
-              isLoading={listIsLoading}
-              isError={listIsError}
-            />
-            <div
-              ref={loadMoreRef}
-              className="flex min-h-12 items-center justify-center px-3 pb-1 pt-4 text-xs text-muted-foreground"
-            >
-              {listIsLoading &&
-              filteredRows.length === 0 ? null : mobileHasNextPage ? (
-                isFetchingNextPage ? (
-                    <span className="flex items-center gap-2">
-                      <Spinner className="size-4" />
-                      {tTable('state.loadingMore')}
-                    </span>
-                  ) : (
-                    tTable('state.loadMoreHint')
-                  )
-              ) : (
-                tTable('state.noMore')
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 overflow-x-auto">
-            <UserTable
-              rows={filteredRows}
-              headerCheckboxState={headerCheckboxState}
-              onToggleSelectAll={handleToggleSelectAll}
-              selectedIds={selectedIds}
-              onToggleSelect={handleToggleSelectRow}
-              onEdit={openEdit}
-              onResetPassword={handleResetPassword}
-              onDelete={setDeleteTarget}
-              isLoading={userListQuery.isLoading}
-              isError={userListQuery.isError}
-            />
-          </div>
-        )}
+        <div className="flex-1 overflow-x-auto">
+          <UserTable
+            rows={filteredRows}
+            headerCheckboxState={headerCheckboxState}
+            onToggleSelectAll={handleToggleSelectAll}
+            selectedIds={selectedIds}
+            onToggleSelect={handleToggleSelectRow}
+            onEdit={openEdit}
+            onResetPassword={handleResetPassword}
+            onDelete={setDeleteTarget}
+            isLoading={userListQuery.isLoading}
+            isError={userListQuery.isError}
+          />
+        </div>
       </section>
 
-      {!isMobile ? (
-        <PaginationToolbar
-          totalItems={total}
-          currentPage={pagination.pageNum}
-          pageSize={pagination.pageSize}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          pageSizeOptions={PAGE_SIZE_OPTIONS}
-          disabled={userListQuery.isFetching || isMutating}
-        />
-      ) : null}
+      <PaginationToolbar
+        totalItems={total}
+        currentPage={pagination.pageNum}
+        pageSize={pagination.pageSize}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+        disabled={userListQuery.isFetching || isMutating}
+      />
     </div>
   );
 }

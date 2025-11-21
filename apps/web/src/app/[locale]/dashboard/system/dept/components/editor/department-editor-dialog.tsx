@@ -1,5 +1,4 @@
-'use client';
-
+import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -22,14 +21,13 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useTranslations } from 'next-intl';
 
 import {
   type DepartmentFormValues,
   type DepartmentParentOption,
-  buildDepartmentFormSchema,
+  departmentFormSchema,
 } from '../../type';
 
 const DEFAULT_VALUES: DepartmentFormValues = {
@@ -68,14 +66,12 @@ export function DepartmentEditorDialog({
   onOpenChange,
   onSubmit,
 }: DepartmentEditorDialogProps) {
-  const tEditor = useTranslations('DepartmentManagement.editor');
-  const formSchema = useMemo(() => buildDepartmentFormSchema(tEditor), [tEditor]);
   const form = useForm<
     DepartmentFormValues,
     DepartmentFormResolverContext,
     DepartmentFormValues
   >({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(departmentFormSchema),
     defaultValues: defaultValues ?? DEFAULT_VALUES,
   });
 
@@ -98,21 +94,41 @@ export function DepartmentEditorDialog({
     });
   });
 
+  const title = mode === 'create' ? '新增部门' : '编辑部门';
+  const description = '请填写部门基础信息，所有节点均可新增子部门。';
+  const submitText = submitting ? '保存中...' : '保存';
+  const formId = 'department-editor-form';
+
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialog.Content className="sm:max-w-2xl">
-        <ResponsiveDialog.Header>
-          <ResponsiveDialog.Title>
-            {mode === 'create'
-              ? tEditor('createTitle')
-              : tEditor('editTitle')}
-          </ResponsiveDialog.Title>
-          <ResponsiveDialog.Description>
-            {tEditor('description')}
-          </ResponsiveDialog.Description>
-        </ResponsiveDialog.Header>
+      <FormDialogLayout
+        title={title}
+        description={description}
+        contentClassName="sm:max-w-2xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+              className="flex-1 sm:flex-none sm:min-w-[96px]"
+            >
+              取消
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              disabled={submitting}
+              className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
+            >
+              {submitText}
+            </Button>
+          </>
+        }
+      >
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-6 pb-2">
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -121,7 +137,7 @@ export function DepartmentEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      {tEditor('fields.parent.label')}
+                      上级部门
                     </FormLabel>
                     <Select
                       value={field.value}
@@ -129,9 +145,7 @@ export function DepartmentEditorDialog({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue
-                            placeholder={tEditor('fields.parent.placeholder')}
-                          />
+                          <SelectValue placeholder="请选择上级部门" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="max-h-64">
@@ -162,13 +176,10 @@ export function DepartmentEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      {tEditor('fields.name.label')}
+                      部门名称
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={tEditor('fields.name.placeholder')}
-                        {...field}
-                      />
+                      <Input placeholder="输入部门名称" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -181,14 +192,10 @@ export function DepartmentEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      {tEditor('fields.order.label')}
+                      显示排序
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={tEditor('fields.order.placeholder')}
-                        inputMode="numeric"
-                        {...field}
-                      />
+                      <Input placeholder="0" inputMode="numeric" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -199,12 +206,9 @@ export function DepartmentEditorDialog({
                 name="leader"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{tEditor('fields.leader.label')}</FormLabel>
+                    <FormLabel>负责人</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={tEditor('fields.leader.placeholder')}
-                        {...field}
-                      />
+                      <Input placeholder="输入负责人" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -215,12 +219,9 @@ export function DepartmentEditorDialog({
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{tEditor('fields.phone.label')}</FormLabel>
+                    <FormLabel>联系电话</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={tEditor('fields.phone.placeholder')}
-                        {...field}
-                      />
+                      <Input placeholder="输入联系电话" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -231,12 +232,9 @@ export function DepartmentEditorDialog({
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{tEditor('fields.email.label')}</FormLabel>
+                    <FormLabel>邮箱</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={tEditor('fields.email.placeholder')}
-                        {...field}
-                      />
+                      <Input placeholder="输入联系邮箱" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -249,7 +247,7 @@ export function DepartmentEditorDialog({
                   <FormItem className="sm:col-span-2">
                     <FormLabel>
                       <RequiredMark />
-                      {tEditor('fields.status.label')}
+                      部门状态
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -261,17 +259,13 @@ export function DepartmentEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="0" />
                           </FormControl>
-                          <FormLabel className="font-normal">
-                            {tEditor('fields.status.options.0')}
-                          </FormLabel>
+                          <FormLabel className="font-normal">正常</FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-2">
                           <FormControl>
                             <RadioGroupItem value="1" />
                           </FormControl>
-                          <FormLabel className="font-normal">
-                            {tEditor('fields.status.options.1')}
-                          </FormLabel>
+                          <FormLabel className="font-normal">停用</FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -285,10 +279,10 @@ export function DepartmentEditorDialog({
               name="remark"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{tEditor('fields.remark.label')}</FormLabel>
+                  <FormLabel>备注</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder={tEditor('fields.remark.placeholder')}
+                      placeholder="填写备注信息（可选）"
                       className="min-h-[72px]"
                       {...field}
                     />
@@ -297,22 +291,9 @@ export function DepartmentEditorDialog({
                 </FormItem>
               )}
             />
-            <ResponsiveDialog.Footer className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={submitting}
-              >
-                {tEditor('actions.cancel')}
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? tEditor('actions.saving') : tEditor('actions.save')}
-              </Button>
-            </ResponsiveDialog.Footer>
           </form>
         </Form>
-      </ResponsiveDialog.Content>
+      </FormDialogLayout>
     </ResponsiveDialog>
   );
 }

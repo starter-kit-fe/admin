@@ -4,7 +4,6 @@ import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { RefreshCcw } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   useLoginLogManagementRefresh,
@@ -13,7 +12,6 @@ import {
 } from '../../store';
 
 export function LoginLogManagementHeader() {
-  const t = useTranslations('LoginLogManagement.header');
   const { total } = useLoginLogManagementStore();
   const { isRefreshing, isMutating } = useLoginLogManagementStatus();
   const refresh = useLoginLogManagementRefresh();
@@ -21,8 +19,8 @@ export function LoginLogManagementHeader() {
 
   return (
     <ManagementHeader
-      title={t('title')}
-      description={t('description', { total })}
+      title="登录日志"
+      description={`查看与排查后台登录记录，支持按账号、IP 与状态筛选，共 ${total} 条。`}
       actions={
         <PermissionButton
           required="monitor:logininfor:list"
@@ -37,7 +35,7 @@ export function LoginLogManagementHeader() {
           ) : (
             <RefreshCcw className="size-4" />
           )}
-          {t('refresh')}
+          刷新
         </PermissionButton>
       }
     />

@@ -18,10 +18,13 @@ import (
 )
 
 type Service struct {
-	startTime time.Time
-	pid       int
-	mu        sync.Mutex
-	lastCPU   cpuSample
+	startTime   time.Time
+	pid         int
+	mu          sync.Mutex
+	lastProcCPU cpuSample
+	lastSysCPU  cpuSample
+	cacheMu     sync.RWMutex
+	lastStatus  *Status
 }
 
 func NewService() *Service {
@@ -43,10 +46,9 @@ type HostInfo struct {
 	Hostname      string `json:"hostname"`
 	OS            string `json:"os"`
 	Arch          string `json:"arch"`
+	BootTime      string `json:"bootTime,omitempty"`
 	Uptime        string `json:"uptime"`
 	UptimeSeconds int64  `json:"uptimeSeconds"`
-	GoVersion     string `json:"goVersion"`
-	KernelVersion string `json:"kernelVersion,omitempty"`
 	Clock         string `json:"currentTime"`
 }
 
@@ -60,6 +62,7 @@ type CPUInfo struct {
 
 type MemoryInfo struct {
 	Total        uint64  `json:"total"`
+	Limit        uint64  `json:"limit"`
 	Free         uint64  `json:"free"`
 	Used         uint64  `json:"used"`
 	UsedPercent  float64 `json:"usedPercent"`
@@ -95,6 +98,30 @@ type ProcessInfo struct {
 }
 
 func (s *Service) GetStatus(ctx context.Context) (*Status, error) {
+	return s.collectStatus(ctx)
+}
+
+// SnapAndDiff 返回最新状态，同时基于上一次缓存生成差异补丁并更新缓存。
+func (s *Service) SnapAndDiff(ctx context.Context) (*Status, *StatusPatch, error) {
+	current, err := s.collectStatus(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	s.cacheMu.Lock()
+	prev := s.lastStatus
+	s.lastStatus = current
+	s.cacheMu.Unlock()
+
+	if prev == nil {
+		return current, nil, nil
+	}
+
+	patch := diffStatus(prev, current)
+	return current, patch, nil
+}
+
+func (s *Service) collectStatus(ctx context.Context) (*Status, error) {
 	if s == nil {
 		return nil, errors.New("service not initialized")
 	}
@@ -118,25 +145,138 @@ func collectHostInfo(startTime time.Time) HostInfo {
 	hostname, _ := os.Hostname()
 	now := time.Now()
 	uptime := resolveSystemUptime(startTime)
-
-	kernelVersion := readKernelVersion()
+	bootTime := now.Add(-uptime)
 
 	return HostInfo{
 		Hostname:      hostname,
 		OS:            runtime.GOOS,
 		Arch:          runtime.GOARCH,
-		GoVersion:     runtime.Version(),
-		KernelVersion: kernelVersion,
 		UptimeSeconds: int64(uptime.Seconds()),
 		Uptime:        formatDuration(uptime),
 		Clock:         now.Format("2006-01-02 15:04:05"),
+		BootTime:      bootTime.Format("2006-01-02 15:04:05"),
 	}
+}
+
+type StatusPatch struct {
+	Host    *HostInfo    `json:"host,omitempty"`
+	CPU     *CPUInfo     `json:"cpu,omitempty"`
+	Memory  *MemoryInfo  `json:"memory,omitempty"`
+	Disks   *[]DiskInfo  `json:"disks,omitempty"`
+	Process *ProcessInfo `json:"process,omitempty"`
+}
+
+func diffStatus(previous *Status, current *Status) *StatusPatch {
+	if current == nil {
+		return nil
+	}
+	if previous == nil {
+		return &StatusPatch{
+			Host:    &current.Host,
+			CPU:     &current.CPU,
+			Memory:  &current.Memory,
+			Disks:   &current.Disks,
+			Process: &current.Process,
+		}
+	}
+
+	patch := &StatusPatch{}
+
+	if hostChanged(previous.Host, current.Host) {
+		patch.Host = &current.Host
+	}
+	if cpuChanged(previous.CPU, current.CPU) {
+		patch.CPU = &current.CPU
+	}
+	if memoryChanged(previous.Memory, current.Memory) {
+		patch.Memory = &current.Memory
+	}
+	if disksChanged(previous.Disks, current.Disks) {
+		patch.Disks = &current.Disks
+	}
+	if processChanged(previous.Process, current.Process) {
+		patch.Process = &current.Process
+	}
+
+	if patch.Host == nil && patch.CPU == nil && patch.Memory == nil && patch.Disks == nil && patch.Process == nil {
+		return nil
+	}
+	return patch
+}
+
+func hostChanged(prev HostInfo, curr HostInfo) bool {
+	return prev.Hostname != curr.Hostname ||
+		prev.OS != curr.OS ||
+		prev.Arch != curr.Arch ||
+		prev.BootTime != curr.BootTime
+}
+
+func cpuChanged(prev CPUInfo, curr CPUInfo) bool {
+	return prev.Cores != curr.Cores ||
+		changedFloat(prev.Load1, curr.Load1) ||
+		changedFloat(prev.Load5, curr.Load5) ||
+		changedFloat(prev.Load15, curr.Load15) ||
+		changedFloat(prev.UsagePercent, curr.UsagePercent)
+}
+
+func memoryChanged(prev MemoryInfo, curr MemoryInfo) bool {
+	return prev.Total != curr.Total ||
+		prev.Limit != curr.Limit ||
+		prev.Free != curr.Free ||
+		prev.Used != curr.Used ||
+		changedFloat(prev.UsedPercent, curr.UsedPercent) ||
+		prev.ProcessAlloc != curr.ProcessAlloc
+}
+
+func disksChanged(prev []DiskInfo, curr []DiskInfo) bool {
+	if len(prev) != len(curr) {
+		return true
+	}
+	for i := range prev {
+		if prev[i].Mountpoint != curr[i].Mountpoint ||
+			prev[i].Filesystem != curr[i].Filesystem ||
+			prev[i].Total != curr[i].Total ||
+			prev[i].Free != curr[i].Free ||
+			prev[i].Used != curr[i].Used ||
+			changedFloat(prev[i].UsedPercent, curr[i].UsedPercent) {
+			return true
+		}
+	}
+	return false
+}
+
+func processChanged(prev ProcessInfo, curr ProcessInfo) bool {
+	return prev.PID != curr.PID ||
+		prev.StartTime != curr.StartTime ||
+		prev.NumGoroutine != curr.NumGoroutine ||
+		prev.Alloc != curr.Alloc ||
+		prev.Sys != curr.Sys ||
+		prev.TotalAlloc != curr.TotalAlloc ||
+		prev.NumGC != curr.NumGC ||
+		prev.LastGC != curr.LastGC ||
+		prev.NextGC != curr.NextGC ||
+		changedFloat(prev.CPUUsage, curr.CPUUsage) ||
+		prev.NumCgoCall != curr.NumCgoCall ||
+		prev.Version != curr.Version ||
+		prev.Commit != curr.Commit
+}
+
+func changedFloat(a, b float64) bool {
+	return math.Abs(a-b) > 0.01
 }
 
 func resolveSystemUptime(startTime time.Time) time.Duration {
 	if runtime.GOOS == "linux" {
 		if uptime, err := readProcUptime(); err == nil && uptime > 0 {
 			return uptime
+		}
+	}
+	if runtime.GOOS == "darwin" {
+		if tv, err := unix.SysctlTimeval("kern.boottime"); err == nil {
+			boot := time.Unix(int64(tv.Sec), int64(tv.Usec)*1000)
+			if boot.Before(time.Now()) {
+				return time.Since(boot)
+			}
 		}
 	}
 	// fallback to process lifetime when platform-specific uptime is unavailable
@@ -163,7 +303,7 @@ func (s *Service) collectCPUInfo() CPUInfo {
 	cores := runtime.NumCPU()
 
 	load1, load5, load15 := getLoadAverage()
-	usage := s.calculateProcessCPUUsage()
+	usage := s.calculateSystemCPUUsage()
 
 	return CPUInfo{
 		Cores:        cores,
@@ -179,10 +319,44 @@ type cpuSample struct {
 	total   uint64
 	idle    uint64
 	process uint64
+	procDur time.Duration
 }
 
 func (s *Service) calculateProcessCPUUsage() float64 {
 	if runtime.GOOS != "linux" {
+		if runtime.GOOS == "darwin" {
+			var ru unix.Rusage
+			if err := unix.Getrusage(unix.RUSAGE_SELF, &ru); err != nil {
+				return 0
+			}
+			now := time.Now()
+			procDur := time.Duration(ru.Utime.Sec)*time.Second +
+				time.Duration(ru.Utime.Usec)*time.Microsecond +
+				time.Duration(ru.Stime.Sec)*time.Second +
+				time.Duration(ru.Stime.Usec)*time.Microsecond
+
+			s.mu.Lock()
+			prev := s.lastProcCPU
+			s.lastProcCPU = cpuSample{
+				time:    now,
+				procDur: procDur,
+			}
+			s.mu.Unlock()
+
+			if prev.time.IsZero() {
+				return 0
+			}
+			elapsed := now.Sub(prev.time)
+			if elapsed <= 0 {
+				return 0
+			}
+			deltaProc := procDur - prev.procDur
+			if deltaProc <= 0 {
+				return 0
+			}
+			usage := float64(deltaProc) / float64(elapsed) * 100
+			return round(usage, 2)
+		}
 		return 0
 	}
 
@@ -207,43 +381,108 @@ func (s *Service) calculateProcessCPUUsage() float64 {
 		process: processTime,
 	}
 
-	if s.lastCPU.time.IsZero() {
-		s.lastCPU = current
+	if s.lastProcCPU.time.IsZero() {
+		s.lastProcCPU = current
 		return 0
 	}
 
-	deltaTotal := current.total - s.lastCPU.total
+	deltaTotal := current.total - s.lastProcCPU.total
 	if deltaTotal == 0 {
 		return 0
 	}
-	deltaProcess := current.process - s.lastCPU.process
+	deltaProcess := current.process - s.lastProcCPU.process
 
-	s.lastCPU = current
+	s.lastProcCPU = current
 
 	usage := float64(deltaProcess) / float64(deltaTotal) * 100.0 * float64(runtime.NumCPU())
-	if usage < 0 {
-		usage = 0
+	return round(usage, 2)
+}
+
+func (s *Service) calculateSystemCPUUsage() float64 {
+	if runtime.GOOS == "linux" {
+		now := time.Now()
+		total, idle, err := readTotalAndIdleCPU()
+		if err != nil {
+			return 0
+		}
+
+		s.mu.Lock()
+		prev := s.lastSysCPU
+		s.lastSysCPU = cpuSample{
+			time: now, total: total, idle: idle,
+		}
+		s.mu.Unlock()
+
+		if prev.time.IsZero() {
+			return 0
+		}
+
+		deltaTotal := total - prev.total
+		deltaIdle := idle - prev.idle
+		if deltaTotal == 0 || deltaIdle > deltaTotal {
+			return 0
+		}
+		usage := float64(deltaTotal-deltaIdle) / float64(deltaTotal) * 100.0
+		return round(usage, 2)
 	}
-	return usage
+
+	if runtime.GOOS == "darwin" {
+		now := time.Now()
+		total, idle, err := darwinCPUTicks()
+		if err != nil {
+			return 0
+		}
+		s.mu.Lock()
+		prev := s.lastSysCPU
+		s.lastSysCPU = cpuSample{
+			time: now, total: total, idle: idle,
+		}
+		s.mu.Unlock()
+
+		if prev.time.IsZero() {
+			return 0
+		}
+		deltaTotal := total - prev.total
+		deltaIdle := idle - prev.idle
+		if deltaTotal == 0 || deltaIdle > deltaTotal {
+			return 0
+		}
+		usage := float64(deltaTotal-deltaIdle) / float64(deltaTotal) * 100.0
+		return round(usage, 2)
+	}
+
+	return 0
 }
 
 func collectMemoryInfo() MemoryInfo {
 	total, free := readSystemMemory()
-	used := uint64(0)
-	if total > free {
+	limit := resolveMemoryLimit(total)
+
+	// 尝试读取 cgroup 当前占用，更接近实际容器限制
+	cgroupUsage := readCgroupMemoryUsage()
+	used := cgroupUsage
+	if used == 0 && total > free {
 		used = total - free
+	}
+
+	if limit > 0 && used > limit {
+		used = limit
+	}
+	if limit == 0 {
+		limit = total
 	}
 
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
 	percent := 0.0
-	if total > 0 {
-		percent = float64(used) / float64(total) * 100
+	if limit > 0 {
+		percent = float64(used) / float64(limit) * 100
 	}
 
 	return MemoryInfo{
 		Total:        total,
+		Limit:        limit,
 		Free:         free,
 		Used:         used,
 		UsedPercent:  round(percent, 2),
@@ -383,6 +622,55 @@ func parseMeminfoValue(line string) uint64 {
 	return value * 1024
 }
 
+func resolveMemoryLimit(systemTotal uint64) uint64 {
+	limit := readCgroupMemoryLimit()
+	if limit == 0 {
+		return systemTotal
+	}
+	if systemTotal == 0 {
+		return limit
+	}
+	if limit > 0 && limit < systemTotal {
+		return limit
+	}
+	return systemTotal
+}
+
+func readCgroupMemoryLimit() uint64 {
+	// cgroup v2
+	if data, err := os.ReadFile("/sys/fs/cgroup/memory.max"); err == nil {
+		value := strings.TrimSpace(string(data))
+		if value != "" && value != "max" {
+			if parsed, err := strconv.ParseUint(value, 10, 64); err == nil {
+				return parsed
+			}
+		}
+	}
+	// cgroup v1
+	if data, err := os.ReadFile("/sys/fs/cgroup/memory/memory.limit_in_bytes"); err == nil {
+		if parsed, err := strconv.ParseUint(strings.TrimSpace(string(data)), 10, 64); err == nil {
+			return parsed
+		}
+	}
+	return 0
+}
+
+func readCgroupMemoryUsage() uint64 {
+	// cgroup v2
+	if data, err := os.ReadFile("/sys/fs/cgroup/memory.current"); err == nil {
+		if parsed, err := strconv.ParseUint(strings.TrimSpace(string(data)), 10, 64); err == nil {
+			return parsed
+		}
+	}
+	// cgroup v1
+	if data, err := os.ReadFile("/sys/fs/cgroup/memory/memory.usage_in_bytes"); err == nil {
+		if parsed, err := strconv.ParseUint(strings.TrimSpace(string(data)), 10, 64); err == nil {
+			return parsed
+		}
+	}
+	return 0
+}
+
 func getLoadAverage() (float64, float64, float64) {
 	if runtime.GOOS == "linux" {
 		data, err := os.ReadFile("/proc/loadavg")
@@ -402,7 +690,12 @@ func getLoadAverage() (float64, float64, float64) {
 		return load1, load5, load15
 	}
 
-	// For unsupported platforms return zeros.
+	if runtime.GOOS == "darwin" {
+		if load1, load5, load15, err := darwinLoadAverage(); err == nil {
+			return round(load1, 2), round(load5, 2), round(load15, 2)
+		}
+	}
+
 	return 0, 0, 0
 }
 
@@ -437,18 +730,6 @@ func round(value float64, precision int) float64 {
 	}
 	factor := math.Pow(10, float64(precision))
 	return math.Round(value*factor) / factor
-}
-
-func readKernelVersion() string {
-	switch runtime.GOOS {
-	case "linux":
-		if data, err := os.ReadFile("/proc/sys/kernel/osrelease"); err == nil {
-			return strings.TrimSpace(string(data))
-		}
-	case "darwin":
-		return darwinKernelVersion()
-	}
-	return ""
 }
 
 func readTotalAndIdleCPU() (total uint64, idle uint64, err error) {

@@ -2,7 +2,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Trash2, X } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
 
 export type FilterChip = {
   key: string;
@@ -21,10 +20,6 @@ export function OperLogAppliedFilters({
   onRemove,
   onClear,
 }: OperLogAppliedFiltersProps) {
-  const locale = useLocale();
-  const tFilters = useTranslations('OperLogManagement.filters');
-  const separator = locale === 'zh-Hans' ? '：' : ': ';
-
   if (items.length === 0) {
     return null;
   }
@@ -38,8 +33,7 @@ export function OperLogAppliedFilters({
           className="flex items-center gap-2 rounded-full px-3 py-1 text-sm dark:bg-secondary/30 dark:text-secondary-foreground"
         >
           <span className="font-medium text-muted-foreground">
-            {item.label}
-            {separator}
+            {item.label}：
           </span>
           <span className="text-foreground">{item.value}</span>
           <button
@@ -48,7 +42,7 @@ export function OperLogAppliedFilters({
             className={cn(
               'text-muted-foreground/70 transition-colors hover:text-muted-foreground',
             )}
-            aria-label={tFilters('chips.remove', { target: item.label })}
+            aria-label={`移除 ${item.label}`}
           >
             <X className="size-3.5" />
           </button>
@@ -60,7 +54,7 @@ export function OperLogAppliedFilters({
         className="inline-flex items-center gap-1 px-0 text-sm text-destructive hover:text-destructive dark:text-destructive dark:hover:text-destructive/80"
         onClick={onClear}
       >
-        <Trash2 className="size-4" /> {tFilters('actions.clear')}
+        <Trash2 className="size-4" /> 清除
       </Button>
     </div>
   );

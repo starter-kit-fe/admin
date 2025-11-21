@@ -12,7 +12,6 @@ import {
   useNoticeManagementStore,
 } from '../../store';
 import { resolveErrorMessage } from '../../utils';
-import { useTranslations } from 'next-intl';
 
 export function NoticeBulkDeleteDialog() {
   const {
@@ -23,8 +22,6 @@ export function NoticeBulkDeleteDialog() {
   } = useNoticeManagementStore();
   const refresh = useNoticeManagementRefresh();
   const { beginMutation, endMutation } = useNoticeManagementMutationCounter();
-  const tToast = useTranslations('NoticeManagement.toast');
-  const tDialogs = useTranslations('NoticeManagement.dialogs');
 
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: number[]) => {
@@ -34,13 +31,13 @@ export function NoticeBulkDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success(tToast('bulkDeleteSuccess'));
+      toast.success('批量删除成功');
       setBulkDeleteOpen(false);
       clearSelectedIds();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, tToast('bulkDeleteError')));
+      toast.error(resolveErrorMessage(error, '批量删除失败，请稍后重试'));
     },
     onSettled: () => {
       endMutation();
@@ -53,13 +50,13 @@ export function NoticeBulkDeleteDialog() {
     <DeleteConfirmDialog
       open={bulkDeleteOpen}
       onOpenChange={setBulkDeleteOpen}
-      title={tDialogs('bulkDeleteTitle')}
+      title="批量删除公告"
       description={
         selectedCount > 0
-          ? tDialogs('bulkDeleteSelected', { count: selectedCount })
-          : tDialogs('deleteFallback')
+          ? `将删除选中的 ${selectedCount} 条公告记录，操作不可恢复。`
+          : '确认删除所选公告吗？'
       }
-      confirmLabel={tDialogs('bulkDeleteConfirm')}
+      confirmLabel="批量删除"
       loading={bulkDeleteMutation.isPending}
       onConfirm={() => {
         if (selectedCount > 0) {

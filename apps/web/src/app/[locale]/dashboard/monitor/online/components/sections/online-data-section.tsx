@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { useTranslations } from 'next-intl';
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import {
@@ -12,29 +11,30 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Button } from '@/components/ui/button';
 
 import {
   listOnlineUsers,
   type OnlineUserListParams,
-} from '../api';
+} from '../../api';
 import {
   ONLINE_PERMISSION_CODES,
   ONLINE_USERS_QUERY_KEY,
   PAGE_SIZE_OPTIONS,
-} from '../constants';
-import { useOnlinePermissionFlags } from '../hooks';
+} from '../../constants';
+import { useOnlinePermissionFlags } from '../../hooks';
 import {
   useOnlineUserManagementSelectionRevision,
   useOnlineUserManagementSetRefreshHandler,
   useOnlineUserManagementSetRefreshing,
   useOnlineUserManagementStatus,
   useOnlineUserManagementStore,
-} from '../store';
+} from '../../store';
 import {
   getOnlineUserRowId,
   normalizeOnlineUserResponse,
-} from '../utils';
-import { OnlineUserTable } from './online-user-table';
+} from '../../utils';
+import { OnlineUserTable } from '../list/online-user-table';
 
 export function OnlineUserDataSection() {
   const {
@@ -44,6 +44,7 @@ export function OnlineUserDataSection() {
     selectedUsers,
     setSelectedUsers,
     clearSelectedUsers,
+    setBatchDialogOpen,
     openForceDialog,
     openDetailDialog,
     pendingForceRowId,
@@ -55,7 +56,6 @@ export function OnlineUserDataSection() {
   const { canList, canForceLogout, canBatchLogout, canQuery } =
     useOnlinePermissionFlags();
   const selectedUserCount = selectedUsers.length;
-  const tGuard = useTranslations('OnlineUserManagement.guard');
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
@@ -134,7 +134,7 @@ export function OnlineUserDataSection() {
       nextIds.length !== prevIds.length ||
       nextIds.some((id, index) => id !== prevIds[index]);
     if (hasChanged) {
-    setSelectedUsers(nextSelected);
+      setSelectedUsers(nextSelected);
     }
   }, [
     canBatchLogout,
@@ -175,8 +175,40 @@ export function OnlineUserDataSection() {
   const shouldShowPagination =
     canList && !isLoading && !isError && total > 0;
 
+  const selectedCount = selectedUsers.length;
+  const showSelectionBar = canBatchLogout && selectedCount > 0;
+
   return (
     <div className="flex flex-col gap-4">
+      {showSelectionBar ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-100/70 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-50">
+          <div className="font-medium">
+            已选择 {selectedCount} 个会话，可批量强退。
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="border-transparent bg-transparent text-emerald-900 hover:bg-emerald-200 dark:text-emerald-50 dark:hover:bg-emerald-500/25"
+              onClick={() => clearSelectedUsers()}
+            >
+              取消选择
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              className="font-medium"
+              onClick={() => setBatchDialogOpen(true)}
+              disabled={isMutating}
+            >
+              {isMutating ? '处理中...' : '批量强退'}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       <section className="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card">
         {canList ? (
           <div className="w-full overflow-x-auto">
@@ -199,11 +231,9 @@ export function OnlineUserDataSection() {
           <div className="flex h-48 flex-col items-center justify-center px-4 text-center">
             <Empty className="border-0 bg-transparent p-4">
               <EmptyHeader>
-                <EmptyTitle>{tGuard('title')}</EmptyTitle>
+                <EmptyTitle>暂无访问权限</EmptyTitle>
                 <EmptyDescription>
-                  {tGuard('description', {
-                    code: ONLINE_PERMISSION_CODES.list,
-                  })}
+                  需要 {ONLINE_PERMISSION_CODES.list} 权限才能查看在线用户。
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

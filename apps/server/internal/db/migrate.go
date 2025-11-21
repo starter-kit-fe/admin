@@ -29,6 +29,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&model.SysConfig{},
 		&model.SysJob{},
 		&model.SysJobLog{},
+		&model.SysJobLogStep{},
 		&model.SysNotice{},
 	}
 

@@ -52,11 +52,16 @@ const NavEntryContent = ({
 
 export function NavMain({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
-  const { state, isMobile } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const isCollapsed = state === 'collapsed';
   const enableHoverMenus = isCollapsed && !isMobile;
   const showButtonLabel = !isCollapsed || isMobile;
   const collapsedDesktop = isCollapsed && !isMobile;
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
   const isActiveLink = (url: string, external?: boolean) => {
     if (external || !url || url === '#') {
       return false;
@@ -105,11 +110,16 @@ export function NavMain({ items }: { items: NavItem[] }) {
         target="_blank"
         rel="noreferrer"
         className={linkClasses}
+        onClick={handleNavClick}
       >
         <NavEntryContent entry={entry} showExternalIndicator />
       </a>
     ) : (
-      <Link href={entry.url || '#'} className={linkClasses}>
+      <Link
+        href={entry.url || '#'}
+        className={linkClasses}
+        onClick={handleNavClick}
+      >
         <NavEntryContent entry={entry} />
       </Link>
     );
@@ -145,29 +155,31 @@ export function NavMain({ items }: { items: NavItem[] }) {
       if (!hasChildren) {
         return (
           <SidebarMenuSubItem key={key} className="relative">
-            <SidebarMenuSubButton
-              asChild
-              isActive={active}
-              className={hoverOverlayClass}
-            >
-              {entry.external ? (
-                <a
-                  href={entry.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex min-w-0 items-center gap-2"
-                >
-                  <NavEntryContent entry={entry} showExternalIndicator />
-                </a>
-              ) : (
-                <Link
-                  href={entry.url || '#'}
-                  className="flex min-w-0 items-center gap-2"
-                >
-                  <NavEntryContent entry={entry} />
-                </Link>
-              )}
-            </SidebarMenuSubButton>
+              <SidebarMenuSubButton
+                asChild
+                isActive={active}
+                className={hoverOverlayClass}
+              >
+                {entry.external ? (
+                  <a
+                    href={entry.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex min-w-0 items-center gap-2"
+                    onClick={handleNavClick}
+                  >
+                    <NavEntryContent entry={entry} showExternalIndicator />
+                  </a>
+                ) : (
+                  <Link
+                    href={entry.url || '#'}
+                    className="flex min-w-0 items-center gap-2"
+                    onClick={handleNavClick}
+                  >
+                    <NavEntryContent entry={entry} />
+                  </Link>
+                )}
+              </SidebarMenuSubButton>
           </SidebarMenuSubItem>
         );
       }

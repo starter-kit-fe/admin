@@ -7,7 +7,6 @@ import {
   useConfigType,
 } from '@/app/dashboard/system/config/store';
 import { useEffect, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
 
 import { CONFIG_TYPE_TABS } from '../../constants';
 import type {
@@ -20,7 +19,6 @@ export function ConfigFiltersSection() {
   const { configType, setConfigType } = useConfigType();
   const { filterForm, setFilterForm } = useConfigFilterForm();
   const { appliedFilters, applyFilters } = useConfigAppliedFilters();
-  const tFilters = useTranslations('ConfigManagement.filters');
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -47,28 +45,19 @@ export function ConfigFiltersSection() {
     if (appliedFilters.configName) {
       chips.push({
         key: 'configName',
-        label: tFilters('chips.configName'),
+        label: '参数名称',
         value: appliedFilters.configName,
       });
     }
     if (appliedFilters.configKey) {
       chips.push({
         key: 'configKey',
-        label: tFilters('chips.configKey'),
+        label: '参数键名',
         value: appliedFilters.configKey,
       });
     }
     return chips;
-  }, [appliedFilters.configKey, appliedFilters.configName, tFilters]);
-
-  const typeTabs = useMemo(
-    () =>
-      CONFIG_TYPE_TABS.map((tab) => ({
-        value: tab.value,
-        label: tFilters(tab.labelKey),
-      })),
-    [tFilters],
-  );
+  }, [appliedFilters.configKey, appliedFilters.configName]);
 
   const handleRemoveFilter = (key: ConfigFilterKey) => {
     const nextFilters = {
@@ -97,7 +86,7 @@ export function ConfigFiltersSection() {
       onConfigKeyChange={(value) =>
         setFilterForm((prev) => ({ ...prev, configKey: value }))
       }
-      typeTabs={typeTabs}
+      typeTabs={CONFIG_TYPE_TABS}
       appliedFilters={filterChips}
       onRemoveFilter={handleRemoveFilter}
     />

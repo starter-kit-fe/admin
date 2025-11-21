@@ -1,9 +1,7 @@
-"use client";
-
 import { useEffect, useState } from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import type { UseFormReturn } from 'react-hook-form';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -29,7 +27,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import {
   Select,
   SelectContent,
@@ -55,7 +52,6 @@ export interface OptionItem {
 
 interface UserEditorFormProps {
   form: UseFormReturn<UserFormValues>;
-  isMobile: boolean;
   mode: 'create' | 'edit';
   submitting?: boolean;
   deptOptions: OptionItem[];
@@ -67,13 +63,13 @@ interface UserEditorFormProps {
   onDeptSearch: (value: string) => void;
   onRoleSearch: (value: string) => void;
   onPostSearch: (value: string) => void;
-  onCancel: () => void;
   onSubmit: ReturnType<UseFormReturn<UserFormValues>['handleSubmit']>;
+  className?: string;
+  formId?: string;
 }
 
 export function UserEditorForm({
   form,
-  isMobile,
   mode,
   submitting,
   deptOptions,
@@ -85,20 +81,35 @@ export function UserEditorForm({
   onDeptSearch,
   onRoleSearch,
   onPostSearch,
-  onCancel,
   onSubmit,
+  className,
+  formId,
 }: UserEditorFormProps) {
-  const tForm = useTranslations('UserManagement.form');
-  const tGender = useTranslations('UserManagement.gender');
-  const tStatus = useTranslations('UserManagement.status');
-  const tCommonDialogs = useTranslations('Common.dialogs');
-  const submitText = submitting
-    ? tForm('submit.creating')
-    : mode === 'create'
-      ? tForm('submit.create')
-      : tForm('submit.save');
-  const cancelButtonClasses = cn(isMobile && 'flex-1 basis-2/5');
-  const submitButtonClasses = cn(isMobile && 'flex-1 basis-3/5');
+  const t = useTranslations('UserManagement');
+  const searchCopy = {
+    searchPlaceholder: t('form.searchPlaceholder'),
+    loadingTitle: t('form.searchLoadingTitle'),
+    loadingDescription: t('form.searchLoadingDescription'),
+    emptyTitle: t('form.searchEmptyTitle'),
+    emptyDescription: t('form.searchEmptyDescription'),
+    noneLabel: t('form.searchNone'),
+    clearLabel: t('form.searchClear'),
+  };
+  const multiSelectCopy = {
+    ...searchCopy,
+    formatPreview: (preview: string, count: number) =>
+      t('form.multiSelectPreview', { preview, count }),
+  };
+  const optionalLabel = t('form.optional');
+  const genderLabels = {
+    '0': t('gender.male'),
+    '1': t('gender.female'),
+    '2': t('gender.unknown'),
+  } as const;
+  const statusLabels = {
+    '0': t('status.enabled'),
+    '1': t('status.disabled'),
+  } as const;
 
   const passwordField =
     mode === 'create' ? (
@@ -108,12 +119,12 @@ export function UserEditorForm({
         render={({ field }) => (
           <FormItem className="md:col-span-2">
             <FormLabel className="flex items-center">
-              <RequiredMark /> {tForm('initialPassword')}
+              <RequiredMark /> {t('form.initialPassword')}
             </FormLabel>
             <FormControl>
               <Input
                 type="password"
-                placeholder={tForm('initialPasswordPlaceholder')}
+                placeholder={t('form.initialPasswordPlaceholder')}
                 autoComplete="new-password"
                 {...field}
               />
@@ -126,240 +137,238 @@ export function UserEditorForm({
 
   return (
     <Form {...form}>
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="userName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center">
-                  <RequiredMark /> {tForm('account')}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={tForm('accountPlaceholder')}
-                    autoComplete="username"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="nickName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center">
-                  <RequiredMark /> {tForm('nickname')}
-                </FormLabel>
-                <FormControl>
-                  <Input placeholder={tForm('nicknamePlaceholder')} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phonenumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{tForm('phone')}</FormLabel>
-                <FormControl>
-                  <Input placeholder={tForm('phonePlaceholder')} inputMode="numeric" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{tForm('email')}</FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    placeholder={tForm('emailPlaceholder')}
-                    autoComplete="email"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="deptId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{tForm('dept')}</FormLabel>
-                <FormControl>
-                  <SearchableCombobox
-                    placeholder={tForm('deptPlaceholder')}
-                    value={field.value}
-                    options={deptOptions}
-                    loading={deptLoading}
-                    disabled={submitting}
-                    onSearch={onDeptSearch}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="roleIds"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center">
-                  <RequiredMark /> {tForm('roles')}
-                </FormLabel>
-                <FormControl>
-                  <SearchableMultiSelect
-                    placeholder={tForm('rolesPlaceholder')}
-                    value={field.value}
-                    options={roleOptions}
-                    loading={roleLoading}
-                    disabled={submitting}
-                    onSearch={onRoleSearch}
-                    onChange={field.onChange}
-                    allowClear
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="postIds"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{tForm('posts')}</FormLabel>
-                <FormControl>
-                  <SearchableMultiSelect
-                    placeholder={tForm('postsPlaceholder')}
-                    value={field.value}
-                    options={postOptions}
-                    loading={postLoading}
-                    disabled={submitting}
-                    onSearch={onPostSearch}
-                    onChange={field.onChange}
-                    allowClear
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="sex"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{tForm('sex')}</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={(value: '0' | '1' | '2') => field.onChange(value)}
-                  disabled={submitting}
-                >
+      <form
+        className={cn('flex h-full min-h-0 flex-col', className)}
+        onSubmit={onSubmit}
+        id={formId}
+      >
+        <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 sm:pr-0">
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="userName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center">
+                    <RequiredMark /> {t('form.account')}
+                  </FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={tForm('sexPlaceholder')} />
-                    </SelectTrigger>
+                    <Input
+                      placeholder={t('form.accountPlaceholder')}
+                      autoComplete="username"
+                      {...field}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="0">{tGender('male')}</SelectItem>
-                    <SelectItem value="1">{tGender('female')}</SelectItem>
-                    <SelectItem value="2">{tGender('unknown')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center">
-                  <RequiredMark /> {tForm('status')}
-                </FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    className="flex flex-wrap gap-4"
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="nickName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center">
+                    <RequiredMark /> {t('form.nickname')}
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder={t('form.nicknamePlaceholder')} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phonenumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('form.phone')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t('form.phonePlaceholder') || optionalLabel}
+                      inputMode="numeric"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('form.email')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder={t('form.emailPlaceholder') || optionalLabel}
+                      autoComplete="email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="deptId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('form.dept')}</FormLabel>
+                  <FormControl>
+                    <SearchableCombobox
+                      placeholder={t('form.deptPlaceholder')}
+                      value={field.value}
+                      options={deptOptions}
+                      loading={deptLoading}
+                      disabled={submitting}
+                      onSearch={onDeptSearch}
+                      onChange={field.onChange}
+                      copy={searchCopy}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="roleIds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center">
+                    <RequiredMark /> {t('form.roles')}
+                  </FormLabel>
+                  <FormControl>
+                    <SearchableMultiSelect
+                      placeholder={t('form.rolesPlaceholder')}
+                      value={field.value}
+                      options={roleOptions}
+                      loading={roleLoading}
+                      disabled={submitting}
+                      onSearch={onRoleSearch}
+                      onChange={field.onChange}
+                      allowClear
+                      copy={multiSelectCopy}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="postIds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('form.posts')}</FormLabel>
+                  <FormControl>
+                    <SearchableMultiSelect
+                      placeholder={t('form.postsPlaceholder') || optionalLabel}
+                      value={field.value}
+                      options={postOptions}
+                      loading={postLoading}
+                      disabled={submitting}
+                      onSearch={onPostSearch}
+                      onChange={field.onChange}
+                      allowClear
+                      copy={multiSelectCopy}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="sex"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('form.sex')}</FormLabel>
+                  <Select
                     value={field.value}
-                    onValueChange={field.onChange}
+                    onValueChange={(value: '0' | '1' | '2') => field.onChange(value)}
                     disabled={submitting}
                   >
-                    <FormItem className="flex items-center gap-2 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="0" />
-                      </FormControl>
-                      <FormLabel className="font-normal">{tStatus('enabled')}</FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center gap-2 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="1" />
-                      </FormControl>
-                      <FormLabel className="font-normal">{tStatus('disabled')}</FormLabel>
-                    </FormItem>
-                  </RadioGroup>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('form.sexPlaceholder')} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="0">{genderLabels['0']}</SelectItem>
+                      <SelectItem value="1">{genderLabels['1']}</SelectItem>
+                      <SelectItem value="2">{genderLabels['2']}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center">
+                    <RequiredMark /> {t('form.status')}
+                  </FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      className="flex flex-wrap gap-4"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={submitting}
+                    >
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="0" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          {statusLabels['0']}
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="1" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          {statusLabels['1']}
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {passwordField}
+          </div>
+
+          <FormField
+            control={form.control}
+            name="remark"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('form.description')}</FormLabel>
+                <FormControl>
+                  <Textarea
+                    className="min-h-[96px] resize-none"
+                    placeholder={optionalLabel}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          {passwordField}
         </div>
 
-        <FormField
-          control={form.control}
-          name="remark"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{tForm('description')}</FormLabel>
-              <FormControl>
-                <Textarea
-                  className="min-h-[96px] resize-none"
-                  placeholder={tForm('optional')}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <ResponsiveDialog.Footer
-          className={cn(
-            'flex flex-col gap-2 sm:flex-row sm:justify-end',
-            isMobile &&
-              'sticky bottom-0 left-0 right-0 w-full rounded-none border-t border-border/60 bg-card/95 px-4 py-3 backdrop-blur sm:static sm:border-none sm:bg-transparent sm:px-0 sm:py-0',
-          )}
-        >
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={submitting}
-            className={cancelButtonClasses}
-          >
-            {tCommonDialogs('cancel')}
-          </Button>
-          <Button type="submit" disabled={submitting} className={submitButtonClasses}>
-            {submitText}
-          </Button>
-        </ResponsiveDialog.Footer>
+       
       </form>
     </Form>
   );
@@ -368,6 +377,17 @@ export function UserEditorForm({
 function RequiredMark() {
   return <span className="mr-1 text-destructive">*</span>;
 }
+
+type SearchCopy = {
+  searchPlaceholder: string;
+  loadingTitle: string;
+  loadingDescription: string;
+  emptyTitle: string;
+  emptyDescription: string;
+  noneLabel: string;
+  clearLabel: string;
+  formatPreview?: (preview: string, count: number) => string;
+};
 
 interface SearchableComboboxProps {
   value: string;
@@ -378,6 +398,7 @@ interface SearchableComboboxProps {
   loading?: boolean;
   disabled?: boolean;
   allowClear?: boolean;
+  copy: SearchCopy;
 }
 
 function SearchableCombobox({
@@ -389,8 +410,8 @@ function SearchableCombobox({
   loading,
   disabled,
   allowClear = true,
+  copy,
 }: SearchableComboboxProps) {
-  const tForm = useTranslations('UserManagement.form');
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
@@ -427,19 +448,19 @@ function SearchableCombobox({
               setInputValue(next);
               onSearch(next);
             }}
-            placeholder={tForm('searchPlaceholder')}
+            placeholder={copy.searchPlaceholder}
           />
           <CommandList>
             <CommandEmpty>
               <Empty className="border-0 bg-transparent p-2">
                 <EmptyHeader>
                   <EmptyTitle>
-                    {loading ? tForm('searchLoadingTitle') : tForm('searchEmptyTitle')}
+                    {loading ? copy.loadingTitle : copy.emptyTitle}
                   </EmptyTitle>
                   <EmptyDescription>
                     {loading
-                      ? tForm('searchLoadingDescription')
-                      : tForm('searchEmptyDescription')}
+                      ? copy.loadingDescription
+                      : copy.emptyDescription}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -457,7 +478,7 @@ function SearchableCombobox({
                   <Check
                     className={cn('mr-2 size-4', value === '' ? 'opacity-100' : 'opacity-0')}
                   />
-                  {tForm('searchNone')}
+                  {copy.noneLabel}
                 </CommandItem>
               ) : null}
               {options.map((option) => (
@@ -496,6 +517,7 @@ interface SearchableMultiSelectProps {
   disabled?: boolean;
   allowClear?: boolean;
   maxPreview?: number;
+  copy: SearchCopy;
 }
 
 function SearchableMultiSelect({
@@ -508,9 +530,8 @@ function SearchableMultiSelect({
   disabled,
   allowClear = true,
   maxPreview = 2,
+  copy,
 }: SearchableMultiSelectProps) {
-  const tForm = useTranslations('UserManagement.form');
-  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const normalizedValue = Array.isArray(value) ? value : [];
@@ -523,20 +544,19 @@ function SearchableMultiSelect({
   }, [open, onSearch]);
 
   const selectedOptions = options.filter((option) => normalizedValue.includes(option.value));
-  const separator = locale.startsWith('zh') ? '、' : ', ';
-  const previewText = selectedOptions
+  const preview = selectedOptions
     .slice(0, maxPreview)
     .map((option) => option.label)
-    .join(separator);
+    .join('、');
+  const extraCount = Math.max(selectedOptions.length - maxPreview, 0);
   const displayLabel =
     selectedOptions.length === 0
       ? placeholder
       : selectedOptions.length <= maxPreview
-        ? previewText
-        : tForm('multiSelectPreview', {
-            preview: previewText,
-            count: selectedOptions.length,
-          });
+        ? preview
+        : copy.formatPreview
+          ? copy.formatPreview(preview, extraCount)
+          : `${preview} +${extraCount}`;
 
   const toggleValue = (itemValue: string) => {
     const set = new Set(normalizedValue);
@@ -574,19 +594,19 @@ function SearchableMultiSelect({
               setInputValue(next);
               onSearch(next);
             }}
-            placeholder={tForm('searchPlaceholder')}
+            placeholder={copy.searchPlaceholder}
           />
           <CommandList>
             <CommandEmpty>
               <Empty className="border-0 bg-transparent p-2">
                 <EmptyHeader>
                   <EmptyTitle>
-                    {loading ? tForm('searchLoadingTitle') : tForm('searchEmptyTitle')}
+                    {loading ? copy.loadingTitle : copy.emptyTitle}
                   </EmptyTitle>
                   <EmptyDescription>
                     {loading
-                      ? tForm('searchLoadingDescription')
-                      : tForm('searchEmptyDescription')}
+                      ? copy.loadingDescription
+                      : copy.emptyDescription}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -607,7 +627,7 @@ function SearchableMultiSelect({
                       normalizedValue.length === 0 ? 'opacity-100' : 'opacity-0',
                     )}
                   />
-                  {tForm('searchClear')}
+                  {copy.clearLabel}
                 </CommandItem>
               ) : null}
               {options.map((option) => (
