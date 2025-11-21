@@ -303,7 +303,8 @@ export function NoticeTable({
             <div className="flex flex-col gap-2">
               <EllipsisText
                 value={notice.noticeTitle}
-                className="max-w-[260px] font-medium text-foreground"
+                className="w-full max-w-[260px] font-medium text-foreground"
+                tooltipClassName="max-w-lg text-sm leading-relaxed text-foreground"
               />
               <div className="flex flex-wrap items-center gap-2">
                 <Badge
@@ -330,11 +331,11 @@ export function NoticeTable({
         cell: ({ row }) => (
           <EllipsisText
             value={row.original.noticeContent}
-            className="max-w-[320px] text-sm text-muted-foreground"
-            tooltipClassName="text-left"
+            className="w-full max-w-[360px] text-sm text-muted-foreground"
+            tooltipClassName="max-w-xl whitespace-pre-wrap text-left text-sm leading-relaxed"
           />
         ),
-        meta: { headerClassName: 'w-[320px]', cellClassName: 'w-[320px]' },
+        meta: { headerClassName: 'w-[360px]', cellClassName: 'w-[360px]' },
       }),
       columnHelper.accessor('remark', {
         header: () => '备注',
