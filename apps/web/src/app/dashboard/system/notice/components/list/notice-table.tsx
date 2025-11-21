@@ -1,5 +1,10 @@
 'use client';
 
+import { EllipsisText } from '@/components/table/ellipsis-text';
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,7 +28,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { usePermissions } from '@/hooks/use-permissions';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -33,12 +48,8 @@ import {
 } from '@tanstack/react-table';
 import { format, isValid, parse, parseISO } from 'date-fns';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
-import {
-  PINNED_ACTION_COLUMN_META,
-  PINNED_TABLE_CLASS,
-} from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import type { Notice } from '../../type';
 
@@ -130,17 +141,81 @@ function NoticeActions({
   canEdit: boolean;
   canDelete: boolean;
 }) {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+
   if (!canEdit && !canDelete) {
     return null;
   }
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground"
+            aria-label="更多操作"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+        >
+          <SheetHeader className="px-4 pb-2 pt-3 text-left">
+            <SheetTitle>公告操作</SheetTitle>
+            <SheetDescription>选择要执行的操作。</SheetDescription>
+          </SheetHeader>
+          <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+            {canEdit ? (
+              <Button
+                variant="secondary"
+                className="w-full justify-between"
+                onClick={() => {
+                  onEdit(notice);
+                  setOpen(false);
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <Pencil className="size-4" />
+                  编辑公告
+                </span>
+                <span className="text-xs text-muted-foreground">修改标题或内容</span>
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <Button
+                variant="destructive"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onDelete(notice);
+                  setOpen(false);
+                }}
+              >
+                <Trash2 className="size-4" />
+                删除
+              </Button>
+            ) : null}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
           variant="ghost"
-          size="icon"
-          className="size-8 hover:text-primary"
+          size="icon-sm"
+          className="text-muted-foreground"
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
           aria-label="更多操作"
@@ -151,7 +226,7 @@ function NoticeActions({
       <DropdownMenuContent align="end" className="w-36">
         {canEdit ? (
           <DropdownMenuItem onSelect={() => onEdit(notice)}>
-            <Pencil className="mr-2 size-4" />
+            <Pencil className="mr-2 size-3.5" />
             编辑
           </DropdownMenuItem>
         ) : null}
@@ -163,7 +238,7 @@ function NoticeActions({
               onDelete(notice);
             }}
           >
-            <Trash2 className="mr-2 size-4" />
+            <Trash2 className="mr-2 size-3.5" />
             删除
           </DropdownMenuItem>
         ) : null}
@@ -226,9 +301,10 @@ export function NoticeTable({
           const statusMeta = STATUS_META[notice.status] ?? STATUS_META['1'];
           return (
             <div className="flex flex-col gap-2">
-              <span className="font-medium text-foreground">
-                {notice.noticeTitle}
-              </span>
+              <EllipsisText
+                value={notice.noticeTitle}
+                className="max-w-[260px] font-medium text-foreground"
+              />
               <div className="flex flex-wrap items-center gap-2">
                 <Badge
                   variant="secondary"
@@ -246,29 +322,30 @@ export function NoticeTable({
             </div>
           );
         },
-        meta: { headerClassName: 'min-w-[220px]' },
+        meta: { headerClassName: 'w-[260px]', cellClassName: 'w-[260px]' },
       }),
       columnHelper.display({
         id: 'content',
         header: () => '内容',
         cell: ({ row }) => (
-          <p className="line-clamp-2 text-sm text-muted-foreground">
-            {row.original.noticeContent}
-          </p>
+          <EllipsisText
+            value={row.original.noticeContent}
+            className="max-w-[320px] text-sm text-muted-foreground"
+            tooltipClassName="text-left"
+          />
         ),
-        meta: { headerClassName: 'min-w-[240px]' },
+        meta: { headerClassName: 'w-[320px]', cellClassName: 'w-[320px]' },
       }),
       columnHelper.accessor('remark', {
         header: () => '备注',
-        cell: ({ getValue }) => {
-          const value = getValue();
-          return (
-            <span className="text-sm text-muted-foreground">
-              {value?.trim() ? value : '—'}
-            </span>
-          );
-        },
-        meta: { headerClassName: 'w-[160px]', cellClassName: 'w-[160px]' },
+        cell: ({ getValue }) => (
+          <EllipsisText
+            value={getValue()}
+            className="max-w-[200px] text-xs text-muted-foreground"
+            tooltipClassName="text-left"
+          />
+        ),
+        meta: { headerClassName: 'w-[200px]', cellClassName: 'w-[200px]' },
       }),
       columnHelper.display({
         id: 'updatedAt',
@@ -333,7 +410,7 @@ export function NoticeTable({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border/60 bg-card dark:border-border/40">
-      <Table className={PINNED_TABLE_CLASS}>
+      <Table className={cn(PINNED_TABLE_CLASS, 'min-w-[960px]')}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-muted/40">

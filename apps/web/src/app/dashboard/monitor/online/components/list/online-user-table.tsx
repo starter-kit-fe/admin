@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   createColumnHelper,
   flexRender,
@@ -10,6 +10,11 @@ import {
 } from '@tanstack/react-table';
 import { Eye, LogOut, MoreHorizontal } from 'lucide-react';
 
+import { EllipsisText } from '@/components/table/ellipsis-text';
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -35,18 +40,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { cn } from '@/lib/utils';
 import {
-  PINNED_ACTION_COLUMN_META,
-  PINNED_TABLE_CLASS,
-} from '@/components/table/pinned-actions';
-import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  TableLoadingSkeleton,
+} from '@/components/table/table-loading-skeleton';
 
 import type { OnlineUser } from '../../type';
-import {
-  getOnlineUserRowId,
-  resolveStatusBadgeVariant,
-} from '../../utils';
+import { getOnlineUserRowId, resolveStatusBadgeVariant } from '../../utils';
 
 interface OnlineUserTableProps {
   rows: OnlineUser[];
@@ -91,17 +101,20 @@ export function OnlineUserTable({
           const user = row.original;
           return (
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">
-                {user.userName || '-'}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {user.nickName?.trim() || user.deptName?.trim() || '—'}
-              </p>
+              <EllipsisText
+                value={user.userName || '-'}
+                className="max-w-[200px] text-sm font-medium text-foreground"
+              />
+              <EllipsisText
+                value={user.nickName?.trim() || user.deptName?.trim() || '—'}
+                className="max-w-[200px] text-xs text-muted-foreground"
+              />
             </div>
           );
         },
         meta: {
-          headerClassName: 'min-w-[140px] md:min-w-[180px]',
+          headerClassName: 'w-[220px]',
+          cellClassName: 'w-[220px]',
         },
       }),
       columnHelper.display({
@@ -111,15 +124,20 @@ export function OnlineUserTable({
           const user = row.original;
           return (
             <div className="space-y-1">
-              <p className="text-sm text-foreground">{user.ipaddr || '-'}</p>
-              <p className="text-xs text-muted-foreground">
-                {user.loginLocation || '未知地点'}
-              </p>
+              <EllipsisText
+                value={user.ipaddr || '-'}
+                className="max-w-[200px] text-sm text-foreground"
+              />
+              <EllipsisText
+                value={user.loginLocation || '未知地点'}
+                className="max-w-[220px] text-xs text-muted-foreground"
+              />
             </div>
           );
         },
         meta: {
-          headerClassName: 'min-w-[140px] md:min-w-[180px]',
+          headerClassName: 'w-[240px]',
+          cellClassName: 'w-[240px]',
         },
       }),
       columnHelper.display({
@@ -129,13 +147,20 @@ export function OnlineUserTable({
           const user = row.original;
           return (
             <div className="space-y-1">
-              <p className="text-sm text-foreground">{user.browser || '-'}</p>
-              <p className="text-xs text-muted-foreground">{user.os || '-'}</p>
+              <EllipsisText
+                value={user.browser || '-'}
+                className="max-w-[180px] text-sm text-foreground"
+              />
+              <EllipsisText
+                value={user.os || '-'}
+                className="max-w-[200px] text-xs text-muted-foreground"
+              />
             </div>
           );
         },
         meta: {
-          headerClassName: 'min-w-[130px] md:min-w-[160px]',
+          headerClassName: 'w-[200px]',
+          cellClassName: 'w-[200px]',
         },
       }),
       columnHelper.display({
@@ -161,19 +186,22 @@ export function OnlineUserTable({
           const user = row.original;
           return (
             <div className="space-y-1">
-              <p className="text-sm text-foreground">
-                {user.loginTime || '-'}
-              </p>
+              <EllipsisText
+                value={user.loginTime || '-'}
+                className="max-w-[200px] text-sm text-foreground"
+              />
               {user.lastAccessTime ? (
-                <p className="text-xs text-muted-foreground">
-                  最近活跃：{user.lastAccessTime}
-                </p>
+                <EllipsisText
+                  value={`最近活跃：${user.lastAccessTime}`}
+                  className="max-w-[220px] text-xs text-muted-foreground"
+                />
               ) : null}
             </div>
           );
         },
         meta: {
-          headerClassName: 'min-w-[150px] md:min-w-[180px]',
+          headerClassName: 'w-[220px]',
+          cellClassName: 'w-[220px]',
         },
       }),
     ];
@@ -191,54 +219,16 @@ export function OnlineUserTable({
               isForceMutating &&
               pendingForceRowId === rowId;
 
-              return (
+            return (
               <div className="flex justify-end">
-                <DropdownMenu modal={false}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 hover:text-primary"
-                      onPointerDown={(event) => event.stopPropagation()}
-                      onClick={(event) => event.stopPropagation()}
-                      aria-label="更多操作"
-                    >
-                      <MoreHorizontal className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    {canViewDetail ? (
-                      <DropdownMenuItem
-                        onSelect={() => onViewDetail(user)}
-                      >
-                        <Eye className="mr-2 size-4" />
-                        查看详情
-                      </DropdownMenuItem>
-                    ) : null}
-                    {canViewDetail && canForceLogout ? (
-                      <DropdownMenuSeparator />
-                    ) : null}
-                    {canForceLogout ? (
-                      <DropdownMenuItem
-                        disabled={isPending}
-                        onSelect={() => onForceLogout(user)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        {isPending ? (
-                          <>
-                            <Spinner className="mr-2 size-4" />
-                            处理中
-                          </>
-                        ) : (
-                          <>
-                            <LogOut className="mr-2 size-4" />
-                            强退
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                    ) : null}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <OnlineRowActions
+                  user={user}
+                  canViewDetail={canViewDetail}
+                  canForceLogout={canForceLogout}
+                  onViewDetail={onViewDetail}
+                  onForceLogout={onForceLogout}
+                  isPending={isPending}
+                />
               </div>
             );
           },
@@ -319,7 +309,7 @@ export function OnlineUserTable({
 
   return (
     <div className="rounded-xl border border-border/60">
-      <Table className={`${PINNED_TABLE_CLASS} [&_td]:align-top`}>
+      <Table className={cn(PINNED_TABLE_CLASS, 'min-w-[980px] [&_td]:align-top')}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -404,5 +394,150 @@ export function OnlineUserTable({
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+function OnlineRowActions({
+  user,
+  canViewDetail,
+  canForceLogout,
+  onViewDetail,
+  onForceLogout,
+  isPending,
+}: {
+  user: OnlineUser;
+  canViewDetail: boolean;
+  canForceLogout: boolean;
+  onViewDetail: (user: OnlineUser) => void;
+  onForceLogout: (user: OnlineUser) => void;
+  isPending: boolean;
+}) {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+
+  if (!canViewDetail && !canForceLogout) {
+    return null;
+  }
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground"
+            aria-label="更多操作"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+        >
+          <SheetHeader className="px-4 pb-2 pt-3 text-left">
+            <SheetTitle>在线会话</SheetTitle>
+            <SheetDescription>选择要对该用户执行的操作。</SheetDescription>
+          </SheetHeader>
+          <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+            {canViewDetail ? (
+              <Button
+                variant="secondary"
+                className="w-full justify-between"
+                onClick={() => {
+                  onViewDetail(user);
+                  setOpen(false);
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <Eye className="size-4" />
+                  查看详情
+                </span>
+                <span className="text-xs text-muted-foreground">查看会话信息</span>
+              </Button>
+            ) : null}
+            {canForceLogout ? (
+              <Button
+                variant="destructive"
+                className="w-full justify-start gap-2"
+                disabled={isPending}
+                onClick={() => {
+                  onForceLogout(user);
+                  setOpen(false);
+                }}
+              >
+                {isPending ? (
+                  <>
+                    <Spinner className="size-4" />
+                    处理中
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="size-4" />
+                    强退
+                  </>
+                )}
+              </Button>
+            ) : null}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+          aria-label="更多操作"
+        >
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        {canViewDetail ? (
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              onViewDetail(user);
+            }}
+          >
+            <Eye className="mr-2 size-4" />
+            查看详情
+          </DropdownMenuItem>
+        ) : null}
+        {canViewDetail && canForceLogout ? <DropdownMenuSeparator /> : null}
+        {canForceLogout ? (
+          <DropdownMenuItem
+            disabled={isPending}
+            onSelect={(event) => {
+              event.preventDefault();
+              onForceLogout(user);
+            }}
+            className="text-destructive focus:text-destructive"
+          >
+            {isPending ? (
+              <>
+                <Spinner className="mr-2 size-4" />
+                处理中
+              </>
+            ) : (
+              <>
+                <LogOut className="mr-2 size-4" />
+                强退
+              </>
+            )}
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

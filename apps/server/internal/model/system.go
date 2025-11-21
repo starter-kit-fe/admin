@@ -158,30 +158,6 @@ func (SysUserPost) TableName() string {
 	return tableName("sys_user_post")
 }
 
-type SysOperLog struct {
-	OperID        int64      `gorm:"column:oper_id;primaryKey;autoIncrement" json:"oper_id"`
-	Title         string     `gorm:"column:title" json:"title"`
-	BusinessType  int        `gorm:"column:business_type" json:"business_type"`
-	Method        string     `gorm:"column:method" json:"method"`
-	RequestMethod string     `gorm:"column:request_method" json:"request_method"`
-	OperatorType  int        `gorm:"column:operator_type" json:"operator_type"`
-	OperName      string     `gorm:"column:oper_name" json:"oper_name"`
-	DeptName      string     `gorm:"column:dept_name" json:"dept_name"`
-	OperURL       string     `gorm:"column:oper_url" json:"oper_url"`
-	OperIP        string     `gorm:"column:oper_ip" json:"oper_ip"`
-	OperLocation  string     `gorm:"column:oper_location" json:"oper_location"`
-	OperParam     string     `gorm:"column:oper_param" json:"oper_param"`
-	JSONResult    string     `gorm:"column:json_result" json:"json_result"`
-	Status        int        `gorm:"column:status" json:"status"`
-	ErrorMsg      string     `gorm:"column:error_msg" json:"error_msg"`
-	OperTime      *time.Time `gorm:"column:oper_time" json:"oper_time,omitempty"`
-	CostTime      int64      `gorm:"column:cost_time" json:"cost_time"`
-}
-
-func (SysOperLog) TableName() string {
-	return tableName("sys_oper_log")
-}
-
 type SysDictType struct {
 	DictID     int64      `gorm:"column:dict_id;primaryKey;autoIncrement" json:"dict_id"`
 	DictName   string     `gorm:"column:dict_name" json:"dict_name"`
@@ -236,22 +212,6 @@ func (SysConfig) TableName() string {
 	return tableName("sys_config")
 }
 
-type SysLogininfor struct {
-	InfoID        int64      `gorm:"column:info_id;primaryKey;autoIncrement" json:"info_id"`
-	UserName      string     `gorm:"column:user_name" json:"user_name"`
-	IPAddr        string     `gorm:"column:ipaddr" json:"ipaddr"`
-	LoginLocation string     `gorm:"column:login_location" json:"login_location"`
-	Browser       string     `gorm:"column:browser" json:"browser"`
-	OS            string     `gorm:"column:os" json:"os"`
-	Status        string     `gorm:"column:status" json:"status"`
-	Msg           string     `gorm:"column:msg" json:"msg"`
-	LoginTime     *time.Time `gorm:"column:login_time" json:"login_time,omitempty"`
-}
-
-func (SysLogininfor) TableName() string {
-	return tableName("sys_logininfor")
-}
-
 type SysJob struct {
 	JobID          int64      `gorm:"column:job_id;primaryKey;autoIncrement" json:"job_id"`
 	JobName        string     `gorm:"column:job_name;primaryKey" json:"job_name"`
@@ -290,8 +250,6 @@ func (SysJobLog) TableName() string {
 	return tableName("sys_job_log")
 }
 
-
-
 // SysJobLogStep 定时任务执行步骤日志
 type SysJobLogStep struct {
 	StepID     int64      `gorm:"column:step_id;primaryKey;autoIncrement" json:"stepId"`
@@ -310,7 +268,7 @@ type SysJobLogStep struct {
 
 // TableName 指定表名
 func (SysJobLogStep) TableName() string {
-	return "sys_job_log_step"
+	return tableName("sys_job_log_step")
 }
 
 type SysNotice struct {

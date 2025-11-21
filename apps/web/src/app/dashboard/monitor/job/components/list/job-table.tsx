@@ -5,6 +5,7 @@ import {
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
+import { EllipsisText } from '@/components/table/ellipsis-text';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +29,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { usePermissions } from '@/hooks/use-permissions';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -38,7 +49,7 @@ import {
 } from '@tanstack/react-table';
 import { Clock, Edit2, Eye, MoreHorizontal, Play, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { STATUS_BADGE_VARIANT } from '../../constants';
 import type { Job } from '../../type';
@@ -90,12 +101,14 @@ export function JobTable({
           const job = row.original;
           return (
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">
-                {job.jobName || '-'}
-              </p>
-              <p className="text-xs font-mono uppercase text-muted-foreground">
-                {job.jobGroup || 'DEFAULT'}
-              </p>
+              <EllipsisText
+                value={job.jobName || '-'}
+                className="max-w-[220px] text-sm font-medium text-foreground"
+              />
+              <EllipsisText
+                value={job.jobGroup || 'DEFAULT'}
+                className="max-w-[200px] text-xs font-mono uppercase text-muted-foreground"
+              />
               {job.isRunning ? (
                 <p className="flex items-center gap-1 text-[11px] text-emerald-600 animate-pulse">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -106,8 +119,8 @@ export function JobTable({
           );
         },
         meta: {
-          headerClassName: 'min-w-[100px]',
-          cellClassName: 'min-w-[100px] whitespace-nowrap pr-4',
+          headerClassName: 'w-[240px]',
+          cellClassName: 'w-[240px] whitespace-nowrap pr-4',
         },
       }),
       columnHelper.accessor('cronExpression', {
@@ -116,24 +129,27 @@ export function JobTable({
           const job = row.original;
           return (
             <div className="space-y-1">
-              <p className="font-mono text-xs text-foreground">
-                {job.cronExpression || '-'}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                策略：{resolveMisfireLabel(job.misfirePolicy)}
-              </p>
+              <EllipsisText
+                value={job.cronExpression || '-'}
+                className="max-w-[240px] font-mono text-xs text-foreground"
+                tooltipClassName="text-left font-mono"
+              />
+              <EllipsisText
+                value={`策略：${resolveMisfireLabel(job.misfirePolicy)}`}
+                className="max-w-[240px] text-xs text-muted-foreground"
+              />
             </div>
           );
         },
         meta: {
-          headerClassName: 'min-w-[180px]',
-          cellClassName: 'min-w-[180px] whitespace-nowrap pr-4',
+          headerClassName: 'w-[260px]',
+          cellClassName: 'w-[260px] whitespace-nowrap pr-4',
         },
       }),
       columnHelper.accessor('concurrent', {
         header: () => '并发',
         cell: ({ getValue }) => (
-          <span className='text-[12px]'>{resolveConcurrentLabel(getValue())}</span>
+          <span className="text-[12px]">{resolveConcurrentLabel(getValue())}</span>
         ),
         meta: {
           headerClassName: 'w-[120px]',
@@ -157,7 +173,7 @@ export function JobTable({
           );
         },
         meta: {
-          headerClassName: 'w-[100px]',
+          headerClassName: 'w-[110px]',
         },
       }),
       columnHelper.display({
@@ -167,14 +183,20 @@ export function JobTable({
           const job = row.original;
           return (
             <div className="space-y-1 text-xs text-muted-foreground">
-              <p>创建：{job.createTime || '-'}</p>
-              <p>更新：{job.updateTime || '-'}</p>
+              <EllipsisText
+                value={`创建：${job.createTime || '-'}`}
+                className="max-w-[220px]"
+              />
+              <EllipsisText
+                value={`更新：${job.updateTime || '-'}`}
+                className="max-w-[220px]"
+              />
             </div>
           );
         },
         meta: {
-          headerClassName: 'min-w-[100px]',
-          cellClassName: 'min-w-[100px] whitespace-normal break-words',
+          headerClassName: 'w-[220px]',
+          cellClassName: 'w-[220px] whitespace-normal break-words',
         },
       }),
       ...(showActions
@@ -193,104 +215,22 @@ export function JobTable({
 
               return (
                 <div className="flex items-center justify-end">
-                  <DropdownMenu modal={false}>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        onPointerDown={(event) => event.stopPropagation()}
-                        onClick={(event) => event.stopPropagation()}
-                        aria-label={`更多操作：${job.jobName}`}
-                      >
-                        <MoreHorizontal className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      {canViewDetail ? (
-                        <DropdownMenuItem
-                          onSelect={(event) => {
-                            event.preventDefault();
-                            router.push(`/dashboard/monitor/job/${jobId}`);
-                          }}
-                        >
-                          <Eye className="mr-2 size-4" />
-                          查看详情
-                        </DropdownMenuItem>
-                      ) : null}
-                      {canEditJob ? (
-                        <DropdownMenuItem
-                          onSelect={(event) => {
-                            event.preventDefault();
-                            onEdit(job);
-                          }}
-                        >
-                          <Edit2 className="mr-2 size-4" />
-                          编辑任务
-                        </DropdownMenuItem>
-                      ) : null}
-                      {canRunJob ? (
-                        <DropdownMenuItem
-                          onSelect={(event) => {
-                            event.preventDefault();
-                            onRunJob(job);
-                          }}
-                          disabled={isRunPending || concurrencyLocked}
-                        >
-                          {isRunPending ? (
-                            <>
-                              <Spinner className="mr-2 size-3.5" />
-                              触发中
-                            </>
-                          ) : concurrencyLocked ? (
-                            <>
-                              <Spinner className="mr-2 size-3.5" />
-                              执行中
-                            </>
-                          ) : (
-                            <>
-                              <Play className="mr-2 size-4" />
-                              立即执行
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                      ) : null}
-                      {canChangeStatus ? (
-                        <DropdownMenuItem
-                          onSelect={(event) => {
-                            event.preventDefault();
-                            onToggleStatus(jobId, nextStatus);
-                          }}
-                          disabled={isUpdatingStatus}
-                        >
-                          {isUpdatingStatus ? (
-                            <>
-                              <Spinner className="mr-2 size-3.5" />
-                              更新中
-                            </>
-                          ) : (
-                            <>
-                              <Clock className="mr-2 size-4" />
-                              {nextStatus === '0' ? '恢复任务' : '暂停任务'}
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                      ) : null}
-                      {canDeleteJob ? (
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onSelect={(event) => {
-                            event.preventDefault();
-                            onDelete(job);
-                          }}
-                        >
-                          <Trash2 className="mr-2 size-4" />
-                          删除任务
-                        </DropdownMenuItem>
-                      ) : null}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <JobRowActions
+                    job={job}
+                    canViewDetail={canViewDetail}
+                    canEdit={canEditJob}
+                    canRun={canRunJob}
+                    canChangeStatus={canChangeStatus}
+                    canDelete={canDeleteJob}
+                    isRunPending={isRunPending}
+                    isUpdatingStatus={isUpdatingStatus}
+                    concurrencyLocked={concurrencyLocked}
+                    onViewDetail={() => router.push(`/dashboard/monitor/job/${jobId}`)}
+                    onEdit={() => onEdit(job)}
+                    onRun={() => onRunJob(job)}
+                    onToggleStatus={() => onToggleStatus(jobId, nextStatus)}
+                    onDelete={() => onDelete(job)}
+                  />
                 </div>
               );
             },
@@ -331,7 +271,7 @@ export function JobTable({
   return (
     <div className="rounded-xl border border-border/60">
       <div className="w-full overflow-x-auto scrollbar-thin">
-        <Table className={`${PINNED_TABLE_CLASS} min-w-[800px]`}>
+        <Table className={cn(PINNED_TABLE_CLASS, 'min-w-[1024px]')}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="bg-muted/40">
@@ -414,6 +354,271 @@ export function JobTable({
   );
 }
 
+function JobRowActions({
+  job,
+  canViewDetail,
+  canEdit,
+  canRun,
+  canChangeStatus,
+  canDelete,
+  isRunPending,
+  isUpdatingStatus,
+  concurrencyLocked,
+  onViewDetail,
+  onEdit,
+  onRun,
+  onToggleStatus,
+  onDelete,
+}: {
+  job: Job;
+  canViewDetail: boolean;
+  canEdit: boolean;
+  canRun: boolean;
+  canChangeStatus: boolean;
+  canDelete: boolean;
+  isRunPending: boolean;
+  isUpdatingStatus: boolean;
+  concurrencyLocked: boolean;
+  onViewDetail: () => void;
+  onEdit: () => void;
+  onRun: () => void;
+  onToggleStatus: () => void;
+  onDelete: () => void;
+}) {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+
+  if (!canViewDetail && !canEdit && !canRun && !canChangeStatus && !canDelete) {
+    return null;
+  }
+
+  const nextStatusLabel = job.status === '0' ? '暂停任务' : '恢复任务';
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground"
+            aria-label="更多操作"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+        >
+          <SheetHeader className="px-4 pb-2 pt-3 text-left">
+            <SheetTitle>任务操作</SheetTitle>
+            <SheetDescription>对「{job.jobName || '未命名任务'}」执行操作。</SheetDescription>
+          </SheetHeader>
+          <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+            {canViewDetail ? (
+              <Button
+                variant="secondary"
+                className="w-full justify-between"
+                onClick={() => {
+                  onViewDetail();
+                  setOpen(false);
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <Eye className="size-4" />
+                  查看详情
+                </span>
+                <span className="text-xs text-muted-foreground">跳转至任务详情</span>
+              </Button>
+            ) : null}
+            {canEdit ? (
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onEdit();
+                  setOpen(false);
+                }}
+              >
+                <Edit2 className="size-4" />
+                编辑任务
+              </Button>
+            ) : null}
+            {canRun ? (
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2"
+                disabled={isRunPending || concurrencyLocked}
+                onClick={() => {
+                  onRun();
+                  setOpen(false);
+                }}
+              >
+                {isRunPending ? (
+                  <>
+                    <Spinner className="size-4" />
+                    触发中
+                  </>
+                ) : concurrencyLocked ? (
+                  <>
+                    <Spinner className="size-4" />
+                    执行中
+                  </>
+                ) : (
+                  <>
+                    <Play className="size-4" />
+                    立即执行
+                  </>
+                )}
+              </Button>
+            ) : null}
+            {canChangeStatus ? (
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2"
+                disabled={isUpdatingStatus}
+                onClick={() => {
+                  onToggleStatus();
+                  setOpen(false);
+                }}
+              >
+                {isUpdatingStatus ? (
+                  <>
+                    <Spinner className="size-4" />
+                    更新中
+                  </>
+                ) : (
+                  <>
+                    <Clock className="size-4" />
+                    {nextStatusLabel}
+                  </>
+                )}
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <Button
+                variant="destructive"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onDelete();
+                  setOpen(false);
+                }}
+              >
+                <Trash2 className="size-4" />
+                删除任务
+              </Button>
+            ) : null}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+          aria-label={`更多操作：${job.jobName}`}
+        >
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        {canViewDetail ? (
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              onViewDetail();
+            }}
+          >
+            <Eye className="mr-2 size-4" />
+            查看详情
+          </DropdownMenuItem>
+        ) : null}
+        {canEdit ? (
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              onEdit();
+            }}
+          >
+            <Edit2 className="mr-2 size-4" />
+            编辑任务
+          </DropdownMenuItem>
+        ) : null}
+        {canRun ? (
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              onRun();
+            }}
+            disabled={isRunPending || concurrencyLocked}
+          >
+            {isRunPending ? (
+              <>
+                <Spinner className="mr-2 size-3.5" />
+                触发中
+              </>
+            ) : concurrencyLocked ? (
+              <>
+                <Spinner className="mr-2 size-3.5" />
+                执行中
+              </>
+            ) : (
+              <>
+                <Play className="mr-2 size-4" />
+                立即执行
+              </>
+            )}
+          </DropdownMenuItem>
+        ) : null}
+        {canChangeStatus ? (
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              onToggleStatus();
+            }}
+            disabled={isUpdatingStatus}
+          >
+            {isUpdatingStatus ? (
+              <>
+                <Spinner className="mr-2 size-3.5" />
+                更新中
+              </>
+            ) : (
+              <>
+                <Clock className="mr-2 size-4" />
+                {nextStatusLabel}
+              </>
+            )}
+          </DropdownMenuItem>
+        ) : null}
+        {canDelete ? (
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onSelect={(event) => {
+              event.preventDefault();
+              onDelete();
+            }}
+          >
+            <Trash2 className="mr-2 size-4" />
+            删除任务
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData, TValue> {
     headerClassName?: string;

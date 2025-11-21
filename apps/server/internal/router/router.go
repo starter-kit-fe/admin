@@ -339,8 +339,10 @@ func registerMonitorRoutes(group *gin.RouterGroup, opts Options) {
 	registerRouteWithPermissions(jobs, http.MethodGet, "/:id/detail", []string{"monitor:job:query"}, opts.JobHandler.Detail, "get job detail")
 	registerRouteWithPermissions(jobs, http.MethodPut, "/:id", []string{"monitor:job:edit"}, opts.JobHandler.Update, "update job")
 	registerRouteWithPermissions(jobs, http.MethodDelete, "/:id", []string{"monitor:job:remove"}, opts.JobHandler.Delete, "delete job")
+	registerRouteWithPermissions(jobs, http.MethodDelete, "/:id/logs", []string{"monitor:job:remove"}, opts.JobHandler.ClearLogs, "clear job logs")
 	registerRouteWithPermissions(jobs, http.MethodPatch, "/:id/status", []string{"monitor:job:changeStatus"}, opts.JobHandler.ChangeStatus, "change job status")
 	registerRouteWithPermissions(jobs, http.MethodPost, "/:id/run", []string{"monitor:job:run"}, opts.JobHandler.Trigger, "run job")
+	registerRouteWithPermissions(jobs, http.MethodGet, "/logs/:id/steps", []string{"monitor:job:query"}, opts.JobHandler.GetLogSteps, "get job log steps")
 	registerRouteWithPermissions(jobs, http.MethodGet, "/logs/:id/stream", []string{"monitor:job:query"}, opts.JobHandler.StreamLog, "stream job log")
 
 	registerRouteWithPermissions(monitor, http.MethodGet, "/server", []string{"monitor:server:list"}, opts.ServerHandler.Status, "view server monitor")

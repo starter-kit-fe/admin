@@ -4,6 +4,7 @@ import {
   PINNED_ACTION_COLUMN_META,
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
+import { EllipsisText } from '@/components/table/ellipsis-text';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -31,11 +32,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -54,7 +50,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { KeyRound, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { User } from '../../type';
 import {
@@ -96,69 +92,6 @@ interface RowActionsProps {
   canEdit: boolean;
   canResetPassword: boolean;
   canDelete: boolean;
-}
-
-function EllipsisText({
-  text,
-  className,
-  placeholder = '—',
-}: {
-  text?: string | null;
-  className?: string;
-  placeholder?: string;
-}) {
-  const display = text && text.trim().length > 0 ? text : null;
-  const textRef = useRef<HTMLSpanElement | null>(null);
-  const [overflow, setOverflow] = useState(false);
-
-  useLayoutEffect(() => {
-    const node = textRef.current;
-    if (!node) return;
-    const check = () => {
-      setOverflow(node.scrollWidth - node.clientWidth > 1);
-    };
-    check();
-    const ro = new ResizeObserver(check);
-    ro.observe(node);
-    window.addEventListener('resize', check);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', check);
-    };
-  }, [display]);
-
-  useEffect(() => {
-    const node = textRef.current;
-    if (!node) return;
-    setOverflow(node.scrollWidth - node.clientWidth > 1);
-  }, [display]);
-
-  const content = (
-    <span
-      ref={textRef}
-      className={cn(
-        'block truncate text-sm text-foreground',
-        !display && 'text-muted-foreground',
-        className,
-      )}
-      title={overflow ? (display ?? undefined) : undefined}
-    >
-      {display ?? placeholder}
-    </span>
-  );
-
-  if (!display || !overflow) {
-    return content;
-  }
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{content}</TooltipTrigger>
-      <TooltipContent className="max-w-xs break-words text-sm">
-        {display}
-      </TooltipContent>
-    </Tooltip>
-  );
 }
 
 function RowActions({
@@ -383,11 +316,11 @@ export function UserTable({
               </Avatar>
               <div className="min-w-0 space-y-1">
                 <EllipsisText
-                  text={accountLabel}
+                  value={accountLabel}
                   className="text-sm font-medium text-foreground max-w-[200px]"
                 />
                 <EllipsisText
-                  text={emailLabel}
+                  value={emailLabel}
                   className="text-xs text-muted-foreground max-w-[220px]"
                   placeholder="未设置邮箱"
                 />
@@ -408,7 +341,7 @@ export function UserTable({
           const nickName = user.nickName?.trim();
           return (
             <EllipsisText
-              text={nickName && nickName.length > 0 ? nickName : undefined}
+              value={nickName && nickName.length > 0 ? nickName : undefined}
               className="text-sm text-muted-foreground max-w-[140px]"
             />
           );
@@ -425,7 +358,7 @@ export function UserTable({
           const user = row.original;
           return (
             <EllipsisText
-              text={formatPhoneNumber(user.phonenumber)}
+              value={formatPhoneNumber(user.phonenumber)}
               className="text-sm text-muted-foreground max-w-[130px]"
             />
           );
@@ -443,7 +376,7 @@ export function UserTable({
           const user = row.original;
           return (
             <EllipsisText
-              text={getCompanyLabel(user)}
+              value={getCompanyLabel(user)}
               className="text-sm text-muted-foreground max-w-[150px]"
             />
           );
@@ -460,7 +393,7 @@ export function UserTable({
           const user = row.original;
           return (
             <EllipsisText
-              text={getRoleLabel(user)}
+              value={getRoleLabel(user)}
               className="text-sm text-muted-foreground max-w-[140px]"
             />
           );

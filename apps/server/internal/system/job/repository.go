@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgconn"
 	"gorm.io/gorm"
 
 	"github.com/starter-kit-fe/admin/internal/model"
@@ -331,4 +332,76 @@ func (r *Repository) UpdateJobLog(ctx context.Context, jobLogID int64, updates m
 		Model(&model.SysJobLog{}).
 		Where("job_log_id = ?", jobLogID).
 		Updates(updates).Error
+}
+
+// DeleteJobLogs 删除指定任务的所有日志及步骤
+func (r *Repository) DeleteJobLogs(ctx context.Context, jobID int64) error {
+	if r == nil || r.db == nil {
+		return ErrRepositoryUnavailable
+	}
+
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var logIDs []int64
+		logTable := model.SysJobLog{}.TableName()
+		if err := tx.
+			Model(&model.SysJobLog{}).
+			Where("job_id = ?", jobID).
+			Pluck("job_log_id", &logIDs).Error; err != nil {
+			if !isMissingTableErr(err, logTable) {
+				return err
+			}
+			// Fallback for legacy un-prefixed table
+			if err := tx.
+				Table("sys_job_log").
+				Where("job_id = ?", jobID).
+				Pluck("job_log_id", &logIDs).Error; err != nil {
+				return err
+			}
+		}
+
+		if len(logIDs) > 0 {
+			if err := tx.
+				Where("job_log_id IN ?", logIDs).
+				Delete(&model.SysJobLogStep{}).Error; err != nil {
+				if !isMissingTableErr(err, model.SysJobLogStep{}.TableName()) {
+					return err
+				}
+				// Legacy fallback: some deployments used an unprefixed table name for steps.
+				if err := tx.Exec("DELETE FROM sys_job_log_step WHERE job_log_id IN ?", logIDs).Error; err != nil && !isMissingTableErr(err, "sys_job_log_step") {
+					return err
+				}
+			}
+		}
+
+		if err := tx.
+			Where("job_id = ?", jobID).
+			Delete(&model.SysJobLog{}).Error; err != nil {
+			if !isMissingTableErr(err, logTable) {
+				return err
+			}
+			// Fallback for legacy un-prefixed table
+			if err := tx.Exec("DELETE FROM sys_job_log WHERE job_id = ?", jobID).Error; err != nil && !isMissingTableErr(err, "sys_job_log") {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func isMissingTableErr(err error, table string) bool {
+	if err == nil {
+		return false
+	}
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "42P01" { // undefined_table
+		return true
+	}
+	// MySQL/MariaDB missing table error code 1146
+	var codeErr interface{ Number() int }
+	if errors.As(err, &codeErr) && codeErr.Number() == 1146 {
+		return true
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "does not exist") && strings.Contains(msg, strings.ToLower(table))
 }

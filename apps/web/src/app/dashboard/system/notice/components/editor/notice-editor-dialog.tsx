@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -89,19 +90,40 @@ export function NoticeEditorDialog({
     });
   });
 
+  const title = mode === 'create' ? '新增通知公告' : '编辑通知公告';
+  const description = '配置系统通知公告内容，将展示于用户端公告模块。';
+  const formId = 'notice-editor-form';
+
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialog.Content className="sm:max-w-2xl">
-        <ResponsiveDialog.Header>
-          <ResponsiveDialog.Title>
-            {mode === 'create' ? '新增通知公告' : '编辑通知公告'}
-          </ResponsiveDialog.Title>
-          <ResponsiveDialog.Description>
-            配置系统通知公告内容，将展示于用户端公告模块。
-          </ResponsiveDialog.Description>
-        </ResponsiveDialog.Header>
+      <FormDialogLayout
+        title={title}
+        description={description}
+        contentClassName="sm:max-w-2xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+              className="flex-1 sm:flex-none sm:min-w-[96px]"
+            >
+              取消
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              disabled={submitting}
+              className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
+            >
+              {submitting ? '保存中...' : mode === 'create' ? '创建' : '保存'}
+            </Button>
+          </>
+        }
+      >
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id={formId} onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -215,22 +237,9 @@ export function NoticeEditorDialog({
                 )}
               />
             </div>
-            <div className="flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => onOpenChange(false)}
-                disabled={submitting}
-              >
-                取消
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? '保存中...' : '保存'}
-              </Button>
-            </div>
           </form>
         </Form>
-      </ResponsiveDialog.Content>
+      </FormDialogLayout>
     </ResponsiveDialog>
   );
 }

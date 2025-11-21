@@ -342,6 +342,51 @@ func (h *Handler) Delete(ctx *gin.Context) {
 	resp.NoContent(ctx)
 }
 
+// ClearLogs godoc
+// @Summary 清空定时任务日志
+// @Description 删除指定任务的全部执行日志
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "任务ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/{id}/logs [delete]
+func (h *Handler) ClearLogs(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
+		return
+	}
+
+	id, err := parseID(ctx.Param("id"))
+	if err != nil {
+		resp.BadRequest(ctx, resp.WithMessage("invalid job id"))
+		return
+	}
+
+	if err := h.service.ClearJobLogs(ctx.Request.Context(), id, currentOperator(ctx)); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			resp.NotFound(ctx, resp.WithMessage("job not found"))
+			return
+		}
+		if errors.Is(err, ErrJobRunningActive) || errors.Is(err, ErrJobRunningConflict) {
+			resp.BadRequest(ctx, resp.WithMessage(err.Error()))
+			return
+		}
+		if errors.Is(err, ErrServiceUnavailable) {
+			resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
+			return
+		}
+		resp.InternalServerError(ctx, resp.WithMessage("failed to clear job logs"))
+		return
+	}
+
+	resp.NoContent(ctx)
+}
+
 // ChangeStatus godoc
 // @Summary 修改任务状态
 // @Description 启停指定任务
@@ -427,6 +472,44 @@ func (h *Handler) Trigger(ctx *gin.Context) {
 	}
 
 	resp.OK(ctx, resp.WithData(gin.H{"jobLogId": logID}))
+}
+
+// GetLogSteps godoc
+// @Summary 获取执行日志的步骤
+// @Description 按日志 ID 返回步骤明细
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "日志ID"
+// @Success 200 {object} resp.Response
+// @Failure 400 {object} resp.Response
+// @Failure 404 {object} resp.Response
+// @Failure 500 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/logs/{id}/steps [get]
+func (h *Handler) GetLogSteps(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
+		return
+	}
+
+	logID, err := parseID(ctx.Param("id"))
+	if err != nil || logID <= 0 {
+		resp.BadRequest(ctx, resp.WithMessage("invalid job log id"))
+		return
+	}
+
+	steps, err := h.service.GetJobLogSteps(ctx.Request.Context(), logID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			resp.NotFound(ctx, resp.WithMessage("job log not found"))
+			return
+		}
+		resp.InternalServerError(ctx, resp.WithMessage("failed to load job log steps"))
+		return
+	}
+
+	resp.OK(ctx, resp.WithData(steps))
 }
 
 // StreamLog godoc

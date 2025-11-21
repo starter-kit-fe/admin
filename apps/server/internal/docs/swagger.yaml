@@ -913,6 +913,29 @@ paths:
       summary: 缓存键列表
       tags:
       - Monitor/Cache
+  /v1/monitor/cache/stream:
+    get:
+      description: 使用 SSE 推送缓存概览，首次返回全量数据，后续仅包含变化字段
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: event stream
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 缓存监控流
+      tags:
+      - Monitor/Cache
   /v1/monitor/jobs:
     get:
       description: 按名称、分组、状态、时间范围过滤任务
@@ -1164,6 +1187,41 @@ paths:
       summary: 获取定时任务详情
       tags:
       - Monitor/Job
+  /v1/monitor/jobs/{id}/logs:
+    delete:
+      description: 删除指定任务的全部执行日志
+      parameters:
+      - description: 任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 清空定时任务日志
+      tags:
+      - Monitor/Job
   /v1/monitor/jobs/{id}/run:
     post:
       description: 手动触发一次定时任务
@@ -1244,6 +1302,80 @@ paths:
       security:
       - BearerAuth: []
       summary: 修改任务状态
+      tags:
+      - Monitor/Job
+  /v1/monitor/jobs/logs/{id}/steps:
+    get:
+      description: 按日志 ID 返回步骤明细
+      parameters:
+      - description: 日志ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取执行日志的步骤
+      tags:
+      - Monitor/Job
+  /v1/monitor/jobs/logs/{id}/stream:
+    get:
+      description: 通过 SSE 订阅指定日志的步骤流
+      parameters:
+      - description: 日志ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 查看任务执行实时日志
       tags:
       - Monitor/Job
   /v1/monitor/logs/login:
@@ -1667,6 +1799,29 @@ paths:
       security:
       - BearerAuth: []
       summary: 服务器监控
+      tags:
+      - Monitor/Server
+  /v1/monitor/server/stream:
+    get:
+      description: 使用 SSE 推送服务器指标，首次返回完整数据，后续仅返回有变动的字段
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: event stream
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 服务器监控流
       tags:
       - Monitor/Server
   /v1/profile:

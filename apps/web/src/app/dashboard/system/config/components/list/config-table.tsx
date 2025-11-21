@@ -1,5 +1,10 @@
 'use client';
 
+import { EllipsisText } from '@/components/table/ellipsis-text';
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,6 +22,15 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import {
   Table,
   TableBody,
   TableCell,
@@ -24,11 +38,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -37,13 +48,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Edit2, MoreHorizontal, Trash2 } from 'lucide-react';
-import { useMemo } from 'react';
-
-import {
-  PINNED_ACTION_COLUMN_META,
-  PINNED_TABLE_CLASS,
-} from '@/components/table/pinned-actions';
-import { usePermissions } from '@/hooks/use-permissions';
+import { useMemo, useState } from 'react';
 
 import { CONFIG_TYPE_TABS } from '../../constants';
 import type { SystemConfig } from '../../type';
@@ -140,25 +145,33 @@ export function ConfigTable({
       columnHelper.accessor('configName', {
         header: '参数名称',
         cell: ({ getValue }) => (
-          <span className="text-sm text-foreground">{getValue()}</span>
+          <EllipsisText
+            value={getValue()}
+            className="max-w-[220px] text-sm font-medium text-foreground"
+          />
         ),
-        meta: { headerClassName: 'min-w-[140px] md:min-w-[200px]' },
+        meta: { headerClassName: 'w-[220px]', cellClassName: 'w-[220px]' },
       }),
       columnHelper.accessor('configKey', {
         header: '参数键名',
         cell: ({ getValue }) => (
-          <span className="text-sm text-muted-foreground">{getValue()}</span>
+          <EllipsisText
+            value={getValue()}
+            className="max-w-[240px] font-mono text-xs text-muted-foreground"
+          />
         ),
-        meta: { headerClassName: 'min-w-[140px] md:min-w-[160px]' },
+        meta: { headerClassName: 'w-[240px]', cellClassName: 'w-[240px]' },
       }),
       columnHelper.accessor('configValue', {
         header: '参数键值',
         cell: ({ getValue }) => (
-          <code className="inline-flex rounded bg-muted px-2 py-1 text-xs">
-            {getValue()}
-          </code>
+          <EllipsisText
+            value={getValue()}
+            className="max-w-[280px] rounded bg-muted px-2 py-1 font-mono text-xs text-foreground"
+            tooltipClassName="text-left"
+          />
         ),
-        meta: { headerClassName: 'min-w-[180px] md:min-w-[220px]' },
+        meta: { headerClassName: 'w-[280px]', cellClassName: 'w-[280px]' },
       }),
       columnHelper.accessor('configType', {
         header: '类型',
@@ -168,32 +181,17 @@ export function ConfigTable({
       }),
       columnHelper.accessor('remark', {
         header: '备注',
-        cell: ({ row }) => {
-          const remark = row.original.remark?.trim();
-          if (!remark) {
-            return <span className="text-xs text-muted-foreground">—</span>;
-          }
-          return (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-block max-w-[220px] truncate text-xs text-muted-foreground">
-                  {remark}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                align="end"
-                className="max-w-xs break-words text-left"
-              >
-                {remark}
-              </TooltipContent>
-            </Tooltip>
-          );
-        },
+        cell: ({ row }) => (
+          <EllipsisText
+            value={row.original.remark}
+            className="max-w-[260px] text-xs text-muted-foreground"
+            tooltipClassName="text-left"
+          />
+        ),
         enableSorting: false,
         meta: {
-          headerClassName: 'w-[220px]',
-          cellClassName: 'w-[220px]',
+          headerClassName: 'w-[260px]',
+          cellClassName: 'w-[260px]',
         },
       }),
     ];
@@ -206,46 +204,13 @@ export function ConfigTable({
           cell: ({ row }) => {
             const config = row.original;
             return (
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8"
-                    onPointerDown={(event) => event.stopPropagation()}
-                    onClick={(event) => event.stopPropagation()}
-                    aria-label={`更多操作：${config.configName}`}
-                  >
-                    <MoreHorizontal className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-36">
-                  {canEditConfig ? (
-                    <DropdownMenuItem
-                      onSelect={(event) => {
-                        event.preventDefault();
-                        onEdit(config);
-                      }}
-                    >
-                      <Edit2 className="mr-2 size-4" />
-                      编辑参数
-                    </DropdownMenuItem>
-                  ) : null}
-                  {canDeleteConfig ? (
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onSelect={(event) => {
-                        event.preventDefault();
-                        onDelete(config);
-                      }}
-                    >
-                      <Trash2 className="mr-2 size-4" />
-                      删除参数
-                    </DropdownMenuItem>
-                  ) : null}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <ConfigRowActions
+                config={config}
+                canEdit={canEditConfig}
+                canDelete={canDeleteConfig}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             );
           },
           enableSorting: false,
@@ -277,10 +242,10 @@ export function ConfigTable({
   const rowModel = table.getRowModel().rows;
 
   return (
-    <Card className="border py-0 shadow-none overflow-hidden">
+    <Card className="overflow-hidden border py-0 shadow-none">
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <Table className={PINNED_TABLE_CLASS}>
+          <Table className={cn(PINNED_TABLE_CLASS, 'min-w-[980px]')}>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="bg-muted/40">
@@ -354,6 +319,136 @@ export function ConfigTable({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+interface ConfigRowActionsProps {
+  config: SystemConfig;
+  canEdit: boolean;
+  canDelete: boolean;
+  onEdit: (config: SystemConfig) => void;
+  onDelete: (config: SystemConfig) => void;
+}
+
+function ConfigRowActions({
+  config,
+  canEdit,
+  canDelete,
+  onEdit,
+  onDelete,
+}: ConfigRowActionsProps) {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+
+  if (!canEdit && !canDelete) {
+    return null;
+  }
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground"
+            aria-label="更多操作"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+        >
+          <SheetHeader className="px-4 pb-2 pt-3 text-left">
+            <SheetTitle>参数操作</SheetTitle>
+            <SheetDescription>
+              对「{config.configName}」执行需要的操作。
+            </SheetDescription>
+          </SheetHeader>
+          <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+            {canEdit ? (
+              <Button
+                variant="secondary"
+                className="w-full justify-between"
+                onClick={() => {
+                  onEdit(config);
+                  setOpen(false);
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <Edit2 className="size-4" />
+                  编辑参数
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  修改键值或说明
+                </span>
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <Button
+                variant="destructive"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onDelete(config);
+                  setOpen(false);
+                }}
+              >
+                <Trash2 className="size-4" />
+                删除参数
+              </Button>
+            ) : null}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground "
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+          aria-label={`更多操作：${config.configName}`}
+        >
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-36">
+        {canEdit ? (
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              onEdit(config);
+            }}
+          >
+            <Edit2 className="mr-2 size-4" />
+            编辑参数
+          </DropdownMenuItem>
+        ) : null}
+        {canDelete ? (
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onSelect={(event) => {
+              event.preventDefault();
+              onDelete(config);
+            }}
+          >
+            <Trash2 className="mr-2 size-4" />
+            删除参数
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

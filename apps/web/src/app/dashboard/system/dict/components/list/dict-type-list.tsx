@@ -36,6 +36,7 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { TYPE_STATUS_TABS } from '../../constants';
 
 interface DictTypeListProps {
@@ -86,8 +87,19 @@ export function DictTypeList({
     <ScrollArea className="h-full p-2">
       <div className="flex flex-col  space-y-1">
         {isLoading && items.length === 0 ? (
-          <div className="flex h-[180px] items-center justify-center text-sm text-muted-foreground">
-            字典类型加载中...
+          <div className="space-y-2">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex flex-col gap-2 rounded-lg border border-dashed border-border/70 bg-muted/30 px-3 py-2"
+              >
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <Skeleton className="h-3 w-16 rounded" />
+                </div>
+                <Skeleton className="h-3 w-48 rounded" />
+              </div>
+            ))}
           </div>
         ) : items.length === 0 ? (
           <Empty className="m-4 h-[180px] border border-dashed border-border/60">

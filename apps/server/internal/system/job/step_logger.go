@@ -3,8 +3,10 @@ package job
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/starter-kit-fe/admin/internal/model"
@@ -14,10 +16,12 @@ import (
 type StepLogger struct {
 	jobLogID  int64
 	repo      *Repository
+	logger    *slog.Logger
 	stepOrder int
 	mu        sync.Mutex
 	eventChan chan *StepEvent
 	onEvent   func(*StepEvent)
+	closed    uint32
 }
 
 // StepEvent SSE 事件
@@ -36,10 +40,11 @@ type StepEvent struct {
 }
 
 // NewStepLogger 创建步骤日志记录器
-func NewStepLogger(jobLogID int64, repo *Repository, onEvent func(*StepEvent)) *StepLogger {
+func NewStepLogger(jobLogID int64, repo *Repository, logger *slog.Logger, onEvent func(*StepEvent)) *StepLogger {
 	return &StepLogger{
 		jobLogID:  jobLogID,
 		repo:      repo,
+		logger:    logger,
 		eventChan: make(chan *StepEvent, 100),
 		onEvent:   onEvent,
 	}
@@ -78,7 +83,9 @@ func (s *StepLogger) StartStep(name string) *Step {
 
 	if s.repo != nil {
 		if err := s.repo.CreateJobLogStep(context.Background(), record); err != nil {
-			fmt.Printf("Failed to create step record: %v\n", err)
+			if s.logger != nil {
+				s.logger.Warn("create job log step failed", "jobLogID", s.jobLogID, "step", name, "error", err)
+			}
 			return step
 		}
 	}
@@ -101,15 +108,22 @@ func (s *StepLogger) StartStep(name string) *Step {
 
 // Close 关闭事件通道
 func (s *StepLogger) Close() {
-	close(s.eventChan)
+	if s == nil {
+		return
+	}
+	if atomic.CompareAndSwapUint32(&s.closed, 0, 1) {
+		close(s.eventChan)
+	}
 }
 
 func (s *StepLogger) sendEvent(event *StepEvent) {
+	if s == nil || event == nil || atomic.LoadUint32(&s.closed) == 1 {
+		return
+	}
 	select {
 	case s.eventChan <- event:
 	default:
-		// 通道满了，丢弃事件（避免阻塞）
-		fmt.Printf("Event channel full, dropping event: %s\n", event.Type)
+		// Channel is full; drop silently to avoid blocking
 	}
 
 	if s.onEvent != nil {
@@ -172,15 +186,15 @@ func (s *Step) finish(status string, errorMsg string) error {
 	duration := endTime.Sub(s.startTime).Milliseconds()
 
 	// 更新数据库
-	updates := map[string]interface{}{
-		"status":      status,
-		"output":      strings.Join(s.outputs, "\n"),
-		"error":       errorMsg,
-		"end_time":    endTime,
-		"duration_ms": duration,
-	}
+	if s.logger != nil && s.logger.repo != nil && s.stepID > 0 {
+		updates := map[string]interface{}{
+			"status":      status,
+			"output":      strings.Join(s.outputs, "\n"),
+			"error":       errorMsg,
+			"end_time":    endTime,
+			"duration_ms": duration,
+		}
 
-	if s.logger.repo != nil {
 		if err := s.logger.repo.UpdateJobLogStep(context.Background(), s.stepID, updates); err != nil {
 			return err
 		}

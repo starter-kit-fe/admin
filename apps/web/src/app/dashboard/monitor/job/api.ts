@@ -5,6 +5,7 @@ import type {
   JobDetailParams,
   JobDetailResponse,
   JobListResponse,
+  JobLogStep,
 } from './type';
 
 export interface JobListParams {
@@ -88,4 +89,12 @@ export function createJob(payload: JobPayload) {
 
 export function updateJob(jobId: number, payload: JobPayload) {
   return put(`/v1/monitor/jobs/${jobId}`, payload);
+}
+
+export function clearJobLogs(jobId: number) {
+  return del(`/v1/monitor/jobs/${jobId}/logs`);
+}
+
+export function getJobLogSteps(jobLogId: number) {
+  return get<JobLogStep[]>(`/v1/monitor/jobs/logs/${jobLogId}/steps`);
 }

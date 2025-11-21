@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { JobDetailContent } from '../components/detail/job-detail-content';
+import { JobDetailContent } from './job-detail-content';
 
 interface JobDetailPageProps {
   params: Promise<{ jobId: string }>;

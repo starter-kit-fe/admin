@@ -7,14 +7,6 @@ import {
     InputGroupInput,
     InputGroupButton,
 } from '@/components/ui/input-group';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { CronHelper } from './cron-helper';
 
 interface CronInputWithGeneratorProps {
@@ -50,31 +42,13 @@ export function CronInputWithGenerator({
                 </InputGroupButton>
             </InputGroup>
 
-            <Dialog open={generatorOpen} onOpenChange={setGeneratorOpen}>
-                <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
-                    <DialogHeader>
-                        <DialogTitle>Cron 表达式生成器</DialogTitle>
-                        <DialogDescription>
-                            可视化配置定时任务的执行规则，生成 Cron 表达式
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex-1 overflow-y-auto">
-                        <CronHelper value={value} onChange={onChange} error={error} />
-                    </div>
-                    <div className="flex justify-end gap-3 border-t pt-4">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setGeneratorOpen(false)}
-                        >
-                            取消
-                        </Button>
-                        <Button type="button" onClick={() => setGeneratorOpen(false)}>
-                            确认使用
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <CronHelper
+                value={value}
+                onChange={onChange}
+                error={error}
+                open={generatorOpen}
+                onOpenChange={setGeneratorOpen}
+            />
         </>
     );
 }

@@ -18,9 +18,18 @@ export function DictDataToolbar({
   onAdd,
 }: DictDataToolbarProps) {
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      <StatusTabs value={status} onValueChange={onStatusChange} tabs={statusTabs} />
-      <Button type="button" size="sm" onClick={onAdd} className="self-start lg:self-auto">
+    <div className="flex w-full  gap-3 lg:flex-row items-center justify-between">
+      <StatusTabs
+        value={status}
+        onValueChange={onStatusChange}
+        tabs={statusTabs}
+      />
+      <Button
+        type="button"
+        size="sm"
+        onClick={onAdd}
+        className="self-start lg:self-auto"
+      >
         <Plus className="mr-2 size-4" />
         新增字典项
       </Button>

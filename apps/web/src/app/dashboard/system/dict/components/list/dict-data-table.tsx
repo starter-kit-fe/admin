@@ -15,18 +15,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { cn } from '@/lib/utils';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { Edit2, MoreHorizontal, Trash2 } from 'lucide-react';
-import { memo, useMemo, useState } from 'react';
-
-import { DATA_STATUS_TABS } from '../../constants';
-import { usePermissions } from '@/hooks/use-permissions';
 import {
   Sheet,
   SheetContent,
@@ -37,6 +25,20 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
+import { cn } from '@/lib/utils';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { Edit2, MoreHorizontal, Trash2 } from 'lucide-react';
+import { memo, useMemo, useState } from 'react';
+
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
+
+import { DATA_STATUS_TABS } from '../../constants';
 
 interface DictDataTableProps {
   rows: DictData[];
@@ -261,7 +263,9 @@ function DictDataTableComponent({
               ))}
             </thead>
             <tbody>
-              {tableRows.length === 0 ? (
+              {isLoading ? (
+                <TableLoadingSkeleton columns={visibleColumnCount} />
+              ) : tableRows.length === 0 ? (
                 <tr>
                   <td
                     colSpan={visibleColumnCount}
@@ -312,7 +316,6 @@ function DictDataTableComponent({
 }
 
 export const DictDataTable = memo(DictDataTableComponent);
-DictDataTable.displayName = 'DictDataTable';
 
 function DictDataMobileActions({
   dict,
@@ -370,7 +373,9 @@ function DictDataMobileActions({
                 <Edit2 className="size-4" />
                 编辑
               </span>
-              <span className="text-xs text-muted-foreground">修改标签与键值</span>
+              <span className="text-xs text-muted-foreground">
+                修改标签与键值
+              </span>
             </Button>
           ) : null}
           {canDelete ? (

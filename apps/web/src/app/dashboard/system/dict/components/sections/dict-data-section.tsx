@@ -13,6 +13,8 @@ import {
   useDictTypesState,
 } from '@/app/dashboard/system/dict/store';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 
@@ -35,6 +37,7 @@ export function DictDataSection() {
   const { openDataCreate, openDataEdit } = useDictDataEditorActions();
   const { setDataDeleteTarget } = useDictDataDeleteState();
   const setRefreshing = useDictManagementSetRefreshing();
+  const isMobile = useIsMobile();
   const selectedDict: DictType | undefined = useMemo(() => {
     if (selectedDictId == null) {
       return undefined;
@@ -105,7 +108,7 @@ export function DictDataSection() {
 
   if (!selectedDict || selectedDictId == null) {
     return (
-      <Card className="border border-dashed border-border/50 bg-muted/40 py-14 text-center text-sm text-muted-foreground">
+      <Card className="border border-dashed border-border/50 bg-muted/40 py-10 text-center text-sm text-muted-foreground sm:py-14">
         请选择左侧字典类型以查看字典数据。
       </Card>
     );
@@ -130,7 +133,12 @@ export function DictDataSection() {
   };
 
   return (
-    <Card className="flex h-[620px] flex-col shadow-none">
+    <Card
+      className={cn(
+        'flex flex-col shadow-none',
+        isMobile ? 'gap-4' : 'lg:h-[620px]',
+      )}
+    >
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <DictDataToolbar
           status={dataStatus}
@@ -139,7 +147,12 @@ export function DictDataSection() {
           onAdd={handleAdd}
         />
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-4 overflow-hidden">
+      <CardContent
+        className={cn(
+          'flex flex-col gap-4',
+          isMobile ? 'pb-2' : 'flex-1 overflow-hidden',
+        )}
+      >
         <DictDataFilters
           dictLabel={dataFilterForm.dictLabel}
           dictValue={dataFilterForm.dictValue}
@@ -151,13 +164,18 @@ export function DictDataSection() {
           }
         />
 
-        <div className="flex-1 overflow-hidden">
+        <div
+          className={cn(
+            'flex-1',
+            isMobile ? 'space-y-3 overflow-visible' : 'overflow-hidden',
+          )}
+        >
           <DictDataTable
             rows={dictData}
             isLoading={dataQuery.isLoading}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            className="h-full"
+            className={isMobile ? '' : 'h-full'}
           />
         </div>
 

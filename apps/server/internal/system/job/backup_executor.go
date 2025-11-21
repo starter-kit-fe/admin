@@ -18,10 +18,17 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"gorm.io/gorm"
 
 	"github.com/starter-kit-fe/admin/internal/config"
+)
+
+const (
+	s3MultipartThreshold  = int64(100 * 1024 * 1024) // 100MB 默认启用分片
+	s3MultipartPartSize   = int64(8 * 1024 * 1024)   // 8MB 分片大小
+	s3MultipartConcurrent = 4                        // 并发分片数量
 )
 
 // BackupExecutor 数据库备份执行器
@@ -160,17 +167,20 @@ func (e *BackupExecutor) parseParams(raw json.RawMessage) (*BackupParams, error)
 }
 
 func (e *BackupExecutor) extractDatabaseName() string {
-	// 从 DSN 中提取数据库名称
-	dsn := e.cfg.Database.DSN
-	// postgres://user:pass@host:port/dbname?options
-	parts := strings.Split(dsn, "/")
-	if len(parts) >= 4 {
-		dbPart := parts[3]
-		if idx := strings.Index(dbPart, "?"); idx > 0 {
-			return dbPart[:idx]
-		}
-		return dbPart
+	parsed, err := url.Parse(e.cfg.Database.DSN)
+	if err != nil {
+		return "admin"
 	}
+
+	db := strings.TrimPrefix(parsed.Path, "/")
+	if db != "" {
+		return db
+	}
+
+	if name := parsed.Query().Get("dbname"); name != "" {
+		return name
+	}
+
 	return "admin"
 }
 
@@ -206,73 +216,71 @@ func (e *BackupExecutor) performBackup(ctx context.Context, params *BackupParams
 	env := e.buildPgEnv()
 	cmd.Env = append(os.Environ(), env...)
 
-	// 执行备份
-	var output bytes.Buffer
-	cmd.Stdout = &output
-	cmd.Stderr = &output
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("pg_dump failed: %w, output: %s", err, output.String())
-	}
-
-	// 写入文件(可能需要压缩)
-	if params.Compress {
-		return e.writeCompressed(output.Bytes(), outputPath)
-	}
-	return os.WriteFile(outputPath, output.Bytes(), 0644)
-}
-
-func (e *BackupExecutor) buildPgEnv() []string {
-	dsn := e.cfg.Database.DSN
-	env := []string{}
-
-	// 解析 DSN: postgres://user:pass@host:port/dbname?options
-	if strings.HasPrefix(dsn, "postgres://") || strings.HasPrefix(dsn, "postgresql://") {
-		dsn = strings.TrimPrefix(dsn, "postgres://")
-		dsn = strings.TrimPrefix(dsn, "postgresql://")
-
-		// 提取用户名和密码
-		if idx := strings.Index(dsn, "@"); idx > 0 {
-			userPass := dsn[:idx]
-			if colonIdx := strings.Index(userPass, ":"); colonIdx > 0 {
-				user := userPass[:colonIdx]
-				pass := userPass[colonIdx+1:]
-				env = append(env, "PGUSER="+user)
-				env = append(env, "PGPASSWORD="+pass)
-			}
-
-			// 提取主机和端口
-			hostPart := dsn[idx+1:]
-			if slashIdx := strings.Index(hostPart, "/"); slashIdx > 0 {
-				hostPort := hostPart[:slashIdx]
-				if colonIdx := strings.Index(hostPort, ":"); colonIdx > 0 {
-					host := hostPort[:colonIdx]
-					port := hostPort[colonIdx+1:]
-					env = append(env, "PGHOST="+host)
-					env = append(env, "PGPORT="+port)
-				} else {
-					env = append(env, "PGHOST="+hostPort)
-					env = append(env, "PGPORT=5432")
-				}
-			}
-		}
-	}
-
-	return env
-}
-
-func (e *BackupExecutor) writeCompressed(data []byte, outputPath string) error {
 	file, err := os.Create(outputPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("create backup file: %w", err)
 	}
 	defer file.Close()
 
-	gzWriter := gzip.NewWriter(file)
-	defer gzWriter.Close()
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 
-	_, err = gzWriter.Write(data)
-	return err
+	var gzipWriter *gzip.Writer
+	if params.Compress {
+		gzipWriter = gzip.NewWriter(file)
+		cmd.Stdout = gzipWriter
+	} else {
+		cmd.Stdout = file
+	}
+
+	runErr := cmd.Run()
+	if gzipWriter != nil {
+		if closeErr := gzipWriter.Close(); runErr == nil && closeErr != nil {
+			runErr = closeErr
+		}
+	}
+
+	if runErr != nil {
+		_ = os.Remove(outputPath)
+		errMsg := strings.TrimSpace(stderr.String())
+		if errMsg != "" {
+			return fmt.Errorf("pg_dump failed: %w, stderr: %s", runErr, errMsg)
+		}
+		return fmt.Errorf("pg_dump failed: %w", runErr)
+	}
+
+	return nil
+}
+
+func (e *BackupExecutor) buildPgEnv() []string {
+	parsed, err := url.Parse(e.cfg.Database.DSN)
+	if err != nil {
+		return nil
+	}
+
+	env := make([]string, 0, 4)
+
+	if parsed.User != nil {
+		if user := parsed.User.Username(); user != "" {
+			env = append(env, "PGUSER="+user)
+		}
+		if pass, ok := parsed.User.Password(); ok {
+			env = append(env, "PGPASSWORD="+pass)
+		}
+	}
+
+	if host := parsed.Hostname(); host != "" {
+		env = append(env, "PGHOST="+host)
+	}
+	port := parsed.Port()
+	if port == "" && parsed.Hostname() != "" {
+		port = "5432"
+	}
+	if port != "" {
+		env = append(env, "PGPORT="+port)
+	}
+
+	return env
 }
 
 func (e *BackupExecutor) uploadToS3(ctx context.Context, params *BackupParams, filePath, filename string) (string, error) {
@@ -330,7 +338,12 @@ func (e *BackupExecutor) uploadToS3(ctx context.Context, params *BackupParams, f
 		return "", err
 	}
 	defer file.Close()
-	e.logStep(readStep, "待上传文件: %s", filePath)
+	statInfo, statErr := file.Stat()
+	var size int64
+	if statErr == nil {
+		size = statInfo.Size()
+	}
+	e.logStep(readStep, "待上传文件: %s (%.2f MB)", filePath, float64(size)/(1024*1024))
 	e.successStep(readStep)
 
 	uploadStep := e.startStep("上传备份文件")
@@ -349,16 +362,40 @@ func (e *BackupExecutor) uploadToS3(ctx context.Context, params *BackupParams, f
 
 	e.logStep(uploadStep, "客户端初始化完成，开始上传")
 
-	// 上传文件
-	_, err = s3Client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(objectKey),
-		Body:   file,
-	})
+	// 上传文件，小文件直接单请求，大文件使用分片上传提高鲁棒性
+	useMultipart := size == 0 || size >= s3MultipartThreshold
+	if useMultipart {
+		uploader := manager.NewUploader(s3Client, func(u *manager.Uploader) {
+			u.Concurrency = s3MultipartConcurrent
+			if s3MultipartPartSize > manager.MinUploadPartSize {
+				u.PartSize = s3MultipartPartSize
+			}
+		})
+		_, err = uploader.Upload(ctx, &s3.PutObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(objectKey),
+			Body:   file,
+		})
+	} else {
+		_, err = s3Client.PutObject(ctx, &s3.PutObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(objectKey),
+			Body:   file,
+		})
+	}
 
 	if err != nil {
-		e.failStep(uploadStep, err)
+		method := "单请求上传"
+		if useMultipart {
+			method = "分片上传"
+		}
+		e.failStep(uploadStep, fmt.Errorf("%s失败: %w", method, err))
 		return "", err
+	}
+	if useMultipart {
+		e.logStep(uploadStep, "分片上传完成")
+	} else {
+		e.logStep(uploadStep, "单请求上传完成")
 	}
 
 	url := buildObjectURL(endpoint, bucket, objectKey, usePathStyle)

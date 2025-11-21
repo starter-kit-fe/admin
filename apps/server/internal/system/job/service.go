@@ -21,6 +21,7 @@ import (
 var (
 	ErrServiceUnavailable = errors.New("job service is not initialized")
 	ErrJobRunningConflict = errors.New("job is running and concurrency is disabled")
+	ErrJobRunningActive   = errors.New("job is running; stop it before clearing logs")
 
 	validStatusValues      = map[string]struct{}{"0": {}, "1": {}}
 	validMisfirePolicies   = map[string]struct{}{"1": {}, "2": {}, "3": {}}
@@ -299,6 +300,28 @@ func (s *Service) GetJobLog(ctx context.Context, id int64) (*JobLog, error) {
 	return &log, nil
 }
 
+func (s *Service) GetJobLogSteps(ctx context.Context, logID int64) ([]JobLogStep, error) {
+	if s == nil || s.repo == nil {
+		return nil, ErrServiceUnavailable
+	}
+
+	if _, err := s.repo.GetJobLog(ctx, logID); err != nil {
+		return nil, err
+	}
+
+	records, err := s.repo.GetJobLogSteps(ctx, logID)
+	if err != nil {
+		return nil, err
+	}
+
+	steps := make([]JobLogStep, 0, len(records))
+	for i := range records {
+		steps = append(steps, jobLogStepFromModel(&records[i]))
+	}
+
+	return steps, nil
+}
+
 func (s *Service) GetJobDetail(ctx context.Context, id int64, opts ListJobLogsOptions) (*JobDetail, error) {
 	job, err := s.GetJob(ctx, id)
 	if err != nil {
@@ -469,6 +492,29 @@ func (s *Service) DeleteJob(ctx context.Context, id int64) error {
 	s.detachLocked(id)
 	s.mu.Unlock()
 	return nil
+}
+
+func (s *Service) ClearJobLogs(ctx context.Context, id int64, operator string) error {
+	if s == nil || s.repo == nil {
+		return ErrServiceUnavailable
+	}
+
+	if _, err := s.GetJob(ctx, id); err != nil {
+		return err
+	}
+
+	if s.isJobRunning(ctx, id) {
+		return ErrJobRunningActive
+	}
+
+	if err := s.repo.DeleteJobLogs(ctx, id); err != nil {
+		return err
+	}
+
+	return s.repo.UpdateJob(ctx, id, map[string]interface{}{
+		"update_by":   sanitizeOperator(operator),
+		"update_time": time.Now(),
+	})
 }
 
 func (s *Service) ChangeStatus(ctx context.Context, id int64, status, operator string) error {
@@ -1165,7 +1211,7 @@ func (s *Service) newStepLogger(jobLogID int64) *StepLogger {
 		return nil
 	}
 
-	return NewStepLogger(jobLogID, s.repo, func(event *StepEvent) {
+	return NewStepLogger(jobLogID, s.repo, s.logger, func(event *StepEvent) {
 		if s.streams != nil && event != nil {
 			s.streams.Publish(jobLogID, event)
 		}

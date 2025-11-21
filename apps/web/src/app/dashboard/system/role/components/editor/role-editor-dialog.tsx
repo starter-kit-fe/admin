@@ -211,9 +211,7 @@ export function RoleEditorDialog({
                         placeholder="默认 0"
                         disabled={disabled}
                         value={field.value}
-                        onChange={(event) =>
-                          field.onChange(event.target.value)
-                        }
+                        onChange={(event) => field.onChange(event.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
