@@ -23,7 +23,7 @@ interface ConfigManagementFiltersProps {
   onConfigNameChange: (value: string) => void;
   configKey: string;
   onConfigKeyChange: (value: string) => void;
-  typeTabs: Array<{ value: string; labelKey: string }>;
+  typeTabs: ReadonlyArray<{ value: string; labelKey: string }>;
   appliedFilters: ConfigFilterChip[];
   onRemoveFilter: (key: ConfigFilterKey) => void;
 }

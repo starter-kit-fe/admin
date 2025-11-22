@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import pkg from '../../../package.json';
+import pkg from '../../../../package.json';
 import { getCaptcha, login } from './api';
 import { LoginAside } from './components/login-aside';
 import { LoginForm } from './components/login-form';

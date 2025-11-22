@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import pkg from '../../../package.json';
+import pkg from '../../../../package.json';
 
 const siteName =
   pkg.seo?.title?.split('—')[0]?.trim() ?? pkg.name ?? 'Admin Template';

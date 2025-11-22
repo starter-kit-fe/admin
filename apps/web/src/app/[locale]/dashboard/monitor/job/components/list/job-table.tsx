@@ -240,7 +240,6 @@ export function JobTable({
                     isRunPending={isRunPending}
                     isUpdatingStatus={isUpdatingStatus}
                     concurrencyLocked={concurrencyLocked}
-                    onViewDetail={() => router.push(`/dashboard/monitor/job/${jobId}`)}
                     onViewDetail={() =>
                       router.push(`/${locale}/dashboard/monitor/job/${jobId}`)
                     }

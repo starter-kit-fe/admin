@@ -12,7 +12,7 @@ import { useTranslations } from 'next-intl';
 
 interface DictTypeFiltersProps {
   status: string;
-  statusTabs: Array<{ value: string; labelKey: string }>;
+  statusTabs: ReadonlyArray<{ value: string; labelKey: string }>;
   dictName: string;
   dictType: string;
   onStatusChange: (value: string) => void;

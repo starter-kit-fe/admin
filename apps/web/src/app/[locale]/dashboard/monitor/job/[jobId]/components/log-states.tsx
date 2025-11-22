@@ -11,6 +11,7 @@ export function AwaitingExecutionState({
   jobStatus,
   upcomingExecutions,
   cronDescription,
+  t,
 }: {
   jobStatus: string;
   upcomingExecutions: string[];
