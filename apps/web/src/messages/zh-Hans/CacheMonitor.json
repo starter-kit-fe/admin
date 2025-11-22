@@ -4,6 +4,15 @@
       "title": "缓存监控",
       "description": "在同一视图内掌握 Redis 运行状态与键分布。",
       "updatedAt": "概览更新时间：{time}",
+      "waitingStream": "等待实时流",
+      "connection": {
+        "live": "实时更新",
+        "waiting": "等待连接"
+      },
+      "actions": {
+        "reconnect": "重新连接",
+        "connecting": "连接中"
+      },
       "refresh": "刷新数据",
       "refreshing": "刷新中"
     },
@@ -22,7 +31,10 @@
         "label": "内存占用",
         "aria": "内存占用比例",
         "peak": "峰值占用",
-        "fragmentation": "碎片率"
+        "fragmentation": "碎片率",
+        "used": "使用中",
+        "limit": "限制",
+        "noLimit": "未配置上限"
       },
       "clients": {
         "title": "客户端",

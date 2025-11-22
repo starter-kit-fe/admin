@@ -11,7 +11,7 @@ import {
 import type { OperLog } from './type';
 
 export type OperLogStatusValue =
-  (typeof OPER_LOG_STATUS_OPTIONS)[number]['value'];
+  (typeof OPER_LOG_STATUS_OPTIONS)[number];
 export type OperLogBusinessTypeValue =
   (typeof OPER_LOG_BUSINESS_TYPE_OPTIONS)[number]['value'];
 export type OperLogRequestMethodValue =

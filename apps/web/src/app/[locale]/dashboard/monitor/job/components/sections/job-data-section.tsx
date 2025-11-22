@@ -4,6 +4,7 @@ import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 import { changeJobStatus, listJobs, runJob } from '../../api';
 import {
@@ -23,6 +24,7 @@ import type { Job } from '../../type';
 import { JobTable } from '../list/job-table';
 
 export function JobDataSection() {
+  const t = useTranslations('JobManagement');
   const {
     appliedFilters,
     pagination,
@@ -109,13 +111,16 @@ export function JobDataSection() {
       setPendingRunId(jobId);
     },
     onSuccess: (data) => {
-      const logIdText = data?.jobLogId ? `（日志 #${data.jobLogId}）` : '';
-      toast.success(`任务已提交执行${logIdText}`);
+      if (data?.jobLogId) {
+        toast.success(t('toast.runSuccessWithLog', { logId: data.jobLogId }));
+      } else {
+        toast.success(t('toast.runSuccess'));
+      }
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '操作失败，请稍后重试';
+        error instanceof Error ? error.message : t('toast.runError');
       toast.error(message);
     },
     onSettled: () => {
@@ -140,12 +145,16 @@ export function JobDataSection() {
       setPendingStatusId(jobId);
     },
     onSuccess: ({ nextStatus }) => {
-      toast.success(nextStatus === '0' ? '任务已恢复' : '任务已暂停');
+      toast.success(
+        nextStatus === '0'
+          ? t('toast.statusResume')
+          : t('toast.statusPause'),
+      );
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '更新任务状态失败，请稍后重试';
+        error instanceof Error ? error.message : t('toast.statusError');
       toast.error(message);
     },
     onSettled: () => {
@@ -159,7 +168,7 @@ export function JobDataSection() {
       return;
     }
     if (job.isRunning && job.concurrent === '1') {
-      toast.info('当前任务执行中且禁止并发，稍后再试');
+      toast.info(t('toast.concurrentLocked'));
       return;
     }
     runJobMutation.mutate(job.jobId);

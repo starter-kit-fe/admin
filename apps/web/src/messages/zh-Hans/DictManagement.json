@@ -32,7 +32,10 @@
     "actions": {
       "addData": "新增字典项",
       "edit": "编辑",
-      "delete": "删除"
+      "delete": "删除",
+      "addHint": "添加新的键值",
+      "sheetTitle": "操作",
+      "sheetDescription": "选择要对该字典类型执行的操作。"
     },
     "moreAria": "更多操作：{name}"
   },
@@ -69,7 +72,10 @@
       },
       "actions": {
         "edit": "编辑",
-        "delete": "删除"
+        "delete": "删除",
+        "editHint": "修改标签与键值",
+        "sheetTitle": "操作",
+        "sheetDescription": "为该字典项选择要执行的操作。"
       },
       "moreAria": "更多操作：{name}"
     }

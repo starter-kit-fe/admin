@@ -13,6 +13,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { JobLogStep } from '../type';
 import { useJobLogStream } from '../hooks/use-job-log-stream';
@@ -29,6 +30,7 @@ export function RealtimeLogViewer({
   jobName,
   onComplete,
 }: RealtimeLogViewerProps) {
+  const t = useTranslations('JobManagement');
   const { steps, isConnected, isComplete } = useJobLogStream({
     jobLogId,
     onComplete,
@@ -68,17 +70,23 @@ export function RealtimeLogViewer({
             }
             className="border-dashed"
           >
-            {isComplete ? (allSuccess ? '成功' : '失败') : '执行中'}
+            {isComplete
+              ? allSuccess
+                ? t('detail.live.status.success')
+                : t('detail.live.status.failure')
+              : t('detail.live.status.running')}
           </Badge>
           {hasError ? (
             <Badge variant="destructive" className="flex items-center gap-1">
               <Bell className="size-3.5" />
-              异常
+              {t('detail.live.status.alert')}
             </Badge>
           ) : null}
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground sm:ml-auto">
-          <span>{steps.length} 个步骤</span>
+          <span>
+            {t('detail.live.steps.count', { count: steps.length })}
+          </span>
           <span
             className={cn(
               'flex items-center gap-1',
@@ -92,10 +100,10 @@ export function RealtimeLogViewer({
               )}
             />
             {isConnected
-              ? '实时推送中'
+              ? t('detail.live.connection.active')
               : isComplete
-                ? '任务已完成'
-                : '等待连接'}
+                ? t('detail.live.connection.complete')
+                : t('detail.live.connection.waiting')}
           </span>
         </div>
       </div>
@@ -107,15 +115,16 @@ export function RealtimeLogViewer({
               key={step.stepId}
               step={step}
               isActive={!isComplete && step.status === '2'}
+              t={t}
             />
           ))}
 
           {steps.length === 0 ? (
             <div className="flex items-center justify-center rounded-md border border-dashed border-border/70 bg-muted/30 p-6 text-sm text-muted-foreground">
               {isComplete ? (
-                '暂无步骤日志'
+                t('detail.live.steps.empty')
               ) : (
-                <InlineLoading label="等待任务开始..." />
+                <InlineLoading label={t('detail.live.waitingStart')} />
               )}
             </div>
           ) : null}
@@ -125,12 +134,20 @@ export function RealtimeLogViewer({
   );
 }
 
-function StepItem({ step, isActive }: { step: JobLogStep; isActive: boolean }) {
+function StepItem({
+  step,
+  isActive,
+  t,
+}: {
+  step: JobLogStep;
+  isActive: boolean;
+  t: (key: string, values?: Record<string, string | number>) => string;
+}) {
   const [expanded, setExpanded] = useState(true);
-  const meta = getLogStatusMeta(step.status);
+  const meta = getLogStatusMeta(step.status, t);
   const durationText =
     step.durationMs !== undefined && step.durationMs >= 0
-      ? formatDuration(step.durationMs)
+      ? formatDuration(step.durationMs, t)
       : null;
   const hasDetails = Boolean(step.message || step.output || step.error);
 
@@ -150,14 +167,21 @@ function StepItem({ step, isActive }: { step: JobLogStep; isActive: boolean }) {
             aria-hidden
           />
           <span className="min-w-0 break-all font-semibold">
-            步骤 {step.stepOrder}: {step.stepName}
+            {t('detail.live.steps.stepLabel', {
+              order: step.stepOrder,
+              name: step.stepName,
+            })}
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground sm:ml-auto sm:text-sm sm:gap-3">
           <span className={cn('font-medium', meta.stepTextClass)}>
             {meta.label}
           </span>
-          {durationText ? <span>耗时 {durationText}</span> : null}
+          {durationText ? (
+            <span>
+              {t('detail.live.steps.duration', { value: durationText })}
+            </span>
+          ) : null}
           {step.createTime ? <span>{step.createTime}</span> : null}
           {hasDetails ? (
             <button
@@ -170,7 +194,7 @@ function StepItem({ step, isActive }: { step: JobLogStep; isActive: boolean }) {
               ) : (
                 <ChevronRight className="size-3" />
               )}
-              {expanded ? '收起' : '展开'}
+              {expanded ? t('detail.live.steps.collapse') : t('detail.live.steps.expand')}
             </button>
           ) : null}
         </div>

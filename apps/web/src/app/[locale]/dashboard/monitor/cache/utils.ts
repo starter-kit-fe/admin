@@ -59,12 +59,22 @@ export function summarizeKeys(keyspace: CacheKeyspaceInfo[]) {
   return keyspace.reduce((total, item) => total + (item?.keys ?? 0), 0);
 }
 
-export function formatDuration(seconds?: number | null) {
+type DurationLabels = {
+  unknown?: string;
+  permanent?: string;
+};
+
+export function formatDuration(
+  seconds?: number | null,
+  labels: DurationLabels = {},
+) {
+  const unknownLabel = labels.unknown ?? 'Unknown';
+  const permanentLabel = labels.permanent ?? 'Permanent';
   if (typeof seconds !== 'number' || !Number.isFinite(seconds)) {
-    return '未知';
+    return unknownLabel;
   }
   if (seconds < 0) {
-    return '永久';
+    return permanentLabel;
   }
   if (seconds < 60) {
     return `${seconds}s`;

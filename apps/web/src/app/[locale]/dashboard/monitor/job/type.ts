@@ -94,33 +94,52 @@ export interface JobDetailParams {
   logPageSize?: number;
 }
 
-const jsonTextSchema = z
-  .string()
-  .default('')
-  .refine((value) => {
-    const trimmed = value?.trim() ?? '';
-    if (!trimmed) {
-      return true;
-    }
-    try {
-      JSON.parse(trimmed);
-      return true;
-    } catch {
-      return false;
-    }
-  }, { message: '请输入有效的 JSON 字符串' });
+const baseJsonSchema = z.string().default('');
 
 export const jobFormSchema = z.object({
-  jobType: z.string().min(1, '请选择任务类型'),
-  jobName: z.string().trim().min(1, '请输入任务名称'),
-  jobGroup: z.string().trim().min(1, '请输入任务分组'),
-  invokeTarget: z.string().trim().min(1, '请输入调用目标'),
-  cronExpression: z.string().trim().min(1, '请输入 Cron 表达式'),
+  jobType: z.string(),
+  jobName: z.string(),
+  jobGroup: z.string(),
+  invokeTarget: z.string(),
+  cronExpression: z.string(),
   misfirePolicy: z.enum(['1', '2', '3']),
   concurrent: z.enum(['0', '1']),
   status: z.enum(['0', '1']),
   remark: z.string().optional(),
-  invokeParams: jsonTextSchema.optional(),
+  invokeParams: baseJsonSchema.optional(),
 });
 
-export type JobFormValues = z.infer<typeof jobFormSchema>;
+export const createJobFormSchema = (
+  t: (key: string) => string,
+) =>
+  jobFormSchema.extend({
+    jobType: jobFormSchema.shape.jobType.min(1, t('editor.validation.jobType')),
+    jobName: jobFormSchema.shape.jobName
+      .trim()
+      .min(1, t('editor.validation.jobName')),
+    jobGroup: jobFormSchema.shape.jobGroup
+      .trim()
+      .min(1, t('editor.validation.jobGroup')),
+    invokeTarget: jobFormSchema.shape.invokeTarget
+      .trim()
+      .min(1, t('editor.validation.invokeTarget')),
+    cronExpression: jobFormSchema.shape.cronExpression
+      .trim()
+      .min(1, t('editor.validation.cronExpression')),
+    invokeParams: jobFormSchema.shape.invokeParams.superRefine((value, ctx) => {
+      const trimmed = value?.trim() ?? '';
+      if (!trimmed) {
+        return;
+      }
+      try {
+        JSON.parse(trimmed);
+      } catch {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('editor.validation.invalidJson'),
+        });
+      }
+    }),
+  });
+
+export type JobFormValues = z.infer<ReturnType<typeof createJobFormSchema>>;

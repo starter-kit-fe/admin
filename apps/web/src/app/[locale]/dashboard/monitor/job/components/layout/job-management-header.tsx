@@ -5,12 +5,14 @@ import {
   useJobManagementStatus,
   useJobManagementStore,
 } from '../../store';
+import { useTranslations } from 'next-intl';
 import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus, RefreshCw } from 'lucide-react';
 
 export function JobManagementHeader() {
+  const t = useTranslations('JobManagement');
   const refresh = useJobManagementRefresh();
   const { isRefreshing, isMutating } = useJobManagementStatus();
   const refreshDisabled = isRefreshing || isMutating;
@@ -18,8 +20,8 @@ export function JobManagementHeader() {
 
   return (
     <ManagementHeader
-      title="定时任务"
-      description="查看并管理调度任务，支持按名称、分组与状态筛选。"
+      title={t('header.title')}
+      description={t('header.description')}
       actions={
         <div className="flex gap-2">
           <PermissionButton
@@ -28,7 +30,7 @@ export function JobManagementHeader() {
             onClick={() => openCreateEditor()}
           >
             <Plus className="size-4" />
-            新增任务
+            {t('header.create')}
           </PermissionButton>
           <PermissionButton
             required="monitor:job:list"
@@ -42,7 +44,7 @@ export function JobManagementHeader() {
             ) : (
               <RefreshCw className="size-4" />
             )}
-            刷新
+            {t('header.refresh')}
           </PermissionButton>
         </div>
       }

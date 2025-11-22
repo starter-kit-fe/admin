@@ -15,7 +15,16 @@ interface UseServerStatusStreamResult {
   reconnect: () => void;
 }
 
-export function useServerStatusStream(): UseServerStatusStreamResult {
+interface UseServerStatusStreamOptions {
+  locale?: string;
+  lessThanMinuteText?: string;
+  connectionErrorText?: string;
+}
+
+export function useServerStatusStream(
+  options: UseServerStatusStreamOptions = {},
+): UseServerStatusStreamResult {
+  const { locale, lessThanMinuteText, connectionErrorText } = options;
   const [status, setStatus] = useState<ServerStatus | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,14 +79,14 @@ export function useServerStatusStream(): UseServerStatusStreamResult {
       },
       onError: (err) => {
         setIsConnected(false);
-        setError(err.message || '连接异常');
+        setError(err.message || connectionErrorText || 'Connection error');
       },
       onClose: () => {
         setIsConnected(false);
         controllerRef.current = null;
       },
     });
-  }, [mergeStatus]);
+  }, [connectionErrorText, mergeStatus]);
 
   useEffect(() => {
     connect();
@@ -128,23 +137,29 @@ export function useServerStatusStream(): UseServerStatusStreamResult {
         : base.process.uptimeSeconds;
 
     const hostCurrentTime =
-      typeof nowMs === 'number' ? formatDateTime(nowMs) : base.host.currentTime || '-';
+      typeof nowMs === 'number'
+        ? formatDateTime(nowMs, locale)
+        : base.host.currentTime || '-';
 
     return {
       ...base,
       host: {
         ...base.host,
         uptimeSeconds: hostUptimeSeconds,
-        uptime: formatDuration(hostUptimeSeconds),
+        uptime: formatDuration(hostUptimeSeconds, locale, {
+          lessThanMinuteText,
+        }),
         currentTime: hostCurrentTime,
       },
       process: {
         ...base.process,
         uptimeSeconds: processUptimeSeconds,
-        uptime: formatDuration(processUptimeSeconds),
+        uptime: formatDuration(processUptimeSeconds, locale, {
+          lessThanMinuteText,
+        }),
       },
     };
-  }, [now, status]);
+  }, [lessThanMinuteText, locale, now, status]);
 
   return useMemo(
     () => ({
@@ -155,6 +170,13 @@ export function useServerStatusStream(): UseServerStatusStreamResult {
       lastUpdated,
       reconnect: reconnectStream,
     }),
-    [derivedStatus, error, isConnected, isLoading, lastUpdated, reconnectStream],
+    [
+      derivedStatus,
+      error,
+      isConnected,
+      isLoading,
+      lastUpdated,
+      reconnectStream,
+    ],
   );
 }

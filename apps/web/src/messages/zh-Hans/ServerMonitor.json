@@ -7,7 +7,14 @@
   },
   "status": {
     "never": "尚未获取",
-    "justNow": "刚刚"
+    "justNow": "刚刚",
+    "live": "实时",
+    "disconnected": "已断开，等待重连",
+    "lessThanMinute": "不足1分钟"
+  },
+  "actions": {
+    "reconnect": "重新连接",
+    "reconnecting": "连接中"
   },
   "error": {
     "title": "无法加载服务监控数据",
@@ -20,7 +27,7 @@
     },
     "memory": {
       "label": "内存",
-      "hint": "进程占用 {allocation}"
+      "hint": "限制 {limit}，进程占用 {allocation}"
     },
     "storage": {
       "label": "存储",
@@ -34,6 +41,7 @@
       "name": "服务器名称",
       "system": "服务器系统",
       "uptime": "服务器运行时长",
+      "bootTime": "服务器开机时间",
       "goRuntime": "Go 运行时",
       "kernel": "内核版本",
       "currentTime": "当前时间"

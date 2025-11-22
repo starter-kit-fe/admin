@@ -9,6 +9,7 @@ interface DictDataToolbarProps {
   statusTabs: StatusTabItem[];
   onStatusChange: (value: string) => void;
   onAdd: () => void;
+  addLabel: string;
 }
 
 export function DictDataToolbar({
@@ -16,6 +17,7 @@ export function DictDataToolbar({
   statusTabs,
   onStatusChange,
   onAdd,
+  addLabel,
 }: DictDataToolbarProps) {
   return (
     <div className="flex w-full  gap-3 lg:flex-row items-center justify-between">
@@ -31,7 +33,7 @@ export function DictDataToolbar({
         className="self-start lg:self-auto"
       >
         <Plus className="mr-2 size-4" />
-        新增字典项
+        {addLabel}
       </Button>
     </div>
   );

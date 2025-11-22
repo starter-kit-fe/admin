@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 
@@ -22,6 +23,7 @@ import {
 import { CacheKeyTable } from './cache-key-table';
 
 export function CacheListDataSection() {
+  const t = useTranslations('CacheMonitor');
   const { appliedFilters, pagination, setPagination } =
     useCacheListManagementStore();
   const setRefreshing = useCacheListSetRefreshing();
@@ -58,7 +60,7 @@ export function CacheListDataSection() {
 
   const limitedTip =
     data.limited && data.scanned
-      ? `出于性能考虑仅展示前 ${data.scanned} 条匹配结果`
+      ? t('list.filters.limitedTip', { count: data.scanned })
       : null;
 
   const isLoading = query.isLoading && rows.length === 0;

@@ -80,7 +80,7 @@ export function ConfigEditorDialog({
   const title = mode === 'create' ? t('form.title.create') : t('form.title.edit');
   const description = t('form.description');
   const formId = 'config-editor-form';
-  const cancelLabel = tCommon('dialogs.cancel');
+  const cancelLabel = tCommon('cancel');
   const submitLabel = submitting
     ? t('form.submit.creating')
     : mode === 'create'

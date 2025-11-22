@@ -1,3 +1,5 @@
+'use client';
+
 import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
@@ -7,6 +9,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { STATUS_BADGE_VARIANT } from '../../constants';
 import type { Job } from '../../type';
@@ -31,6 +34,7 @@ export function JobSummaryPanel({
   cronDescription: string;
   formattedParams: string | undefined;
 }) {
+  const t = useTranslations('JobManagement');
   const StatusIcon = statusMeta.icon;
   const paramText = formattedParams ?? '';
   const shouldClampParams = paramText.length > 200;
@@ -55,15 +59,18 @@ export function JobSummaryPanel({
                 {job.jobName}
               </p>
               <Badge variant={STATUS_BADGE_VARIANT[job.status] ?? 'outline'}>
-                {resolveStatusLabel(job.status)}
+                {resolveStatusLabel(t, job.status)}
               </Badge>
               {job.isRunning ? (
                 <Badge
                   variant="outline"
                   className="border-emerald-200 bg-emerald-50/60 text-emerald-700"
                 >
-                  执行中
-                  {job.currentLogId ? ` · 日志 #${job.currentLogId}` : ''}
+                  {job.currentLogId
+                    ? t('detail.summary.runningTagWithLog', {
+                        logId: job.currentLogId,
+                      })
+                    : t('detail.summary.runningTag')}
                 </Badge>
               ) : null}
             </div>
@@ -75,7 +82,7 @@ export function JobSummaryPanel({
         </div>
         <div className="rounded-md border border-dashed border-border/60 px-3 py-2 text-right">
           <p className="text-[11px] font-medium text-muted-foreground">
-            下一次执行
+            {t('detail.summary.nextExecution.label')}
           </p>
           <p className="text-sm font-semibold text-foreground">
             {nextExecution}
@@ -91,32 +98,39 @@ export function JobSummaryPanel({
 
       <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
         <SummaryItem
-          label="调度策略"
-          value={resolveMisfireLabel(job.misfirePolicy)}
+          label={t('detail.summary.labels.schedule')}
+          value={resolveMisfireLabel(t, job.misfirePolicy)}
         />
         <SummaryItem
-          label="并发策略"
-          value={resolveConcurrentLabel(job.concurrent)}
+          label={t('detail.summary.labels.concurrency')}
+          value={resolveConcurrentLabel(t, job.concurrent)}
         />
-        <SummaryItem label="调用目标" value={job.invokeTarget || '—'} />
         <SummaryItem
-          label="创建"
+          label={t('detail.summary.labels.invokeTarget')}
+          value={job.invokeTarget || '—'}
+        />
+        <SummaryItem
+          label={t('detail.summary.labels.created')}
           value={job.createTime || '—'}
           hint={job.createBy || ''}
         />
         <SummaryItem
-          label="更新"
+          label={t('detail.summary.labels.updated')}
           value={job.updateTime || '—'}
           hint={job.updateBy || ''}
         />
-        {job.remark ? <SummaryItem label="备注" value={job.remark} /> : null}
+        {job.remark ? (
+          <SummaryItem label={t('detail.summary.labels.remark')} value={job.remark} />
+        ) : null}
       </div>
 
       <div className="rounded-md border border-dashed border-border/60 bg-muted/20 px-3 py-2.5">
         <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-          <span>调用参数</span>
+          <span>{t('detail.summary.labels.params')}</span>
           {shouldClampParams && paramText ? (
-            <span className="text-[11px]">悬停查看完整</span>
+            <span className="text-[11px]">
+              {t('detail.summary.params.hint')}
+            </span>
           ) : null}
         </div>
         {paramText ? (
@@ -140,7 +154,9 @@ export function JobSummaryPanel({
             </div>
           )
         ) : (
-          <p className="text-xs text-muted-foreground">未配置参数</p>
+          <p className="text-xs text-muted-foreground">
+            {t('detail.summary.params.empty')}
+          </p>
         )}
       </div>
     </aside>

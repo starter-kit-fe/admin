@@ -87,7 +87,7 @@ export function DictDataEditorDialog({
   const title = mode === 'create' ? t('dataEditor.createTitle') : t('dataEditor.editTitle');
   const description = t('dataEditor.description');
   const submitText = submitting ? t('dataEditor.actions.saving') : t('dataEditor.actions.save');
-  const cancelText = tCommon('dialogs.cancel');
+  const cancelText = tCommon('cancel');
   const formId = 'dict-data-editor-form';
 
   return (

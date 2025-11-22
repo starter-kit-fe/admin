@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Search, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import {
 } from '../../store';
 
 export function CacheListFiltersSection() {
+  const t = useTranslations('CacheMonitor');
   const {
     filterForm,
     setFilterForm,
@@ -90,7 +92,7 @@ export function CacheListFiltersSection() {
             <Search className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="通过模式匹配键名，例如 user:*"
+            placeholder={t('list.filters.placeholder')}
             value={filterForm.pattern}
             onChange={(event) => handlePatternChange(event.target.value)}
           />
@@ -99,7 +101,7 @@ export function CacheListFiltersSection() {
               variant="ghost"
               size="icon-sm"
               className="text-muted-foreground hover:text-foreground"
-              aria-label="清除模式筛选"
+              aria-label={t('list.filters.clearAria')}
               onClick={handleRemoveFilter}
             >
               <X className="size-3.5" />
@@ -112,7 +114,7 @@ export function CacheListFiltersSection() {
           onClick={handleResetFilters}
           disabled={!isDirty && !hasAppliedPattern}
         >
-          重置筛选
+          {t('list.filters.reset')}
         </Button>
       </div>
       {hasAppliedPattern ? (
@@ -122,14 +124,14 @@ export function CacheListFiltersSection() {
             className="flex items-center gap-2 rounded-full px-3 py-1 text-sm"
           >
             <span className="font-medium text-muted-foreground">
-              匹配模式：
+              {t('list.filters.patternLabel')}
             </span>
             <span className="text-foreground">{appliedPattern}</span>
             <button
               type="button"
               onClick={handleRemoveFilter}
               className="text-muted-foreground/70 transition-colors hover:text-foreground"
-              aria-label="移除匹配模式筛选"
+              aria-label={t('list.filters.removePatternAria')}
             >
               <X className="size-3.5" />
             </button>
@@ -140,7 +142,7 @@ export function CacheListFiltersSection() {
             className="px-0 text-sm text-destructive hover:text-destructive"
             onClick={handleRemoveFilter}
           >
-            清除
+            {t('list.filters.clear')}
           </Button>
         </div>
       ) : null}

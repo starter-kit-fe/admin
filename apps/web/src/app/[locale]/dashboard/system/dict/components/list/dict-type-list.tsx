@@ -34,6 +34,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useState } from 'react';
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -58,6 +59,7 @@ export function DictTypeList({
   onAddData,
   onDelete,
 }: DictTypeListProps) {
+  const t = useTranslations('DictManagement');
   const { hasPermission } = usePermissions();
   const canAddData = hasPermission('system:dict:add');
   const canEditType = hasPermission('system:dict:edit');
@@ -78,7 +80,7 @@ export function DictTypeList({
             : 'border-rose-500/20 bg-rose-500/10 text-rose-600',
         )}
       >
-        {meta.label}
+        {t(meta.labelKey)}
       </Badge>
     );
   };
@@ -104,9 +106,9 @@ export function DictTypeList({
         ) : items.length === 0 ? (
           <Empty className="m-4 h-[180px] border border-dashed border-border/60">
             <EmptyHeader>
-              <EmptyTitle>暂无字典类型</EmptyTitle>
+              <EmptyTitle>{t('typeList.emptyTitle')}</EmptyTitle>
               <EmptyDescription>
-                点击右上角“新建”快速添加第一条字典。
+                {t('typeList.emptyDescription')}
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
@@ -115,7 +117,7 @@ export function DictTypeList({
             const isActive = dict.dictId === selectedId;
             const badge =
               dict.status !== '0' ? renderStatusBadge(dict.status) : null;
-            const remarkContent = dict.remark?.trim() || '暂无备注';
+            const remarkContent = dict.remark?.trim() || t('typeList.noRemark');
             const showTooltip = remarkContent.length > 20;
             const remarkNode = (
               <span className="max-w-[220px] truncate text-xs text-muted-foreground">
@@ -200,6 +202,7 @@ function DictTypeActions({
   onEdit: (dict: DictType) => void;
   onDelete: (dict: DictType) => void;
 }) {
+  const t = useTranslations('DictManagement');
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
@@ -212,7 +215,7 @@ function DictTypeActions({
             variant="ghost"
             size="icon-sm"
             className="text-muted-foreground"
-            aria-label="更多操作"
+            aria-label={t('typeList.moreAria', { name: dict.dictName })}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
           >
@@ -221,16 +224,16 @@ function DictTypeActions({
         </SheetTrigger>
         <SheetContent
           side="bottom"
-          className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
-        >
-          <SheetHeader className="px-4 pb-2 pt-3 text-left">
-            <SheetTitle>操作</SheetTitle>
-            <SheetDescription>选择要对该字典类型执行的操作。</SheetDescription>
-          </SheetHeader>
-          <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
-            {canAddData ? (
-              <Button
-                variant="secondary"
+        className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+      >
+        <SheetHeader className="px-4 pb-2 pt-3 text-left">
+          <SheetTitle>{t('typeList.actions.sheetTitle')}</SheetTitle>
+          <SheetDescription>{t('typeList.actions.sheetDescription')}</SheetDescription>
+        </SheetHeader>
+        <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+          {canAddData ? (
+            <Button
+              variant="secondary"
                 className="w-full justify-between"
                 onClick={() => {
                   onAddData(dict);
@@ -239,9 +242,11 @@ function DictTypeActions({
               >
                 <span className="flex items-center gap-2">
                   <Plus className="size-4" />
-                  新增字典项
+                  {t('typeList.actions.addData')}
                 </span>
-                <span className="text-xs text-muted-foreground">添加新的键值</span>
+                <span className="text-xs text-muted-foreground">
+                  {t('typeList.actions.addHint')}
+                </span>
               </Button>
             ) : null}
             {canEditType ? (
@@ -254,7 +259,7 @@ function DictTypeActions({
                 }}
               >
                 <Pencil className="size-4" />
-                编辑字典
+                {t('typeList.actions.edit')}
               </Button>
             ) : null}
             {canDeleteType ? (
@@ -267,7 +272,7 @@ function DictTypeActions({
                 }}
               >
                 <Trash2 className="size-4" />
-                删除
+                {t('typeList.actions.delete')}
               </Button>
             ) : null}
           </SheetFooter>
@@ -284,7 +289,7 @@ function DictTypeActions({
           variant="ghost"
           size="icon-sm"
           className="text-muted-foreground"
-          aria-label="更多操作"
+          aria-label={t('typeList.moreAria', { name: dict.dictName })}
         >
           <MoreHorizontal className="size-4" />
         </Button>
@@ -293,13 +298,13 @@ function DictTypeActions({
         {canAddData ? (
           <DropdownMenuItem onSelect={() => onAddData(dict)}>
             <Plus className="mr-2 size-3.5" />
-            新增字典项
+            {t('typeList.actions.addData')}
           </DropdownMenuItem>
         ) : null}
         {canEditType ? (
           <DropdownMenuItem onSelect={() => onEdit(dict)}>
             <Pencil className="mr-2 size-3.5" />
-            编辑字典
+            {t('typeList.actions.edit')}
           </DropdownMenuItem>
         ) : null}
         {canDeleteType ? (
@@ -308,7 +313,7 @@ function DictTypeActions({
             onSelect={() => onDelete(dict)}
           >
             <Trash2 className="mr-2 size-3.5" />
-            删除
+            {t('typeList.actions.delete')}
           </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>

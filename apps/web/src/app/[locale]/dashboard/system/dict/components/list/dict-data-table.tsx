@@ -27,6 +27,7 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import {
   createColumnHelper,
   flexRender,
@@ -50,29 +51,6 @@ interface DictDataTableProps {
 
 const columnHelper = createColumnHelper<DictData>();
 
-function renderStatusBadge(status?: string | null) {
-  const meta = DATA_STATUS_TABS.find((tab) => tab.value === status);
-  if (!meta || meta.value === 'all') {
-    return null;
-  }
-  const tone =
-    status === '0'
-      ? 'bg-primary/10 text-primary'
-      : 'bg-destructive/10 text-destructive';
-
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        'border-transparent px-2 py-0 text-[11px] font-medium',
-        tone,
-      )}
-    >
-      {meta.label}
-    </Badge>
-  );
-}
-
 function DictDataTableComponent({
   rows,
   isLoading,
@@ -80,16 +58,41 @@ function DictDataTableComponent({
   onDelete,
   className,
 }: DictDataTableProps) {
+  const t = useTranslations('DictManagement');
   const { hasPermission } = usePermissions();
   const canEditDict = hasPermission('system:dict:edit');
   const canDeleteDict = hasPermission('system:dict:remove');
   const showActions = canEditDict || canDeleteDict;
   const isMobile = useIsMobile();
+  const statusLabel = (status?: string | null) => {
+    if (!status || status === 'all') return null;
+    return t(`status.${status}`);
+  };
+  const renderStatusBadge = (status?: string | null) => {
+    const label = statusLabel(status);
+    if (!label) return null;
+    const tone =
+      status === '0'
+        ? 'bg-primary/10 text-primary'
+        : 'bg-destructive/10 text-destructive';
+
+    return (
+      <Badge
+        variant="outline"
+        className={cn(
+          'border-transparent px-2 py-0 text-[11px] font-medium',
+          tone,
+        )}
+      >
+        {label}
+      </Badge>
+    );
+  };
 
   const columns = useMemo(() => {
     const baseColumns = [
       columnHelper.accessor('dictLabel', {
-        header: '标签',
+        header: t('data.table.columns.label'),
         cell: ({ row }) => {
           const dict = row.original;
           return (
@@ -102,35 +105,37 @@ function DictDataTableComponent({
         meta: { headerClassName: 'w-[160px]' },
       }),
       columnHelper.accessor('dictValue', {
-        header: '键值',
+        header: t('data.table.columns.value'),
         cell: ({ getValue }) => <span>{getValue()}</span>,
         meta: { headerClassName: 'w-[140px]' },
       }),
       columnHelper.display({
         id: 'dictSort',
-        header: '排序',
+        header: t('data.table.columns.sort'),
         cell: ({ row }) => <span>{row.original.dictSort ?? 0}</span>,
         meta: { headerClassName: 'w-[100px]' },
       }),
       columnHelper.display({
         id: 'isDefault',
-        header: '是否默认',
+        header: t('data.table.columns.default'),
         cell: ({ row }) =>
           row.original.isDefault === 'Y' ? (
             <Badge
               variant="outline"
               className="border-transparent bg-primary/10 px-2 py-0 text-xs text-primary"
             >
-              默认
+              {t('data.table.badges.default')}
             </Badge>
           ) : (
-            <span className="text-xs text-muted-foreground">否</span>
+            <span className="text-xs text-muted-foreground">
+              {t('data.table.badges.no')}
+            </span>
           ),
         meta: { headerClassName: 'w-[120px]' },
       }),
       columnHelper.display({
         id: 'remark',
-        header: '备注',
+        header: t('data.table.columns.remark'),
         cell: ({ row }) => (
           <span className="text-xs text-muted-foreground">
             {row.original.remark ?? '—'}
@@ -144,7 +149,11 @@ function DictDataTableComponent({
       baseColumns.push(
         columnHelper.display({
           id: 'actions',
-          header: () => <span className="block text-right">操作</span>,
+          header: () => (
+            <span className="block text-right">
+              {t('data.table.columns.actions')}
+            </span>
+          ),
           cell: ({ row }) => {
             const dict = row.original;
             if (isMobile) {
@@ -167,7 +176,9 @@ function DictDataTableComponent({
                       variant="ghost"
                       size="icon-sm"
                       className="text-muted-foreground"
-                      aria-label={`更多操作：${dict.dictLabel}`}
+                      aria-label={t('data.table.moreAria', {
+                        name: dict.dictLabel,
+                      })}
                       onPointerDown={(event) => event.stopPropagation()}
                       onClick={(event) => event.stopPropagation()}
                     >
@@ -183,7 +194,7 @@ function DictDataTableComponent({
                         }}
                       >
                         <Edit2 className="mr-2 size-3.5" />
-                        编辑
+                        {t('data.table.actions.edit')}
                       </DropdownMenuItem>
                     ) : null}
                     {canDeleteDict ? (
@@ -195,7 +206,7 @@ function DictDataTableComponent({
                         }}
                       >
                         <Trash2 className="mr-2 size-3.5" />
-                        删除
+                        {t('data.table.actions.delete')}
                       </DropdownMenuItem>
                     ) : null}
                   </DropdownMenuContent>
@@ -209,7 +220,16 @@ function DictDataTableComponent({
     }
 
     return baseColumns;
-  }, [canDeleteDict, canEditDict, isMobile, onDelete, onEdit, showActions]);
+  }, [
+    canDeleteDict,
+    canEditDict,
+    isMobile,
+    onDelete,
+    onEdit,
+    renderStatusBadge,
+    showActions,
+    t,
+  ]);
 
   const table = useReactTable({
     data: rows,
@@ -274,12 +294,14 @@ function DictDataTableComponent({
                     <Empty className="border-0 bg-transparent p-4">
                       <EmptyHeader>
                         <EmptyTitle>
-                          {isLoading ? '字典数据加载中' : '暂无字典项'}
+                          {isLoading
+                            ? t('data.table.empty.loadingTitle')
+                            : t('data.table.empty.idleTitle')}
                         </EmptyTitle>
                         <EmptyDescription>
                           {isLoading
-                            ? '正在获取字典项，请稍候。'
-                            : '请先新增一条字典项以开始管理。'}
+                            ? t('data.table.empty.loadingDescription')
+                            : t('data.table.empty.idleDescription')}
                         </EmptyDescription>
                       </EmptyHeader>
                     </Empty>
@@ -330,6 +352,7 @@ function DictDataMobileActions({
   onEdit: (item: DictData) => void;
   onDelete: (item: DictData) => void;
 }) {
+  const t = useTranslations('DictManagement');
   const [open, setOpen] = useState(false);
 
   if (!canEdit && !canDelete) {
@@ -344,7 +367,7 @@ function DictDataMobileActions({
           variant="ghost"
           size="icon-sm"
           className="text-muted-foreground"
-          aria-label="更多操作"
+          aria-label={t('data.table.moreAria', { name: dict.dictLabel })}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
         >
@@ -356,8 +379,10 @@ function DictDataMobileActions({
         className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
       >
         <SheetHeader className="px-4 pb-2 pt-3 text-left">
-          <SheetTitle>操作</SheetTitle>
-          <SheetDescription>为该字典项选择要执行的操作。</SheetDescription>
+          <SheetTitle>{t('data.table.actions.sheetTitle')}</SheetTitle>
+          <SheetDescription>
+            {t('data.table.actions.sheetDescription')}
+          </SheetDescription>
         </SheetHeader>
         <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
           {canEdit ? (
@@ -371,10 +396,10 @@ function DictDataMobileActions({
             >
               <span className="flex items-center gap-2">
                 <Edit2 className="size-4" />
-                编辑
+                {t('data.table.actions.edit')}
               </span>
               <span className="text-xs text-muted-foreground">
-                修改标签与键值
+                {t('data.table.actions.editHint')}
               </span>
             </Button>
           ) : null}
@@ -388,7 +413,7 @@ function DictDataMobileActions({
               }}
             >
               <Trash2 className="size-4" />
-              删除
+              {t('data.table.actions.delete')}
             </Button>
           ) : null}
         </SheetFooter>

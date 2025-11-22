@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
@@ -29,10 +30,8 @@ import {
 } from '@/components/ui/select';
 
 import {
-  CONCURRENT_LABELS,
-  MISFIRE_POLICY_LABELS,
   PREDEFINED_JOB_TYPES,
-  STATUS_TABS,
+  STATUS_TAB_KEYS,
 } from '../../constants';
 import {
   useJobManagementMutationCounter,
@@ -41,7 +40,7 @@ import {
 } from '../../store';
 import { createJob, updateJob, type JobPayload } from '../../api';
 import type { Job } from '../../type';
-import { jobFormSchema, type JobFormValues } from '../../type';
+import { createJobFormSchema, type JobFormValues } from '../../type';
 import { stringifyInvokeParams } from '../../utils';
 import { CronInputWithGenerator } from './cron-input-with-generator';
 
@@ -59,6 +58,8 @@ const DEFAULT_VALUES: JobFormValues = {
 };
 
 export function JobEditorDialog() {
+  const t = useTranslations('JobManagement');
+  const tCommon = useTranslations('Common');
   const { editorState, closeEditor } = useJobManagementStore();
   const job = editorState?.job ?? null;
   const mode = editorState?.mode ?? 'create';
@@ -89,7 +90,7 @@ export function JobEditorDialog() {
   }, [job]);
 
   const form = useForm<JobFormValues>({
-    resolver: zodResolver(jobFormSchema),
+    resolver: zodResolver(createJobFormSchema(t)),
     defaultValues,
   });
 
@@ -126,13 +127,13 @@ export function JobEditorDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('任务已创建');
+      toast.success(t('editor.toast.createSuccess'));
       refresh();
       closeEditor();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '创建任务失败，请稍后重试';
+        error instanceof Error ? error.message : t('editor.toast.createError');
       toast.error(message);
     },
     onSettled: () => {
@@ -152,13 +153,13 @@ export function JobEditorDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('任务已更新');
+      toast.success(t('editor.toast.updateSuccess'));
       refresh();
       closeEditor();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '更新任务失败，请稍后重试';
+        error instanceof Error ? error.message : t('editor.toast.updateError');
       toast.error(message);
     },
     onSettled: () => {
@@ -178,9 +179,45 @@ export function JobEditorDialog() {
     }
   });
 
-  const title = mode === 'create' ? '新增任务' : '编辑任务';
-  const description =
-    '配置定时任务的执行规则和参数。选择任务类型后会自动填充默认参数。';
+  const title =
+    mode === 'create' ? t('editor.title.create') : t('editor.title.edit');
+  const description = t('editor.description');
+  const statusTabs = STATUS_TAB_KEYS.filter((value) => value !== 'all').map(
+    (value) => ({
+      value,
+      label: t(`filters.statusTabs.${value}`),
+    }),
+  );
+  const jobTypeOptions = useMemo(
+    () =>
+      PREDEFINED_JOB_TYPES.map((type) => ({
+        ...type,
+        label: t(`editor.jobTypes.${type.value}.label`),
+        description: t(`editor.jobTypes.${type.value}.description`),
+      })),
+    [t],
+  );
+  const misfirePolicyLabels = useMemo(
+    () =>
+      ['1', '2', '3'].map((value) => ({
+        value,
+        label: t(`table.misfirePolicies.${value}`),
+      })),
+    [t],
+  );
+  const concurrentLabels = useMemo(
+    () =>
+      ['0', '1'].map((value) => ({
+        value,
+        label: t(`table.concurrent.${value}`),
+      })),
+    [t],
+  );
+  const submitLabel = submitting
+    ? t('editor.actions.saving')
+    : mode === 'create'
+      ? t('editor.actions.create')
+      : t('editor.actions.save');
 
   return (
     <ResponsiveDialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -198,7 +235,7 @@ export function JobEditorDialog() {
               disabled={submitting}
               className="flex-1 sm:flex-none sm:min-w-[96px]"
             >
-              取消
+              {tCommon('dialogs.cancel')}
             </Button>
             <Button
               type="submit"
@@ -206,7 +243,7 @@ export function JobEditorDialog() {
               disabled={submitting}
               className="flex-[1.5] sm:flex-none sm:min-w-[96px]"
             >
-              {submitting ? '保存中...' : mode === 'create' ? '创建' : '保存'}
+              {submitLabel}
             </Button>
           </>
         }
@@ -215,7 +252,9 @@ export function JobEditorDialog() {
           <form onSubmit={handleSubmit} id="job-editor-form" className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2 flex items-center gap-2 pb-2 border-b">
-                <span className="font-semibold text-lg">基础信息</span>
+                <span className="font-semibold text-lg">
+                  {t('editor.sections.basic')}
+                </span>
               </div>
 
               <FormField
@@ -223,7 +262,7 @@ export function JobEditorDialog() {
                 name="jobType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>任务类型</FormLabel>
+                    <FormLabel>{t('editor.fields.jobType.label')}</FormLabel>
                     <Select
                       value={field.value}
                       onValueChange={(value) => {
@@ -235,15 +274,20 @@ export function JobEditorDialog() {
                         <SelectTrigger>
                           {field.value ? (
                             <span className="font-medium">
-                              {PREDEFINED_JOB_TYPES.find((t) => t.value === field.value)?.label}
+                              {
+                                jobTypeOptions.find((t) => t.value === field.value)
+                                  ?.label
+                              }
                             </span>
                           ) : (
-                            <SelectValue placeholder="选择任务类型" />
+                            <SelectValue
+                              placeholder={t('editor.fields.jobType.placeholder')}
+                            />
                           )}
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {PREDEFINED_JOB_TYPES.map((type) => (
+                        {jobTypeOptions.map((type) => (
                           <SelectItem key={type.value} value={type.value}>
                             <div className="flex flex-col gap-0.5 text-left">
                               <span className="font-medium">{type.label}</span>
@@ -264,9 +308,12 @@ export function JobEditorDialog() {
                 name="jobName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>任务名称</FormLabel>
+                    <FormLabel>{t('editor.fields.jobName.label')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="例如: 数据库备份任务" {...field} />
+                      <Input
+                        placeholder={t('editor.fields.jobName.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -277,9 +324,12 @@ export function JobEditorDialog() {
                 name="jobGroup"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>任务分组</FormLabel>
+                    <FormLabel>{t('editor.fields.jobGroup.label')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="DEFAULT" {...field} />
+                      <Input
+                        placeholder={t('editor.fields.jobGroup.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -292,9 +342,14 @@ export function JobEditorDialog() {
                   name="invokeTarget"
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel>调用目标</FormLabel>
+                      <FormLabel>{t('editor.fields.invokeTarget.label')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="例如 jobService.handleReport" {...field} />
+                        <Input
+                          placeholder={t(
+                            'editor.fields.invokeTarget.placeholder',
+                          )}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -303,7 +358,9 @@ export function JobEditorDialog() {
               ) : null}
 
               <div className="sm:col-span-2 flex items-center gap-2 pt-4 pb-2 border-b">
-                <span className="font-semibold text-lg">调度配置</span>
+                <span className="font-semibold text-lg">
+                  {t('editor.sections.schedule')}
+                </span>
               </div>
 
               <FormField
@@ -311,7 +368,7 @@ export function JobEditorDialog() {
                 name="cronExpression"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Cron 表达式</FormLabel>
+                    <FormLabel>{t('editor.fields.cronExpression.label')}</FormLabel>
                     <FormControl>
                       <CronInputWithGenerator
                         value={field.value}
@@ -325,7 +382,9 @@ export function JobEditorDialog() {
               />
 
               <div className="sm:col-span-2 flex items-center gap-2 pt-4 pb-2 border-b">
-                <span className="font-semibold text-lg">执行策略</span>
+                <span className="font-semibold text-lg">
+                  {t('editor.sections.execution')}
+                </span>
               </div>
 
               <FormField
@@ -333,14 +392,14 @@ export function JobEditorDialog() {
                 name="status"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>初始状态</FormLabel>
+                    <FormLabel>{t('editor.fields.status.label')}</FormLabel>
                     <FormControl>
                       <RadioGroup
                         className="flex gap-6"
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        {STATUS_TABS.filter((tab) => tab.value !== 'all').map((tab) => (
+                        {statusTabs.map((tab) => (
                           <FormItem
                             key={tab.value}
                             className="flex items-center gap-2 space-y-0"
@@ -354,7 +413,7 @@ export function JobEditorDialog() {
                       </RadioGroup>
                     </FormControl>
                     <p className="text-xs text-muted-foreground">
-                      正常状态的任务会按照 Cron 表达式自动执行，暂停状态的任务不会自动执行
+                      {t('editor.fields.status.helper')}
                     </p>
                     <FormMessage />
                   </FormItem>
@@ -365,9 +424,11 @@ export function JobEditorDialog() {
                 name="misfirePolicy"
                 render={({ field }) => (
                   <FormItem className="rounded-lg border p-4">
-                    <FormLabel className="text-base">错过策略</FormLabel>
+                    <FormLabel className="text-base">
+                      {t('editor.fields.misfirePolicy.label')}
+                    </FormLabel>
                     <p className="mb-3 text-xs text-muted-foreground">
-                      当任务错过执行时间时的处理策略
+                      {t('editor.fields.misfirePolicy.helper')}
                     </p>
                     <FormControl>
                       <RadioGroup
@@ -375,7 +436,7 @@ export function JobEditorDialog() {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        {Object.entries(MISFIRE_POLICY_LABELS).map(([value, label]) => (
+                        {misfirePolicyLabels.map(({ value, label }) => (
                           <FormItem
                             key={value}
                             className="flex items-center gap-2 space-y-0"
@@ -397,9 +458,11 @@ export function JobEditorDialog() {
                 name="concurrent"
                 render={({ field }) => (
                   <FormItem className="rounded-lg border p-4">
-                    <FormLabel className="text-base">并发执行</FormLabel>
+                    <FormLabel className="text-base">
+                      {t('editor.fields.concurrent.label')}
+                    </FormLabel>
                     <p className="mb-3 text-xs text-muted-foreground">
-                      是否允许同一任务的多个实例同时执行
+                      {t('editor.fields.concurrent.helper')}
                     </p>
                     <FormControl>
                       <RadioGroup
@@ -407,7 +470,7 @@ export function JobEditorDialog() {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        {Object.entries(CONCURRENT_LABELS).map(([value, label]) => (
+                        {concurrentLabels.map(({ value, label }) => (
                           <FormItem
                             key={value}
                             className="flex items-center gap-2 space-y-0"
@@ -426,24 +489,26 @@ export function JobEditorDialog() {
               />
 
               <div className="sm:col-span-2 flex items-center gap-2 pt-4 pb-2 border-b">
-                <span className="font-semibold text-lg">参数配置</span>
+                <span className="font-semibold text-lg">
+                  {t('editor.sections.params')}
+                </span>
               </div>
               <FormField
                 control={form.control}
                 name="invokeParams"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>任务参数 (JSON 格式)</FormLabel>
+                    <FormLabel>{t('editor.fields.invokeParams.label')}</FormLabel>
                     <FormControl>
                       <Textarea
                         rows={6}
-                        placeholder='例如: {"retentionDays": 7, "compress": true}'
+                        placeholder={t('editor.fields.invokeParams.placeholder')}
                         {...field}
                         className="font-mono text-sm"
                       />
                     </FormControl>
                     <p className="text-xs text-muted-foreground">
-                      根据任务类型配置不同的参数。选择预定义任务类型会自动填充默认参数。
+                      {t('editor.fields.invokeParams.helper')}
                     </p>
                     <FormMessage />
                   </FormItem>
@@ -454,9 +519,13 @@ export function JobEditorDialog() {
                 name="remark"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>备注 (可选)</FormLabel>
+                    <FormLabel>{t('editor.fields.remark.label')}</FormLabel>
                     <FormControl>
-                      <Textarea rows={2} placeholder="任务说明或注意事项" {...field} />
+                      <Textarea
+                        rows={2}
+                        placeholder={t('editor.fields.remark.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import { Cpu, HardDrive, MemoryStick, RefreshCcw } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
@@ -22,24 +22,30 @@ import { DEFAULT_STATUS, summarizeDisks } from './lib/status';
 import { useServerStatusStream } from './hooks/use-server-status-stream';
 
 export function ServerMonitor() {
-  const stream = useServerStatusStream();
+  const t = useTranslations('ServerMonitor');
+  const locale = useLocale();
+  const stream = useServerStatusStream({
+    locale,
+    lessThanMinuteText: t('status.lessThanMinute'),
+    connectionErrorText: t('error.description'),
+  });
   const status = stream.status ?? DEFAULT_STATUS;
 
   const diskSummary = useMemo(
     () => summarizeDisks(status.disks ?? []),
-    [status],
+    [status.disks],
   );
 
   const lastUpdated = useMemo(() => {
     if (!stream.lastUpdated) {
-      return '尚未获取';
+      return t('status.never');
     }
     try {
-      return formatDateTime(stream.lastUpdated);
+      return formatDateTime(stream.lastUpdated, locale);
     } catch {
-      return '刚刚';
+      return t('status.justNow');
     }
-  }, [stream.lastUpdated]);
+  }, [locale, stream.lastUpdated, t]);
 
   const cpuUsagePercent = useMemo(() => {
     const { cpu } = status;
@@ -52,31 +58,54 @@ export function ServerMonitor() {
   const quickStats = useMemo(
     () => [
       {
-        label: 'CPU',
+        label: t('quickStats.cpu.label'),
         icon: Cpu,
         value: cpuUsagePercent,
         formatValue: formatPercent,
-        hint: `Load ${formatLoad(status.cpu.load1)} / ${formatLoad(status.cpu.load5)} / ${formatLoad(status.cpu.load15)}`,
+        hint: t('quickStats.cpu.hint', {
+          load1: formatLoad(status.cpu.load1),
+          load5: formatLoad(status.cpu.load5),
+          load15: formatLoad(status.cpu.load15),
+        }),
         percent: safeNumber(cpuUsagePercent),
       },
       {
-        label: '内存',
+        label: t('quickStats.memory.label'),
         icon: MemoryStick,
         value: status.memory.usedPercent,
         formatValue: formatPercent,
-        hint: `限制 ${formatBytes(status.memory.limit)}，进程占用 ${formatBytes(status.memory.processAlloc || status.process.alloc)}`,
+        hint: t('quickStats.memory.hint', {
+          limit: formatBytes(status.memory.limit),
+          allocation: formatBytes(status.memory.processAlloc || status.process.alloc),
+        }),
         percent: safeNumber(status.memory.usedPercent),
       },
       {
-        label: '存储',
+        label: t('quickStats.storage.label'),
         icon: HardDrive,
         value: diskSummary.usedPercent,
         formatValue: formatPercent,
-        hint: `${formatBytes(diskSummary.used)} / ${formatBytes(diskSummary.total)}`,
+        hint: t('quickStats.storage.hint', {
+          used: formatBytes(diskSummary.used),
+          total: formatBytes(diskSummary.total),
+        }),
         percent: safeNumber(diskSummary.usedPercent),
       },
     ],
-    [cpuUsagePercent, diskSummary, status],
+    [
+      cpuUsagePercent,
+      diskSummary.total,
+      diskSummary.used,
+      diskSummary.usedPercent,
+      status.cpu.load1,
+      status.cpu.load15,
+      status.cpu.load5,
+      status.memory.limit,
+      status.memory.processAlloc,
+      status.memory.usedPercent,
+      status.process.alloc,
+      t,
+    ],
   );
 
   return (
@@ -84,10 +113,10 @@ export function ServerMonitor() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            服务监控
+            {t('header.title')}
           </h1>
           <p className="text-sm text-muted-foreground">
-            聚焦后台服务器程序，CPU / 内存 / 存储。
+            {t('header.description')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 ">
@@ -97,7 +126,7 @@ export function ServerMonitor() {
             <span
               className={`inline-block size-2.5 rounded-full ${stream.isConnected ? 'bg-primary animate-pulse' : 'bg-muted-foreground/50'}`}
             />
-            {stream.isConnected ? '实时' : '已断开，等待重连'}
+            {stream.isConnected ? t('status.live') : t('status.disconnected')}
           </span>
           <Button
             type="button"
@@ -109,12 +138,12 @@ export function ServerMonitor() {
             {stream.isLoading ? (
               <>
                 <Spinner className="mr-2 size-4" />
-                连接中
+                {t('actions.reconnecting')}
               </>
             ) : (
               <>
                 <RefreshCcw className="mr-2 size-4" />
-                重新连接
+                {t('actions.reconnect')}
               </>
             )}
           </Button>
@@ -124,9 +153,9 @@ export function ServerMonitor() {
       {!stream.isConnected && stream.error ? (
         <Card className="border-destructive/40 bg-destructive/10 text-destructive">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-lg">实时流连接异常</CardTitle>
+            <CardTitle className="text-lg">{t('error.title')}</CardTitle>
             <CardDescription className="text-destructive/80">
-              {stream.error || '请稍后重试或刷新页面。'}
+              {stream.error || t('error.description')}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -148,13 +177,10 @@ export function ServerMonitor() {
           ))}
         </div>
         <ServerInfoCard host={status.host} lastUpdated={lastUpdated} />
-
       </section>
       <section>
         <ProcessInfoCard process={status.process} />
       </section>
-
-
     </div>
   );
 }

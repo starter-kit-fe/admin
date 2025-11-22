@@ -81,7 +81,9 @@
       "emptyDescription": "执行新增、修改或删除后会记录在这里。"
     },
     "actions": {
-      "delete": "删除日志"
+      "delete": "删除日志",
+      "more": "更多操作",
+      "sheetDescription": "对该条操作日志执行操作。"
     }
   },
   "toast": {

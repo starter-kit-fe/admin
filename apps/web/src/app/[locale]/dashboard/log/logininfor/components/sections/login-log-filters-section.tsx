@@ -11,6 +11,7 @@ import {
   useLoginLogManagementStore,
 } from '../../store';
 import { LoginLogManagementFilters } from '../filters/login-log-management-filters';
+import { useTranslations } from 'next-intl';
 
 export function LoginLogFiltersSection() {
   const {
@@ -21,6 +22,7 @@ export function LoginLogFiltersSection() {
     applyFilters,
     resetFilters,
   } = useLoginLogManagementStore();
+  const t = useTranslations('LoginLogManagement');
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -56,7 +58,15 @@ export function LoginLogFiltersSection() {
         onUserNameChange={handleUserNameChange}
         ipaddr={filterForm.ipaddr}
         onIpaddrChange={handleIpaddrChange}
-        statusTabs={LOGIN_LOG_STATUS_TABS}
+        statusTabs={LOGIN_LOG_STATUS_TABS.map((value) => ({
+          value,
+          label:
+            value === 'all'
+              ? t('filters.statusTabs.all')
+              : value === '0'
+                ? t('status.success')
+                : t('status.failed'),
+        }))}
         onReset={() => resetFilters()}
       />
     </section>

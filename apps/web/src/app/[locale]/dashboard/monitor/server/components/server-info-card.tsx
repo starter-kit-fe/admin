@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { MonitorSmartphone } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 
 import type { HostInfo } from '../type';
 import { formatDateTime, formatDuration, formatServerSystem } from '../lib/format';
@@ -19,21 +20,28 @@ interface ServerInfoCardProps {
 }
 
 export function ServerInfoCard({ host, lastUpdated }: ServerInfoCardProps) {
+  const t = useTranslations('ServerMonitor');
+  const locale = useLocale();
+
   const rows = [
-    { label: '服务器名称', value: host.hostname || '-' },
+    { label: t('serverInfo.rows.name'), value: host.hostname || '-' },
     {
-      label: '服务器系统',
+      label: t('serverInfo.rows.system'),
       value: formatServerSystem(host),
     },
     {
-      label: '服务器运行时长',
-      value: host.uptime || formatDuration(host.uptimeSeconds),
+      label: t('serverInfo.rows.uptime'),
+      value:
+        host.uptime ||
+        formatDuration(host.uptimeSeconds, locale, {
+          lessThanMinuteText: t('status.lessThanMinute'),
+        }),
     },
     {
-      label: '服务器开机时间',
-      value: formatDateTime(host.bootTime),
+      label: t('serverInfo.rows.bootTime'),
+      value: formatDateTime(host.bootTime, locale),
     },
-    { label: '当前时间', value: formatDateTime(host.currentTime) },
+    { label: t('serverInfo.rows.currentTime'), value: formatDateTime(host.currentTime, locale) },
   ];
 
   return (
@@ -41,10 +49,10 @@ export function ServerInfoCard({ host, lastUpdated }: ServerInfoCardProps) {
       <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <MonitorSmartphone className="size-5 text-muted-foreground" />
-          服务器信息
+          {t('serverInfo.title')}
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
-          服务器级别的信息（区别于进程运行时），最近更新：{lastUpdated}
+          {t('serverInfo.description', { time: lastUpdated })}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex h-full flex-col gap-4 text-sm text-muted-foreground">

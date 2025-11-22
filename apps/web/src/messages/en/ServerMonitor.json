@@ -7,7 +7,14 @@
   },
   "status": {
     "never": "Not fetched yet",
-    "justNow": "Just now"
+    "justNow": "Just now",
+    "live": "Live",
+    "disconnected": "Disconnected, waiting to reconnect",
+    "lessThanMinute": "Less than 1 minute"
+  },
+  "actions": {
+    "reconnect": "Reconnect",
+    "reconnecting": "Reconnecting"
   },
   "error": {
     "title": "Unable to load server monitor data",
@@ -20,7 +27,7 @@
     },
     "memory": {
       "label": "Memory",
-      "hint": "Process allocation {allocation}"
+      "hint": "Limit {limit}, process allocation {allocation}"
     },
     "storage": {
       "label": "Storage",
@@ -34,6 +41,7 @@
       "name": "Server name",
       "system": "Operating system",
       "uptime": "Server uptime",
+      "bootTime": "Boot time",
       "goRuntime": "Go runtime",
       "kernel": "Kernel version",
       "currentTime": "Current time"

@@ -32,7 +32,10 @@
     "actions": {
       "addData": "Add entry",
       "edit": "Edit dictionary",
-      "delete": "Delete"
+      "delete": "Delete",
+      "addHint": "Add a new label/value",
+      "sheetTitle": "Actions",
+      "sheetDescription": "Choose an action for this dictionary type."
     },
     "moreAria": "More actions for {name}"
   },
@@ -69,7 +72,10 @@
       },
       "actions": {
         "edit": "Edit",
-        "delete": "Delete"
+        "delete": "Delete",
+        "editHint": "Update label and value",
+        "sheetTitle": "Actions",
+        "sheetDescription": "Select an action for this entry."
       },
       "moreAria": "More actions for {name}"
     }

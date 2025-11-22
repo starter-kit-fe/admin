@@ -4,6 +4,15 @@
       "title": "Cache monitor",
       "description": "Track Redis runtime health and key distribution from a single view.",
       "updatedAt": "Overview updated: {time}",
+      "waitingStream": "Waiting for live stream",
+      "connection": {
+        "live": "Live updates",
+        "waiting": "Waiting for connection"
+      },
+      "actions": {
+        "reconnect": "Reconnect",
+        "connecting": "Connecting"
+      },
       "refresh": "Refresh data",
       "refreshing": "Refreshing"
     },
@@ -22,7 +31,10 @@
         "label": "Memory usage",
         "aria": "Memory usage percentage",
         "peak": "Peak usage",
-        "fragmentation": "Fragmentation"
+        "fragmentation": "Fragmentation",
+        "used": "Used",
+        "limit": "Limit",
+        "noLimit": "No limit configured"
       },
       "clients": {
         "title": "Clients",

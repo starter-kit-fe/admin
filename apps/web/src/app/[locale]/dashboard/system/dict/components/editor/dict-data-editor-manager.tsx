@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { createDictData, updateDictData } from '../../api';
@@ -20,6 +21,7 @@ import type { DictDataFormValues } from '../../type';
 import { DictDataEditorDialog } from './dict-data-editor-dialog';
 
 export function DictDataEditorManager() {
+  const t = useTranslations('DictManagement');
   const dataEditorState = useDictDataEditorState();
   const { closeDataEditor } = useDictDataEditorActions();
   const refresh = useDictManagementRefresh();
@@ -46,12 +48,12 @@ export function DictDataEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('新增字典项成功');
+      toast.success(t('toast.data.createSuccess'));
       closeDataEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '新增字典项失败'));
+      toast.error(resolveErrorMessage(error, t('toast.data.createError')));
     },
     onSettled: () => {
       endMutation();
@@ -80,12 +82,12 @@ export function DictDataEditorManager() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('字典项已更新');
+      toast.success(t('toast.data.updateSuccess'));
       closeDataEditor();
       refresh();
     },
     onError: (error) => {
-      toast.error(resolveErrorMessage(error, '更新字典项失败'));
+      toast.error(resolveErrorMessage(error, t('toast.data.updateError')));
     },
     onSettled: () => {
       endMutation();

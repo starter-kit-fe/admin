@@ -1,5 +1,4 @@
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -7,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTranslations } from 'next-intl';
 
 import type {
   OperLogBusinessTypeValue,
@@ -44,13 +44,14 @@ export function OperLogFiltersBar({
   businessTypeOptions,
   requestMethodOptions,
 }: OperLogFiltersBarProps) {
+  const t = useTranslations('OperLogManagement');
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div className="flex flex-col gap-2">
         <Input
           id="oper-log-title-filter"
           className="bg-muted"
-          placeholder="按标题模糊查询"
+          placeholder={t('filters.title.placeholder')}
           value={value.title}
           onChange={(event) => onTitleChange(event.target.value)}
         />
@@ -59,7 +60,7 @@ export function OperLogFiltersBar({
       <div className="flex flex-col gap-2">
         <Input
           id="oper-log-operator-filter"
-          placeholder="输入操作人员"
+          placeholder={t('filters.operator.placeholder')}
           className="bg-muted"
           value={value.operName}
           onChange={(event) => onOperNameChange(event.target.value)}
@@ -77,7 +78,7 @@ export function OperLogFiltersBar({
             id="oper-log-business-filter"
             className="w-full bg-muted"
           >
-            <SelectValue placeholder="全部业务" />
+            <SelectValue placeholder={t('filters.businessType.placeholder')} />
           </SelectTrigger>
           <SelectContent>
             {businessTypeOptions.map((option) => (
@@ -100,7 +101,7 @@ export function OperLogFiltersBar({
             id="oper-log-request-filter"
             className="bg-muted w-full"
           >
-            <SelectValue placeholder="全部请求" />
+            <SelectValue placeholder={t('filters.requestMethod.placeholder')} />
           </SelectTrigger>
           <SelectContent>
             {requestMethodOptions.map((option) => (

@@ -19,11 +19,13 @@ import {
   OperLogManagementFilters,
   type FilterChip,
 } from '../filters/oper-log-management-filters';
+import { useTranslations } from 'next-intl';
 
 export function OperLogFiltersSection() {
   const { filterForm, setFilterForm, appliedFilters, applyFilters, resetFilters } =
     useOperLogManagementStore();
   const debounceRef = useRef<number | null>(null);
+  const t = useTranslations('OperLogManagement');
 
   const clearDebounce = useCallback(() => {
     if (debounceRef.current) {
@@ -136,19 +138,27 @@ export function OperLogFiltersSection() {
     () =>
       OPER_LOG_STATUS_TABS.map((tab) => ({
         value: tab.value,
-        label: tab.label,
+        label: t(`filters.statusTabs.${tab.value}`),
         activeColor: tab.color,
       })),
-    [],
+    [t],
   );
 
   const businessTypeOptions = useMemo(
-    () => [...OPER_LOG_BUSINESS_TYPE_OPTIONS],
-    [],
+    () =>
+      OPER_LOG_BUSINESS_TYPE_OPTIONS.map((option) => ({
+        ...option,
+        label: t(`businessTypes.${option.value}`),
+      })),
+    [t],
   );
   const requestMethodOptions = useMemo(
-    () => [...OPER_LOG_REQUEST_METHOD_OPTIONS],
-    [],
+    () =>
+      OPER_LOG_REQUEST_METHOD_OPTIONS.map((option) => ({
+        ...option,
+        label: t(`requestMethods.${option.value}`),
+      })),
+    [t],
   );
 
   const appliedFilterChips = useMemo<FilterChip[]>(() => {
@@ -156,14 +166,14 @@ export function OperLogFiltersSection() {
     if (appliedFilters.title) {
       chips.push({
         key: 'title',
-        label: '标题',
+        label: t('filters.title.chip'),
         value: appliedFilters.title,
       });
     }
     if (appliedFilters.operName) {
       chips.push({
         key: 'operName',
-        label: '操作人',
+        label: t('filters.operator.chip'),
         value: appliedFilters.operName,
       });
     }
@@ -174,7 +184,7 @@ export function OperLogFiltersSection() {
         )?.label ?? appliedFilters.businessType;
       chips.push({
         key: 'businessType',
-        label: '业务类型',
+        label: t('filters.businessType.chip'),
         value: label,
       });
     }
@@ -185,7 +195,7 @@ export function OperLogFiltersSection() {
         )?.label ?? appliedFilters.requestMethod;
       chips.push({
         key: 'requestMethod',
-        label: '请求方式',
+        label: t('filters.requestMethod.chip'),
         value: label,
       });
     }
@@ -197,6 +207,7 @@ export function OperLogFiltersSection() {
     appliedFilters.title,
     businessTypeOptions,
     requestMethodOptions,
+    t,
   ]);
 
   return (

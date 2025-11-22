@@ -14,6 +14,8 @@ interface JobManagementFiltersProps {
   status: JobStatusFilter;
   onStatusChange: (value: JobStatusFilter) => void;
   statusTabs: ReadonlyArray<StatusTabItem>;
+  jobNamePlaceholder: string;
+  jobGroupPlaceholder: string;
 }
 
 export function JobManagementFilters({
@@ -24,6 +26,8 @@ export function JobManagementFilters({
   status,
   onStatusChange,
   statusTabs,
+  jobNamePlaceholder,
+  jobGroupPlaceholder,
 }: JobManagementFiltersProps) {
   return (
     <div className="rounded-xl bg-card p-4">
@@ -37,14 +41,14 @@ export function JobManagementFilters({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <InputGroup className="w-full bg-muted/60 sm:w-[280px]">
             <InputGroupInput
-              placeholder="按名称筛选"
+              placeholder={jobNamePlaceholder}
               value={jobName}
               onChange={(event) => onJobNameChange(event.target.value)}
             />
           </InputGroup>
           <InputGroup className="w-full bg-muted/60 sm:w-[280px]">
             <InputGroupInput
-              placeholder="按分组筛选"
+              placeholder={jobGroupPlaceholder}
               value={jobGroup}
               onChange={(event) => onJobGroupChange(event.target.value)}
             />

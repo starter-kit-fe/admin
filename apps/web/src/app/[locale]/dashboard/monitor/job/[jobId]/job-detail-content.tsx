@@ -17,6 +17,7 @@ import {
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { clearJobLogs, getJobDetail, runJob } from '../api';
 import { BASE_QUERY_KEY, STATUS_BADGE_VARIANT } from '../constants';
@@ -77,22 +78,22 @@ const TONE_STYLES: Record<
 
 const JOB_STATUS_META: Record<string, JobStatusMeta> = {
   '0': {
-    label: '运行中',
-    helperText: '任务会按 Cron 计划自动执行，您可以随时暂停。',
+    label: 'Running',
+    helperText: 'Job will execute automatically on its cron schedule. You can pause anytime.',
     icon: PlayCircle,
     tone: 'emerald',
   },
   '1': {
-    label: '已暂停',
-    helperText: '任务已暂停，恢复后会继续沿用当前 Cron 计划。',
+    label: 'Paused',
+    helperText: 'Job is paused. Resume to continue its cron schedule.',
     icon: PauseCircle,
     tone: 'amber',
   },
 };
 
 const DEFAULT_JOB_STATUS_META: JobStatusMeta = {
-  label: '未知状态',
-  helperText: '无法获取任务状态，请刷新后重试。',
+  label: 'Unknown status',
+  helperText: 'Unable to load job status. Please refresh.',
   icon: Loader2,
   tone: 'slate',
 };
@@ -102,6 +103,8 @@ interface JobDetailContentProps {
 }
 
 export function JobDetailContent({ jobId }: JobDetailContentProps) {
+  const locale = useLocale();
+  const t = useTranslations('JobManagement');
   const [logPagination, setLogPagination] = useState({
     pageNum: 1,
     pageSize: DEFAULT_LOG_PAGE_SIZE,
@@ -139,16 +142,16 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
   const runJobMutation = useMutation({
     mutationFn: () => runJob(jobId),
     onSuccess: (data) => {
-      toast.success('任务已提交执行');
+      toast.success(t('toast.runSuccess'));
       if (data?.jobLogId) {
         setActiveLogId(data.jobLogId);
-        setActiveLogName(detail?.job?.jobName ?? '任务执行');
+        setActiveLogName(detail?.job?.jobName ?? t('detail.live.fallbackName'));
       }
       detailQuery.refetch();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '触发任务失败，请稍后重试';
+        error instanceof Error ? error.message : t('toast.runError');
       toast.error(message);
     },
   });
@@ -156,12 +159,12 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
   const clearLogsMutation = useMutation({
     mutationFn: () => clearJobLogs(jobId),
     onSuccess: () => {
-      toast.success('执行日志已清空');
+      toast.success(t('detail.logs.clearSuccess'));
       void detailQuery.refetch();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '清空日志失败，请稍后重试';
+        error instanceof Error ? error.message : t('detail.logs.clearError');
       toast.error(message);
     },
   });
@@ -197,15 +200,20 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
 
   const nextExecution = useMemo(() => {
     return (
-      upcomingExecutions[0] ?? (job?.status === '1' ? '已暂停' : '等待调度')
+      upcomingExecutions[0] ??
+      (job?.status === '1'
+        ? t('detail.summary.nextExecution.paused')
+        : t('detail.summary.nextExecution.pending'))
     );
-  }, [job?.status, upcomingExecutions]);
+  }, [job?.status, upcomingExecutions, t]);
 
   useEffect(() => {
     const runningLog = logs?.items.find((item) => item.status === '2');
     if (runningLog) {
       setActiveLogId(runningLog.jobLogId);
-      setActiveLogName(runningLog.jobName || job?.jobName || '任务执行');
+      setActiveLogName(
+        runningLog.jobName || job?.jobName || t('detail.live.fallbackName'),
+      );
       return;
     }
 
@@ -236,35 +244,35 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
     }
 
     if (job.isRunning && job.concurrent === '1') {
-      toast.info('任务正在执行且不允许并发，请稍后再试');
+      toast.info(t('toast.concurrentLocked'));
       return;
     }
 
     runJobMutation.mutate();
   };
 
-  const toneStyles = getToneStyles(getJobStatusMeta(job?.status ?? '').tone);
+  const toneStyles = getToneStyles(getJobStatusMeta(job?.status ?? '', t).tone);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="ghost" size="sm" asChild>
           <Link
-            href="/dashboard/monitor/job"
+            href={`/${locale}/dashboard/monitor/job`}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="size-4" />
-            返回列表
+            {t('detail.back')}
           </Link>
         </Button>
         <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
           <span className="truncate">
-            {job?.jobName ? job.jobName : '任务详情'}
+            {job?.jobName ? job.jobName : t('detail.titleFallback')}
           </span>
           {job ? (
             <>
               <Badge variant={STATUS_BADGE_VARIANT[job.status] ?? 'outline'}>
-                {resolveStatusLabel(job.status)}
+                {resolveStatusLabel(t, job.status)}
               </Badge>
               <span className="text-xs font-medium text-muted-foreground">
                 #{job.jobId} · {job.jobGroup || 'DEFAULT'}
@@ -287,17 +295,17 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
               {runJobMutation.isPending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  触发中...
+                  {t('detail.actions.running')}
                 </>
               ) : job.isRunning && job.concurrent === '1' ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  执行中
+                  {t('detail.actions.executing')}
                 </>
               ) : (
                 <>
                   <PlayCircle className="size-4" />
-                  立即执行一次
+                  {t('detail.actions.run')}
                 </>
               )}
             </Button>
@@ -310,11 +318,11 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
             className="flex items-center gap-2"
           >
             {detailQuery.isFetching ? (
-              <InlineLoading label="刷新中" />
+              <InlineLoading label={t('detail.actions.refreshing')} />
             ) : (
               <>
                 <RefreshCw className="size-4" />
-                刷新数据
+                {t('detail.actions.refresh')}
               </>
             )}
           </Button>
@@ -325,17 +333,17 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
         <div className="rounded-xl border border-border/60 bg-card">
           {isLoading ? (
             <div className="flex h-48 items-center justify-center">
-              <InlineLoading label="正在加载任务详情..." />
+              <InlineLoading label={t('detail.messages.loading')} />
             </div>
           ) : hasError ? (
             <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-10 text-center text-sm text-destructive">
-              加载失败，请稍后再试。
+              {t('detail.messages.error')}
             </div>
           ) : job ? (
             <div className="space-y-3 p-4">
               <JobSummaryPanel
                 job={job}
-                statusMeta={getJobStatusMeta(job.status)}
+                statusMeta={getJobStatusMeta(job.status, t)}
                 tone={toneStyles}
                 nextExecution={nextExecution}
                 cronDescription={cronDescription}
@@ -346,9 +354,13 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
                 <div className="space-y-2 rounded-lg border border-border/70 bg-muted/30 p-3">
                   <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">
                     <Activity className="size-4 text-sky-600" />
-                    <span>实时执行 · {activeLogName || job.jobName}</span>
+                    <span>
+                      {t('detail.live.title', {
+                        name: activeLogName || job.jobName,
+                      })}
+                    </span>
                     <Badge variant="outline" className="animate-pulse">
-                      执行中
+                      {t('detail.live.badge')}
                     </Badge>
                   </div>
                   <RealtimeLogViewer
@@ -364,7 +376,7 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
             </div>
           ) : (
             <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-              未找到任务信息。
+              {t('detail.messages.empty')}
             </div>
           )}
         </div>
@@ -385,6 +397,7 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
             onClearLogs={() => clearLogsMutation.mutate()}
             canClearLogs={canClearLogs}
             clearing={clearLogsMutation.isPending}
+            t={t}
           />
         ) : null}
       </div>
@@ -400,16 +413,16 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
       >
         <ResponsiveDialog.Content className="w-[min(900px,calc(100vw-1.5rem))] sm:max-w-4xl">
           <ResponsiveDialog.Header>
-            <ResponsiveDialog.Title>执行详情</ResponsiveDialog.Title>
+            <ResponsiveDialog.Title>{t('detail.dialog.title')}</ResponsiveDialog.Title>
             <ResponsiveDialog.Description>
-              仅展示该次执行的步骤日志，固定高度可滚动。
+              {t('detail.dialog.description')}
             </ResponsiveDialog.Description>
           </ResponsiveDialog.Header>
           {logDetail ? (
             <LogStepsPanel log={logDetail} />
           ) : (
             <div className="py-10 text-center text-sm text-muted-foreground">
-              请选择一条日志
+              {t('detail.dialog.empty')}
             </div>
           )}
         </ResponsiveDialog.Content>
@@ -422,6 +435,22 @@ function getToneStyles(tone: Tone): ToneStyles {
   return TONE_STYLES[tone] ?? TONE_STYLES.slate;
 }
 
-function getJobStatusMeta(status: string): JobStatusMeta {
+type Translator = (key: string, values?: Record<string, string | number>) => string;
+
+function getJobStatusMeta(status: string, t?: Translator): JobStatusMeta {
+  if (t) {
+    const metaKey =
+      status === '0'
+        ? 'detail.summary.status.running'
+        : status === '1'
+          ? 'detail.summary.status.paused'
+          : 'detail.summary.status.unknown';
+    const base = JOB_STATUS_META[status] ?? DEFAULT_JOB_STATUS_META;
+    return {
+      ...base,
+      label: t(`${metaKey}.label`),
+      helperText: t(`${metaKey}.helper`),
+    };
+  }
   return JOB_STATUS_META[status] ?? DEFAULT_JOB_STATUS_META;
 }

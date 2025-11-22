@@ -1,5 +1,7 @@
 import type { JobLog } from '../../type';
 
+type Translator = (key: string, values?: Record<string, string | number>) => string;
+
 const LOG_STATUS_META: Record<
   string,
   {
@@ -12,7 +14,7 @@ const LOG_STATUS_META: Record<
   }
 > = {
   '0': {
-    label: '执行成功',
+    label: 'Succeeded',
     badge: 'secondary',
     dotClass: 'bg-primary',
     stepSurfaceClass: 'bg-primary/5',
@@ -20,7 +22,7 @@ const LOG_STATUS_META: Record<
     stepTextClass: 'text-primary',
   },
   '1': {
-    label: '执行失败',
+    label: 'Failed',
     badge: 'destructive',
     dotClass: 'bg-rose-500',
     stepSurfaceClass: 'bg-rose-50/60',
@@ -28,7 +30,7 @@ const LOG_STATUS_META: Record<
     stepTextClass: 'text-rose-700',
   },
   '2': {
-    label: '执行中',
+    label: 'Running',
     badge: 'outline',
     dotClass: 'bg-sky-500',
     stepSurfaceClass: 'bg-sky-50/60',
@@ -37,10 +39,26 @@ const LOG_STATUS_META: Record<
   },
 };
 
-export function getLogStatusMeta(status?: string) {
+export function getLogStatusMeta(status?: string, t?: Translator) {
+  if (t) {
+    const key =
+      status === '0'
+        ? 'detail.logs.status.success'
+        : status === '1'
+          ? 'detail.logs.status.failure'
+          : status === '2'
+            ? 'detail.logs.status.running'
+            : 'detail.logs.status.pending';
+    const label = t(key);
+    const base =
+      LOG_STATUS_META[status ?? ''] ??
+      LOG_STATUS_META['2'] ??
+      (LOG_STATUS_META['0'] as (typeof LOG_STATUS_META)[string]);
+    return { ...base, label };
+  }
   return (
     LOG_STATUS_META[status ?? ''] ?? {
-      label: '等待调度',
+      label: 'Pending',
       badge: 'outline' as const,
       dotClass: 'bg-muted-foreground/50',
       stepSurfaceClass: 'bg-muted/20',
@@ -50,11 +68,14 @@ export function getLogStatusMeta(status?: string) {
   );
 }
 
-export function formatDuration(ms?: number): string {
+export function formatDuration(
+  ms?: number,
+  t?: Translator,
+): string {
   if (!ms || ms < 0) return '—';
-  if (ms < 1000) return `${ms}ms`;
+  if (ms < 1000) return t ? t('detail.logs.duration.ms', { value: ms }) : `${ms}ms`;
   const seconds = (ms / 1000).toFixed(1);
-  return `${seconds}s`;
+  return t ? t('detail.logs.duration.seconds', { value: seconds }) : `${seconds}s`;
 }
 
 export type JobLogStatusMeta = ReturnType<typeof getLogStatusMeta> & {

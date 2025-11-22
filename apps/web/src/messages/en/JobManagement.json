@@ -2,7 +2,8 @@
   "header": {
     "title": "Scheduled Jobs",
     "description": "Monitor cron jobs and run, pause, or filter them by name, group, and status.",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "create": "New job"
   },
   "filters": {
     "statusTabs": {
@@ -41,7 +42,14 @@
       "togglePending": "Updating",
       "resume": "Resume",
       "pause": "Pause",
-      "delete": "Delete"
+      "delete": "Delete",
+      "view": "View details",
+      "edit": "Edit",
+      "detailHint": "Open the job detail page",
+      "sheetTitle": "Job actions",
+      "sheetDescription": "Actions for “{name}”.",
+      "untitled": "Untitled job",
+      "moreLabel": "More actions for {name}"
     },
     "state": {
       "loading": "Loading jobs...",
@@ -52,6 +60,10 @@
     "timestamps": {
       "created": "Created: {time}",
       "updated": "Updated: {time}"
+    },
+    "runningTag": "Running",
+    "statusText": {
+      "scheduling": "Scheduling"
     }
   },
   "status": {
@@ -60,16 +72,238 @@
   },
   "toast": {
     "runSuccess": "Job submitted for execution.",
+    "runSuccessWithLog": "Job submitted for execution (log #{logId}).",
     "runError": "Operation failed. Please try again later.",
     "statusResume": "Job resumed.",
     "statusPause": "Job paused.",
     "statusError": "Failed to update job status. Please try again later.",
     "deleteSuccess": "Job deleted.",
-    "deleteError": "Failed to delete the job. Please try again later."
+    "deleteError": "Failed to delete the job. Please try again later.",
+    "concurrentLocked": "Job is running and concurrent executions are disabled. Please try again later."
   },
   "dialogs": {
     "deleteTitle": "Delete job",
     "deleteDescription": "Are you sure you want to delete “{name}”?",
     "deleteFallback": "Are you sure you want to delete this job?"
+  },
+  "detail": {
+    "dialog": {
+      "title": "Log steps",
+      "description": "View step-by-step execution details for this run.",
+      "empty": "Select a log entry to view its steps."
+    },
+    "back": "Back to jobs",
+    "titleFallback": "Job detail",
+    "actions": {
+      "run": "Run once now",
+      "running": "Running...",
+      "executing": "Executing",
+      "refresh": "Refresh data",
+      "refreshing": "Refreshing"
+    },
+    "messages": {
+      "loading": "Loading job detail...",
+      "error": "Failed to load job detail. Please try again later.",
+      "empty": "Job not found."
+    },
+    "live": {
+      "title": "Live execution · {name}",
+      "badge": "Running",
+      "fallbackName": "Job run",
+      "status": {
+        "success": "Success",
+        "failure": "Failed",
+        "running": "Running",
+        "alert": "Alert"
+      },
+      "connection": {
+        "active": "Live stream",
+        "complete": "Job completed",
+        "waiting": "Waiting for connection"
+      },
+      "waitingStart": "Waiting for job to start...",
+      "steps": {
+        "title": "Step logs",
+        "count": "{count} steps",
+        "hint": "One entry per line; scroll to view more.",
+        "error": "Failed to load step logs.",
+        "retry": "Retry",
+        "loading": "Loading step logs...",
+        "empty": "No step logs yet",
+        "stepLabel": "Step {order}: {name}",
+        "duration": "Duration {value}",
+        "collapse": "Collapse",
+        "expand": "Expand"
+      }
+    },
+    "summary": {
+      "runningTag": "Running",
+      "runningTagWithLog": "Running · Log #{logId}",
+      "nextExecution": {
+        "label": "Next execution",
+        "paused": "Paused",
+        "pending": "Waiting for scheduler"
+      },
+      "status": {
+        "running": {
+          "label": "Active",
+          "helper": "Job runs on its cron schedule. You can pause at any time."
+        },
+        "paused": {
+          "label": "Paused",
+          "helper": "Job is paused. Resume to continue the current cron schedule."
+        },
+        "unknown": {
+          "label": "Unknown status",
+          "helper": "Unable to load job status. Please refresh and try again."
+        }
+      },
+      "labels": {
+        "schedule": "Schedule policy",
+        "concurrency": "Concurrency",
+        "invokeTarget": "Invoke target",
+        "created": "Created",
+        "updated": "Updated",
+        "remark": "Remark",
+        "params": "Invoke params"
+      },
+      "params": {
+        "hint": "Hover to view full text",
+        "empty": "No parameters configured"
+      }
+    },
+    "logs": {
+      "title": "Execution logs",
+      "count": "{count} entries",
+      "clear": "Clear logs",
+      "clearing": "Clearing...",
+      "clearSuccess": "Execution logs cleared.",
+      "clearError": "Failed to clear logs. Please try again later.",
+      "table": {
+        "time": "Time",
+        "status": "Status",
+        "message": "Message",
+        "actions": "Actions",
+        "view": "View details",
+        "sheetTitle": "Log actions"
+      },
+      "empty": {
+        "titleActive": "Waiting for next schedule",
+        "titlePaused": "Job is paused",
+        "descriptionActive": "Job is created and will run at the next cron trigger.",
+        "descriptionPaused": "Job is paused. Resume to schedule it again.",
+        "nextExecution": "Next execution · {time}",
+        "nthExecution": "#{index} execution · {time}",
+        "schedule": "Schedule: {description}"
+      },
+      "status": {
+        "success": "Succeeded",
+        "failure": "Failed",
+        "running": "Running",
+        "pending": "Waiting"
+      },
+      "duration": {
+        "ms": "{value}ms",
+        "seconds": "{value}s"
+      }
+    }
+  },
+  "editor": {
+    "title": {
+      "create": "Create job",
+      "edit": "Edit job"
+    },
+    "description": "Configure the job schedule and parameters. Choosing a predefined type will autofill defaults.",
+    "actions": {
+      "saving": "Saving...",
+      "save": "Save",
+      "create": "Create"
+    },
+    "sections": {
+      "basic": "Basic info",
+      "schedule": "Schedule",
+      "execution": "Execution policy",
+      "params": "Parameters"
+    },
+    "fields": {
+      "jobType": {
+        "label": "Job type",
+        "placeholder": "Select a job type"
+      },
+      "jobName": {
+        "label": "Job name",
+        "placeholder": "e.g. Database backup"
+      },
+      "jobGroup": {
+        "label": "Job group",
+        "placeholder": "DEFAULT"
+      },
+      "invokeTarget": {
+        "label": "Invoke target",
+        "placeholder": "e.g. jobService.handleReport"
+      },
+      "cronExpression": {
+        "label": "Cron expression"
+      },
+      "status": {
+        "label": "Initial status",
+        "helper": "Active jobs follow the cron schedule. Paused jobs won’t run automatically."
+      },
+      "misfirePolicy": {
+        "label": "Misfire policy",
+        "helper": "What to do when a scheduled time is missed."
+      },
+      "concurrent": {
+        "label": "Concurrency",
+        "helper": "Allow multiple instances of the same job to run at once."
+      },
+      "invokeParams": {
+        "label": "Job parameters (JSON)",
+        "placeholder": "e.g. {\"retentionDays\": 7, \"compress\": true}",
+        "helper": "Configure parameters per job type. Selecting a preset fills defaults."
+      },
+      "remark": {
+        "label": "Remark (optional)",
+        "placeholder": "Notes or caveats for this job"
+      }
+    },
+    "jobTypes": {
+      "db": {
+        "backup": {
+          "label": "Database backup",
+          "description": "Back up PostgreSQL to object storage on schedule"
+        }
+      },
+      "log": {
+        "cleanup": {
+          "label": "Log cleanup",
+          "description": "Purge expired system logs regularly"
+        }
+      },
+      "cache": {
+        "warmup": {
+          "label": "Cache warmup",
+          "description": "Preload common data into Redis"
+        }
+      },
+      "custom": {
+        "label": "Custom job",
+        "description": "Enter an invoke target manually"
+      }
+    },
+    "toast": {
+      "createSuccess": "Job created.",
+      "updateSuccess": "Job updated.",
+      "createError": "Failed to create the job. Please try again later.",
+      "updateError": "Failed to update the job. Please try again later."
+    },
+    "validation": {
+      "jobType": "Please select a job type",
+      "jobName": "Please enter a job name",
+      "jobGroup": "Please enter a job group",
+      "invokeTarget": "Please enter an invoke target",
+      "cronExpression": "Please enter a cron expression",
+      "invalidJson": "Enter a valid JSON string"
+    }
   }
 }

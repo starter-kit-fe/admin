@@ -21,6 +21,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from 'next-intl';
 import {
   Table,
   TableBody,
@@ -41,6 +42,7 @@ import {
 import { usePermissions } from '@/hooks/use-permissions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useLocale } from 'next-intl';
 import {
   createColumnHelper,
   flexRender,
@@ -82,6 +84,8 @@ export function JobTable({
   onDelete,
   onEdit,
 }: JobTableProps) {
+  const locale = useLocale();
+  const t = useTranslations('JobManagement');
   const router = useRouter();
   const columnHelper = useMemo(() => createColumnHelper<Job>(), []);
   const { hasPermission } = usePermissions();
@@ -96,7 +100,7 @@ export function JobTable({
   const columns = useMemo(
     () => [
       columnHelper.accessor('jobName', {
-        header: () => '任务名称',
+        header: () => t('table.columns.jobName'),
         cell: ({ row }) => {
           const job = row.original;
           return (
@@ -112,7 +116,7 @@ export function JobTable({
               {job.isRunning ? (
                 <p className="flex items-center gap-1 text-[11px] text-emerald-600 animate-pulse">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  执行中
+                  {t('table.runningTag')}
                 </p>
               ) : null}
             </div>
@@ -124,7 +128,7 @@ export function JobTable({
         },
       }),
       columnHelper.accessor('cronExpression', {
-        header: () => 'Cron 表达式',
+        header: () => t('table.columns.cronExpression'),
         cell: ({ row }) => {
           const job = row.original;
           return (
@@ -135,7 +139,9 @@ export function JobTable({
                 tooltipClassName="text-left font-mono"
               />
               <EllipsisText
-                value={`策略：${resolveMisfireLabel(job.misfirePolicy)}`}
+                value={t('table.policyLabel', {
+                  policy: resolveMisfireLabel(t, job.misfirePolicy),
+                })}
                 className="max-w-[240px] text-xs text-muted-foreground"
               />
             </div>
@@ -147,26 +153,28 @@ export function JobTable({
         },
       }),
       columnHelper.accessor('concurrent', {
-        header: () => '并发',
+        header: () => t('table.columns.concurrent'),
         cell: ({ getValue }) => (
-          <span className="text-[12px]">{resolveConcurrentLabel(getValue())}</span>
+          <span className="text-[12px]">
+            {resolveConcurrentLabel(t, getValue())}
+          </span>
         ),
         meta: {
           headerClassName: 'w-[120px]',
         },
       }),
       columnHelper.accessor('status', {
-        header: () => '状态',
+        header: () => t('table.columns.status'),
         cell: ({ getValue }) => {
           const status = getValue() ?? '1';
           return (
             <div className="flex flex-col items-start justify-start">
               <Badge variant={STATUS_BADGE_VARIANT[status] ?? 'outline'}>
-                {resolveStatusLabel(status)}
+                {resolveStatusLabel(t, status)}
               </Badge>
               {status === '0' ? (
                 <span className="text-[11px] text-muted-foreground">
-                  调度中
+                  {t('table.statusText.scheduling')}
                 </span>
               ) : null}
             </div>
@@ -178,17 +186,21 @@ export function JobTable({
       }),
       columnHelper.display({
         id: 'timestamps',
-        header: () => '更新时间',
+        header: () => t('table.columns.updatedAt'),
         cell: ({ row }) => {
           const job = row.original;
           return (
             <div className="space-y-1 text-xs text-muted-foreground">
               <EllipsisText
-                value={`创建：${job.createTime || '-'}`}
+                value={t('table.timestamps.created', {
+                  time: job.createTime || '-',
+                })}
                 className="max-w-[220px]"
               />
               <EllipsisText
-                value={`更新：${job.updateTime || '-'}`}
+                value={t('table.timestamps.updated', {
+                  time: job.updateTime || '-',
+                })}
                 className="max-w-[220px]"
               />
             </div>
@@ -203,7 +215,9 @@ export function JobTable({
         ? [
           columnHelper.display({
             id: 'actions',
-            header: () => <span className="block text-right">操作</span>,
+            header: () => (
+              <span className="block text-right">{t('table.columns.actions')}</span>
+            ),
             cell: ({ row }) => {
               const job = row.original;
               const jobId = job.jobId;
@@ -217,6 +231,7 @@ export function JobTable({
                 <div className="flex items-center justify-end">
                   <JobRowActions
                     job={job}
+                    t={t}
                     canViewDetail={canViewDetail}
                     canEdit={canEditJob}
                     canRun={canRunJob}
@@ -226,6 +241,9 @@ export function JobTable({
                     isUpdatingStatus={isUpdatingStatus}
                     concurrencyLocked={concurrencyLocked}
                     onViewDetail={() => router.push(`/dashboard/monitor/job/${jobId}`)}
+                    onViewDetail={() =>
+                      router.push(`/${locale}/dashboard/monitor/job/${jobId}`)
+                    }
                     onEdit={() => onEdit(job)}
                     onRun={() => onRunJob(job)}
                     onToggleStatus={() => onToggleStatus(jobId, nextStatus)}
@@ -304,7 +322,7 @@ export function JobTable({
                   colSpan={visibleColumnCount}
                   className="h-24 text-center text-sm text-destructive"
                 >
-                  加载失败，请稍后再试。
+                  {t('table.state.error')}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows.length === 0 ? (
@@ -315,9 +333,9 @@ export function JobTable({
                 >
                   <Empty className="border-0 bg-transparent p-4">
                     <EmptyHeader>
-                      <EmptyTitle>暂无任务数据</EmptyTitle>
+                      <EmptyTitle>{t('table.state.emptyTitle')}</EmptyTitle>
                       <EmptyDescription>
-                        配置定时任务后可在此查看与管理。
+                        {t('table.state.emptyDescription')}
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>
@@ -356,6 +374,7 @@ export function JobTable({
 
 function JobRowActions({
   job,
+  t,
   canViewDetail,
   canEdit,
   canRun,
@@ -371,6 +390,7 @@ function JobRowActions({
   onDelete,
 }: {
   job: Job;
+  t: (key: string, values?: Record<string, string | number>) => string;
   canViewDetail: boolean;
   canEdit: boolean;
   canRun: boolean;
@@ -387,12 +407,14 @@ function JobRowActions({
 }) {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  const jobName = job.jobName || t('table.actions.untitled');
 
   if (!canViewDetail && !canEdit && !canRun && !canChangeStatus && !canDelete) {
     return null;
   }
 
-  const nextStatusLabel = job.status === '0' ? '暂停任务' : '恢复任务';
+  const nextStatusLabel =
+    job.status === '0' ? t('table.actions.pause') : t('table.actions.resume');
 
   if (isMobile) {
     return (
@@ -403,7 +425,7 @@ function JobRowActions({
             variant="ghost"
             size="icon-sm"
             className="text-muted-foreground"
-            aria-label="更多操作"
+            aria-label={t('table.actions.moreLabel', { name: jobName })}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
           >
@@ -415,8 +437,12 @@ function JobRowActions({
           className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
         >
           <SheetHeader className="px-4 pb-2 pt-3 text-left">
-            <SheetTitle>任务操作</SheetTitle>
-            <SheetDescription>对「{job.jobName || '未命名任务'}」执行操作。</SheetDescription>
+            <SheetTitle>{t('table.actions.sheetTitle')}</SheetTitle>
+            <SheetDescription>
+              {t('table.actions.sheetDescription', {
+                name: jobName,
+              })}
+            </SheetDescription>
           </SheetHeader>
           <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
             {canViewDetail ? (
@@ -430,9 +456,11 @@ function JobRowActions({
               >
                 <span className="flex items-center gap-2">
                   <Eye className="size-4" />
-                  查看详情
+                  {t('table.actions.view')}
                 </span>
-                <span className="text-xs text-muted-foreground">跳转至任务详情</span>
+                <span className="text-xs text-muted-foreground">
+                  {t('table.actions.detailHint')}
+                </span>
               </Button>
             ) : null}
             {canEdit ? (
@@ -445,7 +473,7 @@ function JobRowActions({
                 }}
               >
                 <Edit2 className="size-4" />
-                编辑任务
+                {t('table.actions.edit')}
               </Button>
             ) : null}
             {canRun ? (
@@ -461,17 +489,17 @@ function JobRowActions({
                 {isRunPending ? (
                   <>
                     <Spinner className="size-4" />
-                    触发中
+                    {t('table.actions.running')}
                   </>
                 ) : concurrencyLocked ? (
                   <>
                     <Spinner className="size-4" />
-                    执行中
+                    {t('table.actions.running')}
                   </>
                 ) : (
                   <>
                     <Play className="size-4" />
-                    立即执行
+                    {t('table.actions.run')}
                   </>
                 )}
               </Button>
@@ -489,7 +517,7 @@ function JobRowActions({
                 {isUpdatingStatus ? (
                   <>
                     <Spinner className="size-4" />
-                    更新中
+                    {t('table.actions.togglePending')}
                   </>
                 ) : (
                   <>
@@ -509,7 +537,7 @@ function JobRowActions({
                 }}
               >
                 <Trash2 className="size-4" />
-                删除任务
+                {t('table.actions.delete')}
               </Button>
             ) : null}
           </SheetFooter>
@@ -528,7 +556,7 @@ function JobRowActions({
           className="text-muted-foreground"
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
-          aria-label={`更多操作：${job.jobName}`}
+          aria-label={t('table.actions.moreLabel', { name: jobName })}
         >
           <MoreHorizontal className="size-4" />
         </Button>
@@ -542,7 +570,7 @@ function JobRowActions({
             }}
           >
             <Eye className="mr-2 size-4" />
-            查看详情
+            {t('table.actions.view')}
           </DropdownMenuItem>
         ) : null}
         {canEdit ? (
@@ -553,7 +581,7 @@ function JobRowActions({
             }}
           >
             <Edit2 className="mr-2 size-4" />
-            编辑任务
+            {t('table.actions.edit')}
           </DropdownMenuItem>
         ) : null}
         {canRun ? (
@@ -567,17 +595,17 @@ function JobRowActions({
             {isRunPending ? (
               <>
                 <Spinner className="mr-2 size-3.5" />
-                触发中
+                {t('table.actions.running')}
               </>
             ) : concurrencyLocked ? (
               <>
                 <Spinner className="mr-2 size-3.5" />
-                执行中
+                {t('table.actions.running')}
               </>
             ) : (
               <>
                 <Play className="mr-2 size-4" />
-                立即执行
+                {t('table.actions.run')}
               </>
             )}
           </DropdownMenuItem>
@@ -593,7 +621,7 @@ function JobRowActions({
             {isUpdatingStatus ? (
               <>
                 <Spinner className="mr-2 size-3.5" />
-                更新中
+                {t('table.actions.togglePending')}
               </>
             ) : (
               <>
@@ -612,7 +640,7 @@ function JobRowActions({
             }}
           >
             <Trash2 className="mr-2 size-4" />
-            删除任务
+            {t('table.actions.delete')}
           </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>

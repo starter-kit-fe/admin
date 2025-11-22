@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/input-group';
 import { Button } from '@/components/ui/button';
 import { Globe, UserRound, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface LoginLogManagementFiltersProps {
   status: string;
@@ -31,6 +32,7 @@ export function LoginLogManagementFilters({
   statusTabs,
   onReset,
 }: LoginLogManagementFiltersProps) {
+  const t = useTranslations('LoginLogManagement');
   return (
     <div className="space-y-4 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border/60">
       <StatusTabs
@@ -45,7 +47,7 @@ export function LoginLogManagementFilters({
             <UserRound className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="按账号模糊查询"
+            placeholder={t('filters.userPlaceholder')}
             value={userName}
             onChange={(event) => onUserNameChange(event.target.value)}
           />
@@ -54,7 +56,7 @@ export function LoginLogManagementFilters({
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label="清空账号筛选"
+              aria-label={t('filters.userClear')}
               onClick={() => onUserNameChange('')}
             >
               <X className="size-3.5" />
@@ -67,7 +69,7 @@ export function LoginLogManagementFilters({
             <Globe className="size-4 text-muted-foreground" />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="输入 IP 地址"
+            placeholder={t('filters.ipPlaceholder')}
             value={ipaddr}
             onChange={(event) => onIpaddrChange(event.target.value)}
           />
@@ -76,7 +78,7 @@ export function LoginLogManagementFilters({
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label="清空 IP 筛选"
+              aria-label={t('filters.ipClear')}
               onClick={() => onIpaddrChange('')}
             >
               <X className="size-3.5" />
@@ -93,7 +95,7 @@ export function LoginLogManagementFilters({
           onClick={onReset}
           className="text-muted-foreground hover:text-foreground"
         >
-          重置筛选
+          {t('filters.reset')}
         </Button>
       </div>
     </div>

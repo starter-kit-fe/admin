@@ -2,7 +2,8 @@
   "header": {
     "title": "定时任务",
     "description": "查看并管理调度任务，支持按名称、分组与状态筛选。",
-    "refresh": "刷新"
+    "refresh": "刷新",
+    "create": "新增任务"
   },
   "filters": {
     "statusTabs": {
@@ -41,7 +42,14 @@
       "togglePending": "更新中",
       "resume": "恢复",
       "pause": "暂停",
-      "delete": "删除"
+      "delete": "删除",
+      "view": "查看详情",
+      "edit": "编辑",
+      "detailHint": "跳转至任务详情",
+      "sheetTitle": "任务操作",
+      "sheetDescription": "对「{name}」执行操作。",
+      "untitled": "未命名任务",
+      "moreLabel": "更多操作：{name}"
     },
     "state": {
       "loading": "正在加载任务...",
@@ -52,6 +60,10 @@
     "timestamps": {
       "created": "创建：{time}",
       "updated": "更新：{time}"
+    },
+    "runningTag": "执行中",
+    "statusText": {
+      "scheduling": "调度中"
     }
   },
   "status": {
@@ -60,16 +72,238 @@
   },
   "toast": {
     "runSuccess": "任务已提交执行",
+    "runSuccessWithLog": "任务已提交执行（日志 #{logId}）",
     "runError": "操作失败，请稍后重试",
     "statusResume": "任务已恢复",
     "statusPause": "任务已暂停",
     "statusError": "更新任务状态失败，请稍后重试",
     "deleteSuccess": "任务已删除",
-    "deleteError": "删除任务失败，请稍后再试"
+    "deleteError": "删除任务失败，请稍后再试",
+    "concurrentLocked": "当前任务执行中且禁止并发，稍后再试"
   },
   "dialogs": {
     "deleteTitle": "删除定时任务",
     "deleteDescription": "确定要删除任务「{name}」吗？",
     "deleteFallback": "确定要删除该任务吗？"
+  },
+  "detail": {
+    "dialog": {
+      "title": "执行步骤",
+      "description": "查看本次执行的详细步骤与耗时。",
+      "empty": "选择一条日志查看步骤明细。"
+    },
+    "back": "返回任务列表",
+    "titleFallback": "任务详情",
+    "actions": {
+      "run": "立即执行一次",
+      "running": "触发中...",
+      "executing": "执行中",
+      "refresh": "刷新数据",
+      "refreshing": "刷新中"
+    },
+    "messages": {
+      "loading": "正在加载任务详情...",
+      "error": "加载失败，请稍后重试。",
+      "empty": "未找到任务信息。"
+    },
+    "live": {
+      "title": "实时执行 · {name}",
+      "badge": "执行中",
+      "fallbackName": "任务执行",
+      "status": {
+        "success": "成功",
+        "failure": "失败",
+        "running": "执行中",
+        "alert": "异常"
+      },
+      "connection": {
+        "active": "实时推送中",
+        "complete": "任务已完成",
+        "waiting": "等待连接"
+      },
+      "waitingStart": "等待任务开始...",
+      "steps": {
+        "title": "步骤日志",
+        "count": "{count} 条",
+        "hint": "按行展示，可滚动查看",
+        "error": "加载步骤日志失败",
+        "retry": "重试",
+        "loading": "加载步骤日志中...",
+        "empty": "暂无步骤日志",
+        "stepLabel": "步骤 {order}: {name}",
+        "duration": "耗时 {value}",
+        "collapse": "收起",
+        "expand": "展开"
+      }
+    },
+    "summary": {
+      "runningTag": "执行中",
+      "runningTagWithLog": "执行中 · 日志 #{logId}",
+      "nextExecution": {
+        "label": "下一次执行",
+        "paused": "已暂停",
+        "pending": "等待调度"
+      },
+      "status": {
+        "running": {
+          "label": "运行中",
+          "helper": "任务会按当前 Cron 计划自动执行，可随时暂停。"
+        },
+        "paused": {
+          "label": "已暂停",
+          "helper": "任务已暂停，恢复后会继续沿用当前 Cron 计划。"
+        },
+        "unknown": {
+          "label": "未知状态",
+          "helper": "无法获取任务状态，请刷新后重试。"
+        }
+      },
+      "labels": {
+        "schedule": "调度策略",
+        "concurrency": "并发策略",
+        "invokeTarget": "调用目标",
+        "created": "创建",
+        "updated": "更新",
+        "remark": "备注",
+        "params": "调用参数"
+      },
+      "params": {
+        "hint": "悬停查看完整",
+        "empty": "未配置参数"
+      }
+    },
+    "logs": {
+      "title": "执行日志",
+      "count": "{count} 条",
+      "clear": "清空日志",
+      "clearing": "清空中...",
+      "clearSuccess": "执行日志已清空",
+      "clearError": "清空日志失败，请稍后重试。",
+      "table": {
+        "time": "时间",
+        "status": "状态",
+        "message": "消息",
+        "actions": "操作",
+        "view": "查看详情",
+        "sheetTitle": "日志操作"
+      },
+      "empty": {
+        "titleActive": "等待下一次调度",
+        "titlePaused": "当前任务已暂停",
+        "descriptionActive": "任务已创建，将在下一次 Cron 调度时执行。",
+        "descriptionPaused": "任务已暂停，恢复后才会重新调度。",
+        "nextExecution": "下一次执行 · {time}",
+        "nthExecution": "#{index} 次执行 · {time}",
+        "schedule": "调度说明：{description}"
+      },
+      "status": {
+        "success": "执行成功",
+        "failure": "执行失败",
+        "running": "执行中",
+        "pending": "等待调度"
+      },
+      "duration": {
+        "ms": "{value}ms",
+        "seconds": "{value}s"
+      }
+    }
+  },
+  "editor": {
+    "title": {
+      "create": "新增任务",
+      "edit": "编辑任务"
+    },
+    "description": "配置定时任务的执行规则和参数。选择任务类型后会自动填充默认参数。",
+    "actions": {
+      "saving": "保存中...",
+      "save": "保存",
+      "create": "创建"
+    },
+    "sections": {
+      "basic": "基础信息",
+      "schedule": "调度配置",
+      "execution": "执行策略",
+      "params": "参数配置"
+    },
+    "fields": {
+      "jobType": {
+        "label": "任务类型",
+        "placeholder": "选择任务类型"
+      },
+      "jobName": {
+        "label": "任务名称",
+        "placeholder": "例如：数据库备份任务"
+      },
+      "jobGroup": {
+        "label": "任务分组",
+        "placeholder": "DEFAULT"
+      },
+      "invokeTarget": {
+        "label": "调用目标",
+        "placeholder": "例如 jobService.handleReport"
+      },
+      "cronExpression": {
+        "label": "Cron 表达式"
+      },
+      "status": {
+        "label": "初始状态",
+        "helper": "正常状态的任务会按照 Cron 表达式自动执行，暂停状态的任务不会自动执行"
+      },
+      "misfirePolicy": {
+        "label": "错过策略",
+        "helper": "当任务错过执行时间时的处理策略"
+      },
+      "concurrent": {
+        "label": "并发执行",
+        "helper": "是否允许同一任务的多个实例同时执行"
+      },
+      "invokeParams": {
+        "label": "任务参数（JSON 格式）",
+        "placeholder": "例如: {\"retentionDays\": 7, \"compress\": true}",
+        "helper": "根据任务类型配置不同的参数。选择预定义任务类型会自动填充默认参数。"
+      },
+      "remark": {
+        "label": "备注（可选）",
+        "placeholder": "任务说明或注意事项"
+      }
+    },
+    "jobTypes": {
+      "db": {
+        "backup": {
+          "label": "数据库备份",
+          "description": "定时备份 PostgreSQL 数据库到对象存储"
+        }
+      },
+      "log": {
+        "cleanup": {
+          "label": "日志清理",
+          "description": "清理过期的系统日志"
+        }
+      },
+      "cache": {
+        "warmup": {
+          "label": "缓存预热",
+          "description": "预热常用数据到 Redis 缓存"
+        }
+      },
+      "custom": {
+        "label": "自定义任务",
+        "description": "手动输入调用目标"
+      }
+    },
+    "toast": {
+      "createSuccess": "任务已创建",
+      "updateSuccess": "任务已更新",
+      "createError": "创建任务失败，请稍后重试",
+      "updateError": "更新任务失败，请稍后重试"
+    },
+    "validation": {
+      "jobType": "请选择任务类型",
+      "jobName": "请输入任务名称",
+      "jobGroup": "请输入任务分组",
+      "invokeTarget": "请输入调用目标",
+      "cronExpression": "请输入 Cron 表达式",
+      "invalidJson": "请输入有效的 JSON 字符串"
+    }
   }
 }

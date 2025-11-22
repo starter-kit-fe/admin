@@ -46,14 +46,11 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { OperLog } from '../../type';
-import {
-  getBusinessTypeLabel,
-  getOperLogStatusBadgeVariant,
-  getOperLogStatusLabel,
-} from '../../utils';
+import { getOperLogStatusBadgeVariant } from '../../utils';
 
 interface RowActionsProps {
   log: OperLog;
@@ -63,6 +60,7 @@ interface RowActionsProps {
 function RowActions({ log, onDelete }: RowActionsProps) {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  const t = useTranslations('OperLogManagement');
 
   const handleDelete = () => {
     onDelete(log);
@@ -80,7 +78,7 @@ function RowActions({ log, onDelete }: RowActionsProps) {
             className="size-7 sm:size-8"
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
-            aria-label="更多操作"
+            aria-label={t('table.actions.more')}
           >
             <MoreHorizontal className="size-4" />
           </Button>
@@ -90,8 +88,10 @@ function RowActions({ log, onDelete }: RowActionsProps) {
           className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
         >
           <SheetHeader className="px-4 pb-2 pt-3 text-left">
-            <SheetTitle>操作</SheetTitle>
-            <SheetDescription>针对该条操作日志执行操作。</SheetDescription>
+            <SheetTitle>{t('table.columns.actions')}</SheetTitle>
+            <SheetDescription>
+              {t('table.actions.sheetDescription')}
+            </SheetDescription>
           </SheetHeader>
           <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
             <Button
@@ -100,7 +100,7 @@ function RowActions({ log, onDelete }: RowActionsProps) {
               onClick={handleDelete}
             >
               <Trash2 className="size-4" />
-              删除
+              {t('table.actions.delete')}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -114,30 +114,30 @@ function RowActions({ log, onDelete }: RowActionsProps) {
         <Button
           type="button"
           variant="ghost"
-          size="icon-sm"
-          className="size-7 sm:size-8"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => event.stopPropagation()}
-          aria-label="更多操作"
-        >
-          <MoreHorizontal className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-28">
+            size="icon-sm"
+            className="size-7 sm:size-8"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+            aria-label={t('table.actions.more')}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-28">
         <DropdownMenuItem
           className="text-destructive focus:text-destructive"
-          onSelect={(event) => {
-            event.preventDefault();
-            handleDelete();
-          }}
-        >
-          <Trash2 className="mr-2 size-4" />
-          删除
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
+            onSelect={(event) => {
+              event.preventDefault();
+              handleDelete();
+            }}
+          >
+            <Trash2 className="mr-2 size-4" />
+            {t('table.actions.delete')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
 
 interface OperLogTableProps {
   rows: OperLog[];
@@ -155,11 +155,28 @@ export function OperLogTable({
   const columnHelper = useMemo(() => createColumnHelper<OperLog>(), []);
   const { hasPermission } = usePermissions();
   const canDeleteOperLog = hasPermission('monitor:operlog:remove');
+  const t = useTranslations('OperLogManagement');
+
+  const getStatusLabel = useCallback(
+    (status?: number | string | null) => {
+      const key = String(status) === '0' ? '0' : '1';
+      return t(`status.${key}`);
+    },
+    [t],
+  );
+
+  const getBusinessTypeLabel = useCallback(
+    (value?: number | string | null) => {
+      const key = value === null || value === undefined ? '0' : String(value);
+      return t(`businessTypes.${key}`);
+    },
+    [t],
+  );
 
   const columns = useMemo(
     () => [
       columnHelper.accessor('title', {
-        header: () => '操作标题',
+        header: () => t('table.columns.title'),
         cell: ({ row }) => {
           const log = row.original;
           return (
@@ -168,7 +185,9 @@ export function OperLogTable({
                 {log.title || '-'}
               </p>
               <p className="text-xs text-muted-foreground">
-                部门：{log.deptName || '未分配'}
+                {t('table.cells.department', {
+                  value: log.deptName || t('table.cells.departmentFallback'),
+                })}
               </p>
             </div>
           );
@@ -179,7 +198,7 @@ export function OperLogTable({
         },
       }),
       columnHelper.accessor('businessType', {
-        header: () => '业务类型',
+        header: () => t('table.columns.businessType'),
         cell: ({ getValue }) => (
           <Badge variant="secondary" className="rounded-full px-2 py-0.5">
             {getBusinessTypeLabel(getValue())}
@@ -191,10 +210,10 @@ export function OperLogTable({
         },
       }),
       columnHelper.accessor('status', {
-        header: () => '执行结果',
+        header: () => t('table.columns.status'),
         cell: ({ getValue }) => (
           <Badge variant={getOperLogStatusBadgeVariant(getValue())}>
-            {getOperLogStatusLabel(getValue())}
+            {getStatusLabel(getValue())}
           </Badge>
         ),
         meta: {
@@ -203,7 +222,7 @@ export function OperLogTable({
         },
       }),
       columnHelper.accessor('requestMethod', {
-        header: () => '请求方式',
+        header: () => t('table.columns.requestMethod'),
         cell: ({ getValue }) => (
           <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-mono uppercase text-foreground/80">
             {getValue() || '-'}
@@ -216,7 +235,7 @@ export function OperLogTable({
       }),
       columnHelper.display({
         id: 'operator',
-        header: () => '操作人员',
+        header: () => t('table.columns.operator'),
         cell: ({ row }) => {
           const log = row.original;
           return (
@@ -224,7 +243,7 @@ export function OperLogTable({
               <p className="text-sm text-foreground">{log.operName || '-'}</p>
               {log.operIp ? (
                 <p className="text-xs text-muted-foreground">
-                  IP：{log.operIp}
+                  {t('table.cells.ip', { value: log.operIp })}
                 </p>
               ) : null}
             </div>
@@ -236,7 +255,7 @@ export function OperLogTable({
         },
       }),
       columnHelper.accessor('operUrl', {
-        header: () => '请求地址',
+        header: () => t('table.columns.operUrl'),
         cell: ({ row, getValue }) => {
           const location = row.original.operLocation;
           return (
@@ -256,7 +275,7 @@ export function OperLogTable({
         },
       }),
       columnHelper.accessor('operTime', {
-        header: () => '操作时间',
+        header: () => t('table.columns.operTime'),
         cell: ({ row }) => {
           const log = row.original;
           return (
@@ -264,7 +283,7 @@ export function OperLogTable({
               <p>{log.operTime || '-'}</p>
               {log.costTime ? (
                 <p className="text-xs text-muted-foreground">
-                  耗时：{log.costTime}ms
+                  {t('table.cells.cost', { value: log.costTime })}
                 </p>
               ) : null}
             </div>
@@ -279,7 +298,9 @@ export function OperLogTable({
         ? [
             columnHelper.display({
               id: 'actions',
-              header: () => <div className="text-right">操作</div>,
+              header: () => (
+                <div className="text-right">{t('table.columns.actions')}</div>
+              ),
               cell: ({ row }) => {
                 const log = row.original;
                 return (
@@ -299,7 +320,7 @@ export function OperLogTable({
           ]
         : []),
     ],
-    [canDeleteOperLog, columnHelper, onDelete],
+    [canDeleteOperLog, columnHelper, getBusinessTypeLabel, getStatusLabel, onDelete, t],
   );
 
   const table = useReactTable({
@@ -349,7 +370,7 @@ export function OperLogTable({
                   colSpan={visibleColumnCount}
                   className="h-24 text-center text-sm text-destructive"
                 >
-                  加载失败，请稍后再试。
+                  {t('table.state.error')}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows.length === 0 ? (
@@ -360,9 +381,9 @@ export function OperLogTable({
                 >
                   <Empty className="border-0 bg-transparent p-4">
                     <EmptyHeader>
-                      <EmptyTitle>暂无操作日志</EmptyTitle>
+                      <EmptyTitle>{t('table.state.emptyTitle')}</EmptyTitle>
                       <EmptyDescription>
-                        执行新增、修改或删除后会记录在这里。
+                        {t('table.state.emptyDescription')}
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>

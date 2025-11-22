@@ -8,10 +8,6 @@ export function resolveErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-export function getLoginStatusLabel(status?: string | null) {
-  return status === '0' ? '成功' : '失败';
-}
-
 export function getLoginStatusBadgeVariant(status?: string | null) {
   return status === '0' ? 'secondary' : 'destructive';
 }

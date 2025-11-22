@@ -82,7 +82,7 @@ export function DictTypeEditorDialog({
   const title = mode === 'create' ? t('typeEditor.createTitle') : t('typeEditor.editTitle');
   const description = t('typeEditor.description');
   const submitText = submitting ? t('typeEditor.actions.saving') : t('typeEditor.actions.save');
-  const cancelText = tCommon('dialogs.cancel');
+  const cancelText = tCommon('cancel');
   const formId = 'dict-type-editor-form';
 
   return (
@@ -123,10 +123,13 @@ export function DictTypeEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      字典名称
+                      {t('typeEditor.fields.dictName.label')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入字典名称" {...field} />
+                      <Input
+                        placeholder={t('typeEditor.fields.dictName.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -139,10 +142,13 @@ export function DictTypeEditorDialog({
                   <FormItem>
                     <FormLabel>
                       <RequiredMark />
-                      字典类型
+                      {t('typeEditor.fields.dictType.label')}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="请输入字典类型" {...field} />
+                      <Input
+                        placeholder={t('typeEditor.fields.dictType.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -155,7 +161,7 @@ export function DictTypeEditorDialog({
                   <FormItem className="sm:col-span-2">
                     <FormLabel>
                       <RequiredMark />
-                      状态
+                      {t('typeEditor.fields.status.label')}
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -167,13 +173,17 @@ export function DictTypeEditorDialog({
                           <FormControl>
                             <RadioGroupItem value="0" />
                           </FormControl>
-                          <FormLabel className="font-normal">正常</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('typeEditor.fields.status.options.0')}
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center gap-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="1" />
                           </FormControl>
-                          <FormLabel className="font-normal">停用</FormLabel>
+                          <FormLabel className="font-normal">
+                            {t('typeEditor.fields.status.options.1')}
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -186,9 +196,13 @@ export function DictTypeEditorDialog({
                 name="remark"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>备注</FormLabel>
+                    <FormLabel>{t('typeEditor.fields.remark.label')}</FormLabel>
                     <FormControl>
-                      <Textarea rows={3} placeholder="可填写字典用途说明" {...field} />
+                      <Textarea
+                        rows={3}
+                        placeholder={t('typeEditor.fields.remark.placeholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -37,7 +37,7 @@ import { Activity, Eye, Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import type { Job, JobLog, JobLogList } from '../../type';
-import { formatDuration, getLogStatusMeta } from './log-meta';
+import { getLogStatusMeta } from './log-meta';
 import { AwaitingExecutionState } from './log-states';
 
 const LOG_PAGE_SIZES = [5, 10, 20];
@@ -54,6 +54,7 @@ export function JobLogsSection({
   onClearLogs,
   canClearLogs,
   clearing,
+  t,
 }: {
   job: Job;
   logs?: JobLogList;
@@ -66,6 +67,7 @@ export function JobLogsSection({
   onClearLogs: () => void;
   canClearLogs: boolean;
   clearing: boolean;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }) {
   const rows = logs?.items ?? [];
   const total = logs?.total ?? 0;
@@ -82,7 +84,7 @@ export function JobLogsSection({
     () => [
       {
         id: 'time',
-        header: '时间',
+        header: t('detail.logs.table.time'),
         cell: ({ row }) => {
           const log = row.original;
           return (
@@ -100,9 +102,9 @@ export function JobLogsSection({
       },
       {
         id: 'status',
-        header: '状态',
+        header: t('detail.logs.table.status'),
         cell: ({ row }) => {
-          const meta = getLogStatusMeta(row.original.status);
+          const meta = getLogStatusMeta(row.original.status, t);
           return (
             <Badge variant={meta.badge} className="px-2">
               {meta.label}
@@ -116,7 +118,7 @@ export function JobLogsSection({
       },
       {
         id: 'message',
-        header: '消息',
+        header: t('detail.logs.table.message'),
         cell: ({ row }) => (
           <EllipsisText
             value={row.original.jobMessage || '—'}
@@ -128,11 +130,12 @@ export function JobLogsSection({
       },
       {
         id: 'actions',
-        header: () => <span className="">操作</span>,
+        header: () => <span className="">{t('detail.logs.table.actions')}</span>,
         cell: ({ row }) => (
           <LogRowActions
             log={row.original}
             onView={() => onSelectLog(row.original)}
+            t={t}
           />
         ),
         meta: {
@@ -143,7 +146,7 @@ export function JobLogsSection({
         },
       },
     ],
-    [job.invokeTarget, onSelectLog],
+    [job.invokeTarget, onSelectLog, t],
   );
 
   const table = useReactTable({
@@ -160,9 +163,9 @@ export function JobLogsSection({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Activity className="size-4 text-muted-foreground" />
-          执行日志
+          {t('detail.logs.title')}
           <Badge variant="outline" className="ml-1">
-            {total} 条
+            {t('detail.logs.count', { count: total })}
           </Badge>
         </div>
         <div className="flex items-center gap-2">
@@ -179,7 +182,7 @@ export function JobLogsSection({
               ) : (
                 <Trash2 className="mr-2 size-4" />
               )}
-              清空日志
+              {clearing ? t('detail.logs.clearing') : t('detail.logs.clear')}
             </Button>
           ) : null}
         </div>
@@ -219,6 +222,7 @@ export function JobLogsSection({
                     jobStatus={job.status}
                     upcomingExecutions={upcomingExecutions}
                     cronDescription={cronDescription}
+                    t={t}
                   />
                 </TableCell>
               </TableRow>
@@ -267,7 +271,15 @@ export function JobLogsSection({
   );
 }
 
-function LogRowActions({ log, onView }: { log: JobLog; onView: () => void }) {
+function LogRowActions({
+  log,
+  onView,
+  t,
+}: {
+  log: JobLog;
+  onView: () => void;
+  t: (key: string, values?: Record<string, string | number>) => string;
+}) {
   const isMobile = useIsMobile();
 
   if (isMobile) {
@@ -290,7 +302,7 @@ function LogRowActions({ log, onView }: { log: JobLog; onView: () => void }) {
           className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
         >
           <SheetHeader className="px-4 pb-2 pt-3 text-left">
-            <SheetTitle>日志操作</SheetTitle>
+            <SheetTitle>{t('detail.logs.table.sheetTitle')}</SheetTitle>
           </SheetHeader>
           <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
             <Button
@@ -301,7 +313,7 @@ function LogRowActions({ log, onView }: { log: JobLog; onView: () => void }) {
               }}
             >
               <Eye className="size-4" />
-              查看详情
+              {t('detail.logs.table.view')}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -327,13 +339,13 @@ function LogRowActions({ log, onView }: { log: JobLog; onView: () => void }) {
         <DropdownMenuItem
           onSelect={(event) => {
             event.preventDefault();
-            onView();
-          }}
-        >
-          <Eye className="mr-2 size-4" />
-          查看详情
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+          onView();
+        }}
+      >
+        <Eye className="mr-2 size-4" />
+        {t('detail.logs.table.view')}
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+);
 }

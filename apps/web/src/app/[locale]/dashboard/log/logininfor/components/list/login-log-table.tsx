@@ -46,10 +46,11 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { LoginLog } from '../../type';
-import { getLoginStatusBadgeVariant, getLoginStatusLabel } from '../../utils';
+import { getLoginStatusBadgeVariant } from '../../utils';
 
 interface LoginLogTableProps {
   rows: LoginLog[];
@@ -66,6 +67,7 @@ interface RowActionsProps {
 function RowActions({ log, onDelete }: RowActionsProps) {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  const t = useTranslations('LoginLogManagement');
 
   const handleDelete = () => {
     onDelete(log);
@@ -83,7 +85,7 @@ function RowActions({ log, onDelete }: RowActionsProps) {
             className="size-7 sm:size-8"
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
-            aria-label="更多操作"
+            aria-label={t('table.actions.more')}
           >
             <MoreHorizontal className="size-4" />
           </Button>
@@ -93,8 +95,10 @@ function RowActions({ log, onDelete }: RowActionsProps) {
           className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
         >
           <SheetHeader className="px-4 pb-2 pt-3 text-left">
-            <SheetTitle>操作</SheetTitle>
-            <SheetDescription>针对该条登录日志执行操作。</SheetDescription>
+            <SheetTitle>{t('table.columns.actions')}</SheetTitle>
+            <SheetDescription>
+              {t('table.actions.sheetDescription')}
+            </SheetDescription>
           </SheetHeader>
           <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
             <Button
@@ -103,7 +107,7 @@ function RowActions({ log, onDelete }: RowActionsProps) {
               onClick={handleDelete}
             >
               <Trash2 className="size-4" />
-              删除
+              {t('table.actions.delete')}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -117,30 +121,30 @@ function RowActions({ log, onDelete }: RowActionsProps) {
         <Button
           type="button"
           variant="ghost"
-          size="icon-sm"
-          className="size-7 sm:size-8"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => event.stopPropagation()}
-          aria-label="更多操作"
-        >
-          <MoreHorizontal className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-28">
+            size="icon-sm"
+            className="size-7 sm:size-8"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+            aria-label={t('table.actions.more')}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-28">
         <DropdownMenuItem
           className="text-destructive focus:text-destructive"
-          onSelect={(event) => {
-            event.preventDefault();
-            handleDelete();
-          }}
-        >
-          <Trash2 className="mr-2 size-4" />
-          删除
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
+            onSelect={(event) => {
+              event.preventDefault();
+              handleDelete();
+            }}
+          >
+            <Trash2 className="mr-2 size-4" />
+            {t('table.actions.delete')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
 
 export function LoginLogTable({
   rows,
@@ -151,11 +155,18 @@ export function LoginLogTable({
   const columnHelper = useMemo(() => createColumnHelper<LoginLog>(), []);
   const { hasPermission } = usePermissions();
   const canDeleteLog = hasPermission('monitor:logininfor:remove');
+  const t = useTranslations('LoginLogManagement');
+
+  const getStatusLabel = useCallback(
+    (status?: string | null) =>
+      status === '0' ? t('status.success') : t('status.failed'),
+    [t],
+  );
 
   const columns = useMemo(
     () => [
       columnHelper.accessor('userName', {
-        header: () => '登录账号',
+        header: () => t('table.columns.account'),
         cell: ({ row }) => {
           const log = row.original;
           return (
@@ -164,7 +175,9 @@ export function LoginLogTable({
                 {log.userName || '-'}
               </p>
               <p className="text-xs text-muted-foreground">
-                地点：{log.loginLocation || '未知地点'}
+                {t('table.locationLabel', {
+                  location: log.loginLocation || t('table.locationUnknown'),
+                })}
               </p>
             </div>
           );
@@ -174,7 +187,7 @@ export function LoginLogTable({
         },
       }),
       columnHelper.accessor('ipaddr', {
-        header: () => '登录 IP',
+        header: () => t('table.columns.ip'),
         cell: ({ getValue }) => (
           <span className="text-sm text-foreground">{getValue() || '-'}</span>
         ),
@@ -184,7 +197,7 @@ export function LoginLogTable({
       }),
       columnHelper.display({
         id: 'client',
-        header: () => '客户端',
+        header: () => t('table.columns.client'),
         cell: ({ row }) => {
           const log = row.original;
           return (
@@ -199,10 +212,10 @@ export function LoginLogTable({
         },
       }),
       columnHelper.accessor('status', {
-        header: () => '状态',
+        header: () => t('table.columns.status'),
         cell: ({ getValue }) => (
           <Badge variant={getLoginStatusBadgeVariant(getValue())}>
-            {getLoginStatusLabel(getValue())}
+            {getStatusLabel(getValue())}
           </Badge>
         ),
         meta: {
@@ -210,7 +223,7 @@ export function LoginLogTable({
         },
       }),
       columnHelper.accessor('msg', {
-        header: () => '提示信息',
+        header: () => t('table.columns.message'),
         cell: ({ getValue }) => (
           <span className="line-clamp-2 text-sm text-muted-foreground">
             {getValue() || '-'}
@@ -222,7 +235,7 @@ export function LoginLogTable({
         },
       }),
       columnHelper.accessor('loginTime', {
-        header: () => '登录时间',
+        header: () => t('table.columns.time'),
         cell: ({ getValue }) => (
           <span className="text-sm text-foreground">{getValue() ?? '-'}</span>
         ),
@@ -234,7 +247,9 @@ export function LoginLogTable({
         ? [
             columnHelper.display({
               id: 'actions',
-              header: () => <div className="text-right">操作</div>,
+              header: () => (
+                <div className="text-right">{t('table.columns.actions')}</div>
+              ),
               cell: ({ row }) => {
                 const log = row.original;
                 return (
@@ -254,7 +269,7 @@ export function LoginLogTable({
           ]
         : []),
     ],
-    [canDeleteLog, columnHelper, onDelete],
+    [canDeleteLog, columnHelper, getStatusLabel, onDelete, t],
   );
 
   const table = useReactTable({
@@ -304,7 +319,7 @@ export function LoginLogTable({
                   colSpan={visibleColumnCount}
                   className="h-24 text-center text-sm text-destructive"
                 >
-                  加载登录日志失败，请稍后再试。
+                  {t('table.state.error')}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows.length === 0 ? (
@@ -315,9 +330,9 @@ export function LoginLogTable({
                 >
                   <Empty className="border-0 bg-transparent p-4">
                     <EmptyHeader>
-                      <EmptyTitle>暂无登录日志数据</EmptyTitle>
+                      <EmptyTitle>{t('table.state.emptyTitle')}</EmptyTitle>
                       <EmptyDescription>
-                        当有新的登录行为时会自动汇总在此。
+                        {t('table.state.emptyDescription')}
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>

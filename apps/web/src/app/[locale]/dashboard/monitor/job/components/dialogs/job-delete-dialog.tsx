@@ -3,6 +3,7 @@
 import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 import { deleteJob } from '../../api';
 import {
@@ -12,6 +13,7 @@ import {
 } from '../../store';
 
 export function JobDeleteDialog() {
+  const t = useTranslations('JobManagement');
   const { deleteTarget, setDeleteTarget } = useJobManagementStore();
   const refresh = useJobManagementRefresh();
   const { beginMutation, endMutation } = useJobManagementMutationCounter();
@@ -22,13 +24,13 @@ export function JobDeleteDialog() {
       beginMutation();
     },
     onSuccess: () => {
-      toast.success('任务已删除');
+      toast.success(t('toast.deleteSuccess'));
       setDeleteTarget(null);
       refresh();
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : '删除任务失败，请稍后再试';
+        error instanceof Error ? error.message : t('toast.deleteError');
       toast.error(message);
     },
     onSettled: () => {
@@ -44,11 +46,11 @@ export function JobDeleteDialog() {
           setDeleteTarget(null);
         }
       }}
-      title="删除定时任务"
+      title={t('dialogs.deleteTitle')}
       description={
         deleteTarget
-          ? `确定要删除任务「${deleteTarget.jobName}」吗？`
-          : '确定要删除该任务吗？'
+          ? t('dialogs.deleteDescription', { name: deleteTarget.jobName })
+          : t('dialogs.deleteFallback')
       }
       loading={deleteMutation.isPending}
       onConfirm={() => {

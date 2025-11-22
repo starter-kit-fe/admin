@@ -58,7 +58,7 @@ export function useCacheOverviewStream(): UseCacheOverviewStreamResult {
       },
       onError: (err) => {
         setIsConnected(false);
-        setError(err.message || '连接异常');
+        setError(err.message ?? '');
       },
       onClose: () => {
         setIsConnected(false);
@@ -92,7 +92,7 @@ export function useCacheOverviewStream(): UseCacheOverviewStreamResult {
     };
   }, [disconnect, reconnect]);
 
-  const isLoading = !overview && !error;
+  const isLoading = !overview && error === null;
 
   const snapshot = useMemo<UseCacheOverviewStreamResult>(
     () => ({

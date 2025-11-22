@@ -16,6 +16,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -30,7 +31,6 @@ import {
   Users,
 } from 'lucide-react';
 
-import type { CacheKeyspaceInfo } from '../api/types';
 import { useCacheOverviewStream } from '../hooks/use-cache-overview-stream';
 import {
   formatBytes,
@@ -39,33 +39,6 @@ import {
   safeMemoryGauge,
   summarizeKeys,
 } from '../utils';
-
-function formatTimestamp(value?: number | null) {
-  if (!value || Number.isNaN(value)) {
-    return '等待实时流';
-  }
-  return new Date(value).toLocaleString();
-}
-
-function renderKeyspaceRow(space: CacheKeyspaceInfo) {
-  const avgTTL =
-    typeof space.avgTtl === 'number' && space.avgTtl > 0
-      ? `${Math.round(space.avgTtl / 1000)}s`
-      : '未知';
-
-  return (
-    <tr key={space.db} className="text-sm">
-      <td className="py-2 font-medium text-foreground">
-        {space.db.toUpperCase()}
-      </td>
-      <td className="py-2 text-muted-foreground">{formatNumber(space.keys)}</td>
-      <td className="py-2 text-muted-foreground">
-        {formatNumber(space.expires)}
-      </td>
-      <td className="py-2 text-muted-foreground">{avgTTL}</td>
-    </tr>
-  );
-}
 
 function MetaPill({
   icon: Icon,
@@ -122,6 +95,7 @@ const safeNumber = (value?: number | null) =>
   typeof value === 'number' && Number.isFinite(value) ? value : 0;
 
 export function CacheDashboard() {
+  const t = useTranslations('CacheMonitor');
   const stream = useCacheOverviewStream();
   const overview = stream.overview;
 
@@ -136,12 +110,23 @@ export function CacheDashboard() {
   const memoryLimitLabel =
     maxMemory > 0
       ? formatBytes(maxMemory, { decimals: 1 })
-      : (overview.memory.maxMemoryHuman ?? '未配置上限');
+      : overview.memory.maxMemoryHuman ?? t('dashboard.overview.memory.noLimit');
   const memoryPeakLabel =
     overview.memory.usedMemoryPeakHuman ??
     formatBytes(peakMemory, {
       decimals: 1,
     });
+
+  const formatTimestamp = (value?: number | null) => {
+    if (!value || Number.isNaN(value)) {
+      return t('dashboard.header.waitingStream');
+    }
+    try {
+      return new Date(value).toLocaleString();
+    } catch {
+      return t('dashboard.header.waitingStream');
+    }
+  };
 
   const hitRate = safeNumber(overview.stats.hitRate);
   const opsPerSec = safeNumber(overview.stats.instantaneousOps);
@@ -149,20 +134,20 @@ export function CacheDashboard() {
   const metaItems = [
     {
       icon: Database,
-      label: '键总数',
+      label: t('dashboard.meta.keys'),
       value: totalKeys,
       formatValue: (val: number) => formatNumber(Math.max(0, Math.round(val))),
     },
     {
       icon: Gauge,
-      label: '命中率',
+      label: t('dashboard.meta.hitRate'),
       value: hitRate,
       formatValue: (val: number) =>
         formatPercent(Math.max(0, Math.min(100, val))),
     },
     {
       icon: Activity,
-      label: '每秒命令',
+      label: t('dashboard.meta.ops'),
       value: opsPerSec,
       formatValue: (val: number) => formatNumber(Math.max(0, Math.round(val))),
     },
@@ -174,22 +159,44 @@ export function CacheDashboard() {
   const evictedKeys = safeNumber(overview.stats.evictedKeys);
   const connectedClients = safeNumber(overview.clients.connected);
   const blockedClients = safeNumber(overview.clients.blocked);
+  const serverFields = [
+    {
+      label: t('dashboard.server.fields.mode'),
+      value: overview.server.mode || t('common.unknown'),
+    },
+    {
+      label: t('dashboard.server.fields.role'),
+      value: overview.server.role || t('common.unknown'),
+    },
+    {
+      label: t('dashboard.server.fields.version'),
+      value: overview.server.version || t('common.unknown'),
+    },
+    {
+      label: t('dashboard.server.fields.uptime'),
+      value: overview.server.uptime || t('common.unknown'),
+    },
+  ];
 
   const connectionBadgeClass = stream.isConnected
     ? 'bg-primary/15 text-primary'
     : 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-100';
-  const connectionLabel = stream.isConnected ? '实时更新' : '等待连接';
+  const connectionLabel = stream.isConnected
+    ? t('dashboard.header.connection.live')
+    : t('dashboard.header.connection.waiting');
   const isConnecting =
-    stream.isLoading || (!stream.isConnected && !stream.error);
+    stream.isLoading || (!stream.isConnected && stream.error === null);
 
   return (
     <div className="mx-auto flex w-full flex-col gap-6">
       <Card className="shadow-none border-none">
         <CardHeader className="space-y-4 lg:flex lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-semibold">缓存监控</CardTitle>
+            <CardTitle className="text-2xl font-semibold">
+              {t('dashboard.header.title')}
+            </CardTitle>
             <CardDescription>
-              使用 SSE 实时捕获 Redis 运行状态与键分布，无需轮询。
+              {t('dashboard.header.description')}
             </CardDescription>
             <div className="flex flex-wrap gap-2">
               {metaItems.map((item) => (
@@ -220,7 +227,11 @@ export function CacheDashboard() {
               />
               {connectionLabel}
             </div>
-            <div>概览更新时间：{formatTimestamp(stream.lastUpdated)}</div>
+            <div>
+              {t('dashboard.header.updatedAt', {
+                time: formatTimestamp(stream.lastUpdated),
+              })}
+            </div>
             <PermissionButton
               required="monitor:cache:list"
               type="button"
@@ -232,22 +243,22 @@ export function CacheDashboard() {
               {isConnecting ? (
                 <>
                   <Spinner className="size-4" />
-                  连接中
+                  {t('dashboard.header.actions.connecting')}
                 </>
               ) : (
                 <>
                   <RefreshCcw className="size-4" />
-                  重新连接
+                  {t('dashboard.header.actions.reconnect')}
                 </>
               )}
             </PermissionButton>
           </div>
         </CardHeader>
-        {stream.error && !stream.isConnected ? (
+        {stream.error !== null && !stream.isConnected ? (
           <CardContent>
             <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
               <AlertTriangle className="size-4" />
-              {stream.error || '无法加载缓存概览，请稍后再试。'}
+              {stream.error || t('dashboard.error.overview')}
             </div>
           </CardContent>
         ) : null}
@@ -256,8 +267,12 @@ export function CacheDashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="shadow-none border-none">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-lg font-semibold">运行概览</CardTitle>
-            <CardDescription>内存、命中率与客户端连接情况</CardDescription>
+            <CardTitle className="text-lg font-semibold">
+              {t('dashboard.overview.title')}
+            </CardTitle>
+            <CardDescription>
+              {t('dashboard.overview.description')}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="relative overflow-hidden rounded-2xl border border-border/50  p-4  transition-colors dark:border-border/30">
@@ -272,7 +287,7 @@ export function CacheDashboard() {
                 <div className="flex items-center justify-between text-sm font-semibold text-foreground">
                   <span className="flex items-center gap-2">
                     <HardDrive className="size-4 text-muted-foreground" />
-                    内存占用
+                    {t('dashboard.overview.memory.label')}
                   </span>
                   <span
                     className={cn(
@@ -291,23 +306,25 @@ export function CacheDashboard() {
                 </div>
                 <div className="flex flex-col gap-4 text-xs uppercase tracking-wide text-muted-foreground sm:flex-row sm:items-end sm:justify-between">
                   <div className="space-y-2">
-                    <div>使用中</div>
+                    <div>{t('dashboard.overview.memory.used')}</div>
                     <NumberTicker
                       value={usedMemory}
                       formatValue={(val) => formatBytes(val, { decimals: 1 })}
                       className="text-lg font-semibold text-foreground"
                     />
                     <div className="text-muted-foreground">
-                      峰值 {memoryPeakLabel}
+                      {t('dashboard.overview.memory.peak')} {memoryPeakLabel}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-muted-foreground">限制</div>
+                    <div className="text-muted-foreground">
+                      {t('dashboard.overview.memory.limit')}
+                    </div>
                     <div className="text-sm font-semibold text-foreground">
                       {memoryLimitLabel}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      碎片率{' '}
+                      {t('dashboard.overview.memory.fragmentation')}{' '}
                       <NumberTicker
                         value={fragmentationRatio}
                         formatValue={(val) => formatPercent(val)}
@@ -323,11 +340,13 @@ export function CacheDashboard() {
               <div className="rounded-xl border border-border/50 p-4">
                 <div className="flex items-center gap-2 text-foreground">
                   <Users className="size-4 text-muted-foreground" />
-                  <span className="text-sm font-semibold">客户端</span>
+                  <span className="text-sm font-semibold">
+                    {t('dashboard.overview.clients.title')}
+                  </span>
                 </div>
                 <div className="mt-3 space-y-2 text-xs uppercase tracking-wide">
                   <div className="flex items-center justify-between">
-                    <span>已连接</span>
+                    <span>{t('dashboard.overview.clients.connected')}</span>
                     <NumberTicker
                       value={connectedClients}
                       formatValue={(val) =>
@@ -337,7 +356,7 @@ export function CacheDashboard() {
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>被阻塞</span>
+                    <span>{t('dashboard.overview.clients.blocked')}</span>
                     <NumberTicker
                       value={blockedClients}
                       formatValue={(val) =>
@@ -351,11 +370,13 @@ export function CacheDashboard() {
               <div className="rounded-xl border border-border/50 p-4">
                 <div className="flex items-center gap-2 text-foreground">
                   <Layers className="size-4 text-muted-foreground" />
-                  <span className="text-sm font-semibold">访问统计</span>
+                  <span className="text-sm font-semibold">
+                    {t('dashboard.overview.stats.title')}
+                  </span>
                 </div>
                 <div className="mt-3 space-y-2 text-xs uppercase tracking-wide">
                   <div className="flex items-center justify-between">
-                    <span>命中</span>
+                    <span>{t('dashboard.overview.stats.hits')}</span>
                     <NumberTicker
                       value={hitCount}
                       formatValue={(val) =>
@@ -365,7 +386,7 @@ export function CacheDashboard() {
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>未命中</span>
+                    <span>{t('dashboard.overview.stats.misses')}</span>
                     <NumberTicker
                       value={missCount}
                       formatValue={(val) =>
@@ -375,7 +396,7 @@ export function CacheDashboard() {
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>过期键</span>
+                    <span>{t('dashboard.overview.stats.expired')}</span>
                     <NumberTicker
                       value={expiredKeys}
                       formatValue={(val) =>
@@ -385,7 +406,7 @@ export function CacheDashboard() {
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>驱逐键</span>
+                    <span>{t('dashboard.overview.stats.evicted')}</span>
                     <NumberTicker
                       value={evictedKeys}
                       formatValue={(val) =>
@@ -402,17 +423,16 @@ export function CacheDashboard() {
 
         <Card className="shadow-none border-none">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-lg font-semibold">服务器状态</CardTitle>
-            <CardDescription>核心运行参数与持久化信息</CardDescription>
+            <CardTitle className="text-lg font-semibold">
+              {t('dashboard.server.title')}
+            </CardTitle>
+            <CardDescription>
+              {t('dashboard.server.description')}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/50 p-4">
-              {[
-                { label: '运行模式', value: overview.server.mode || '未知' },
-                { label: '角色', value: overview.server.role || 'master' },
-                { label: '版本', value: overview.server.version || '-' },
-                { label: '运行时长', value: overview.server.uptime || '-' },
-              ].map((item) => (
+              {serverFields.map((item) => (
                 <div key={item.label} className={cn('space-y-1')}>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground">
                     {item.label}
@@ -426,23 +446,32 @@ export function CacheDashboard() {
             <div className="rounded-xl border border-border/50 p-4">
               <div className="flex items-center gap-2 text-foreground">
                 <Server className="size-4 text-muted-foreground" />
-                <span className="text-sm font-semibold">持久化</span>
+                <span className="text-sm font-semibold">
+                  {t('dashboard.server.persistence.title')}
+                </span>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-3 text-xs uppercase tracking-wide">
                 <div>
-                  <div className="text-muted-foreground">上次 RDB</div>
+                  <div className="text-muted-foreground">
+                    {t('dashboard.server.persistence.lastRdb')}
+                  </div>
                   <div className="text-sm font-medium text-foreground">
-                    {overview.persistence.rdbLastSaveTime || '未执行'}
+                    {overview.persistence.rdbLastSaveTime ||
+                      t('common.notExecuted')}
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground">状态</div>
+                  <div className="text-muted-foreground">
+                    {t('dashboard.server.persistence.status')}
+                  </div>
                   <div className="text-sm font-medium text-foreground">
-                    {overview.persistence.rdbLastStatus || '未知'}
+                    {overview.persistence.rdbLastStatus || t('common.unknown')}
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground">未持久化</div>
+                  <div className="text-muted-foreground">
+                    {t('dashboard.server.persistence.pending')}
+                  </div>
                   <div className="text-sm font-medium text-foreground">
                     {formatNumber(
                       overview.persistence.rdbChangesSinceLastSave || 0,
@@ -450,7 +479,9 @@ export function CacheDashboard() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground">AOF</div>
+                  <div className="text-muted-foreground">
+                    {t('dashboard.server.persistence.aof')}
+                  </div>
                   <div
                     className={cn(
                       'text-sm font-medium',
@@ -459,7 +490,9 @@ export function CacheDashboard() {
                         : 'text-muted-foreground',
                     )}
                   >
-                    {overview.persistence.aofEnabled ? '已开启' : '未开启'}
+                    {overview.persistence.aofEnabled
+                      ? t('common.enabled')
+                      : t('common.disabled')}
                   </div>
                 </div>
               </div>
@@ -470,8 +503,12 @@ export function CacheDashboard() {
 
       <Card className="shadow-none border-none px-2 py-3">
         <CardHeader className="">
-          <CardTitle className="text-lg font-semibold">Keyspace 分布</CardTitle>
-          <CardDescription>各逻辑库的键数量与过期情况</CardDescription>
+          <CardTitle className="text-lg font-semibold">
+            {t('dashboard.keyspace.title')}
+          </CardTitle>
+          <CardDescription>
+            {t('dashboard.keyspace.description')}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {overview.keyspace && overview.keyspace.length > 0 ? (
@@ -479,21 +516,52 @@ export function CacheDashboard() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-                    <th className="py-2 font-medium">数据库</th>
-                    <th className="py-2 font-medium">键数量</th>
-                    <th className="py-2 font-medium">过期键</th>
-                    <th className="py-2 font-medium">平均 TTL</th>
+                    <th className="py-2 font-medium">
+                      {t('dashboard.keyspace.table.db')}
+                    </th>
+                    <th className="py-2 font-medium">
+                      {t('dashboard.keyspace.table.keys')}
+                    </th>
+                    <th className="py-2 font-medium">
+                      {t('dashboard.keyspace.table.expires')}
+                    </th>
+                    <th className="py-2 font-medium">
+                      {t('dashboard.keyspace.table.avgTtl')}
+                    </th>
                   </tr>
                 </thead>
-                <tbody>{overview.keyspace.map(renderKeyspaceRow)}</tbody>
+                <tbody>
+                  {overview.keyspace.map((space) => {
+                    const avgTTL =
+                      typeof space.avgTtl === 'number' && space.avgTtl > 0
+                        ? `${Math.round(space.avgTtl / 1000)}s`
+                        : t('common.unknown');
+                    return (
+                      <tr key={space.db} className="text-sm">
+                        <td className="py-2 font-medium text-foreground">
+                          {typeof space.db === 'string'
+                            ? space.db.toUpperCase()
+                            : '-'}
+                        </td>
+                        <td className="py-2 text-muted-foreground">
+                          {formatNumber(space.keys)}
+                        </td>
+                        <td className="py-2 text-muted-foreground">
+                          {formatNumber(space.expires)}
+                        </td>
+                        <td className="py-2 text-muted-foreground">{avgTTL}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
               </table>
             </div>
           ) : (
             <Empty className="min-h-[160px] border border-dashed border-border/60 bg-muted/40">
               <EmptyHeader>
-                <EmptyTitle>暂无 Keyspace 数据</EmptyTitle>
+                <EmptyTitle>{t('dashboard.keyspace.emptyTitle')}</EmptyTitle>
                 <EmptyDescription>
-                  等待缓存上报指标后再来查看分布情况。
+                  {t('dashboard.keyspace.emptyDescription')}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

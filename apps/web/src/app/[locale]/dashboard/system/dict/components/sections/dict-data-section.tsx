@@ -17,6 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { listDictData } from '../../api';
 import { DATA_STATUS_TABS, DEFAULT_DEBOUNCE_MS } from '../../constants';
@@ -27,6 +28,7 @@ import { DictDataTable } from '../list/dict-data-table';
 import { DictDataToolbar } from '../toolbars/dict-data-toolbar';
 
 export function DictDataSection() {
+  const t = useTranslations('DictManagement');
   const { dictTypes } = useDictTypesState();
   const { selectedDictId } = useDictSelection();
   const { dataStatus, setDataStatus } = useDictDataStatus();
@@ -109,12 +111,15 @@ export function DictDataSection() {
   if (!selectedDict || selectedDictId == null) {
     return (
       <Card className="border border-dashed border-border/50 bg-muted/40 py-10 text-center text-sm text-muted-foreground sm:py-14">
-        请选择左侧字典类型以查看字典数据。
+        {t('data.selectPrompt')}
       </Card>
     );
   }
 
-  const statusTabs = DATA_STATUS_TABS;
+  const statusTabs = DATA_STATUS_TABS.map((tab) => ({
+    value: tab.value,
+    label: t(tab.labelKey),
+  }));
 
   const handleStatusChange = (value: string) => {
     setDataStatus(value as DataStatusValue);
@@ -145,6 +150,7 @@ export function DictDataSection() {
           statusTabs={statusTabs}
           onStatusChange={handleStatusChange}
           onAdd={handleAdd}
+          addLabel={t('data.toolbar.add')}
         />
       </CardHeader>
       <CardContent
@@ -180,7 +186,7 @@ export function DictDataSection() {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          共 {dictDataTotal} 条字典数据。
+          {t('data.total', { count: dictDataTotal })}
         </p>
       </CardContent>
     </Card>

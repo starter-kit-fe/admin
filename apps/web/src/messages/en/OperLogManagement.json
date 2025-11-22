@@ -81,7 +81,9 @@
       "emptyDescription": "Create, update, or delete actions will show up here once recorded."
     },
     "actions": {
-      "delete": "Delete log"
+      "delete": "Delete log",
+      "more": "More actions",
+      "sheetDescription": "Choose an action for this log."
     }
   },
   "toast": {
