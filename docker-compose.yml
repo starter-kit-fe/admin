@@ -104,7 +104,7 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
       BASE_URL: ${BASE_URL:-http://server:${SERVER_PORT:-27401}}
     ports:
-      - "${WEB_PORT:-3000}:3000"
+      - "${WEB_PORT:-3000}:80"
 
 volumes:
   db_data:
