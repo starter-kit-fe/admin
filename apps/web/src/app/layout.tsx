@@ -1,15 +1,9 @@
 import { routing } from '@/i18n/routing';
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
 import Script from 'next/script';
 
 import pkg from '../../package.json';
 import './globals.css';
-
-const font = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
 
 const metadataBase = (() => {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? pkg.seo.og.url;
@@ -55,6 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const lang = routing.defaultLocale;
+  const fontClassName = 'font-sans';
 
   return (
     <html lang={lang} suppressHydrationWarning>
@@ -123,7 +118,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={font.className} suppressHydrationWarning>
+      <body className={fontClassName} suppressHydrationWarning>
         {children}
       </body>
     </html>

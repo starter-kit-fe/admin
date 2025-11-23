@@ -1,5 +1,4 @@
 import { messages as staticMessages } from '@/messages';
-import { hasLocale } from 'next-intl';
 import { getRequestConfig } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
@@ -14,11 +13,8 @@ export const loadMessages = (locale: AppLocale) => {
   return resolved;
 };
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  const requested = await requestLocale;
-  const locale = hasLocale(routing.locales, requested)
-    ? requested
-    : routing.defaultLocale;
+export default getRequestConfig(() => {
+  const locale = routing.defaultLocale;
   return {
     locale,
     messages: loadMessages(locale),

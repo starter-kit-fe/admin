@@ -1,11 +1,11 @@
 'use client';
 
+import { EllipsisText } from '@/components/table/ellipsis-text';
 import {
   PINNED_ACTION_COLUMN_META,
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-import { EllipsisText } from '@/components/table/ellipsis-text';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,16 +20,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { Spinner } from '@/components/ui/spinner';
-import { useTranslations } from 'next-intl';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Sheet,
   SheetContent,
@@ -39,10 +29,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { usePermissions } from '@/hooks/use-permissions';
+import { Spinner } from '@/components/ui/spinner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
-import { useLocale } from 'next-intl';
 import {
   createColumnHelper,
   flexRender,
@@ -50,6 +48,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Clock, Edit2, Eye, MoreHorizontal, Play, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
@@ -213,49 +213,53 @@ export function JobTable({
       }),
       ...(showActions
         ? [
-          columnHelper.display({
-            id: 'actions',
-            header: () => (
-              <span className="block text-right">{t('table.columns.actions')}</span>
-            ),
-            cell: ({ row }) => {
-              const job = row.original;
-              const jobId = job.jobId;
-              const isRunPending = pendingRunId === jobId;
-              const isUpdatingStatus = pendingStatusId === jobId;
-              const nextStatus = job.status === '0' ? '1' : '0';
-              const concurrencyLocked =
-                job.isRunning && job.concurrent === '1';
+            columnHelper.display({
+              id: 'actions',
+              header: () => (
+                <span className="block text-right">
+                  {t('table.columns.actions')}
+                </span>
+              ),
+              cell: ({ row }) => {
+                const job = row.original;
+                const jobId = job.jobId;
+                const isRunPending = pendingRunId === jobId;
+                const isUpdatingStatus = pendingStatusId === jobId;
+                const nextStatus = job.status === '0' ? '1' : '0';
+                const concurrencyLocked =
+                  job.isRunning && job.concurrent === '1';
 
-              return (
-                <div className="flex items-center justify-end">
-                  <JobRowActions
-                    job={job}
-                    t={t}
-                    canViewDetail={canViewDetail}
-                    canEdit={canEditJob}
-                    canRun={canRunJob}
-                    canChangeStatus={canChangeStatus}
-                    canDelete={canDeleteJob}
-                    isRunPending={isRunPending}
-                    isUpdatingStatus={isUpdatingStatus}
-                    concurrencyLocked={concurrencyLocked}
-                    onViewDetail={() =>
-                      router.push(`/${locale}/dashboard/monitor/job/${jobId}`)
-                    }
-                    onEdit={() => onEdit(job)}
-                    onRun={() => onRunJob(job)}
-                    onToggleStatus={() => onToggleStatus(jobId, nextStatus)}
-                    onDelete={() => onDelete(job)}
-                  />
-                </div>
-              );
-            },
-            meta: {
-              ...PINNED_ACTION_COLUMN_META,
-            },
-          }),
-        ]
+                return (
+                  <div className="flex items-center justify-end">
+                    <JobRowActions
+                      job={job}
+                      t={t}
+                      canViewDetail={canViewDetail}
+                      canEdit={canEditJob}
+                      canRun={canRunJob}
+                      canChangeStatus={canChangeStatus}
+                      canDelete={canDeleteJob}
+                      isRunPending={isRunPending}
+                      isUpdatingStatus={isUpdatingStatus}
+                      concurrencyLocked={concurrencyLocked}
+                      onViewDetail={() =>
+                        router.push(
+                          `/${locale}/dashboard/monitor/job/detail?id=${jobId}`,
+                        )
+                      }
+                      onEdit={() => onEdit(job)}
+                      onRun={() => onRunJob(job)}
+                      onToggleStatus={() => onToggleStatus(jobId, nextStatus)}
+                      onDelete={() => onDelete(job)}
+                    />
+                  </div>
+                );
+              },
+              meta: {
+                ...PINNED_ACTION_COLUMN_META,
+              },
+            }),
+          ]
         : []),
     ],
     [
@@ -297,16 +301,16 @@ export function JobTable({
                     key={header.id}
                     className={cn(
                       header.column.columnDef.meta?.headerClassName as
-                      | string
-                      | undefined,
+                        | string
+                        | undefined,
                     )}
                   >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -351,8 +355,8 @@ export function JobTable({
                       key={cell.id}
                       className={cn(
                         cell.column.columnDef.meta?.cellClassName as
-                        | string
-                        | undefined,
+                          | string
+                          | undefined,
                       )}
                     >
                       {flexRender(

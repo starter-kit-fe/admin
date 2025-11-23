@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { useLocale } from 'next-intl';
 
 import pkg from '../../../../package.json';
 import { getCaptcha, login } from './api';
@@ -33,6 +34,7 @@ const loginImages = [
 
 export default function Page() {
   const router = useRouter();
+  const locale = useLocale();
   const [showPassword, setShowPassword] = useState(false);
   const [isCaptchaExpired, setCaptchaExpired] = useState(false);
   const [captchaCountdown, setCaptchaCountdown] = useState<number | null>(null);
@@ -74,7 +76,7 @@ export default function Page() {
     },
     onSuccess: () => {
       toast.success('登录成功，欢迎回来！');
-      router.replace('/dashboard');
+      router.replace(`/${locale}/dashboard`);
     },
     onError: (error: unknown) => {
       const message =
@@ -86,9 +88,9 @@ export default function Page() {
 
   useEffect(() => {
     if (user) {
-      router.replace('/dashboard');
+      router.replace(`/${locale}/dashboard`);
     }
-  }, [user, router]);
+  }, [user, router, locale]);
 
   useEffect(() => {
     if (!captchaData?.captcha_id || !captchaData?.expires_in) {
