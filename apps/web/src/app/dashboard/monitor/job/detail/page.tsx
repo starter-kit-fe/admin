@@ -1,14 +1,15 @@
+'use client';
+
 import { notFound } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { JobDetailContent } from './job-detail-content';
 
-interface JobDetailPageProps {
-  params: Promise<{ jobId: string }>;
-}
+export default function JobDetailPage() {
+  const searchParams = useSearchParams();
 
-export default async function JobDetailPage({ params }: JobDetailPageProps) {
-  const { jobId: jobIdParam } = await params;
-  const jobId = Number(jobIdParam);
+  const jobIdStr = searchParams.get('id');
+  const jobId = jobIdStr ? Number(jobIdStr) : NaN;
   if (!Number.isFinite(jobId) || jobId <= 0) {
     notFound();
   }
