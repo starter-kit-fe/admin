@@ -1,5 +1,23 @@
 import { fetchEventSource, type EventSourceMessage } from '@microsoft/fetch-event-source';
 
+import {
+  handleUnauthorizedRedirect,
+  refreshAuthToken,
+  shouldAttemptAuthRefresh,
+} from './request/auth';
+import { DEFAULT_UNAUTHORIZED_MESSAGE } from './request/constants';
+
+class RetryableAuthError extends Error {
+  retryInMs: number;
+
+  constructor(retryInMs = 0) {
+    super('Retry SSE after refreshing auth');
+    this.retryInMs = retryInMs;
+  }
+}
+
+class FatalAuthError extends Error {}
+
 type EventHandler<T> = (event: string, data: T, raw: EventSourceMessage) => void;
 
 export interface SSEClientOptions<T = unknown> {
@@ -36,6 +54,7 @@ export function startSSE<T = unknown>(options: SSEClientOptions<T>): SSEConnecti
 
   const base = process.env.NEXT_PUBLIC_API_URL || '/api';
   const url = `${base.replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
+  let handledFatalError = false;
 
   fetchEventSource(url, {
     method,
@@ -46,10 +65,27 @@ export function startSSE<T = unknown>(options: SSEClientOptions<T>): SSEConnecti
     credentials: withCredentials ? 'include' : 'same-origin',
     signal: controller.signal,
     async onopen(res) {
-      if (!res.ok) {
-        throw new Error(`SSE failed with status ${res.status}`);
+      if (res.ok) {
+        onOpen?.(res);
+        return;
       }
-      onOpen?.(res);
+
+      const unauthorized = res.status === 401;
+      const refreshExpired = res.status === 402;
+
+      if (unauthorized && shouldAttemptAuthRefresh(url)) {
+        const refreshed = await refreshAuthToken(base);
+        if (refreshed) {
+          throw new RetryableAuthError(0);
+        }
+      }
+
+      if (unauthorized || refreshExpired) {
+        handleUnauthorizedRedirect();
+        throw new FatalAuthError(DEFAULT_UNAUTHORIZED_MESSAGE);
+      }
+
+      throw new Error(`SSE failed with status ${res.status}`);
     },
     onmessage(ev) {
       if (!ev.data) {
@@ -70,10 +106,24 @@ export function startSSE<T = unknown>(options: SSEClientOptions<T>): SSEConnecti
       onClose?.();
     },
     onerror(err) {
+      if (err instanceof RetryableAuthError) {
+        return err.retryInMs;
+      }
+
+      if (err instanceof FatalAuthError) {
+        handledFatalError = true;
+        onError?.(err);
+        throw err;
+      }
+
       const error = err instanceof Error ? err : new Error('SSE connection error');
       onError?.(error);
     },
   }).catch((err) => {
+    if (handledFatalError) {
+      handledFatalError = false;
+      return;
+    }
     const error = err instanceof Error ? err : new Error('SSE connection failed');
     onError?.(error);
   });

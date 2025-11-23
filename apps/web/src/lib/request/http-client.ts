@@ -5,18 +5,15 @@ import {
   SUCCESS_STATUS_MIN,
 } from './constants';
 import {
-  isLoginPathname,
-  resolveLoginRoute,
-} from './locale';
-import { showSessionExpiredDialog } from './session-dialog';
+  handleUnauthorizedRedirect,
+  refreshAuthToken,
+  shouldAttemptAuthRefresh,
+} from './auth';
 import type {
   ApiResponse,
   RequestConfig,
   RequestOptions,
 } from './types';
-
-let hasTriggeredUnauthorizedRedirect = false;
-let refreshPromise: Promise<boolean> | null = null;
 
 function isSuccessfulStatus(code?: number) {
   if (typeof code !== 'number') {
@@ -59,48 +56,7 @@ export class HttpClient {
   }
 
   private handleUnauthorized(message?: string) {
-    this.updateToken(null);
-
-    const fallbackMessage =
-      message && message.trim().length > 0
-        ? message
-        : DEFAULT_UNAUTHORIZED_MESSAGE;
-
-    if (typeof window === 'undefined') {
-      throw new Error(fallbackMessage);
-    }
-
-    try {
-      localStorage.clear();
-    } catch {
-      // ignore storage clear failures (e.g. disabled storage)
-    }
-
-    const pathname = window.location.pathname;
-    const loginRoute = resolveLoginRoute(pathname);
-    const alreadyOnLogin = isLoginPathname(pathname);
-    if (alreadyOnLogin) {
-      return;
-    }
-
-    if (hasTriggeredUnauthorizedRedirect) {
-      return;
-    }
-
-    hasTriggeredUnauthorizedRedirect = true;
-    const currentUrl = pathname + window.location.search + window.location.hash;
-    const redirectParam = encodeURIComponent(currentUrl || '/');
-    const target = `${loginRoute}?redirect=${redirectParam}`;
-
-    showSessionExpiredDialog({
-      message: fallbackMessage,
-      onConfirm: () => {
-        window.location.replace(target);
-      },
-      onCancel: () => {
-        hasTriggeredUnauthorizedRedirect = false;
-      },
-    });
+    handleUnauthorizedRedirect(message, () => this.updateToken(null));
   }
 
   private unwrapResponse<T>(response: ApiResponse<T>): T {
@@ -127,50 +83,6 @@ export class HttpClient {
     }
 
     return fullURL;
-  }
-
-  private shouldAttemptRefresh(url: string) {
-    const normalized = url.toLowerCase();
-    return (
-      !normalized.includes('/auth/login') &&
-      !normalized.includes('/auth/refresh')
-    );
-  }
-
-  private async tryRefreshToken(): Promise<boolean> {
-    if (refreshPromise) {
-      return refreshPromise;
-    }
-    const refreshURL = this.buildURL('/v1/auth/refresh');
-    refreshPromise = fetch(refreshURL, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({}),
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          return false;
-        }
-        const payload = await response
-          .json()
-          .catch(() => ({ code: response.status }));
-        if (
-          payload &&
-          typeof payload.code === 'number' &&
-          payload.code !== 200
-        ) {
-          return false;
-        }
-        return true;
-      })
-      .catch(() => false)
-      .finally(() => {
-        refreshPromise = null;
-      });
-    return refreshPromise;
   }
 
   async request<T>(
@@ -213,9 +125,9 @@ export class HttpClient {
         if (
           shouldRefresh &&
           !skipAuthRefresh &&
-          this.shouldAttemptRefresh(fullURL)
+          shouldAttemptAuthRefresh(fullURL)
         ) {
-          const refreshed = await this.tryRefreshToken();
+          const refreshed = await refreshAuthToken(this.baseURL);
           if (refreshed) {
             return this.request<T>(url, { ...options, skipAuthRefresh: true });
           }
@@ -236,9 +148,9 @@ export class HttpClient {
         if (
           response.status === 401 &&
           !skipAuthRefresh &&
-          this.shouldAttemptRefresh(fullURL)
+          shouldAttemptAuthRefresh(fullURL)
         ) {
-          const refreshed = await this.tryRefreshToken();
+          const refreshed = await refreshAuthToken(this.baseURL);
           if (refreshed) {
             return this.request<T>(url, { ...options, skipAuthRefresh: true });
           }
@@ -272,9 +184,9 @@ export class HttpClient {
       if (
         response.status === 401 &&
         !skipAuthRefresh &&
-        this.shouldAttemptRefresh(fullURL)
+        shouldAttemptAuthRefresh(fullURL)
       ) {
-        const refreshed = await this.tryRefreshToken();
+        const refreshed = await refreshAuthToken(this.baseURL);
         if (refreshed) {
           return this.request<T>(url, { ...options, skipAuthRefresh: true });
         }
