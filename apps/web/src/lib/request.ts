@@ -30,6 +30,46 @@ const LOGIN_ROUTE = '/login';
 let hasTriggeredUnauthorizedRedirect = false;
 let refreshPromise: Promise<boolean> | null = null;
 
+const resolveBaseURL = (baseURL?: string) =>
+  baseURL && baseURL.trim().length > 0
+    ? baseURL
+    : process.env.NEXT_PUBLIC_API_URL || '/api';
+
+export const refreshAuthToken = async (baseURL?: string): Promise<boolean> => {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+  const normalizedBase = resolveBaseURL(baseURL).replace(/\/$/, '');
+  const refreshURL = `${normalizedBase}/v1/auth/refresh`;
+
+  refreshPromise = fetch(refreshURL, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({}),
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        return false;
+      }
+      const payload = await response
+        .json()
+        .catch(() => ({ code: response.status }));
+      if (payload && typeof payload.code === 'number' && payload.code !== 200) {
+        return false;
+      }
+      return true;
+    })
+    .catch(() => false)
+    .finally(() => {
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
+};
+
 const showSessionExpiredDialog = (
   message: string,
   onConfirm: () => void,
@@ -166,39 +206,7 @@ export class HttpClient {
   }
 
   private async tryRefreshToken(): Promise<boolean> {
-    if (refreshPromise) {
-      return refreshPromise;
-    }
-    const refreshURL = this.buildURL('/v1/auth/refresh');
-    refreshPromise = fetch(refreshURL, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({}),
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          return false;
-        }
-        const payload = await response
-          .json()
-          .catch(() => ({ code: response.status }));
-        if (
-          payload &&
-          typeof payload.code === 'number' &&
-          payload.code !== 200
-        ) {
-          return false;
-        }
-        return true;
-      })
-      .catch(() => false)
-      .finally(() => {
-        refreshPromise = null;
-      });
-    return refreshPromise;
+    return refreshAuthToken(this.baseURL);
   }
 
   async request<T>(
