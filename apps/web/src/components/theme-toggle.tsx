@@ -300,7 +300,7 @@ export function ThemeToggle({ className }: { className?: string }) {
             )}
           >
             <span className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-foreground/60" />
+              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
               <span>{t('colorOptions.default')}</span>
             </span>
           </button>
