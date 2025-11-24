@@ -65,7 +65,10 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 
 	docsHandler := docs.NewHandler()
 
-	captchaSvc := captcha.New(captcha.Options{})
+	captchaSvc := captcha.New(captcha.Options{
+		Redis:     redisCache,
+		KeyPrefix: "captcha",
+	})
 	captchaHandler := captcha.NewHandler(captchaSvc)
 
 	authRepo := auth.NewRepository(sqlDB)
