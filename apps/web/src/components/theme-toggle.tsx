@@ -264,12 +264,12 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   const content = (
     <>
-      <p className="px-2 pb-2 text-xs text-muted-foreground">
+      <p className=" block sm:hidden px-2 pb-2 text-xs text-muted-foreground">
         选择主题、主色、圆角、字体与布局。
       </p>
 
       {/* Color */}
-      <div className="space-y-2 px-2 pb-3">
+      <div className="space-y-2 px-2 pb-3 sm:pt-2">
         <p className="text-xs font-medium text-muted-foreground">主色</p>
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -423,7 +423,7 @@ export function ThemeToggle({ className }: { className?: string }) {
               外观与主题
             </DrawerTitle>
           </DrawerHeader>
-          <div className="max-h-[70vh] space-y-3 overflow-y-auto px-3">
+          <div className="max-h-[70vh] space-y-3 overflow-y-auto px-3 ">
             {content}
           </div>
         </DrawerContent>
