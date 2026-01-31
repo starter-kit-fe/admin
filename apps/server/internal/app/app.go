@@ -149,3 +149,13 @@ func (a *App) closeResources() {
 		}
 	}
 }
+
+// Handler exposes the HTTP handler for testing purposes
+func (a *App) Handler() http.Handler {
+	return a.server.Handler
+}
+
+// DB exposes the database connection for testing purposes
+func (a *App) DB() *gorm.DB {
+	return a.db
+}

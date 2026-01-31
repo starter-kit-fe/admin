@@ -40,7 +40,8 @@ type LogConfig struct {
 }
 
 type DatabaseConfig struct {
-	DSN string
+	Driver string
+	DSN    string
 }
 
 type RedisConfig struct {
@@ -110,7 +111,8 @@ func Load(envFiles ...string) (*Config, error) {
 			Level: strings.TrimSpace(v.GetString("log.level")),
 		},
 		Database: DatabaseConfig{
-			DSN: strings.TrimSpace(v.GetString("database.dsn")),
+			Driver: strings.TrimSpace(v.GetString("database.driver")),
+			DSN:    strings.TrimSpace(v.GetString("database.dsn")),
 		},
 		Redis: RedisConfig{
 			URL: strings.TrimSpace(v.GetString("redis.url")),
@@ -319,6 +321,7 @@ func newViper() *viper.Viper {
 	v.SetDefault("http.addr", ":"+constant.PORT)
 	v.SetDefault("http.port", constant.PORT)
 	v.SetDefault("log.level", "info")
+	v.SetDefault("database.driver", "postgres")
 	v.SetDefault("database.dsn", "")
 	v.SetDefault("redis.url", "")
 	v.SetDefault("auth.secret", "")
@@ -349,6 +352,7 @@ func newViper() *viper.Viper {
 	_ = v.BindEnv("http.addr", "HTTP_ADDR", "ADDR")
 	_ = v.BindEnv("http.port", "HTTP_PORT", "PORT")
 	_ = v.BindEnv("log.level", "LOG_LEVEL")
+	_ = v.BindEnv("database.driver", "DB_DRIVER")
 	_ = v.BindEnv("database.dsn", "DB_URL", "DATABASE_URL")
 	_ = v.BindEnv("redis.url", "REDIS_URL")
 	_ = v.BindEnv("auth.secret", "AUTH_SECRET")

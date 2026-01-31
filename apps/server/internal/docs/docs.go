@@ -618,7 +618,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/job.createJobRequest"
+                            "$ref": "#/definitions/job_handler.createJobRequest"
                         }
                     }
                 ],
@@ -854,7 +854,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/job.updateJobRequest"
+                            "$ref": "#/definitions/job_handler.updateJobRequest"
                         }
                     }
                 ],
@@ -1160,7 +1160,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/job.changeStatusRequest"
+                            "$ref": "#/definitions/job_handler.changeStatusRequest"
                         }
                     }
                 ],
@@ -5589,7 +5589,7 @@ const docTemplate = `{
                 }
             }
         },
-        "job.changeStatusRequest": {
+        "job_handler.changeStatusRequest": {
             "type": "object",
             "required": [
                 "status"
@@ -5600,7 +5600,7 @@ const docTemplate = `{
                 }
             }
         },
-        "job.createJobRequest": {
+        "job_handler.createJobRequest": {
             "type": "object",
             "required": [
                 "cronExpression",
@@ -5640,7 +5640,7 @@ const docTemplate = `{
                 }
             }
         },
-        "job.updateJobRequest": {
+        "job_handler.updateJobRequest": {
             "type": "object",
             "properties": {
                 "concurrent": {
@@ -5726,7 +5726,7 @@ const docTemplate = `{
         "menu.reorderMenuItem": {
             "type": "object",
             "properties": {
-                "menuId": {
+                "id": {
                     "type": "integer"
                 },
                 "orderNum": {

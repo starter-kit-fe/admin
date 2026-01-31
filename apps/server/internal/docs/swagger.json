@@ -614,7 +614,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/job.createJobRequest"
+                            "$ref": "#/definitions/job_handler.createJobRequest"
                         }
                     }
                 ],
@@ -850,7 +850,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/job.updateJobRequest"
+                            "$ref": "#/definitions/job_handler.updateJobRequest"
                         }
                     }
                 ],
@@ -1156,7 +1156,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/job.changeStatusRequest"
+                            "$ref": "#/definitions/job_handler.changeStatusRequest"
                         }
                     }
                 ],
@@ -5585,7 +5585,7 @@
                 }
             }
         },
-        "job.changeStatusRequest": {
+        "job_handler.changeStatusRequest": {
             "type": "object",
             "required": [
                 "status"
@@ -5596,7 +5596,7 @@
                 }
             }
         },
-        "job.createJobRequest": {
+        "job_handler.createJobRequest": {
             "type": "object",
             "required": [
                 "cronExpression",
@@ -5636,7 +5636,7 @@
                 }
             }
         },
-        "job.updateJobRequest": {
+        "job_handler.updateJobRequest": {
             "type": "object",
             "properties": {
                 "concurrent": {
@@ -5722,7 +5722,7 @@
         "menu.reorderMenuItem": {
             "type": "object",
             "properties": {
-                "menuId": {
+                "id": {
                     "type": "integer"
                 },
                 "orderNum": {

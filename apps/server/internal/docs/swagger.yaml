@@ -265,14 +265,14 @@ definitions:
       status:
         type: string
     type: object
-  job.changeStatusRequest:
+  job_handler.changeStatusRequest:
     properties:
       status:
         type: string
     required:
     - status
     type: object
-  job.createJobRequest:
+  job_handler.createJobRequest:
     properties:
       concurrent:
         type: string
@@ -299,7 +299,7 @@ definitions:
     - invokeTarget
     - jobName
     type: object
-  job.updateJobRequest:
+  job_handler.updateJobRequest:
     properties:
       concurrent:
         type: string
@@ -356,7 +356,7 @@ definitions:
     type: object
   menu.reorderMenuItem:
     properties:
-      menuId:
+      id:
         type: integer
       orderNum:
         type: integer
@@ -1002,7 +1002,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/job.createJobRequest'
+          $ref: '#/definitions/job_handler.createJobRequest'
       produces:
       - application/json
       responses:
@@ -1113,7 +1113,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/job.updateJobRequest'
+          $ref: '#/definitions/job_handler.updateJobRequest'
       produces:
       - application/json
       responses:
@@ -1275,7 +1275,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/job.changeStatusRequest'
+          $ref: '#/definitions/job_handler.changeStatusRequest'
       produces:
       - application/json
       responses:

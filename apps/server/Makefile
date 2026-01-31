@@ -22,6 +22,29 @@ REMOTE_DIR ?= /opt/admin
 REMOTE_TMP ?= /tmp/admin-deploy
 SERVICE_NAME ?= admin.service
 
+# --- Systemd Service Template ---
+define SERVICE_TEMPLATE
+[Unit]
+Description=OneNav Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=$(REMOTE_DIR)
+ExecStart=$(REMOTE_DIR)/$(BINARY_NAME) start
+EnvironmentFile=-$(REMOTE_DIR)/.env
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+KillSignal=SIGTERM
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
+endef
+export SERVICE_TEMPLATE
+
 # --- Versioning ---
 # Get version from the root package.json. Use shell to execute the command and assign the result.
 # The `:=` operator evaluates the right-hand side immediately.
@@ -63,15 +86,14 @@ dev:
 	air --build.cmd "go build -v -ldflags=\"$(LDFLAGS_DEV)\" -o $(TMP_DIR)/$(BINARY_NAME) $(PKG_PATH)"
 
 # Target: deploy
-# Builds the application for production (Linux AMD64) and places it in the ./build directory.
+# Builds the application for production (Linux arm64) and places it in the ./build directory.
 deploy:
 	@echo "📦 Building for production (linux/arm64)..."
 	# CGO_ENABLED=0 creates a static binary without C dependencies.
 	# GOOS and GOARCH specify the target Operating System and Architecture.
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -v -trimpath -ldflags="$(LDFLAGS_PROD)" -o $(BUILD_DIR)/$(BINARY_NAME) $(PKG_PATH)
-	@echo "⚙️  Copying systemd service file..."
-	# Copy the service file from the deployments directory
-	cp deployments/admin.service $(BUILD_DIR)/admin.service
+	@echo "⚙️  Generating systemd service file..."
+	@echo "$$SERVICE_TEMPLATE" > $(BUILD_DIR)/$(SERVICE_NAME)
 	cp ./.env $(BUILD_DIR)/.env
 	@echo "📡 Preparing remote host $(DEPLOY_HOST)..."
 	ssh $(DEPLOY_HOST) "rm -rf $(REMOTE_TMP) && mkdir -p $(REMOTE_TMP)"
@@ -82,7 +104,7 @@ deploy:
 		sudo mkdir -p $(REMOTE_DIR); \
 		sudo install -m 755 $(REMOTE_TMP)/$(BINARY_NAME) $(REMOTE_DIR)/$(BINARY_NAME); \
 		sudo install -m 600 $(REMOTE_TMP)/.env $(REMOTE_DIR)/.env; \
-		sudo install -m 644 $(REMOTE_TMP)/admin.service /etc/systemd/system/$(SERVICE_NAME); \
+		sudo install -m 644 $(REMOTE_TMP)/$(SERVICE_NAME) /etc/systemd/system/$(SERVICE_NAME); \
 		sudo systemctl daemon-reload; \
 		sudo systemctl restart $(SERVICE_NAME); \
 		rm -rf $(REMOTE_TMP)"
