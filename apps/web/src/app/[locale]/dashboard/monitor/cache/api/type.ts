@@ -79,7 +79,7 @@ export interface CacheKeyItem {
 }
 
 export interface CacheKeyListResponse {
-  items: CacheKeyItem[];
+  list: CacheKeyItem[];
   total: number;
   pageNum: number;
   pageSize: number;

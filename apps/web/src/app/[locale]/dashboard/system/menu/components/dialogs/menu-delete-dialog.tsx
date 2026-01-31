@@ -55,7 +55,7 @@ export function MenuDeleteDialog() {
       }}
       onConfirm={() => {
         if (deleteTarget) {
-          deleteMutation.mutate(deleteTarget.menuId);
+          deleteMutation.mutate(deleteTarget.id);
         }
       }}
     />

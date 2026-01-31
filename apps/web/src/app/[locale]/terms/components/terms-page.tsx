@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import pkg from '../../../../package.json';
+import pkg from '../../../../../package.json';
 
 const brandName =
   pkg.seo?.title?.split('—')[0]?.trim() ?? pkg.name ?? 'Admin Template';

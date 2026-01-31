@@ -2,7 +2,7 @@
 
 import { notFound, useSearchParams } from 'next/navigation';
 
-import { JobDetailContent } from './job-detail-content';
+import { JobDetailContent } from '../job-detail-content';
 
 export function JobDetailPage() {
   const searchParams = useSearchParams();

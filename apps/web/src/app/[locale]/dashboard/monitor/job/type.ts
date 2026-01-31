@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export interface Job {
-  jobId: number;
+  id: number;
   jobName: string;
   jobGroup: string;
   invokeTarget: string;
@@ -12,22 +12,22 @@ export interface Job {
   status: string;
   remark?: string | null;
   createBy?: string;
-  createTime?: string;
+  createdAt?: string;
   updateBy?: string;
-  updateTime?: string;
+  updatedAt?: string;
   isRunning: boolean;
   currentLogId?: number | null;
 }
 
 export interface JobListResponse {
-  items: Job[];
+  list: Job[];
   total: number;
   pageNum: number;
   pageSize: number;
 }
 
 export interface JobLog {
-  jobLogId: number;
+  id: number;
   jobId: number;
   jobName: string;
   jobGroup: string;
@@ -36,7 +36,7 @@ export interface JobLog {
   jobMessage?: string | null;
   status: string;
   exception?: string | null;
-  createTime?: string;
+  createdAt?: string;
   startTime?: string;
   endTime?: string;
   durationMs?: number;
@@ -55,7 +55,7 @@ export interface JobLogStep {
   startTime: string;
   endTime?: string;
   durationMs?: number;
-  createTime: string;
+  createdAt: string;
 }
 
 export interface JobLogWithSteps extends JobLog {
@@ -64,7 +64,7 @@ export interface JobLogWithSteps extends JobLog {
 
 export interface StepEvent {
   type: 'step_start' | 'step_log' | 'step_end' | 'complete' | 'heartbeat';
-  jobLogId: number;
+  id: number;
   stepId?: number;
   stepOrder: number;
   stepName?: string;
@@ -77,7 +77,7 @@ export interface StepEvent {
 }
 
 export interface JobLogList {
-  items: JobLog[];
+  list: JobLog[];
   total: number;
   pageNum: number;
   pageSize: number;
@@ -109,9 +109,7 @@ export const jobFormSchema = z.object({
   invokeParams: baseJsonSchema.optional(),
 });
 
-export const createJobFormSchema = (
-  t: (key: string) => string,
-) =>
+export const createJobFormSchema = (t: (key: string) => string) =>
   jobFormSchema.extend({
     jobType: jobFormSchema.shape.jobType.min(1, t('editor.validation.jobType')),
     jobName: jobFormSchema.shape.jobName

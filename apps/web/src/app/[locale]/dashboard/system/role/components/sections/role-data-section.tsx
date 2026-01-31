@@ -81,8 +81,8 @@ export function RoleDataSection() {
     setSelectedIds((prev) => {
       const next = new Set<number>();
       rows.forEach((role) => {
-        if (prev.has(role.id)) {
-          next.add(role.id);
+        if (prev.has(role.roleId)) {
+          next.add(role.roleId);
         }
       });
       return next;
@@ -91,7 +91,7 @@ export function RoleDataSection() {
 
   const selectedCount = selectedIds.size;
   const isAllSelected =
-    rows.length > 0 && rows.every((row) => selectedIds.has(row.id));
+    rows.length > 0 && rows.every((row) => selectedIds.has(row.roleId));
   const headerCheckboxState = isAllSelected
     ? true
     : selectedCount > 0
@@ -100,7 +100,7 @@ export function RoleDataSection() {
 
   const handleToggleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(new Set(rows.map((row) => row.id)));
+      setSelectedIds(new Set(rows.map((row) => row.roleId)));
     } else {
       setSelectedIds(new Set());
     }
@@ -143,7 +143,7 @@ export function RoleDataSection() {
   };
 
   const handleEdit = (role: Role) => {
-    openEdit(role.id);
+    openEdit(role.roleId);
   };
 
   return (

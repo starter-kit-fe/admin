@@ -90,7 +90,7 @@ export function NoticeEditorManager() {
     };
     if (editorState.open && editorState.mode === 'edit') {
       updateMutation.mutate({
-        id: editorState.notice.id,
+        id: editorState.notice.noticeId,
         payload,
       });
       return;

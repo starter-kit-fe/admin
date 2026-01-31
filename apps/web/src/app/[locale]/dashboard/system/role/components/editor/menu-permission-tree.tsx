@@ -30,7 +30,7 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
   const t = useTranslations('RoleManagement');
   const flatNodes = useMemo(() => flattenNodes(nodes), [nodes]);
   const allIds = useMemo(
-    () => flatNodes.map((entry) => entry.node.menuId),
+    () => flatNodes.map((entry) => entry.node.id),
     [flatNodes],
   );
   const parentMap = useMemo(() => buildParentMap(flatNodes), [flatNodes]);
@@ -158,11 +158,11 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
     (items: MenuTreeNode[], depth = 0): ReactElement[] => {
       return items.map((item) => {
         const hasChildren = Boolean(item.children && item.children.length > 0);
-        const isExpanded = !hasChildren || expanded.has(item.menuId);
-        const checked = valueSet.has(item.menuId);
+        const isExpanded = !hasChildren || expanded.has(item.id);
+        const checked = valueSet.has(item.id);
 
         return (
-          <div key={item.menuId} className="text-sm">
+          <div key={item.id} className="text-sm">
             <div className="flex items-center gap-2 py-1" style={{ paddingLeft: depth * INDENT_PX }}>
               {hasChildren ? (
                 <Button
@@ -170,7 +170,7 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 shrink-0 text-muted-foreground"
-                  onClick={() => toggleNode(item.menuId)}
+                  onClick={() => toggleNode(item.id)}
                   disabled={disabled}
                 >
                   {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -180,7 +180,7 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
               )}
               <Checkbox
                 checked={checked}
-                onCheckedChange={(nextChecked) => applySelection(item.menuId, nextChecked === true)}
+                onCheckedChange={(nextChecked) => applySelection(item.id, nextChecked === true)}
                 disabled={disabled}
               />
               <span className="truncate text-foreground" title={item.menuName}>
@@ -256,7 +256,7 @@ function flattenNodes(nodes: MenuTreeNode[]): FlatNode[] {
     items.forEach((item) => {
       entries.push({ node: item, parentId });
       if (item.children && item.children.length > 0) {
-        walk(item.children, item.menuId);
+        walk(item.children, item.id);
       }
     });
   };
@@ -267,7 +267,7 @@ function flattenNodes(nodes: MenuTreeNode[]): FlatNode[] {
 function buildParentMap(entries: FlatNode[]) {
   const map = new Map<number, number>();
   entries.forEach(({ node, parentId }) => {
-    map.set(node.menuId, parentId);
+    map.set(node.id, parentId);
   });
   return map;
 }
@@ -278,7 +278,7 @@ function buildChildrenMap(entries: FlatNode[]) {
     if (!map.has(parentId)) {
       map.set(parentId, []);
     }
-    map.get(parentId)!.push(node.menuId);
+    map.get(parentId)!.push(node.id);
   });
   return map;
 }
@@ -287,7 +287,7 @@ function extractParentIds(entries: FlatNode[]) {
   const ids: number[] = [];
   entries.forEach(({ node }) => {
     if (node.children && node.children.length > 0) {
-      ids.push(node.menuId);
+      ids.push(node.id);
     }
   });
   return ids;

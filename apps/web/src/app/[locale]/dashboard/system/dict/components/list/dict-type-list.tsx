@@ -17,11 +17,6 @@ import {
 } from '@/components/ui/empty';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -30,14 +25,19 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useState } from 'react';
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
-import { useTranslations } from 'next-intl';
 import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
-import { Skeleton } from '@/components/ui/skeleton';
 import { TYPE_STATUS_TABS } from '../../constants';
 
 interface DictTypeListProps {
@@ -114,7 +114,7 @@ export function DictTypeList({
           </Empty>
         ) : (
           items.map((dict) => {
-            const isActive = dict.dictId === selectedId;
+            const isActive = dict.id === selectedId;
             const badge =
               dict.status !== '0' ? renderStatusBadge(dict.status) : null;
             const remarkContent = dict.remark?.trim() || t('typeList.noRemark');
@@ -127,7 +127,7 @@ export function DictTypeList({
 
             return (
               <div
-                key={dict.dictId}
+                key={dict.id}
                 className={cn(
                   'group flex flex-col gap-1.5 rounded-lg px-3 py-2 transition-colors',
                   isActive ? 'bg-primary/10' : 'hover:bg-muted/40',
@@ -224,16 +224,18 @@ function DictTypeActions({
         </SheetTrigger>
         <SheetContent
           side="bottom"
-        className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
-      >
-        <SheetHeader className="px-4 pb-2 pt-3 text-left">
-          <SheetTitle>{t('typeList.actions.sheetTitle')}</SheetTitle>
-          <SheetDescription>{t('typeList.actions.sheetDescription')}</SheetDescription>
-        </SheetHeader>
-        <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
-          {canAddData ? (
-            <Button
-              variant="secondary"
+          className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
+        >
+          <SheetHeader className="px-4 pb-2 pt-3 text-left">
+            <SheetTitle>{t('typeList.actions.sheetTitle')}</SheetTitle>
+            <SheetDescription>
+              {t('typeList.actions.sheetDescription')}
+            </SheetDescription>
+          </SheetHeader>
+          <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
+            {canAddData ? (
+              <Button
+                variant="secondary"
                 className="w-full justify-between"
                 onClick={() => {
                   onAddData(dict);

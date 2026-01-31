@@ -6,7 +6,7 @@ export interface UserListParams {
 }
 
 export interface User {
-  id: number;
+  userId: number;
   deptId?: number | null;
   deptName?: string | null;
   userName: string;

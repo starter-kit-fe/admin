@@ -54,7 +54,7 @@ export function NoticeDataSection() {
   }, [noticeQuery.data, noticeQuery.isLoading, setNotices]);
 
   useEffect(() => {
-    const validIds = new Set(notices.map((notice) => notice.id));
+    const validIds = new Set(notices.map((notice) => notice.noticeId));
     if (validIds.size === 0) {
       clearSelectedIds();
       return;
@@ -118,7 +118,7 @@ export function NoticeDataSection() {
       clearSelectedIds();
       return;
     }
-    const next = new Set<number>(notices.map((notice) => notice.id));
+    const next = new Set<number>(notices.map((notice) => notice.noticeId));
     setSelectedIds(next);
   };
 

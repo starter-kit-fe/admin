@@ -1,7 +1,7 @@
 'use client';
 
-import { CacheListDataSection } from './cache-list-data-section';
-import { CacheManagementHeader } from './cache-management-header';
+import { CacheListDataSection } from './components/cache-list-data-section';
+import { CacheManagementHeader } from './components/cache-management-header';
 
 export function CacheList() {
   return (

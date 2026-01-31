@@ -52,13 +52,24 @@ func SeedDefaults(ctx context.Context, db *gorm.DB, logger *slog.Logger) error {
 
 			roleMenuTable := prefix + "sys_role_menu"
 			menuTable := prefix + "sys_menu"
-			if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, menu_id) SELECT 1, id FROM %s ON CONFLICT DO NOTHING;", roleMenuTable, menuTable)).Error; err != nil {
-				return fmt.Errorf("seed role menus: %w", err)
-			}
-
 			roleDeptTable := prefix + "sys_role_dept"
 			deptTable := prefix + "sys_dept"
-			if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, dept_id) SELECT 1, id FROM %s ON CONFLICT DO NOTHING;", roleDeptTable, deptTable)).Error; err != nil {
+
+			sqlRoleMenu := fmt.Sprintf("INSERT INTO %s (role_id, menu_id) SELECT 1, id FROM %s ON CONFLICT DO NOTHING;", roleMenuTable, menuTable)
+			sqlRoleDept := fmt.Sprintf("INSERT INTO %s (role_id, dept_id) SELECT 1, id FROM %s ON CONFLICT DO NOTHING;", roleDeptTable, deptTable)
+
+			if tx.Dialector.Name() == "mysql" {
+				sqlRoleMenu = fmt.Sprintf("INSERT IGNORE INTO %s (role_id, menu_id) SELECT 1, id FROM %s;", roleMenuTable, menuTable)
+				sqlRoleDept = fmt.Sprintf("INSERT IGNORE INTO %s (role_id, dept_id) SELECT 1, id FROM %s;", roleDeptTable, deptTable)
+			} else if tx.Dialector.Name() == "sqlite" {
+				sqlRoleMenu = fmt.Sprintf("INSERT OR IGNORE INTO %s (role_id, menu_id) SELECT 1, id FROM %s;", roleMenuTable, menuTable)
+				sqlRoleDept = fmt.Sprintf("INSERT OR IGNORE INTO %s (role_id, dept_id) SELECT 1, id FROM %s;", roleDeptTable, deptTable)
+			}
+
+			if err := tx.Exec(sqlRoleMenu).Error; err != nil {
+				return fmt.Errorf("seed role menus: %w", err)
+			}
+			if err := tx.Exec(sqlRoleDept).Error; err != nil {
 				return fmt.Errorf("seed role depts: %w", err)
 			}
 
@@ -248,6 +259,10 @@ func syncSequences(ctx context.Context, db *gorm.DB, prefix string, logger *slog
 }
 
 func ensureSequenceOffset(ctx context.Context, db *gorm.DB, table, column string) error {
+	if db.Dialector.Name() != "postgres" {
+		return nil
+	}
+
 	var seqName sql.NullString
 	if err := db.WithContext(ctx).
 		Raw("SELECT pg_get_serial_sequence(?, ?) AS seq_name", table, column).

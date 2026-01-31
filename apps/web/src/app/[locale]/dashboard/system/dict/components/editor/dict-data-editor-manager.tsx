@@ -1,23 +1,23 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
-
-import { createDictData, updateDictData } from '../../api';
 import {
   useDictDataEditorActions,
   useDictDataEditorState,
   useDictManagementMutationCounter,
   useDictManagementRefresh,
 } from '@/app/dashboard/system/dict/store';
+import { useMutation } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
+import { useMemo } from 'react';
+import { toast } from 'sonner';
+
+import { createDictData, updateDictData } from '../../api';
+import type { DictDataFormValues } from '../../type';
 import {
   normalizeOptional,
   resolveErrorMessage,
   toDictDataFormValues,
 } from '../../utils';
-import type { DictDataFormValues } from '../../type';
 import { DictDataEditorDialog } from './dict-data-editor-dialog';
 
 export function DictDataEditorManager() {
@@ -25,18 +25,11 @@ export function DictDataEditorManager() {
   const dataEditorState = useDictDataEditorState();
   const { closeDataEditor } = useDictDataEditorActions();
   const refresh = useDictManagementRefresh();
-  const { beginMutation, endMutation } =
-    useDictManagementMutationCounter();
+  const { beginMutation, endMutation } = useDictManagementMutationCounter();
 
   const createMutation = useMutation({
-    mutationFn: ({
-      dictTypeId,
-      values,
-    }: {
-      dictTypeId: number;
-      values: DictDataFormValues;
-    }) =>
-      createDictData(dictTypeId, {
+    mutationFn: ({ id, values }: { id: number; values: DictDataFormValues }) =>
+      createDictData(id, {
         dictLabel: values.dictLabel.trim(),
         dictValue: values.dictValue.trim(),
         dictSort: resolveSortValue(values.dictSort),
@@ -62,15 +55,15 @@ export function DictDataEditorManager() {
 
   const updateMutation = useMutation({
     mutationFn: ({
-      dictTypeId,
-      dictCode,
+      dictId,
+      id,
       values,
     }: {
-      dictTypeId: number;
-      dictCode: number;
+      dictId: number;
+      id: number;
       values: DictDataFormValues;
     }) =>
-      updateDictData(dictTypeId, dictCode, {
+      updateDictData(dictId, id, {
         dictLabel: values.dictLabel.trim(),
         dictValue: values.dictValue.trim(),
         dictSort: resolveSortValue(values.dictSort),
@@ -95,9 +88,7 @@ export function DictDataEditorManager() {
   });
 
   const mode: 'create' | 'edit' =
-    dataEditorState.open && dataEditorState.mode === 'edit'
-      ? 'edit'
-      : 'create';
+    dataEditorState.open && dataEditorState.mode === 'edit' ? 'edit' : 'create';
 
   const defaultValues = useMemo<DictDataFormValues | undefined>(() => {
     if (!dataEditorState.open || dataEditorState.mode === 'create') {
@@ -106,22 +97,21 @@ export function DictDataEditorManager() {
     return toDictDataFormValues(dataEditorState.dictData);
   }, [dataEditorState]);
 
-  const submitting =
-    createMutation.isPending || updateMutation.isPending;
+  const submitting = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = (values: DictDataFormValues) => {
     if (!dataEditorState.open) return;
-    const dictTypeId = dataEditorState.dictType.dictId;
+    const dictId = dataEditorState.dictType.id;
     if (dataEditorState.mode === 'edit') {
       updateMutation.mutate({
-        dictTypeId,
-        dictCode: dataEditorState.dictData.dictCode,
+        dictId,
+        id: dataEditorState.dictData.id,
         values,
       });
       return;
     }
     createMutation.mutate({
-      dictTypeId,
+      id: dictId,
       values,
     });
   };
@@ -141,7 +131,7 @@ export function DictDataEditorManager() {
     />
   );
 }
-  const resolveSortValue = (value: string) => {
-    const parsed = Number.parseInt(value, 10);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  };
+const resolveSortValue = (value: string) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? 0 : parsed;
+};

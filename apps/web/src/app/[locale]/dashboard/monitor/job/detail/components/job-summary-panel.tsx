@@ -8,8 +8,8 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
 
 import { STATUS_BADGE_VARIANT } from '../../constants';
 import type { Job } from '../../type';
@@ -106,31 +106,24 @@ export function JobSummaryPanel({
           value={resolveConcurrentLabel(t, job.concurrent)}
         />
         <SummaryItem
-<<<<<<<< HEAD:apps/web/src/app/[locale]/dashboard/monitor/job/detail/components/job-summary-panel.tsx
           label={t('detail.summary.labels.invokeTarget')}
           value={job.invokeTarget || '—'}
         />
         <SummaryItem
           label={t('detail.summary.labels.created')}
-          value={job.createTime || '—'}
-          hint={job.createBy || ''}
-        />
-        <SummaryItem
-          label={t('detail.summary.labels.updated')}
-          value={job.updateTime || '—'}
-========
-          label="创建"
           value={job.createdAt || '—'}
           hint={job.createBy || ''}
         />
         <SummaryItem
-          label="更新"
+          label={t('detail.summary.labels.updated')}
           value={job.updatedAt || '—'}
->>>>>>>> main:apps/web/src/app/dashboard/monitor/job/detail/components/job-summary-panel.tsx
           hint={job.updateBy || ''}
         />
         {job.remark ? (
-          <SummaryItem label={t('detail.summary.labels.remark')} value={job.remark} />
+          <SummaryItem
+            label={t('detail.summary.labels.remark')}
+            value={job.remark}
+          />
         ) : null}
       </div>
 

@@ -144,7 +144,7 @@ func (s *Service) collectStatus(ctx context.Context) (*Status, error) {
 func collectHostInfo(startTime time.Time) HostInfo {
 	hostname, _ := os.Hostname()
 	now := time.Now()
-	uptime := resolveSystemUptime(startTime)
+	uptime := resolveUptime(startTime)
 	bootTime := now.Add(-uptime)
 
 	return HostInfo{
@@ -265,7 +265,7 @@ func changedFloat(a, b float64) bool {
 	return math.Abs(a-b) > 0.01
 }
 
-func resolveSystemUptime(startTime time.Time) time.Duration {
+func resolveUptime(startTime time.Time) time.Duration {
 	now := time.Now()
 	if runtime.GOOS == "linux" {
 		if uptime, err := readProcUptime(); err == nil && uptime > 0 {

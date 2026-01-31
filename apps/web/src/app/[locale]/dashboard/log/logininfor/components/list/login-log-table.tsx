@@ -46,8 +46,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
-import { useMemo, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { useCallback, useMemo, useState } from 'react';
 
 import type { LoginLog } from '../../type';
 import { getLoginStatusBadgeVariant } from '../../utils';
@@ -121,30 +121,30 @@ function RowActions({ log, onDelete }: RowActionsProps) {
         <Button
           type="button"
           variant="ghost"
-            size="icon-sm"
-            className="size-7 sm:size-8"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => event.stopPropagation()}
-            aria-label={t('table.actions.more')}
-          >
-            <MoreHorizontal className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-28">
+          size="icon-sm"
+          className="size-7 sm:size-8"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+          aria-label={t('table.actions.more')}
+        >
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-28">
         <DropdownMenuItem
           className="text-destructive focus:text-destructive"
-            onSelect={(event) => {
-              event.preventDefault();
-              handleDelete();
-            }}
-          >
-            <Trash2 className="mr-2 size-4" />
-            {t('table.actions.delete')}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
+          onSelect={(event) => {
+            event.preventDefault();
+            handleDelete();
+          }}
+        >
+          <Trash2 className="mr-2 size-4" />
+          {t('table.actions.delete')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export function LoginLogTable({
   rows,
@@ -234,7 +234,7 @@ export function LoginLogTable({
           cellClassName: 'max-w-[320px]',
         },
       }),
-      columnHelper.accessor('loginTime', {
+      columnHelper.accessor('createdAt', {
         header: () => t('table.columns.time'),
         cell: ({ getValue }) => (
           <span className="text-sm text-foreground">{getValue() ?? '-'}</span>

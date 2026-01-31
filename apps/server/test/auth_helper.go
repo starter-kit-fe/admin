@@ -46,7 +46,7 @@ func Login(t *testing.T, a *app.App, mr *miniredis.Miniredis, username, password
 
 	var captchaResp struct {
 		Data struct {
-			UUID string `json:"uuid"`
+			CaptchaID string `json:"captcha_id"`
 		} `json:"data"`
 	}
 	if wCaptcha.Code == 200 {
@@ -54,10 +54,11 @@ func Login(t *testing.T, a *app.App, mr *miniredis.Miniredis, username, password
 	}
 
 	code := "1234"
+	captchaID := captchaResp.Data.CaptchaID
 	// Retrieve code from miniredis
-	if captchaResp.Data.UUID != "" {
-		// Key format: "captcha:" + uuid
-		key := "captcha:" + captchaResp.Data.UUID
+	if captchaID != "" {
+		// Key format: "captcha:" + id
+		key := "captcha:" + captchaID
 		val, err := mr.Get(key)
 		if err == nil {
 			code = val
@@ -68,9 +69,9 @@ func Login(t *testing.T, a *app.App, mr *miniredis.Miniredis, username, password
 	payload := map[string]string{
 		"username":   username,
 		"password":   password,
-		"uuid":       captchaResp.Data.UUID,
+		"uuid":       captchaID,
 		"code":       code,
-		"captcha_id": captchaResp.Data.UUID, // Support both fields just in case
+		"captcha_id": captchaID,
 	}
 
 	body, _ := json.Marshal(payload)

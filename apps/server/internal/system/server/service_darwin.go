@@ -12,10 +12,7 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"time"
 	"unsafe"
-
-	"golang.org/x/sys/unix"
 )
 
 func darwinLoadAverage() (float64, float64, float64, error) {
@@ -40,15 +37,4 @@ func darwinCPUTicks() (total uint64, idle uint64, err error) {
 	}
 	idle = uint64(info.cpu_ticks[C.CPU_STATE_IDLE])
 	return total, idle, nil
-}
-
-func resolveSystemUptime(startTime time.Time) time.Duration {
-	if tv, err := unix.SysctlTimeval("kern.boottime"); err == nil {
-		boot := time.Unix(int64(tv.Sec), int64(tv.Usec)*1000)
-		if boot.Before(time.Now()) {
-			return time.Since(boot)
-		}
-	}
-	// fallback to process lifetime when platform-specific uptime is unavailable
-	return time.Since(startTime)
 }

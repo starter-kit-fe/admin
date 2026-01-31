@@ -1,13 +1,7 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
-
 import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -17,10 +11,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import {
   Select,
   SelectContent,
@@ -28,19 +20,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
+import { useEffect, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
-import {
-  PREDEFINED_JOB_TYPES,
-  STATUS_TAB_KEYS,
-} from '../../constants';
+import { type JobPayload, createJob, updateJob } from '../../api';
+import { PREDEFINED_JOB_TYPES, STATUS_TAB_KEYS } from '../../constants';
 import {
   useJobManagementMutationCounter,
   useJobManagementRefresh,
   useJobManagementStore,
 } from '../../store';
-import { createJob, updateJob, type JobPayload } from '../../api';
 import type { Job } from '../../type';
-import { createJobFormSchema, type JobFormValues } from '../../type';
+import { type JobFormValues, createJobFormSchema } from '../../type';
 import { stringifyInvokeParams } from '../../utils';
 import { CronInputWithGenerator } from './cron-input-with-generator';
 
@@ -117,7 +113,10 @@ export function JobEditorDialog() {
       }
       form.setValue('jobGroup', selectedType.defaultGroup);
       form.setValue('cronExpression', selectedType.defaultCron);
-      form.setValue('invokeParams', JSON.stringify(selectedType.defaultParams, null, 2));
+      form.setValue(
+        'invokeParams',
+        JSON.stringify(selectedType.defaultParams, null, 2),
+      );
     }
   };
 
@@ -142,13 +141,8 @@ export function JobEditorDialog() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({
-      jobId,
-      payload,
-    }: {
-      jobId: number;
-      payload: JobPayload;
-    }) => updateJob(jobId, payload),
+    mutationFn: ({ id, payload }: { id: number; payload: JobPayload }) =>
+      updateJob(id, payload),
     onMutate: () => {
       beginMutation();
     },
@@ -167,15 +161,14 @@ export function JobEditorDialog() {
     },
   });
 
-  const submitting =
-    createMutation.isPending || updateMutation.isPending;
+  const submitting = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = form.handleSubmit((values) => {
     const payload = buildPayload(values);
     if (mode === 'create') {
       createMutation.mutate(payload);
     } else if (job) {
-      updateMutation.mutate({ jobId: job.jobId, payload });
+      updateMutation.mutate({ id: job.id, payload });
     }
   });
 
@@ -220,7 +213,10 @@ export function JobEditorDialog() {
       : t('editor.actions.save');
 
   return (
-    <ResponsiveDialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+    <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={(open) => !open && handleClose()}
+    >
       <FormDialogLayout
         title={title}
         description={description}
@@ -249,7 +245,11 @@ export function JobEditorDialog() {
         }
       >
         <Form {...form}>
-          <form onSubmit={handleSubmit} id="job-editor-form" className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            id="job-editor-form"
+            className="space-y-6"
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2 flex items-center gap-2 pb-2 border-b">
                 <span className="font-semibold text-lg">
@@ -275,13 +275,16 @@ export function JobEditorDialog() {
                           {field.value ? (
                             <span className="font-medium">
                               {
-                                jobTypeOptions.find((t) => t.value === field.value)
-                                  ?.label
+                                jobTypeOptions.find(
+                                  (t) => t.value === field.value,
+                                )?.label
                               }
                             </span>
                           ) : (
                             <SelectValue
-                              placeholder={t('editor.fields.jobType.placeholder')}
+                              placeholder={t(
+                                'editor.fields.jobType.placeholder',
+                              )}
                             />
                           )}
                         </SelectTrigger>
@@ -342,7 +345,9 @@ export function JobEditorDialog() {
                   name="invokeTarget"
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel>{t('editor.fields.invokeTarget.label')}</FormLabel>
+                      <FormLabel>
+                        {t('editor.fields.invokeTarget.label')}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder={t(
@@ -368,7 +373,9 @@ export function JobEditorDialog() {
                 name="cronExpression"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>{t('editor.fields.cronExpression.label')}</FormLabel>
+                    <FormLabel>
+                      {t('editor.fields.cronExpression.label')}
+                    </FormLabel>
                     <FormControl>
                       <CronInputWithGenerator
                         value={field.value}
@@ -407,7 +414,9 @@ export function JobEditorDialog() {
                             <FormControl>
                               <RadioGroupItem value={tab.value} />
                             </FormControl>
-                            <FormLabel className="font-normal">{tab.label}</FormLabel>
+                            <FormLabel className="font-normal">
+                              {tab.label}
+                            </FormLabel>
                           </FormItem>
                         ))}
                       </RadioGroup>
@@ -444,7 +453,9 @@ export function JobEditorDialog() {
                             <FormControl>
                               <RadioGroupItem value={value} />
                             </FormControl>
-                            <FormLabel className="font-normal">{label}</FormLabel>
+                            <FormLabel className="font-normal">
+                              {label}
+                            </FormLabel>
                           </FormItem>
                         ))}
                       </RadioGroup>
@@ -478,7 +489,9 @@ export function JobEditorDialog() {
                             <FormControl>
                               <RadioGroupItem value={value} />
                             </FormControl>
-                            <FormLabel className="font-normal">{label}</FormLabel>
+                            <FormLabel className="font-normal">
+                              {label}
+                            </FormLabel>
                           </FormItem>
                         ))}
                       </RadioGroup>
@@ -498,11 +511,15 @@ export function JobEditorDialog() {
                 name="invokeParams"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>{t('editor.fields.invokeParams.label')}</FormLabel>
+                    <FormLabel>
+                      {t('editor.fields.invokeParams.label')}
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         rows={6}
-                        placeholder={t('editor.fields.invokeParams.placeholder')}
+                        placeholder={t(
+                          'editor.fields.invokeParams.placeholder',
+                        )}
                         {...field}
                         className="font-mono text-sm"
                       />

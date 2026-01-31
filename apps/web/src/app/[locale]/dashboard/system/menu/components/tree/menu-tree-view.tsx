@@ -129,7 +129,7 @@ export function MenuTreeView({
             (child) => child.menuType !== 'F',
           );
           if (hasNonButtonChild) {
-            ids.push(item.menuId);
+            ids.push(item.id);
           }
           walk(item.children);
         }
@@ -182,7 +182,7 @@ export function MenuTreeView({
       if (targetIndex < 0 || targetIndex >= siblings.length) {
         return;
       }
-      const orderedIds = siblings.map((item) => item.menuId);
+      const orderedIds = siblings.map((item) => item.id);
       const [moved] = orderedIds.splice(index, 1);
       orderedIds.splice(targetIndex, 0, moved);
       onReorder(parentId, orderedIds);
@@ -200,7 +200,7 @@ export function MenuTreeView({
     ): ReactElement[] => {
       return items.map((node, index) => {
         const hasChildren = Boolean(node.children?.length);
-        const isExpanded = hasChildren ? expanded.has(node.menuId) : false;
+        const isExpanded = hasChildren ? expanded.has(node.id) : false;
         const typeLabel =
           node.menuType === 'M'
             ? t('types.directory')
@@ -248,7 +248,7 @@ export function MenuTreeView({
         const Icon = resolveLucideIcon(node.icon);
 
         return (
-          <div key={node.menuId} className="text-sm">
+          <div key={node.id} className="text-sm">
             <div className="flex items-stretch">
               <TreeLines depth={depth} ancestors={ancestors} isLast={isLast} />
               <div className="flex flex-1 flex-col gap-1 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/40 dark:hover:bg-muted/20">
@@ -259,7 +259,7 @@ export function MenuTreeView({
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 shrink-0 text-muted-foreground"
-                      onClick={() => toggleNode(node.menuId)}
+                      onClick={() => toggleNode(node.id)}
                     >
                       {isExpanded ? (
                         <ChevronDown className="h-4 w-4" />
@@ -364,7 +364,7 @@ export function MenuTreeView({
               ? renderNodes(
                   node.children!,
                   depth + 1,
-                  node.menuId,
+                  node.id,
                   [...ancestors, !isLast],
                   nextPathSegments,
                 )

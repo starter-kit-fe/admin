@@ -4,7 +4,7 @@ export type DictStatus = '0' | '1';
 export type DictDefaultFlag = 'Y' | 'N';
 
 export interface DictType {
-  dictId: number;
+  id: number;
   dictName: string;
   dictType: string;
   status: DictStatus;
@@ -12,7 +12,7 @@ export interface DictType {
 }
 
 export interface DictData {
-  dictCode: number;
+  id: number;
   dictSort: number;
   dictLabel: string;
   dictValue: string;
@@ -26,8 +26,7 @@ export interface DictData {
 
 export interface DictDataList {
   type?: DictType;
-  items: DictData[];
-  total: number;
+  list: DictData[];
 }
 
 export const createDictTypeFormSchema = (t: (key: string) => string) =>
@@ -67,11 +66,12 @@ export const createDictDataFormSchema = (t: (key: string) => string) =>
       ),
     status: z.enum(['0', '1']),
     isDefault: z.enum(['Y', 'N']),
-    remark: z
-      .string()
-      .trim()
-      .max(255, t('dataEditor.validation.remark.max')),
+    remark: z.string().trim().max(255, t('dataEditor.validation.remark.max')),
   });
 
-export type DictTypeFormValues = z.infer<ReturnType<typeof createDictTypeFormSchema>>;
-export type DictDataFormValues = z.infer<ReturnType<typeof createDictDataFormSchema>>;
+export type DictTypeFormValues = z.infer<
+  ReturnType<typeof createDictTypeFormSchema>
+>;
+export type DictDataFormValues = z.infer<
+  ReturnType<typeof createDictDataFormSchema>
+>;

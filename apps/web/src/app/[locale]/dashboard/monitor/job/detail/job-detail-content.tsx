@@ -14,27 +14,27 @@ import {
   PlayCircle,
   RefreshCw,
 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { useLocale, useTranslations } from 'next-intl';
 
-import { clearJobLogs, getJobDetail, runJob } from '../../api';
-import { BASE_QUERY_KEY, STATUS_BADGE_VARIANT } from '../../constants';
-import type { Job, JobLog } from '../../type';
-import { resolveStatusLabel, stringifyInvokeParams } from '../../utils';
+import { clearJobLogs, getJobDetail, runJob } from '../api';
+import { BASE_QUERY_KEY, STATUS_BADGE_VARIANT } from '../constants';
+import type { Job, JobLog } from '../type';
+import { resolveStatusLabel, stringifyInvokeParams } from '../utils';
 import {
   describeCron,
   formatDateTime,
   getNextExecutionTimes,
-} from '../../utils/cron';
-import { JobLogsSection } from './job-logs-section';
+} from '../utils/cron';
+import { JobLogsSection } from './components/job-logs-section';
 import {
   JobStatusMeta,
   JobSummaryPanel,
   ToneStyles,
-} from './job-summary-panel';
-import { LogStepsPanel } from './log-steps-panel';
+} from './components/job-summary-panel';
+import { LogStepsPanel } from './components/log-steps-panel';
 import { RealtimeLogViewer } from './realtime-log-viewer';
 
 export type Tone = 'emerald' | 'amber' | 'sky' | 'rose' | 'slate';
@@ -79,7 +79,8 @@ const TONE_STYLES: Record<
 const JOB_STATUS_META: Record<string, JobStatusMeta> = {
   '0': {
     label: 'Running',
-    helperText: 'Job will execute automatically on its cron schedule. You can pause anytime.',
+    helperText:
+      'Job will execute automatically on its cron schedule. You can pause anytime.',
     icon: PlayCircle,
     tone: 'emerald',
   },
@@ -102,13 +103,9 @@ interface JobDetailContentProps {
   id: number;
 }
 
-<<<<<<<< HEAD:apps/web/src/app/[locale]/dashboard/monitor/job/detail/job-detail-content.tsx
-export function JobDetailContent({ jobId }: JobDetailContentProps) {
+export function JobDetailContent({ id }: JobDetailContentProps) {
   const locale = useLocale();
   const t = useTranslations('JobManagement');
-========
-export function JobDetailContent({ id }: JobDetailContentProps) {
->>>>>>>> main:apps/web/src/app/dashboard/monitor/job/detail/components/job-detail-content.tsx
   const [logPagination, setLogPagination] = useState({
     pageNum: 1,
     pageSize: DEFAULT_LOG_PAGE_SIZE,
@@ -214,7 +211,7 @@ export function JobDetailContent({ id }: JobDetailContentProps) {
   useEffect(() => {
     const runningLog = logs?.list.find((item) => item.status === '2');
     if (runningLog) {
-      setActiveLogId(runningLog.jobLogId);
+      setActiveLogId(runningLog.id);
       setActiveLogName(
         runningLog.jobName || job?.jobName || t('detail.live.fallbackName'),
       );
@@ -417,7 +414,9 @@ export function JobDetailContent({ id }: JobDetailContentProps) {
       >
         <ResponsiveDialog.Content className="w-[min(900px,calc(100vw-1.5rem))] sm:max-w-4xl">
           <ResponsiveDialog.Header>
-            <ResponsiveDialog.Title>{t('detail.dialog.title')}</ResponsiveDialog.Title>
+            <ResponsiveDialog.Title>
+              {t('detail.dialog.title')}
+            </ResponsiveDialog.Title>
             <ResponsiveDialog.Description>
               {t('detail.dialog.description')}
             </ResponsiveDialog.Description>
@@ -439,7 +438,10 @@ function getToneStyles(tone: Tone): ToneStyles {
   return TONE_STYLES[tone] ?? TONE_STYLES.slate;
 }
 
-type Translator = (key: string, values?: Record<string, string | number>) => string;
+type Translator = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
 
 function getJobStatusMeta(status: string, t?: Translator): JobStatusMeta {
   if (t) {

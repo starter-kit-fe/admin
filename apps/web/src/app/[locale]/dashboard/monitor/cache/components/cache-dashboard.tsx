@@ -16,7 +16,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
-import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -30,9 +29,10 @@ import {
   Server,
   Users,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
+import type { CacheKeyspaceInfo, CacheOverview } from '../api/type';
 import { useCacheOverviewStream } from '../hooks/use-cache-overview-stream';
-import type { CacheKeyspaceInfo, CacheOverview } from '../type';
 import {
   formatBytes,
   formatNumber,
@@ -111,7 +111,8 @@ export function CacheDashboard() {
   const memoryLimitLabel =
     maxMemory > 0
       ? formatBytes(maxMemory, { decimals: 1 })
-      : overview.memory.maxMemoryHuman ?? t('dashboard.overview.memory.noLimit');
+      : (overview.memory.maxMemoryHuman ??
+        t('dashboard.overview.memory.noLimit'));
   const memoryPeakLabel =
     overview.memory.usedMemoryPeakHuman ??
     formatBytes(peakMemory, {
@@ -532,7 +533,7 @@ export function CacheDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {overview.keyspace.map((space) => {
+                  {overview.keyspace.map((space: CacheKeyspaceInfo) => {
                     const avgTTL =
                       typeof space.avgTtl === 'number' && space.avgTtl > 0
                         ? `${Math.round(space.avgTtl / 1000)}s`

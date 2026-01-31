@@ -130,7 +130,9 @@ export function JobLogsSection({
       },
       {
         id: 'actions',
-        header: () => <span className="">{t('detail.logs.table.actions')}</span>,
+        header: () => (
+          <span className="">{t('detail.logs.table.actions')}</span>
+        ),
         cell: ({ row }) => (
           <LogRowActions
             log={row.original}
@@ -153,7 +155,7 @@ export function JobLogsSection({
     data: rows,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getRowId: (row) => String(row.jobLogId),
+    getRowId: (row) => String(row.id),
   });
 
   const columnCount = columns.length;
@@ -339,13 +341,13 @@ function LogRowActions({
         <DropdownMenuItem
           onSelect={(event) => {
             event.preventDefault();
-          onView();
-        }}
-      >
-        <Eye className="mr-2 size-4" />
-        {t('detail.logs.table.view')}
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
-);
+            onView();
+          }}
+        >
+          <Eye className="mr-2 size-4" />
+          {t('detail.logs.table.view')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }

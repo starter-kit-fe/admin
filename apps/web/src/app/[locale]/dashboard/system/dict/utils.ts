@@ -44,7 +44,6 @@ export function normalizeOptional(value: string): string | undefined {
 export const emptyDictDataList: DictDataList = {
   type: undefined,
   list: [],
-  total: 0,
 };
 
 function normalizeField(value: string | null | undefined) {

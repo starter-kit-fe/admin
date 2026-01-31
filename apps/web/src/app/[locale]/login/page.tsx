@@ -5,12 +5,12 @@ import ThemeToggle from '@/components/theme-toggle';
 import { useAuthStore } from '@/stores';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { useLocale } from 'next-intl';
 
 import pkg from '../../../../package.json';
 import { getCaptcha, login } from './api';

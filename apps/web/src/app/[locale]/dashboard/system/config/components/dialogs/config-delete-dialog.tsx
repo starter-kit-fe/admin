@@ -7,11 +7,11 @@ import {
 } from '@/app/dashboard/system/config/store';
 import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { removeConfig } from '../../api';
 import { resolveErrorMessage } from '../../utils';
-import { useTranslations } from 'next-intl';
 
 export function ConfigDeleteDialog() {
   const t = useTranslations('ConfigManagement');

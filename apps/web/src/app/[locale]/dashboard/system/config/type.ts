@@ -3,7 +3,7 @@ import { z } from 'zod';
 export type ConfigType = 'Y' | 'N';
 
 export interface SystemConfig {
-  configId: number;
+  id: number;
   configName: string;
   configKey: string;
   configValue: string;
@@ -11,9 +11,7 @@ export interface SystemConfig {
   remark?: string | null;
 }
 
-export const createConfigFormSchema = (
-  t: (key: string) => string,
-) =>
+export const createConfigFormSchema = (t: (key: string) => string) =>
   z.object({
     configName: z
       .string()
@@ -31,10 +29,9 @@ export const createConfigFormSchema = (
       .min(1, t('form.validation.value.required'))
       .max(500, t('form.validation.value.max')),
     configType: z.enum(['Y', 'N']),
-    remark: z
-      .string()
-      .trim()
-      .max(255, t('form.validation.remark.max')),
+    remark: z.string().trim().max(255, t('form.validation.remark.max')),
   });
 
-export type ConfigFormValues = z.infer<ReturnType<typeof createConfigFormSchema>>;
+export type ConfigFormValues = z.infer<
+  ReturnType<typeof createConfigFormSchema>
+>;

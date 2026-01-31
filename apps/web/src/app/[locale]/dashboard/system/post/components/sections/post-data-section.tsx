@@ -142,8 +142,8 @@ export function PostDataSection() {
     setSelectedIds((prev) => {
       const next = new Set<number>();
       rows.forEach((post) => {
-        if (prev.has(post.id)) {
-          next.add(post.id);
+        if (prev.has(post.postId)) {
+          next.add(post.postId);
         }
       });
       return next;
@@ -152,7 +152,7 @@ export function PostDataSection() {
 
   const selectedCount = selectedIds.size;
   const isAllSelected =
-    rows.length > 0 && rows.every((row) => selectedIds.has(row.id));
+    rows.length > 0 && rows.every((row) => selectedIds.has(row.postId));
   const headerCheckboxState = isAllSelected
     ? true
     : selectedCount > 0
@@ -161,7 +161,7 @@ export function PostDataSection() {
 
   const handleToggleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(new Set(rows.map((row) => row.id)));
+      setSelectedIds(new Set(rows.map((row) => row.postId)));
     } else {
       setSelectedIds(new Set());
     }

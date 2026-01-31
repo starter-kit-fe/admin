@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import pkg from '../../../../package.json';
+import pkg from '../../../../../package.json';
 
 const siteName =
   pkg.seo?.title?.split('—')[0]?.trim() ?? pkg.name ?? 'Admin Template';
@@ -69,10 +69,12 @@ export function CookiesPage() {
           <p className="text-sm uppercase tracking-widest text-muted-foreground">
             最后更新：{lastUpdated}
           </p>
-          <h1 className="text-3xl font-semibold sm:text-4xl">{siteName} Cookie 政策</h1>
+          <h1 className="text-3xl font-semibold sm:text-4xl">
+            {siteName} Cookie 政策
+          </h1>
           <p className="text-base leading-relaxed text-muted-foreground">
-            本政策解释我们在 {siteName} 中如何使用 Cookie、localStorage 与类似技术，
-            以及你可以如何管理它们。它是{' '}
+            本政策解释我们在 {siteName} 中如何使用 Cookie、localStorage
+            与类似技术， 以及你可以如何管理它们。它是{' '}
             <Link
               href="/terms"
               className="font-medium text-primary underline-offset-4 hover:underline"
@@ -94,8 +96,8 @@ export function CookiesPage() {
           <div>
             <h2 className="text-xl font-semibold">我们使用的 Cookie 类型</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              我们遵循“必要优先”的设计：仅在维持登录或记住界面设置时写入 Cookie。
-              任何用于分析或实验的脚本都需要你通过横幅明确同意。
+              我们遵循“必要优先”的设计：仅在维持登录或记住界面设置时写入
+              Cookie。 任何用于分析或实验的脚本都需要你通过横幅明确同意。
             </p>
           </div>
           <div className="overflow-x-auto rounded-2xl border border-border/60">
@@ -155,15 +157,19 @@ export function CookiesPage() {
             <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
               <li>
                 <span className="font-medium text-foreground">通过横幅：</span>
-                点击登录或首页底部的 Cookie 横幅，可随时拒绝可选 Cookie 或重新接受。
+                点击登录或首页底部的 Cookie 横幅，可随时拒绝可选 Cookie
+                或重新接受。
               </li>
               <li>
-                <span className="font-medium text-foreground">浏览器设置：</span>
+                <span className="font-medium text-foreground">
+                  浏览器设置：
+                </span>
                 在浏览器的“隐私/安全”设置中清理 Cookie 或启用禁止第三方 Cookie。
               </li>
               <li>
                 <span className="font-medium text-foreground">撤回同意：</span>
-                若你已接受可选 Cookie，可直接清除 admin_cookie_consent 或通过横幅选择“拒绝”以立即停用相关脚本。
+                若你已接受可选 Cookie，可直接清除 admin_cookie_consent
+                或通过横幅选择“拒绝”以立即停用相关脚本。
               </li>
               <li>
                 <span className="font-medium text-foreground">联系我们：</span>

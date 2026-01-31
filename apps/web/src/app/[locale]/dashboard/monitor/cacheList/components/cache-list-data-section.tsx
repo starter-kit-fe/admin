@@ -1,16 +1,12 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
+import { useEffect, useMemo } from 'react';
 
-import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
-
-import {
-  listCacheKeys,
-  type CacheKeyListParams,
-} from '../../cache/api';
-import type { CacheKeyListResponse } from '../../cache/api/types';
+import { type CacheKeyListParams, listCacheKeys } from '../../cache/api';
+import type { CacheKeyListResponse } from '../../cache/api/type';
 import {
   CACHE_LIST_PAGE_SIZE_OPTIONS,
   CACHE_LIST_QUERY_KEY,
@@ -39,11 +35,7 @@ export function CacheListDataSection() {
       params.pattern = trimmedPattern;
     }
     return params;
-  }, [
-    appliedFilters.pattern,
-    pagination.pageNum,
-    pagination.pageSize,
-  ]);
+  }, [appliedFilters.pattern, pagination.pageNum, pagination.pageSize]);
 
   const query = useQuery({
     queryKey: [...CACHE_LIST_QUERY_KEY, queryParams],
@@ -52,7 +44,7 @@ export function CacheListDataSection() {
   });
 
   const data = query.data ?? ({} as CacheKeyListResponse);
-  const rows = data.items ?? [];
+  const rows = data.list ?? [];
   const total =
     typeof data.total === 'number' && data.total >= 0
       ? data.total

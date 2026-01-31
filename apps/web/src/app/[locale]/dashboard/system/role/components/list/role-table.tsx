@@ -306,7 +306,7 @@ export function RoleTable({
         enableSorting: false,
         meta: { headerClassName: 'w-[120px]' },
       }),
-      columnHelper.accessor('createTime', {
+      columnHelper.accessor('createdAt', {
         header: t('table.columns.createdAt'),
         cell: ({ getValue }) => (
           <span className="text-sm text-muted-foreground">

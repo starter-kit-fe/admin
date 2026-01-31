@@ -46,8 +46,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
-import { useMemo, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { useCallback, useMemo, useState } from 'react';
 
 import type { OperLog } from '../../type';
 import { getOperLogStatusBadgeVariant } from '../../utils';
@@ -114,30 +114,30 @@ function RowActions({ log, onDelete }: RowActionsProps) {
         <Button
           type="button"
           variant="ghost"
-            size="icon-sm"
-            className="size-7 sm:size-8"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => event.stopPropagation()}
-            aria-label={t('table.actions.more')}
-          >
-            <MoreHorizontal className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-28">
+          size="icon-sm"
+          className="size-7 sm:size-8"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+          aria-label={t('table.actions.more')}
+        >
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-28">
         <DropdownMenuItem
           className="text-destructive focus:text-destructive"
-            onSelect={(event) => {
-              event.preventDefault();
-              handleDelete();
-            }}
-          >
-            <Trash2 className="mr-2 size-4" />
-            {t('table.actions.delete')}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
+          onSelect={(event) => {
+            event.preventDefault();
+            handleDelete();
+          }}
+        >
+          <Trash2 className="mr-2 size-4" />
+          {t('table.actions.delete')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 interface OperLogTableProps {
   rows: OperLog[];
@@ -274,13 +274,13 @@ export function OperLogTable({
           cellClassName: 'min-w-[280px] max-w-[360px]',
         },
       }),
-      columnHelper.accessor('operTime', {
+      columnHelper.accessor('createdAt', {
         header: () => t('table.columns.operTime'),
         cell: ({ row }) => {
           const log = row.original;
           return (
             <div className="space-y-1 text-sm text-foreground">
-              <p>{log.operTime || '-'}</p>
+              <p>{log.createdAt || '-'}</p>
               {log.costTime ? (
                 <p className="text-xs text-muted-foreground">
                   {t('table.cells.cost', { value: log.costTime })}
@@ -320,7 +320,14 @@ export function OperLogTable({
           ]
         : []),
     ],
-    [canDeleteOperLog, columnHelper, getBusinessTypeLabel, getStatusLabel, onDelete, t],
+    [
+      canDeleteOperLog,
+      columnHelper,
+      getBusinessTypeLabel,
+      getStatusLabel,
+      onDelete,
+      t,
+    ],
   );
 
   const table = useReactTable({

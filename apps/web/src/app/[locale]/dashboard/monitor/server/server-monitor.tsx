@@ -1,25 +1,29 @@
 'use client';
 
-import { useMemo } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
 import { Cpu, HardDrive, MemoryStick, RefreshCcw } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { useMemo } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Spinner } from '@/components/ui/spinner';
-
-import { ProcessInfoCard } from './process-info-card';
-import { QuickStatCard } from './quick-stat-card';
-import { ServerInfoCard } from './server-info-card';
+import { ProcessInfoCard } from './components/process-info-card';
+import { QuickStatCard } from './components/quick-stat-card';
+import { ServerInfoCard } from './components/server-info-card';
+import { useServerStatusStream } from './hooks/use-server-status-stream';
 import {
   formatBytes,
   formatDateTime,
   formatLoad,
   formatPercent,
   safeNumber,
-} from '../lib/format';
-import { DEFAULT_STATUS, summarizeDisks } from '../lib/status';
-import { useServerStatusStream } from '../hooks/use-server-status-stream';
+} from './lib/format';
+import { DEFAULT_STATUS, summarizeDisks } from './lib/status';
 
 export function ServerMonitor() {
   const t = useTranslations('ServerMonitor');
@@ -49,7 +53,10 @@ export function ServerMonitor() {
 
   const cpuUsagePercent = useMemo(() => {
     const { cpu } = status;
-    if (typeof cpu.usagePercent === 'number' && !Number.isNaN(cpu.usagePercent)) {
+    if (
+      typeof cpu.usagePercent === 'number' &&
+      !Number.isNaN(cpu.usagePercent)
+    ) {
       return cpu.usagePercent;
     }
     return 0;
@@ -76,7 +83,9 @@ export function ServerMonitor() {
         formatValue: formatPercent,
         hint: t('quickStats.memory.hint', {
           limit: formatBytes(status.memory.limit),
-          allocation: formatBytes(status.memory.processAlloc || status.process.alloc),
+          allocation: formatBytes(
+            status.memory.processAlloc || status.process.alloc,
+          ),
         }),
         percent: safeNumber(status.memory.usedPercent),
       },

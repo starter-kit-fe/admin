@@ -23,9 +23,9 @@ export function LogStepsPanel({ log }: { log: JobLog }) {
     refetch,
     isFetching,
   } = useQuery({
-    queryKey: [...BASE_QUERY_KEY, 'logs', 'steps', log.jobLogId],
-    queryFn: () => getJobLogSteps(log.jobLogId),
-    enabled: Boolean(log.jobLogId),
+    queryKey: [...BASE_QUERY_KEY, 'logs', 'steps', log.id],
+    queryFn: () => getJobLogSteps(log.id),
+    enabled: Boolean(log.id),
     staleTime: 30 * 1000,
   });
 

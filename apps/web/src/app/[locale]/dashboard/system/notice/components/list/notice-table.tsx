@@ -348,7 +348,8 @@ export function NoticeTable({
         id: 'updatedAt',
         header: () => t('table.columns.updatedAt'),
         cell: ({ row }) => {
-          const timeLabel = row.original.updateTime ?? row.original.createTime;
+          const timeLabel =
+            row.original.updatedAt ?? row.original.createdAt ?? null;
           return (
             <span className="text-sm text-muted-foreground">
               {formatNoticeDate(timeLabel)}

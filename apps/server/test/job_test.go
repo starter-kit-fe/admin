@@ -52,7 +52,7 @@ func TestJobModule(t *testing.T) {
 
 		app.Handler().ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, http.StatusCreated, w.Code)
 	})
 
 	t.Run("List Jobs After Create", func(t *testing.T) {

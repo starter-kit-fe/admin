@@ -11,12 +11,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import pkg from '../../../../package.json';
+import pkg from '../../../../../package.json';
 import { getCaptcha, login } from '../api';
-import { LoginAside } from './login-aside';
-import { LoginForm } from './login-form';
 import { type LoginValues, loginSchema } from '../schema';
 import type { LoginRequestPayload } from '../type';
+import { LoginAside } from './login-aside';
+import { LoginForm } from './login-form';
 
 const featureHighlights = [
   '支持账号密码快速登录，登录后自动缓存权限配置。',

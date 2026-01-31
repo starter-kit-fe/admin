@@ -204,8 +204,8 @@ export function UserDataSection() {
     setSelectedIds((prev) => {
       const next = new Set<number>();
       filteredRows.forEach((user) => {
-        if (prev.has(user.id)) {
-          next.add(user.id);
+        if (prev.has(user.userId)) {
+          next.add(user.userId);
         }
       });
       return next;
@@ -215,7 +215,7 @@ export function UserDataSection() {
   const selectedCount = selectedIds.size;
   const isAllSelected =
     filteredRows.length > 0 &&
-    filteredRows.every((row) => selectedIds.has(row.id));
+    filteredRows.every((row) => selectedIds.has(row.userId));
   const headerCheckboxState = isAllSelected
     ? true
     : selectedCount > 0
@@ -224,7 +224,7 @@ export function UserDataSection() {
 
   const handleToggleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(new Set(filteredRows.map((row) => row.id)));
+      setSelectedIds(new Set(filteredRows.map((row) => row.userId)));
     } else {
       setSelectedIds(new Set());
     }

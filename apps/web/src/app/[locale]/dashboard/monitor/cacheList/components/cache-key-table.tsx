@@ -29,11 +29,11 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Check, Clipboard, TimerReset } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
-import type { CacheKeyItem } from '../../cache/type';
+import type { CacheKeyItem } from '../../cache/api/type';
 import { formatBytes, formatDuration } from '../utils';
 
 interface CacheKeyTableProps {
@@ -231,8 +231,8 @@ export function CacheKeyTable({
   const table = useReactTable({
     data: rows,
     columns,
-        getCoreRowModel: getCoreRowModel(),
-      });
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   const tableRows = table.getRowModel().rows;
   const visibleColumnCount =

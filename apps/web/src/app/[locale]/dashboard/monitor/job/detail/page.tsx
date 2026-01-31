@@ -16,7 +16,7 @@ export default function JobDetailPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6">
-      <JobDetailContent jobId={jobId} />
+      <JobDetailContent id={jobId} />
     </div>
   );
 }

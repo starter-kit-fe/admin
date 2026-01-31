@@ -2,7 +2,7 @@ export type NoticeType = '1' | '2';
 export type NoticeStatus = '0' | '1';
 
 export interface Notice {
-  id: number;
+  noticeId: number;
   noticeTitle: string;
   noticeType: NoticeType;
   noticeContent: string;

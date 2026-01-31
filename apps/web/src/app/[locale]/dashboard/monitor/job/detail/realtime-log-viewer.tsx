@@ -12,12 +12,12 @@ import {
   Loader2,
   XCircle,
 } from 'lucide-react';
-import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
-import { useJobLogStream } from '../../hooks/use-job-log-stream';
-import type { JobLogStep } from '../../type';
-import { formatDuration, getLogStatusMeta } from './log-meta';
+import { useJobLogStream } from '../hooks/use-job-log-stream';
+import type { JobLogStep } from '../type';
+import { formatDuration, getLogStatusMeta } from './components/log-meta';
 
 interface RealtimeLogViewerProps {
   jobLogId: number;
@@ -32,7 +32,7 @@ export function RealtimeLogViewer({
 }: RealtimeLogViewerProps) {
   const t = useTranslations('JobManagement');
   const { steps, isConnected, isComplete } = useJobLogStream({
-    jobLogId,
+    id: jobLogId,
     onComplete,
   });
 
@@ -84,9 +84,7 @@ export function RealtimeLogViewer({
           ) : null}
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground sm:ml-auto">
-          <span>
-            {t('detail.live.steps.count', { count: steps.length })}
-          </span>
+          <span>{t('detail.live.steps.count', { count: steps.length })}</span>
           <span
             className={cn(
               'flex items-center gap-1',
@@ -177,17 +175,12 @@ function StepItem({
           <span className={cn('font-medium', meta.stepTextClass)}>
             {meta.label}
           </span>
-<<<<<<<< HEAD:apps/web/src/app/[locale]/dashboard/monitor/job/detail/realtime-log-viewer.tsx
           {durationText ? (
             <span>
               {t('detail.live.steps.duration', { value: durationText })}
             </span>
           ) : null}
-          {step.createTime ? <span>{step.createTime}</span> : null}
-========
-          {durationText ? <span>耗时 {durationText}</span> : null}
           {step.createdAt ? <span>{step.createdAt}</span> : null}
->>>>>>>> main:apps/web/src/app/dashboard/monitor/job/detail/components/realtime-log-viewer.tsx
           {hasDetails ? (
             <button
               type="button"
@@ -199,7 +192,9 @@ function StepItem({
               ) : (
                 <ChevronRight className="size-3" />
               )}
-              {expanded ? t('detail.live.steps.collapse') : t('detail.live.steps.expand')}
+              {expanded
+                ? t('detail.live.steps.collapse')
+                : t('detail.live.steps.expand')}
             </button>
           ) : null}
         </div>

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { JobLogStep, StepEvent } from '../type';
 
 interface UseJobLogStreamOptions {
-  jobLogId: number;
+  id: number;
   enabled?: boolean;
   onEvent?: (event: StepEvent) => void;
   onComplete?: () => void;
@@ -14,7 +14,7 @@ interface UseJobLogStreamOptions {
 }
 
 export function useJobLogStream({
-  jobLogId,
+  id,
   enabled = true,
   onEvent,
   onComplete,
@@ -39,7 +39,7 @@ export function useJobLogStream({
     controllerRef.current = controller;
 
     startSSE<StepEvent>({
-      path: `/v1/monitor/jobs/logs/${jobLogId}/stream`,
+      path: `/v1/monitor/jobs/logs/${id}/stream`,
       controller,
       onOpen: () => {
         setIsConnected(true);
@@ -61,7 +61,7 @@ export function useJobLogStream({
             const next = new Map(prev);
             next.set(payload.stepOrder, {
               stepId: payload.stepId!,
-              jobLogId: payload.jobLogId,
+              jobLogId: payload.id,
               stepName: payload.stepName!,
               stepOrder: payload.stepOrder,
               status: '2',
@@ -109,7 +109,7 @@ export function useJobLogStream({
         onError?.(error);
       },
     });
-  }, [jobLogId, enabled, onEvent, onComplete, onError, disconnect, isComplete]);
+  }, [id, enabled, onEvent, onComplete, onError, disconnect, isComplete]);
 
   useEffect(() => {
     if (enabled) {
@@ -121,7 +121,7 @@ export function useJobLogStream({
   useEffect(() => {
     setSteps(new Map());
     setIsComplete(false);
-  }, [jobLogId]);
+  }, [id]);
 
   return {
     steps: Array.from(steps.values()).sort((a, b) => a.stepOrder - b.stepOrder),

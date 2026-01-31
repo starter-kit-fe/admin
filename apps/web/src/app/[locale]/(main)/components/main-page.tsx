@@ -1,7 +1,5 @@
 'use client';
 
-import HealthStatusPanel from './health-status';
-import HeroSection from './hero';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +23,9 @@ import {
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import pkg from '../../../../package.json';
+import pkg from '../../../../../package.json';
+import HealthStatusPanel from './health-status';
+import HeroSection from './hero';
 
 const featureCards = [
   {
@@ -192,7 +192,6 @@ export function MainPage() {
     const sectionTimelines: gsap.core.Timeline[] = [];
 
     const ctx = gsap.context(() => {
-
       const sections = gsap.utils.toArray<HTMLElement>(
         root.querySelectorAll('[data-animate-section]'),
       );
@@ -296,7 +295,6 @@ export function MainPage() {
           }),
         );
       });
-
     }, root);
 
     return () => {

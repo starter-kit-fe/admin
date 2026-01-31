@@ -193,13 +193,13 @@ export function JobTable({
             <div className="space-y-1 text-xs text-muted-foreground">
               <EllipsisText
                 value={t('table.timestamps.created', {
-                  time: job.createTime || '-',
+                  time: job.createdAt || '-',
                 })}
                 className="max-w-[220px]"
               />
               <EllipsisText
                 value={t('table.timestamps.updated', {
-                  time: job.updateTime || '-',
+                  time: job.updatedAt || '-',
                 })}
                 className="max-w-[220px]"
               />
@@ -222,7 +222,7 @@ export function JobTable({
               ),
               cell: ({ row }) => {
                 const job = row.original;
-                const jobId = job.jobId;
+                const jobId = job.id;
                 const isRunPending = pendingRunId === jobId;
                 const isUpdatingStatus = pendingStatusId === jobId;
                 const nextStatus = job.status === '0' ? '1' : '0';

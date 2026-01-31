@@ -54,7 +54,7 @@ export function PostDeleteDialog() {
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (deleteTarget) {
-          deleteMutation.mutate(deleteTarget.id);
+          deleteMutation.mutate(deleteTarget.postId);
         }
       }}
     />

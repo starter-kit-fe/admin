@@ -82,15 +82,15 @@ export function removeDictType(id: number) {
   return del(`/v1/system/dicts/${id}`);
 }
 
-export function listDictData(dictId: number, params: DictDataListParams = {}) {
+export function listDictData(id: number, params: DictDataListParams = {}) {
   return get<DictDataList>(
-    `/v1/system/dicts/${dictId}/data`,
+    `/v1/system/dicts/${id}/data`,
     buildDataQuery(params),
   );
 }
 
-export function createDictData(dictId: number, payload: CreateDictDataPayload) {
-  return post<DictData>(`/v1/system/dicts/${dictId}/data`, payload);
+export function createDictData(id: number, payload: CreateDictDataPayload) {
+  return post<DictData>(`/v1/system/dicts/${id}/data`, payload);
 }
 
 export function updateDictData(

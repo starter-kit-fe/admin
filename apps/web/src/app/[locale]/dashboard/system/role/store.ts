@@ -19,7 +19,7 @@ type FilterState = {
 type EditorState =
   | { open: false }
   | { open: true; mode: 'create' }
-  | { open: true; mode: 'edit'; id: number };
+  | { open: true; mode: 'edit'; roleId: number };
 
 type SetStateAction<T> = T | ((prev: T) => T);
 
@@ -115,8 +115,8 @@ const openCreateAtom = atom(null, (_get, set) => {
   set(editorStateAtom, { open: true, mode: 'create' });
 });
 
-const openEditAtom = atom(null, (_get, set, id: number) => {
-  set(editorStateAtom, { open: true, mode: 'edit', id });
+const openEditAtom = atom(null, (_get, set, roleId: number) => {
+  set(editorStateAtom, { open: true, mode: 'edit', roleId });
 });
 
 const closeEditorAtom = atom(null, (_get, set) => {
@@ -162,7 +162,7 @@ export interface RoleManagementStore {
   clearSelectedIds: () => void;
   editorState: EditorState;
   openCreate: () => void;
-  openEdit: (id: number) => void;
+  openEdit: (roleId: number) => void;
   closeEditor: () => void;
   deleteTarget: Role | null;
   setDeleteTarget: (role: Role | null) => void;
