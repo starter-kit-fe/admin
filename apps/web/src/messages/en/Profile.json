@@ -1,0 +1,103 @@
+{
+  "Page": {
+    "title": "Account settings",
+    "description": "Update personal info and manage security settings.",
+    "tabs": {
+      "profile": "Profile",
+      "security": "Security"
+    },
+    "fallback": {
+      "unknownDate": "No record",
+      "missingIp": "Missing IP info"
+    }
+  },
+  "toast": {
+    "profileUpdated": "Profile updated",
+    "profileUpdateError": "Failed to update profile. Please try again.",
+    "passwordUpdated": "Password updated",
+    "passwordUpdateError": "Failed to update password. Please try again.",
+    "sessionLoggedOut": "Session signed out",
+    "sessionError": "Action failed. Please try again.",
+    "sessionIdMissing": "Unable to identify this session"
+  },
+  "profileForm": {
+    "title": "Profile",
+    "description": "Update your nickname and contact details.",
+    "fields": {
+      "nickname": "Nickname",
+      "email": "Email",
+      "phone": "Phone",
+      "sex": "Gender",
+      "remark": "Notes"
+    },
+    "placeholders": {
+      "nickname": "e.g. Admin",
+      "email": "Optional",
+      "phone": "Optional",
+      "sex": "Select gender",
+      "remark": "Optional"
+    },
+    "sexOptions": {
+      "male": "Male",
+      "female": "Female",
+      "secret": "Private"
+    },
+    "submit": {
+      "idle": "Save changes",
+      "pending": "Saving..."
+    }
+  },
+  "passwordForm": {
+    "title": "Change password",
+    "description": "Use a strong password to protect your account.",
+    "fields": {
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password"
+    },
+    "submit": {
+      "idle": "Update password",
+      "pending": "Updating..."
+    }
+  },
+  "security": {
+    "title": "Security overview",
+    "description": "Review recent sign-in and security activity.",
+    "items": {
+      "lastLoginAt": "Last sign-in",
+      "lastLoginIp": "Last sign-in IP",
+      "lastPasswordChange": "Last password change"
+    }
+  },
+  "sessions": {
+    "title": "Active sessions",
+    "description": "Manage sign-ins across your devices.",
+    "refresh": {
+      "idle": "Refresh list",
+      "pending": "Refreshing..."
+    },
+    "states": {
+      "loading": "Loading sessions...",
+      "error": "Failed to load sessions. Please try again.",
+      "empty": "No other active sessions."
+    },
+    "table": {
+      "device": "Device",
+      "location": "IP / Location",
+      "time": "Time",
+      "actions": "Actions"
+    },
+    "fallbacks": {
+      "browser": "Unknown browser",
+      "os": "Unknown OS",
+      "ip": "Unknown IP",
+      "time": "-",
+      "location": ""
+    },
+    "lastActive": "Last active: {time}",
+    "action": {
+      "forceLogout": "Force sign out",
+      "pending": "Processing..."
+    }
+  }
+}

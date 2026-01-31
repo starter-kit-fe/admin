@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { FC } from 'react';
 
 interface LoginAsideProps {
@@ -13,18 +14,20 @@ export const LoginAside: FC<LoginAsideProps> = ({
   description,
   highlights,
 }) => {
+  const t = useTranslations('Login');
+
   return (
     <aside className="relative hidden  min-h-dvh flex-1 overflow-hidden md:flex">
       <img
         src={image}
-        alt="登录背景"
+        alt={t('Page.backgroundAlt')}
         className="absolute inset-0 h-full w-full object-cover "
       />
       <div className="absolute inset-0 bg-gradient-to-br from-slate-950/80 via-slate-900/70 to-slate-900/60" />
       <div className="relative z-10 flex flex-1 flex-col justify-between px-10 py-12 text-slate-100">
         <div className="space-y-4">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-xs uppercase tracking-[0.35em] text-white/70">
-            Welcome Back
+            {t('Page.badge')}
           </span>
           <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
             {title}
@@ -45,7 +48,7 @@ export const LoginAside: FC<LoginAsideProps> = ({
           ))}
         </ul>
         <p className="text-xs uppercase tracking-[0.35em] text-white/60">
-          Admin Template
+          {t('Aside.footer')}
         </p>
       </div>
     </aside>

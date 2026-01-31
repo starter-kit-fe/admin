@@ -12,7 +12,6 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import {
   Eye,
@@ -23,7 +22,8 @@ import {
   ShieldAlert,
   User,
 } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import type { BaseSyntheticEvent, FC } from 'react';
 import type { FieldErrors, UseFormRegister } from 'react-hook-form';
 
@@ -58,15 +58,18 @@ export const LoginForm: FC<LoginFormProps> = ({
   onRefreshCaptcha,
   isCaptchaExpired,
 }) => {
+  const t = useTranslations('Login');
   const captchaInvalid =
     captchaError || isCaptchaExpired || !captchaImage || captchaFetching;
 
   return (
     <Card className="border-none bg-transparent md:bg-card  shadow-none  ">
       <CardHeader className="space-y-2 text-center">
-        <CardTitle className="mb-1 text-2xl font-semibold">账号登录</CardTitle>
+        <CardTitle className="mb-1 text-2xl font-semibold">
+          {t('Form.title')}
+        </CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
-          输入账号信息，以便访问仪表盘
+          {t('Form.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -81,8 +84,8 @@ export const LoginForm: FC<LoginFormProps> = ({
               </InputGroupAddon>
               <InputGroupInput
                 id="username"
-                placeholder="输入用户名"
-                title="输入用户名"
+                placeholder={t('Form.username.placeholder')}
+                title={t('Form.username.aria')}
                 autoComplete="username"
                 tabIndex={1}
                 {...register('username')}
@@ -107,8 +110,8 @@ export const LoginForm: FC<LoginFormProps> = ({
               <InputGroupInput
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="输入密码"
-                title="输入密码"
+                placeholder={t('Form.password.placeholder')}
+                title={t('Form.password.aria')}
                 tabIndex={2}
                 autoComplete="current-password"
                 {...register('password')}
@@ -118,7 +121,11 @@ export const LoginForm: FC<LoginFormProps> = ({
                 <InputGroupButton
                   size="icon-sm"
                   variant="ghost"
-                  aria-label={showPassword ? '隐藏密码' : '显示密码'}
+                  aria-label={
+                    showPassword
+                      ? t('Form.password.hide')
+                      : t('Form.password.show')
+                  }
                   onClick={onTogglePassword}
                 >
                   {showPassword ? (
@@ -149,10 +156,10 @@ export const LoginForm: FC<LoginFormProps> = ({
                   className="inline-flex p-0 m-0 text-[11px] gap-0.5 cursor-pointer"
                   onClick={onRefreshCaptcha}
                   disabled={captchaFetching}
-                  title="刷新验证码"
+                  title={t('Form.captcha.refresh')}
                 >
                   <RefreshCw className="size-3" />
-                  换一张
+                  {t('Form.captcha.refresh')}
                 </Button>
               </div>
             </div>
@@ -165,8 +172,8 @@ export const LoginForm: FC<LoginFormProps> = ({
               </InputGroupAddon>
               <InputGroupInput
                 id="captcha"
-                placeholder="输入验证码"
-                title="输入验证码"
+                placeholder={t('Form.captcha.placeholder')}
+                title={t('Form.captcha.aria')}
                 tabIndex={3}
                 autoComplete="one-time-code"
                 {...register('captcha')}
@@ -181,7 +188,7 @@ export const LoginForm: FC<LoginFormProps> = ({
                   variant="ghost"
                   className="flex h-[30px] w-[100px]  items-center justify-center mr-2"
                   onClick={onRefreshCaptcha}
-                  title="点击刷新验证码"
+                  title={t('Form.captcha.tapToRefresh')}
                   disabled={captchaFetching}
                 >
                   {captchaFetching ? (
@@ -189,12 +196,12 @@ export const LoginForm: FC<LoginFormProps> = ({
                   ) : captchaInvalid ? (
                     <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
                       <ShieldAlert className="h-3.5 w-3.5" />
-                      点击刷新
+                      {t('Form.captcha.tapToRefresh')}
                     </span>
                   ) : (
                     <img
                       src={captchaImage}
-                      alt="验证码"
+                      alt={t('Form.captcha.alt')}
                       className="h-[40px] w-full rounded-md object-cover"
                     />
                   )}
@@ -221,12 +228,12 @@ export const LoginForm: FC<LoginFormProps> = ({
           >
             {loginPending ? (
               <>
-                <Spinner /> 登录中...
+                <Spinner /> {t('Form.submit.pending')}
               </>
             ) : (
               <>
                 <LogIn className="mr-2 h-4 w-4" />
-                登录
+                {t('Form.submit.idle')}
               </>
             )}
           </Button>
@@ -234,28 +241,32 @@ export const LoginForm: FC<LoginFormProps> = ({
       </CardContent>
       <CardContent className="pt-0">
         <p className="text-center text-xs leading-relaxed text-muted-foreground">
-          登录即表示你同意{' '}
-          <Link
-            href="/terms"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            服务条款
-          </Link>
-          、{' '}
-          <Link
-            href="/privacy"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            隐私政策
-          </Link>{' '}
-          以及{' '}
-          <Link
-            href="/cookies"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Cookie 政策
-          </Link>
-          。
+          {t.rich('Form.agreements.notice', {
+            terms: (chunks) => (
+              <Link
+                href="/terms"
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {chunks}
+              </Link>
+            ),
+            privacy: (chunks) => (
+              <Link
+                href="/privacy"
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {chunks}
+              </Link>
+            ),
+            cookies: (chunks) => (
+              <Link
+                href="/cookies"
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {chunks}
+              </Link>
+            ),
+          })}
         </p>
       </CardContent>
     </Card>

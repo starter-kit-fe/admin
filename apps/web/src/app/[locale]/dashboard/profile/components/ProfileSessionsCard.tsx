@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useTranslations } from 'next-intl';
 
 import type { OnlineUser } from '../../monitor/online/type';
 
@@ -37,14 +38,14 @@ export function ProfileSessionsCard({
   onForceLogout,
   pendingSessionId,
 }: ProfileSessionsCardProps) {
+  const t = useTranslations('Profile');
+
   return (
     <Card className="shadow-none  border-none">
       <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <CardTitle>登录会话</CardTitle>
-          <CardDescription>
-            查看并管理当前账号在不同设备上的登录状态。
-          </CardDescription>
+          <CardTitle>{t('sessions.title')}</CardTitle>
+          <CardDescription>{t('sessions.description')}</CardDescription>
         </div>
         <Button
           variant="outline"
@@ -52,7 +53,9 @@ export function ProfileSessionsCard({
           onClick={onRefresh}
           disabled={isRefreshing}
         >
-          {isRefreshing ? '刷新中...' : '刷新列表'}
+          {isRefreshing
+            ? t('sessions.refresh.pending')
+            : t('sessions.refresh.idle')}
         </Button>
       </CardHeader>
       <CardContent>
@@ -64,20 +67,22 @@ export function ProfileSessionsCard({
           </div>
         ) : isError ? (
           <p className="text-sm text-destructive">
-            获取会话信息失败，请稍后重试。
+            {t('sessions.states.error')}
           </p>
         ) : sessions.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            目前没有其他登录会话。
+            {t('sessions.states.empty')}
           </p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>设备信息</TableHead>
-                <TableHead>IP / 地点</TableHead>
-                <TableHead>时间</TableHead>
-                <TableHead className="text-right">操作</TableHead>
+                <TableHead>{t('sessions.table.device')}</TableHead>
+                <TableHead>{t('sessions.table.location')}</TableHead>
+                <TableHead>{t('sessions.table.time')}</TableHead>
+                <TableHead className="text-right">
+                  {t('sessions.table.actions')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -91,22 +96,27 @@ export function ProfileSessionsCard({
                   <TableRow key={identifier}>
                     <TableCell>
                       <div className="font-medium">
-                        {session.browser || '未知浏览器'}
+                        {session.browser || t('sessions.fallbacks.browser')}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {session.os || '未知系统'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>{session.ipaddr || '未知 IP'}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {session.loginLocation || ''}
+                        {session.os || t('sessions.fallbacks.os')}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>{session.loginTime || '-'}</div>
+                      <div>{session.ipaddr || t('sessions.fallbacks.ip')}</div>
                       <div className="text-xs text-muted-foreground">
-                        上次活跃：{session.lastAccessTime || '-'}
+                        {session.loginLocation ||
+                          t('sessions.fallbacks.location')}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>{session.loginTime || t('sessions.fallbacks.time')}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {t('sessions.lastActive', {
+                          time:
+                            session.lastAccessTime ||
+                            t('sessions.fallbacks.time'),
+                        })}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -116,7 +126,9 @@ export function ProfileSessionsCard({
                         disabled={!actionId || isPending}
                         onClick={() => onForceLogout(actionId)}
                       >
-                        {isPending ? '处理中...' : '强制下线'}
+                        {isPending
+                          ? t('sessions.action.pending')
+                          : t('sessions.action.forceLogout')}
                       </Button>
                     </TableCell>
                   </TableRow>

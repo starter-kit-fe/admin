@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { useTranslations } from 'next-intl';
 import type { UseFormReturn } from 'react-hook-form';
 
 import type { PasswordFormValues } from '../schemas';
@@ -30,24 +31,26 @@ export function PasswordFormCard({
   onSubmit,
   submitting,
 }: PasswordFormCardProps) {
+  const t = useTranslations('Profile');
+
   return (
     <Card className="shadow-none  border-none">
       <CardHeader>
-        <CardTitle>修改密码</CardTitle>
-        <CardDescription>使用强密码保护账户安全。</CardDescription>
+        <CardTitle>{t('passwordForm.title')}</CardTitle>
+        <CardDescription>{t('passwordForm.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form className="space-y-4" onSubmit={onSubmit}>
             <FormField
               control={form.control}
-              name="currentPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>当前密码</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
+                name="currentPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('passwordForm.fields.current')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
                       type="password"
                       autoComplete="current-password"
                       disabled={submitting}
@@ -59,12 +62,12 @@ export function PasswordFormCard({
             />
             <FormField
               control={form.control}
-              name="newPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>新密码</FormLabel>
-                  <FormControl>
-                    <Input
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('passwordForm.fields.new')}</FormLabel>
+                    <FormControl>
+                      <Input
                       {...field}
                       type="password"
                       autoComplete="new-password"
@@ -77,12 +80,12 @@ export function PasswordFormCard({
             />
             <FormField
               control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>确认新密码</FormLabel>
-                  <FormControl>
-                    <Input
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('passwordForm.fields.confirm')}</FormLabel>
+                    <FormControl>
+                      <Input
                       {...field}
                       type="password"
                       autoComplete="new-password"
@@ -95,7 +98,9 @@ export function PasswordFormCard({
             />
             <div className="flex justify-end">
               <Button type="submit" disabled={submitting}>
-                {submitting ? '更新中...' : '更新密码'}
+                {submitting
+                  ? t('passwordForm.submit.pending')
+                  : t('passwordForm.submit.idle')}
               </Button>
             </div>
           </form>

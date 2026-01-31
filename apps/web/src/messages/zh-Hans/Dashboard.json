@@ -1,0 +1,7 @@
+{
+  "title": "权限列表",
+  "description": "当前账号共 {count} 项权限。",
+  "loading": "权限信息加载中...",
+  "empty": "当前账号暂无权限。",
+  "badge": "已拥有"
+}

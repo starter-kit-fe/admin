@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslations } from 'next-intl';
 
 type SecurityOverviewCardProps = {
   isLoading: boolean;
@@ -20,11 +21,13 @@ export function SecurityOverviewCard({
   lastLoginIp,
   lastPasswordChange,
 }: SecurityOverviewCardProps) {
+  const t = useTranslations('Profile');
+
   return (
     <Card className="shadow-none  border-none">
       <CardHeader>
-        <CardTitle>安全概览</CardTitle>
-        <CardDescription>快速确认账号最近一次登录与安全操作。</CardDescription>
+        <CardTitle>{t('security.title')}</CardTitle>
+        <CardDescription>{t('security.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -36,15 +39,21 @@ export function SecurityOverviewCard({
         ) : (
           <dl className="space-y-4 text-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <dt className="text-muted-foreground">最近登录时间</dt>
+              <dt className="text-muted-foreground">
+                {t('security.items.lastLoginAt')}
+              </dt>
               <dd className="font-medium text-foreground">{lastLoginAt}</dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <dt className="text-muted-foreground">上次登录 IP</dt>
+              <dt className="text-muted-foreground">
+                {t('security.items.lastLoginIp')}
+              </dt>
               <dd className="font-medium text-foreground">{lastLoginIp}</dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <dt className="text-muted-foreground">上次修改密码</dt>
+              <dt className="text-muted-foreground">
+                {t('security.items.lastPasswordChange')}
+              </dt>
               <dd className="font-medium text-foreground">
                 {lastPasswordChange}
               </dd>

@@ -1,0 +1,7 @@
+{
+  "title": "Permissions",
+  "description": "This account has {count} permissions.",
+  "loading": "Loading permissions...",
+  "empty": "No permissions assigned to this account.",
+  "badge": "Granted"
+}

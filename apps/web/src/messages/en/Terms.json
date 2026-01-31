@@ -2,7 +2,9 @@
   "metadata": {
     "title": "Admin Template Terms of Service",
     "updated": "July 6, 2022",
-    "effective": "July 6, 2022"
+    "effective": "July 6, 2022",
+    "updatedLabel": "Updated: {date}",
+    "effectiveLabel": "Effective: {date}"
   },
   "introduction": [
     "Welcome to the Admin Template platform (https://admin.com). The service is designed and operated by VOH Technology Co., Ltd., and all intellectual property belongs to the company.",

@@ -2,6 +2,7 @@ import Common from './Common.json';
 import CacheMonitor from './CacheMonitor.json';
 import CookieBanner from './CookieBanner.json';
 import Cookies from './Cookies.json';
+import Dashboard from './Dashboard.json';
 import DepartmentManagement from './DepartmentManagement.json';
 import DictManagement from './DictManagement.json';
 import ErrorMessages from './Error.json';
@@ -18,6 +19,7 @@ import LoginLogManagement from './LoginLogManagement.json';
 import NavUser from './NavUser.json';
 import NotFound from './NotFound.json';
 import Privacy from './Privacy.json';
+import Profile from './Profile.json';
 import SelectionBanner from './SelectionBanner.json';
 import RoleManagement from './RoleManagement.json';
 import MenuManagement from './MenuManagement.json';
@@ -28,6 +30,7 @@ import OperLogManagement from './OperLogManagement.json';
 import ServerMonitor from './ServerMonitor.json';
 import Terms from './Terms.json';
 import ThemeToggle from './ThemeToggle.json';
+import Tool from './Tool.json';
 import UserManagement from './UserManagement.json';
 
 const messages = {
@@ -35,6 +38,7 @@ const messages = {
   CacheMonitor,
   CookieBanner,
   Cookies,
+  Dashboard,
   DepartmentManagement,
   DictManagement,
   Error: ErrorMessages,
@@ -51,6 +55,7 @@ const messages = {
   NavUser,
   NotFound,
   Privacy,
+  Profile,
   RoleManagement,
   MenuManagement,
   ConfigManagement,
@@ -61,6 +66,7 @@ const messages = {
   SelectionBanner,
   Terms,
   ThemeToggle,
+  Tool,
   UserManagement,
 } as const;
 

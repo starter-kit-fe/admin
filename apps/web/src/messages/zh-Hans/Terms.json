@@ -2,7 +2,9 @@
   "metadata": {
     "title": "Admin Template 平台用户协议",
     "updated": "2022年07月06日",
-    "effective": "2022年07月06日"
+    "effective": "2022年07月06日",
+    "updatedLabel": "更新日期：{date}",
+    "effectiveLabel": "生效日期：{date}"
   },
   "introduction": [
     "欢迎使用 Admin Template 平台（https://admin.com）。本平台由 VOH 科技有限公司开发运营，相关知识产权均归公司所有。",

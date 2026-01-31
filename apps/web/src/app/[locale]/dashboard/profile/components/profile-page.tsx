@@ -4,6 +4,7 @@ import { useAuthStore } from '@/app/login/store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -30,6 +31,8 @@ const PROFILE_QUERY_KEY = ['profile'];
 const PROFILE_SESSIONS_QUERY_KEY = ['profile', 'sessions'];
 
 export function ProfilePage() {
+  const t = useTranslations('Profile');
+  const locale = useLocale();
   const { user, setUser } = useAuthStore();
   const queryClient = useQueryClient();
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
@@ -72,7 +75,7 @@ export function ProfilePage() {
   const updateProfileMutation = useMutation({
     mutationFn: updateProfile,
     onSuccess: (data) => {
-      toast.success('个人资料已更新');
+      toast.success(t('toast.profileUpdated'));
       queryClient.setQueryData(PROFILE_QUERY_KEY, data);
       if (user) {
         setUser({
@@ -88,7 +91,7 @@ export function ProfilePage() {
     },
     onError: (error: unknown) => {
       const message =
-        error instanceof Error ? error.message : '更新个人资料失败，请稍后重试';
+        error instanceof Error ? error.message : t('toast.profileUpdateError');
       toast.error(message);
     },
   });
@@ -105,13 +108,13 @@ export function ProfilePage() {
   const changePasswordMutation = useMutation({
     mutationFn: changePassword,
     onSuccess: () => {
-      toast.success('密码已更新');
+      toast.success(t('toast.passwordUpdated'));
       passwordForm.reset();
       queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
     },
     onError: (error: unknown) => {
       const message =
-        error instanceof Error ? error.message : '更新密码失败，请稍后重试';
+        error instanceof Error ? error.message : t('toast.passwordUpdateError');
       toast.error(message);
     },
   });
@@ -119,12 +122,12 @@ export function ProfilePage() {
   const sessionLogoutMutation = useMutation({
     mutationFn: forceLogoutSelfSession,
     onSuccess: () => {
-      toast.success('会话已强制下线');
+      toast.success(t('toast.sessionLoggedOut'));
       void sessionQuery.refetch();
     },
     onError: (error: unknown) => {
       const message =
-        error instanceof Error ? error.message : '操作失败，请稍后重试';
+        error instanceof Error ? error.message : t('toast.sessionError');
       toast.error(message);
     },
   });
@@ -148,7 +151,7 @@ export function ProfilePage() {
 
   const handleForceLogoutSession = (sessionId: string) => {
     if (!sessionId) {
-      toast.error('无法识别该会话');
+      toast.error(t('toast.sessionIdMissing'));
       return;
     }
     setPendingSessionId(sessionId);
@@ -162,22 +165,33 @@ export function ProfilePage() {
   const isSessionLoading = sessionQuery.isLoading && !sessionQuery.data;
   const isSessionError = sessionQuery.isError;
 
-  const lastLoginAt = formatDateTime(profile?.loginDate ?? null);
-  const lastPasswordChange = formatDateTime(profile?.pwdUpdateDate ?? null);
-  const lastLoginIp = profile?.loginIp?.trim() || 'IP 信息缺失';
+  const unknownDateLabel = t('Page.fallback.unknownDate');
+  const lastLoginAt = formatDateTime(
+    profile?.loginDate ?? null,
+    locale,
+    unknownDateLabel,
+  );
+  const lastPasswordChange = formatDateTime(
+    profile?.pwdUpdateDate ?? null,
+    locale,
+    unknownDateLabel,
+  );
+  const lastLoginIp = profile?.loginIp?.trim() || t('Page.fallback.missingIp');
 
   return (
     <div className="space-y-6 ">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">账号设置</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('Page.title')}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          更新个人信息并管理安全配置，随时掌控自己的账号。
+          {t('Page.description')}
         </p>
       </div>
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="w-full max-w-md justify-start bg-muted-foreground/10">
-          <TabsTrigger value="profile">个人信息</TabsTrigger>
-          <TabsTrigger value="security">安全性</TabsTrigger>
+          <TabsTrigger value="profile">{t('Page.tabs.profile')}</TabsTrigger>
+          <TabsTrigger value="security">{t('Page.tabs.security')}</TabsTrigger>
         </TabsList>
         <TabsContent value="profile" className="space-y-6">
           <ProfileFormCard
@@ -214,15 +228,19 @@ export function ProfilePage() {
   );
 }
 
-function formatDateTime(value?: string | null) {
+function formatDateTime(
+  value: string | null | undefined,
+  locale: string,
+  fallback: string,
+) {
   if (!value) {
-    return '暂无记录';
+    return fallback;
   }
   const timestamp = Date.parse(value);
   if (Number.isNaN(timestamp)) {
     return value;
   }
-  return new Intl.DateTimeFormat('zh-CN', {
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(timestamp));

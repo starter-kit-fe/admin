@@ -25,6 +25,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import type { UseFormReturn } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
 
 import type { ProfileFormValues } from '../schemas';
 
@@ -41,11 +42,13 @@ export function ProfileFormCard({
   isLoading,
   submitting,
 }: ProfileFormCardProps) {
+  const t = useTranslations('Profile');
+
   return (
     <Card className="shadow-none  border-none">
       <CardHeader>
-        <CardTitle>个人资料</CardTitle>
-        <CardDescription>更新昵称、联系方式等基础信息。</CardDescription>
+        <CardTitle>{t('profileForm.title')}</CardTitle>
+        <CardDescription>{t('profileForm.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -64,11 +67,11 @@ export function ProfileFormCard({
                 name="nickName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>昵称</FormLabel>
+                    <FormLabel>{t('profileForm.fields.nickname')}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="例如：管理员"
+                        placeholder={t('profileForm.placeholders.nickname')}
                         disabled={submitting}
                       />
                     </FormControl>
@@ -81,35 +84,35 @@ export function ProfileFormCard({
                   control={form.control}
                   name="email"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>邮箱</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="email"
-                          placeholder="可选"
-                          disabled={submitting}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  <FormItem>
+                    <FormLabel>{t('profileForm.fields.email')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder={t('profileForm.placeholders.email')}
+                        disabled={submitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                   )}
                 />
                 <FormField
                   control={form.control}
                   name="phonenumber"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>手机号</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="可选"
-                          disabled={submitting}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  <FormItem>
+                    <FormLabel>{t('profileForm.fields.phone')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder={t('profileForm.placeholders.phone')}
+                        disabled={submitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                   )}
                 />
               </div>
@@ -118,7 +121,7 @@ export function ProfileFormCard({
                 name="sex"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>性别</FormLabel>
+                    <FormLabel>{t('profileForm.fields.sex')}</FormLabel>
                     <Select
                       value={field.value}
                       onValueChange={field.onChange}
@@ -126,13 +129,21 @@ export function ProfileFormCard({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="选择性别" />
+                          <SelectValue
+                            placeholder={t('profileForm.placeholders.sex')}
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="0">男</SelectItem>
-                        <SelectItem value="1">女</SelectItem>
-                        <SelectItem value="2">保密</SelectItem>
+                        <SelectItem value="0">
+                          {t('profileForm.sexOptions.male')}
+                        </SelectItem>
+                        <SelectItem value="1">
+                          {t('profileForm.sexOptions.female')}
+                        </SelectItem>
+                        <SelectItem value="2">
+                          {t('profileForm.sexOptions.secret')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -144,11 +155,11 @@ export function ProfileFormCard({
                 name="remark"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>备注</FormLabel>
+                    <FormLabel>{t('profileForm.fields.remark')}</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
-                        placeholder="可选"
+                        placeholder={t('profileForm.placeholders.remark')}
                         className="min-h-[96px]"
                         disabled={submitting}
                       />
@@ -159,7 +170,9 @@ export function ProfileFormCard({
               />
               <div className="flex justify-end">
                 <Button type="submit" disabled={submitting}>
-                  {submitting ? '保存中...' : '保存修改'}
+                  {submitting
+                    ? t('profileForm.submit.pending')
+                    : t('profileForm.submit.idle')}
                 </Button>
               </div>
             </form>
