@@ -51,7 +51,7 @@ func (r *Repository) ListNotices(ctx context.Context, opts ListOptions) ([]model
 	}
 
 	var records []model.SysNotice
-	if err := query.Order("notice_id DESC").Find(&records).Error; err != nil {
+	if err := query.Order("id DESC").Find(&records).Error; err != nil {
 		return nil, err
 	}
 	return records, nil

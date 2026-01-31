@@ -147,9 +147,9 @@ func (r *Repository) GetSession(ctx context.Context, sessionID string) (*Session
 
 	var record model.SysLogininfor
 	err := r.db.WithContext(ctx).
-		Where("info_id = ?", sessionID).
+		Where("id = ?", sessionID).
 		Where("status = ?", "0").
-		Order("login_time DESC").
+		Order("created_at DESC").
 		First(&record).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -386,7 +386,7 @@ func (r *Repository) listFromDatabase(ctx context.Context, opts ListOptions) ([]
 
 	var records []model.SysLogininfor
 	if err := query.
-		Order("login_time DESC").
+		Order("created_at DESC").
 		Limit(maxFallbackBatchSize).
 		Find(&records).Error; err != nil {
 		return nil, 0, err
@@ -458,14 +458,14 @@ func sessionFromModel(record *model.SysLogininfor) *Session {
 		return nil
 	}
 
-	loginTime := time.Now()
-	if record.LoginTime != nil {
-		loginTime = *record.LoginTime
+	loginTime := record.CreatedAt
+	if loginTime.IsZero() {
+		loginTime = time.Now()
 	}
 
 	return &Session{
-		SessionID:      strconv.FormatInt(record.InfoID, 10),
-		UserID:         record.InfoID,
+		SessionID:      strconv.FormatInt(int64(record.ID), 10),
+		UserID:         int64(record.ID),
 		UserName:       record.UserName,
 		NickName:       record.UserName,
 		DeptName:       "",

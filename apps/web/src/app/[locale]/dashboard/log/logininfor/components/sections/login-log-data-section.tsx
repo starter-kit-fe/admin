@@ -55,7 +55,7 @@ export function LoginLogDataSection() {
 
   useEffect(() => {
     if (logQuery.data) {
-      setLogs(logQuery.data.items);
+      setLogs(logQuery.data.list);
       setTotal(logQuery.data.total);
     }
   }, [logQuery.data, setLogs, setTotal]);
@@ -75,8 +75,8 @@ export function LoginLogDataSection() {
   }, [logQuery.refetch, setRefreshHandler]);
 
   const rows = useMemo(
-    () => logQuery.data?.items ?? logs,
-    [logQuery.data?.items, logs],
+    () => logQuery.data?.list ?? logs,
+    [logQuery.data?.list, logs],
   );
 
   const handlePageChange = (pageNum: number) => {

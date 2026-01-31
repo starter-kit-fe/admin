@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 
 import { useCacheOverviewStream } from '../hooks/use-cache-overview-stream';
+import type { CacheKeyspaceInfo, CacheOverview } from '../type';
 import {
   formatBytes,
   formatNumber,

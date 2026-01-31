@@ -47,7 +47,7 @@ func (r *Repository) ListMenus(ctx context.Context, opts ListOptions) ([]model.S
 	}
 
 	var menus []model.SysMenu
-	if err := query.Order("parent_id ASC, order_num ASC, menu_id ASC").Find(&menus).Error; err != nil {
+	if err := query.Order("parent_id ASC, order_num ASC, id ASC").Find(&menus).Error; err != nil {
 		return nil, err
 	}
 
@@ -64,14 +64,14 @@ func (r *Repository) GetMenusByIDs(ctx context.Context, ids []int64) (map[int64]
 
 	var menus []model.SysMenu
 	if err := r.db.WithContext(ctx).
-		Where("menu_id IN ?", ids).
+		Where("id IN ?", ids).
 		Find(&menus).Error; err != nil {
 		return nil, err
 	}
 
 	result := make(map[int64]model.SysMenu, len(menus))
 	for _, menu := range menus {
-		result[menu.MenuID] = menu
+		result[int64(menu.ID)] = menu
 	}
 	return result, nil
 }
@@ -86,7 +86,7 @@ func (r *Repository) GetMenu(ctx context.Context, id int64) (*model.SysMenu, err
 
 	var menu model.SysMenu
 	if err := r.db.WithContext(ctx).
-		Where("menu_id = ?", id).
+		Where("id = ?", id).
 		First(&menu).Error; err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (r *Repository) UpdateMenu(ctx context.Context, id int64, updates map[strin
 
 	result := r.db.WithContext(ctx).
 		Model(&model.SysMenu{}).
-		Where("menu_id = ?", id).
+		Where("id = ?", id).
 		Updates(updates)
 	if result.Error != nil {
 		return result.Error
@@ -137,7 +137,7 @@ func (r *Repository) DeleteMenu(ctx context.Context, id int64) error {
 	}
 
 	result := r.db.WithContext(ctx).
-		Where("menu_id = ?", id).
+		Where("id = ?", id).
 		Delete(&model.SysMenu{})
 	if result.Error != nil {
 		return result.Error
@@ -176,7 +176,7 @@ func (r *Repository) UpdateMenuOrders(ctx context.Context, updates []OrderUpdate
 			}
 
 			result := tx.Model(&model.SysMenu{}).
-				Where("menu_id = ?", update.MenuID).
+				Where("id = ?", update.MenuID).
 				Updates(data)
 			if result.Error != nil {
 				return result.Error

@@ -70,7 +70,7 @@ export function DepartmentTreeSection() {
   }, [departmentQuery.refetch, setRefreshHandler]);
 
   const handleAddChild = (node: DepartmentNode) => {
-    openCreate(node.deptId);
+    openCreate(node.id);
   };
 
   const handleEdit = (node: DepartmentNode) => {

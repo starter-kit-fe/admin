@@ -1,4 +1,4 @@
-import { OperLogManagement } from './oper-log-management';
+import { OperLogManagement } from './components/oper-log-management';
 
 export default function Page() {
   return <OperLogManagement />;

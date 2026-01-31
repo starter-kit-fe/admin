@@ -466,7 +466,7 @@ func (h *Handler) UpdateData(ctx *gin.Context) {
 	operator := resolveOperator(ctx)
 	item, err := h.service.UpdateDictData(ctx.Request.Context(), UpdateDictDataInput{
 		DictID:    dictID,
-		DictCode:  dictCode,
+		ID:        dictCode,
 		DictLabel: payload.DictLabel,
 		DictValue: payload.DictValue,
 		DictSort:  payload.DictSort,

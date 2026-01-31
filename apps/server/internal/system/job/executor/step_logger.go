@@ -1,4 +1,4 @@
-package job
+package executor
 
 import (
 	"context"
@@ -10,53 +10,40 @@ import (
 	"time"
 
 	"github.com/starter-kit-fe/admin/internal/model"
+	"github.com/starter-kit-fe/admin/internal/system/job/repository"
+	"github.com/starter-kit-fe/admin/internal/system/job/types"
 )
 
 // StepLogger 步骤日志记录器
 type StepLogger struct {
 	jobLogID  int64
-	repo      *Repository
+	repo      *repository.Repository
 	logger    *slog.Logger
 	stepOrder int
 	mu        sync.Mutex
-	eventChan chan *StepEvent
-	onEvent   func(*StepEvent)
+	eventChan chan *types.StepEvent
+	onEvent   func(*types.StepEvent)
 	closed    uint32
 }
 
-// StepEvent SSE 事件
-type StepEvent struct {
-	Type      string      `json:"type"`
-	JobLogID  int64       `json:"jobLogId"`
-	StepID    int64       `json:"stepId,omitempty"`
-	StepOrder int         `json:"stepOrder"`
-	StepName  string      `json:"stepName,omitempty"`
-	Status    string      `json:"status,omitempty"`
-	Message   string      `json:"message,omitempty"`
-	Output    string      `json:"output,omitempty"`
-	Error     string      `json:"error,omitempty"`
-	Timestamp string      `json:"timestamp"`
-	Data      interface{} `json:"data,omitempty"`
-}
-
 // NewStepLogger 创建步骤日志记录器
-func NewStepLogger(jobLogID int64, repo *Repository, logger *slog.Logger, onEvent func(*StepEvent)) *StepLogger {
+func NewStepLogger(jobLogID int64, repo *repository.Repository, logger *slog.Logger, onEvent func(*types.StepEvent)) *StepLogger {
 	return &StepLogger{
 		jobLogID:  jobLogID,
 		repo:      repo,
 		logger:    logger,
-		eventChan: make(chan *StepEvent, 100),
+		eventChan: make(chan *types.StepEvent, 100),
 		onEvent:   onEvent,
 	}
 }
 
 // EventChannel 获取事件通道（用于 SSE）
-func (s *StepLogger) EventChannel() <-chan *StepEvent {
+func (s *StepLogger) EventChannel() <-chan *types.StepEvent {
 	return s.eventChan
 }
 
 // StartStep 开始一个步骤
-func (s *StepLogger) StartStep(name string) *Step {
+func (s *StepLogger) StartStep(name string) types.StepInterface {
 	s.mu.Lock()
 	s.stepOrder++
 	order := s.stepOrder
@@ -90,13 +77,13 @@ func (s *StepLogger) StartStep(name string) *Step {
 		}
 	}
 
-	step.stepID = record.StepID
+	step.stepID = int64(record.ID)
 
 	// 发送 SSE 事件
-	s.sendEvent(&StepEvent{
+	s.sendEvent(&types.StepEvent{
 		Type:      "step_start",
 		JobLogID:  s.jobLogID,
-		StepID:    record.StepID,
+		StepID:    int64(record.ID),
 		StepOrder: order,
 		StepName:  name,
 		Status:    "2",
@@ -116,7 +103,7 @@ func (s *StepLogger) Close() {
 	}
 }
 
-func (s *StepLogger) sendEvent(event *StepEvent) {
+func (s *StepLogger) sendEvent(event *types.StepEvent) {
 	if s == nil || event == nil || atomic.LoadUint32(&s.closed) == 1 {
 		return
 	}
@@ -154,7 +141,7 @@ func (s *Step) Log(format string, args ...interface{}) {
 	s.outputs = append(s.outputs, output)
 
 	// 发送 SSE 事件
-	s.logger.sendEvent(&StepEvent{
+	s.logger.sendEvent(&types.StepEvent{
 		Type:      "step_log",
 		JobLogID:  s.jobLogID,
 		StepID:    s.stepID,
@@ -201,7 +188,7 @@ func (s *Step) finish(status string, errorMsg string) error {
 	}
 
 	// 发送 SSE 事件
-	s.logger.sendEvent(&StepEvent{
+	s.logger.sendEvent(&types.StepEvent{
 		Type:      "step_end",
 		JobLogID:  s.jobLogID,
 		StepID:    s.stepID,

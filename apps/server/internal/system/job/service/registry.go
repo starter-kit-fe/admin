@@ -1,37 +1,25 @@
-package job
+package service
 
 import (
-	"context"
-	"encoding/json"
 	"errors"
-	"log/slog"
 	"strings"
 	"sync"
+
+	"github.com/starter-kit-fe/admin/internal/system/job/types"
 )
-
-// Executor defines the signature for concrete job implementations.
-type Executor func(ctx context.Context, payload ExecutionPayload) error
-
-// ExecutionPayload carries metadata and raw parameters for a job invocation.
-type ExecutionPayload struct {
-	Job        Job             `json:"job"`
-	Params     json.RawMessage `json:"params,omitempty"`
-	Logger     *slog.Logger    `json:"-"`
-	StepLogger *StepLogger     `json:"-"`
-}
 
 type executorRegistry struct {
 	mu      sync.RWMutex
-	entries map[string]Executor
+	entries map[string]types.Executor
 }
 
 func newExecutorRegistry() *executorRegistry {
 	return &executorRegistry{
-		entries: make(map[string]Executor),
+		entries: make(map[string]types.Executor),
 	}
 }
 
-func (r *executorRegistry) Register(key string, exec Executor) error {
+func (r *executorRegistry) Register(key string, exec types.Executor) error {
 	if exec == nil {
 		return errors.New("executor is nil")
 	}
@@ -48,7 +36,7 @@ func (r *executorRegistry) Register(key string, exec Executor) error {
 	return nil
 }
 
-func (r *executorRegistry) Resolve(key string) (Executor, bool) {
+func (r *executorRegistry) Resolve(key string) (types.Executor, bool) {
 	if r == nil {
 		return nil, false
 	}

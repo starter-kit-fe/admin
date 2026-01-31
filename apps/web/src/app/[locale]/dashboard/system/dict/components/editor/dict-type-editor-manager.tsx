@@ -1,23 +1,23 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import {
-  createDictType,
-  updateDictType,
-  type CreateDictTypePayload,
-  type UpdateDictTypePayload,
-} from '../../api';
 import {
   useDictManagementMutationCounter,
   useDictManagementRefresh,
   useDictTypeEditorActions,
   useDictTypeEditorState,
 } from '@/app/dashboard/system/dict/store';
-import { resolveErrorMessage, toDictTypeFormValues } from '../../utils';
+import { useMutation } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { toast } from 'sonner';
+
+import {
+  type CreateDictTypePayload,
+  type UpdateDictTypePayload,
+  createDictType,
+  updateDictType,
+} from '../../api';
 import type { DictTypeFormValues } from '../../type';
+import { resolveErrorMessage, toDictTypeFormValues } from '../../utils';
 import { DictTypeEditorDialog } from './dict-type-editor-dialog';
 import { useTranslations } from 'next-intl';
 
@@ -26,8 +26,7 @@ export function DictTypeEditorManager() {
   const typeEditorState = useDictTypeEditorState();
   const { closeTypeEditor } = useDictTypeEditorActions();
   const refresh = useDictManagementRefresh();
-  const { beginMutation, endMutation } =
-    useDictManagementMutationCounter();
+  const { beginMutation, endMutation } = useDictManagementMutationCounter();
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateDictTypePayload) => createDictType(payload),
@@ -72,9 +71,7 @@ export function DictTypeEditorManager() {
   });
 
   const mode: 'create' | 'edit' =
-    typeEditorState.open && typeEditorState.mode === 'edit'
-      ? 'edit'
-      : 'create';
+    typeEditorState.open && typeEditorState.mode === 'edit' ? 'edit' : 'create';
 
   const defaultValues = useMemo<DictTypeFormValues | undefined>(() => {
     if (!typeEditorState.open || typeEditorState.mode === 'create') {
@@ -83,8 +80,7 @@ export function DictTypeEditorManager() {
     return toDictTypeFormValues(typeEditorState.dictType);
   }, [typeEditorState]);
 
-  const submitting =
-    createMutation.isPending || updateMutation.isPending;
+  const submitting = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = (values: DictTypeFormValues) => {
     const payload: CreateDictTypePayload = {
@@ -95,7 +91,7 @@ export function DictTypeEditorManager() {
     };
     if (typeEditorState.open && typeEditorState.mode === 'edit') {
       updateMutation.mutate({
-        id: typeEditorState.dictType.dictId,
+        id: typeEditorState.dictType.id,
         payload,
       });
       return;

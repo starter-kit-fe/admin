@@ -18,7 +18,7 @@
 ### Web（`apps/web`）
 
 - 基于 Next.js 16 App Router（目录 `apps/web/src/app`），使用 Server/Client Component 组合、Jotai 状态（`src/stores.ts`）与 TanStack Query 发起数据请求，Tailwind v4 与 `packages/ui` 中的共享组件一起提供 UI 能力。
-- `src/app/api/[[...path]]/route.ts` 实现了一个 BASE_URL 透传代理，把 `/api/*` 请求转发到 Go 服务（容器内默认直连 `http://server:27401`），这样 Cloudflare Workers、Node 运行器以及 Docker Compose 都能复用同一前端构建。
+- `src/app/api/[[...path]]/route.ts` 实现了一个 BASE_URL 透传代理，把 `/api/*` 请求转发到 Go 服务（容器内默认直连 `http://server:27507`），这样 Cloudflare Workers、Node 运行器以及 Docker Compose 都能复用同一前端构建。
 - `wrangler.toml` + `open-next.config.ts` 说明前端可以通过 OpenNext 打包成 Cloudflare Worker；在容器场景下则使用 `pnpm start` 启动传统 Node 服务器。
 
 ### Server（`apps/server`）
@@ -72,6 +72,7 @@
 ```
 
 Cloudflare Worker 运行 Next.js 构建产物并作为 BFF，负责：
+
 - 终端用户与 Go API 之间的 TLS 边界，复用 Cloudflare 身份策略、防护能力。
 - 利用 `apps/web/src/app/api/[[...path]]/route.ts` 代理 `/api/*` 请求，并在边缘处理 Cookie、Session、Fetch 重试等逻辑。
 - 静态资源由 Cloudflare KV/Assets 分发，动态请求再命中后台 `apps/server`，后者继续访问 Postgres/Redis。
@@ -183,7 +184,7 @@ docker compose ps
 
 ````
 
-端口默认：前端 3000、后端 27401、Postgres 5432、Redis 6379，可在 `.env` 中调整。若需清理本地数据卷：
+端口默认：前端 3000、后端 27507、Postgres 5432、Redis 6379，可在 `.env` 中调整。若需清理本地数据卷：
 
 ```sh
 docker compose --env-file .env down -v

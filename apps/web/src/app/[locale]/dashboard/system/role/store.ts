@@ -19,7 +19,7 @@ type FilterState = {
 type EditorState =
   | { open: false }
   | { open: true; mode: 'create' }
-  | { open: true; mode: 'edit'; roleId: number };
+  | { open: true; mode: 'edit'; id: number };
 
 type SetStateAction<T> = T | ((prev: T) => T);
 
@@ -40,14 +40,11 @@ const refreshActionAtom = atom<{ current: () => void }>({
   current: noopRefresh,
 });
 
-const setStatusAtom = atom(
-  null,
-  (_get, set, value: StatusValue) => {
-    set(statusAtom, value);
-    set(paginationAtom, { ...DEFAULT_PAGINATION });
-    set(selectedIdsAtom, new Set<number>());
-  },
-);
+const setStatusAtom = atom(null, (_get, set, value: StatusValue) => {
+  set(statusAtom, value);
+  set(paginationAtom, { ...DEFAULT_PAGINATION });
+  set(selectedIdsAtom, new Set<number>());
+});
 
 const setFilterFormAtom = atom(
   null,
@@ -63,15 +60,10 @@ const setFilterFormAtom = atom(
 
 const applyFiltersAtom = atom(
   null,
-  (
-    get,
-    set,
-    payload: { filters: FilterState; force?: boolean },
-  ) => {
+  (get, set, payload: { filters: FilterState; force?: boolean }) => {
     const { filters, force = false } = payload;
     const previous = get(appliedFiltersAtom);
-    const hasChanged =
-      force || previous.keyword !== filters.keyword;
+    const hasChanged = force || previous.keyword !== filters.keyword;
 
     if (!hasChanged) {
       return;
@@ -123,34 +115,25 @@ const openCreateAtom = atom(null, (_get, set) => {
   set(editorStateAtom, { open: true, mode: 'create' });
 });
 
-const openEditAtom = atom(null, (_get, set, roleId: number) => {
-  set(editorStateAtom, { open: true, mode: 'edit', roleId });
+const openEditAtom = atom(null, (_get, set, id: number) => {
+  set(editorStateAtom, { open: true, mode: 'edit', id });
 });
 
 const closeEditorAtom = atom(null, (_get, set) => {
   set(editorStateAtom, { open: false });
 });
 
-const setDeleteTargetAtom = atom(
-  null,
-  (_get, set, role: Role | null) => {
-    set(deleteTargetAtom, role);
-  },
-);
+const setDeleteTargetAtom = atom(null, (_get, set, role: Role | null) => {
+  set(deleteTargetAtom, role);
+});
 
-const setBulkDeleteOpenAtom = atom(
-  null,
-  (_get, set, open: boolean) => {
-    set(bulkDeleteOpenAtom, open);
-  },
-);
+const setBulkDeleteOpenAtom = atom(null, (_get, set, open: boolean) => {
+  set(bulkDeleteOpenAtom, open);
+});
 
-const setRefreshingAtom = atom(
-  null,
-  (_get, set, value: boolean) => {
-    set(refreshingAtom, value);
-  },
-);
+const setRefreshingAtom = atom(null, (_get, set, value: boolean) => {
+  set(refreshingAtom, value);
+});
 
 const incrementMutationsAtom = atom(null, (_get, set) => {
   set(activeMutationsAtom, (prev) => prev + 1);
@@ -160,12 +143,9 @@ const decrementMutationsAtom = atom(null, (_get, set) => {
   set(activeMutationsAtom, (prev) => (prev > 0 ? prev - 1 : 0));
 });
 
-const setRefreshActionAtom = atom(
-  null,
-  (_get, set, handler: () => void) => {
-    set(refreshActionAtom, { current: handler });
-  },
-);
+const setRefreshActionAtom = atom(null, (_get, set, handler: () => void) => {
+  set(refreshActionAtom, { current: handler });
+});
 
 export interface RoleManagementStore {
   status: StatusValue;
@@ -173,10 +153,7 @@ export interface RoleManagementStore {
   filterForm: FilterState;
   setFilterForm: (action: SetStateAction<FilterState>) => void;
   appliedFilters: FilterState;
-  applyFilters: (
-    filters: FilterState,
-    options?: { force?: boolean },
-  ) => void;
+  applyFilters: (filters: FilterState, options?: { force?: boolean }) => void;
   resetFilters: () => void;
   pagination: PaginationState;
   setPagination: (action: SetStateAction<PaginationState>) => void;
@@ -185,7 +162,7 @@ export interface RoleManagementStore {
   clearSelectedIds: () => void;
   editorState: EditorState;
   openCreate: () => void;
-  openEdit: (roleId: number) => void;
+  openEdit: (id: number) => void;
   closeEditor: () => void;
   deleteTarget: Role | null;
   setDeleteTarget: (role: Role | null) => void;

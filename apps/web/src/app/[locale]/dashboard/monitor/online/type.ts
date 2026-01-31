@@ -17,7 +17,7 @@ export interface OnlineUser {
 }
 
 export interface OnlineUserListResponse {
-  items: OnlineUser[];
+  list: OnlineUser[];
   total: number;
   pageNum?: number;
   pageSize?: number;

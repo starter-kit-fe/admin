@@ -25,22 +25,22 @@ func NewService(repo *Repository) *Service {
 }
 
 type ListResult struct {
-	Items    []LoginLog `json:"items"`
+	List     []LoginLog `json:"list"`
 	Total    int64      `json:"total"`
 	PageNum  int        `json:"pageNum"`
 	PageSize int        `json:"pageSize"`
 }
 
 type LoginLog struct {
-	InfoID        int64   `json:"infoId"`
-	UserName      string  `json:"userName"`
-	IPAddr        string  `json:"ipaddr"`
-	LoginLocation string  `json:"loginLocation"`
-	Browser       string  `json:"browser"`
-	OS            string  `json:"os"`
-	Status        string  `json:"status"`
-	Msg           string  `json:"msg"`
-	LoginTime     *string `json:"loginTime,omitempty"`
+	InfoID        int64      `json:"infoId"`
+	UserName      string     `json:"userName"`
+	IPAddr        string     `json:"ipaddr"`
+	LoginLocation string     `json:"loginLocation"`
+	Browser       string     `json:"browser"`
+	OS            string     `json:"os"`
+	Status        string     `json:"status"`
+	Msg           string     `json:"msg"`
+	CreatedAt     *time.Time `json:"createdAt,omitempty"`
 }
 
 type CreateLoginLogInput struct {
@@ -51,7 +51,7 @@ type CreateLoginLogInput struct {
 	OS            string
 	Status        string
 	Msg           string
-	LoginTime     *time.Time
+	CreateTime    *time.Time
 }
 
 func (s *Service) ListLoginLogs(ctx context.Context, opts ListOptions) (*ListResult, error) {
@@ -85,7 +85,7 @@ func (s *Service) ListLoginLogs(ctx context.Context, opts ListOptions) (*ListRes
 	}
 
 	return &ListResult{
-		Items:    items,
+		List:     items,
 		Total:    total,
 		PageNum:  pageNum,
 		PageSize: pageSize,
@@ -125,8 +125,8 @@ func (s *Service) RecordLoginLog(ctx context.Context, input CreateLoginLogInput)
 		Status:        sanitizeLoginStatus(input.Status),
 		Msg:           truncateLoginField(input.Msg, 255),
 	}
-	if input.LoginTime != nil {
-		record.LoginTime = input.LoginTime
+	if input.CreateTime != nil {
+		record.CreatedAt = *input.CreateTime
 	}
 
 	return s.repo.CreateLoginLog(ctx, record)
@@ -137,14 +137,8 @@ func loginLogFromModel(record *model.SysLogininfor) *LoginLog {
 		return nil
 	}
 
-	var loginTime *string
-	if record.LoginTime != nil {
-		formatted := record.LoginTime.Format("2006-01-02 15:04:05")
-		loginTime = &formatted
-	}
-
 	return &LoginLog{
-		InfoID:        record.InfoID,
+		InfoID:        int64(record.ID),
 		UserName:      record.UserName,
 		IPAddr:        record.IPAddr,
 		LoginLocation: record.LoginLocation,
@@ -152,7 +146,7 @@ func loginLogFromModel(record *model.SysLogininfor) *LoginLog {
 		OS:            record.OS,
 		Status:        record.Status,
 		Msg:           record.Msg,
-		LoginTime:     loginTime,
+		CreatedAt:     &record.CreatedAt,
 	}
 }
 

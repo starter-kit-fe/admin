@@ -25,30 +25,30 @@ func NewService(repo *Repository) *Service {
 }
 
 type ListResult struct {
-	Items    []OperLog `json:"items"`
+	List     []OperLog `json:"list"`
 	Total    int64     `json:"total"`
 	PageNum  int       `json:"pageNum"`
 	PageSize int       `json:"pageSize"`
 }
 
 type OperLog struct {
-	OperID        int64   `json:"operId"`
-	Title         string  `json:"title"`
-	BusinessType  int     `json:"businessType"`
-	Method        string  `json:"method"`
-	RequestMethod string  `json:"requestMethod"`
-	OperatorType  int     `json:"operatorType"`
-	OperName      string  `json:"operName"`
-	DeptName      string  `json:"deptName"`
-	OperURL       string  `json:"operUrl"`
-	OperIP        string  `json:"operIp"`
-	OperLocation  string  `json:"operLocation"`
-	OperParam     string  `json:"operParam"`
-	JSONResult    string  `json:"jsonResult"`
-	Status        int     `json:"status"`
-	ErrorMsg      string  `json:"errorMsg"`
-	OperTime      *string `json:"operTime,omitempty"`
-	CostTime      int64   `json:"costTime"`
+	OperID        int64      `json:"operId"`
+	Title         string     `json:"title"`
+	BusinessType  int        `json:"businessType"`
+	Method        string     `json:"method"`
+	RequestMethod string     `json:"requestMethod"`
+	OperatorType  int        `json:"operatorType"`
+	OperName      string     `json:"operName"`
+	DeptName      string     `json:"deptName"`
+	OperURL       string     `json:"operUrl"`
+	OperIP        string     `json:"operIp"`
+	OperLocation  string     `json:"operLocation"`
+	OperParam     string     `json:"operParam"`
+	JSONResult    string     `json:"jsonResult"`
+	Status        int        `json:"status"`
+	ErrorMsg      string     `json:"errorMsg"`
+	CreatedAt     *time.Time `json:"createdAt,omitempty"`
+	CostTime      int64      `json:"costTime"`
 }
 
 const (
@@ -70,7 +70,7 @@ type CreateOperLogInput struct {
 	JSONResult    string
 	Status        int
 	ErrorMsg      string
-	OperTime      *time.Time
+	CreateTime    *time.Time
 	CostTime      int64
 }
 
@@ -107,7 +107,7 @@ func (s *Service) ListOperLogs(ctx context.Context, opts ListOptions) (*ListResu
 	}
 
 	return &ListResult{
-		Items:    items,
+		List:     items,
 		Total:    total,
 		PageNum:  pageNum,
 		PageSize: pageSize,
@@ -155,8 +155,8 @@ func (s *Service) RecordOperLog(ctx context.Context, input CreateOperLogInput) e
 		ErrorMsg:      truncateString(input.ErrorMsg, maxPayloadLength),
 		CostTime:      sanitizeCostTime(input.CostTime),
 	}
-	if input.OperTime != nil {
-		record.OperTime = input.OperTime
+	if input.CreateTime != nil {
+		record.CreatedAt = *input.CreateTime
 	}
 	return s.repo.CreateOperLog(ctx, record)
 }
@@ -166,14 +166,8 @@ func operLogFromModel(record *model.SysOperLog) *OperLog {
 		return nil
 	}
 
-	var operTime *string
-	if record.OperTime != nil {
-		formatted := record.OperTime.Format("2006-01-02 15:04:05")
-		operTime = &formatted
-	}
-
 	return &OperLog{
-		OperID:        record.OperID,
+		OperID:        int64(record.ID),
 		Title:         record.Title,
 		BusinessType:  record.BusinessType,
 		Method:        record.Method,
@@ -188,7 +182,7 @@ func operLogFromModel(record *model.SysOperLog) *OperLog {
 		JSONResult:    record.JSONResult,
 		Status:        record.Status,
 		ErrorMsg:      record.ErrorMsg,
-		OperTime:      operTime,
+		CreatedAt:     &record.CreatedAt,
 		CostTime:      record.CostTime,
 	}
 }

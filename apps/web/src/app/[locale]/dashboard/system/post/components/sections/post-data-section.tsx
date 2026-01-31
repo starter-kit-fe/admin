@@ -130,7 +130,7 @@ export function PostDataSection() {
 
   useEffect(() => {
     if (postListQuery.data) {
-      setPosts(postListQuery.data.items);
+      setPosts(postListQuery.data.list);
       setTotal(postListQuery.data.total);
     }
   }, [postListQuery.data, setPosts, setTotal]);
@@ -142,8 +142,8 @@ export function PostDataSection() {
     setSelectedIds((prev) => {
       const next = new Set<number>();
       rows.forEach((post) => {
-        if (prev.has(post.postId)) {
-          next.add(post.postId);
+        if (prev.has(post.id)) {
+          next.add(post.id);
         }
       });
       return next;
@@ -152,7 +152,7 @@ export function PostDataSection() {
 
   const selectedCount = selectedIds.size;
   const isAllSelected =
-    rows.length > 0 && rows.every((row) => selectedIds.has(row.postId));
+    rows.length > 0 && rows.every((row) => selectedIds.has(row.id));
   const headerCheckboxState = isAllSelected
     ? true
     : selectedCount > 0
@@ -161,19 +161,19 @@ export function PostDataSection() {
 
   const handleToggleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(new Set(rows.map((row) => row.postId)));
+      setSelectedIds(new Set(rows.map((row) => row.id)));
     } else {
       setSelectedIds(new Set());
     }
   };
 
-  const handleToggleSelectRow = (postId: number, checked: boolean) => {
+  const handleToggleSelectRow = (id: number, checked: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (checked) {
-        next.add(postId);
+        next.add(id);
       } else {
-        next.delete(postId);
+        next.delete(id);
       }
       return next;
     });

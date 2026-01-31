@@ -28,7 +28,7 @@ func NewService(repo *Repository, manager SessionManager) *Service {
 }
 
 type ListResult struct {
-	Items    []OnlineUser `json:"items"`
+	List     []OnlineUser `json:"list"`
 	Total    int          `json:"total"`
 	PageNum  int          `json:"pageNum"`
 	PageSize int          `json:"pageSize"`
@@ -79,7 +79,7 @@ func (s *Service) ListOnlineUsers(ctx context.Context, opts ListOptions) (*ListR
 	}
 
 	return &ListResult{
-		Items:    users,
+		List:     users,
 		Total:    total,
 		PageNum:  pageNum,
 		PageSize: pageSize,

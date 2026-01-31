@@ -68,7 +68,7 @@ export function OperLogDataSection() {
 
   useEffect(() => {
     if (logQuery.data) {
-      setLogs(logQuery.data.items);
+      setLogs(logQuery.data.list);
       setTotal(logQuery.data.total);
     }
   }, [logQuery.data, setLogs, setTotal]);

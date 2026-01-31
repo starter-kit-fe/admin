@@ -2,7 +2,7 @@ export type MenuType = 'M' | 'C' | 'F';
 export type MenuStatus = '0' | '1';
 
 export interface MenuTreeNode {
-  menuId: number;
+  id: number;
   menuName: string;
   parentId: number;
   orderNum: number;
@@ -54,7 +54,7 @@ export interface CreateMenuPayload {
 export type UpdateMenuPayload = Partial<CreateMenuPayload>;
 
 export interface MenuOrderUpdate {
-  menuId: number;
+  id: number;
   parentId: number;
   orderNum: number;
 }

@@ -39,7 +39,7 @@ func (r *Repository) LoadPermissions(ctx context.Context, userID uint) ([]string
 	query := r.db.WithContext(ctx).
 		Table(menuTable).
 		Select(fmt.Sprintf("DISTINCT %s.perms", menuTable)).
-		Joins(fmt.Sprintf("JOIN %s ON %s.menu_id = %s.menu_id", roleMenuTable, menuTable, roleMenuTable)).
+		Joins(fmt.Sprintf("JOIN %s ON %s.id = %s.menu_id", roleMenuTable, menuTable, roleMenuTable)).
 		Joins(fmt.Sprintf("JOIN %s ON %s.role_id = %s.role_id", userRoleTable, roleMenuTable, userRoleTable)).
 		Where(fmt.Sprintf("%s.user_id = ? AND %s.perms IS NOT NULL AND %s.perms <> ''", userRoleTable, menuTable, menuTable), userID)
 
@@ -82,7 +82,7 @@ func (r *Repository) GetUserByID(ctx context.Context, userID uint) (*model.SysUs
 
 	var user model.SysUser
 	err := r.db.WithContext(ctx).
-		Where("user_id = ?", userID).
+		Where("id = ?", userID).
 		First(&user).
 		Error
 	if err != nil {
@@ -104,7 +104,7 @@ func (r *Repository) GetRoles(ctx context.Context, userID uint) ([]string, error
 	err := r.db.WithContext(ctx).
 		Table(roleTable).
 		Select(fmt.Sprintf("%s.role_key", roleTable)).
-		Joins(fmt.Sprintf("JOIN %s ON %s.role_id = %s.role_id", userRoleTable, roleTable, userRoleTable)).
+		Joins(fmt.Sprintf("JOIN %s ON %s.id = %s.role_id", userRoleTable, roleTable, userRoleTable)).
 		Where(fmt.Sprintf("%s.user_id = ?", userRoleTable), userID).
 		Pluck(fmt.Sprintf("%s.role_key", roleTable), &roles).
 		Error
@@ -127,11 +127,11 @@ func (r *Repository) GetMenus(ctx context.Context, userID uint) ([]model.SysMenu
 	baseQuery := r.db.WithContext(ctx).
 		Table(menuTable).
 		Distinct(fmt.Sprintf("%s.*", menuTable)).
-		Order(fmt.Sprintf("%s.parent_id ASC, %s.order_num ASC, %s.menu_id ASC", menuTable, menuTable, menuTable))
+		Order(fmt.Sprintf("%s.parent_id ASC, %s.order_num ASC, %s.id ASC", menuTable, menuTable, menuTable))
 
 	if userID != 0 {
 		baseQuery = baseQuery.
-			Joins(fmt.Sprintf("JOIN %s ON %s.menu_id = %s.menu_id", roleMenuTable, menuTable, roleMenuTable)).
+			Joins(fmt.Sprintf("JOIN %s ON %s.id = %s.menu_id", roleMenuTable, menuTable, roleMenuTable)).
 			Joins(fmt.Sprintf("JOIN %s ON %s.role_id = %s.role_id", userRoleTable, roleMenuTable, userRoleTable)).
 			Where(fmt.Sprintf("%s.user_id = ?", userRoleTable), userID)
 	}

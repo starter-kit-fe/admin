@@ -1,15 +1,10 @@
 import { useEffect, useState } from 'react';
 
 /**
- * 监听媒体查询变化，返回是否匹配
+ * 监听媒体查询变化，返回是否匹配（SSR 默认值可避免 hydration mismatch）
  */
-export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() => {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-    return window.matchMedia(query).matches;
-  });
+export function useMediaQuery(query: string, defaultValue = false): boolean {
+  const [matches, setMatches] = useState(defaultValue);
 
   useEffect(() => {
     if (typeof window === 'undefined') {

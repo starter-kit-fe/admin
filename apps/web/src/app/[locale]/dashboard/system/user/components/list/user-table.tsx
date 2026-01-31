@@ -1,10 +1,10 @@
 'use client';
 
+import { EllipsisText } from '@/components/table/ellipsis-text';
 import {
   PINNED_ACTION_COLUMN_META,
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
-import { EllipsisText } from '@/components/table/ellipsis-text';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -24,14 +24,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -40,8 +32,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { usePermissions } from '@/hooks/use-permissions';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -76,7 +76,7 @@ interface UserTableProps {
   headerCheckboxState: boolean | 'indeterminate';
   onToggleSelectAll: (checked: boolean) => void;
   selectedIds: Set<number>;
-  onToggleSelect: (userId: number, checked: boolean) => void;
+  onToggleSelect: (id: number, checked: boolean) => void;
   onEdit: (user: User) => void;
   onResetPassword?: (user: User) => void;
   onDelete: (user: User) => void;
@@ -151,6 +151,9 @@ function RowActions({
                   <span className="flex items-center gap-2">
                     <Pencil className="size-4" />
                     {t('table.actions.edit')}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {t('dialogs.editDescription')}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {t('dialogs.editDescription')}

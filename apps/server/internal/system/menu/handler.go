@@ -56,7 +56,7 @@ type updateMenuRequest struct {
 }
 
 type reorderMenuItem struct {
-	MenuID   int64 `json:"menuId"`
+	ID       int64 `json:"id"`
 	ParentID int64 `json:"parentId"`
 	OrderNum int   `json:"orderNum"`
 }
@@ -348,7 +348,7 @@ func (h *Handler) Reorder(ctx *gin.Context) {
 	items := make([]MenuOrderItem, 0, len(payload.Items))
 	for _, item := range payload.Items {
 		items = append(items, MenuOrderItem{
-			MenuID:   item.MenuID,
+			MenuID:   item.ID,
 			ParentID: item.ParentID,
 			OrderNum: item.OrderNum,
 		})

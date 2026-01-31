@@ -19,22 +19,22 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useLocale, useTranslations } from 'next-intl';
 
-import { clearJobLogs, getJobDetail, runJob } from '../api';
-import { BASE_QUERY_KEY, STATUS_BADGE_VARIANT } from '../constants';
-import type { Job, JobLog } from '../type';
-import { resolveStatusLabel, stringifyInvokeParams } from '../utils';
+import { clearJobLogs, getJobDetail, runJob } from '../../api';
+import { BASE_QUERY_KEY, STATUS_BADGE_VARIANT } from '../../constants';
+import type { Job, JobLog } from '../../type';
+import { resolveStatusLabel, stringifyInvokeParams } from '../../utils';
 import {
   describeCron,
   formatDateTime,
   getNextExecutionTimes,
-} from '../utils/cron';
-import { JobLogsSection } from './components/job-logs-section';
+} from '../../utils/cron';
+import { JobLogsSection } from './job-logs-section';
 import {
   JobStatusMeta,
   JobSummaryPanel,
   ToneStyles,
-} from './components/job-summary-panel';
-import { LogStepsPanel } from './components/log-steps-panel';
+} from './job-summary-panel';
+import { LogStepsPanel } from './log-steps-panel';
 import { RealtimeLogViewer } from './realtime-log-viewer';
 
 export type Tone = 'emerald' | 'amber' | 'sky' | 'rose' | 'slate';
@@ -99,12 +99,16 @@ const DEFAULT_JOB_STATUS_META: JobStatusMeta = {
 };
 
 interface JobDetailContentProps {
-  jobId: number;
+  id: number;
 }
 
+<<<<<<<< HEAD:apps/web/src/app/[locale]/dashboard/monitor/job/detail/job-detail-content.tsx
 export function JobDetailContent({ jobId }: JobDetailContentProps) {
   const locale = useLocale();
   const t = useTranslations('JobManagement');
+========
+export function JobDetailContent({ id }: JobDetailContentProps) {
+>>>>>>>> main:apps/web/src/app/dashboard/monitor/job/detail/components/job-detail-content.tsx
   const [logPagination, setLogPagination] = useState({
     pageNum: 1,
     pageSize: DEFAULT_LOG_PAGE_SIZE,
@@ -119,12 +123,12 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
     queryKey: [
       ...BASE_QUERY_KEY,
       'detail',
-      jobId,
+      id,
       logPagination.pageNum,
       logPagination.pageSize,
     ],
     queryFn: () =>
-      getJobDetail(jobId, {
+      getJobDetail(id, {
         logPageNum: logPagination.pageNum,
         logPageSize: logPagination.pageSize,
       }),
@@ -140,7 +144,7 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
   const [logDetailOpen, setLogDetailOpen] = useState(false);
 
   const runJobMutation = useMutation({
-    mutationFn: () => runJob(jobId),
+    mutationFn: () => runJob(id),
     onSuccess: (data) => {
       toast.success(t('toast.runSuccess'));
       if (data?.jobLogId) {
@@ -157,7 +161,7 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
   });
 
   const clearLogsMutation = useMutation({
-    mutationFn: () => clearJobLogs(jobId),
+    mutationFn: () => clearJobLogs(id),
     onSuccess: () => {
       toast.success(t('detail.logs.clearSuccess'));
       void detailQuery.refetch();
@@ -208,7 +212,7 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
   }, [job?.status, upcomingExecutions, t]);
 
   useEffect(() => {
-    const runningLog = logs?.items.find((item) => item.status === '2');
+    const runningLog = logs?.list.find((item) => item.status === '2');
     if (runningLog) {
       setActiveLogId(runningLog.jobLogId);
       setActiveLogName(
@@ -226,7 +230,7 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
     detail?.job?.jobName,
     detail?.job?.isRunning,
     job?.jobName,
-    logs?.items,
+    logs?.list,
     runJobMutation.isPending,
   ]);
 
@@ -275,7 +279,7 @@ export function JobDetailContent({ jobId }: JobDetailContentProps) {
                 {resolveStatusLabel(t, job.status)}
               </Badge>
               <span className="text-xs font-medium text-muted-foreground">
-                #{job.jobId} · {job.jobGroup || 'DEFAULT'}
+                #{job.id} · {job.jobGroup || 'DEFAULT'}
               </span>
             </>
           ) : null}

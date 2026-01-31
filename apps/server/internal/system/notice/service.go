@@ -48,9 +48,9 @@ type Notice struct {
 	Status        string     `json:"status"`
 	Remark        *string    `json:"remark,omitempty"`
 	CreateBy      string     `json:"createBy"`
-	CreateTime    time.Time  `json:"createTime"`
+	CreatedAt     time.Time  `json:"createdAt"`
 	UpdateBy      string     `json:"updateBy"`
-	UpdateTime    *time.Time `json:"updateTime,omitempty"`
+	UpdatedAt     *time.Time `json:"updatedAt,omitempty"`
 }
 
 type CreateNoticeInput struct {
@@ -129,7 +129,6 @@ func (s *Service) CreateNotice(ctx context.Context, input CreateNoticeInput) (*N
 		return nil, ErrInvalidStatus
 	}
 
-	now := time.Now()
 	record := &model.SysNotice{
 		NoticeTitle:   title,
 		NoticeType:    noticeType,
@@ -138,8 +137,6 @@ func (s *Service) CreateNotice(ctx context.Context, input CreateNoticeInput) (*N
 		Remark:        normalizeRemark(input.Remark),
 		CreateBy:      sanitizeOperator(input.Operator),
 		UpdateBy:      sanitizeOperator(input.Operator),
-		CreateTime:    &now,
-		UpdateTime:    &now,
 	}
 
 	if err := s.repo.CreateNotice(ctx, record); err != nil {
@@ -198,9 +195,7 @@ func (s *Service) UpdateNotice(ctx context.Context, input UpdateNoticeInput) (*N
 		record.Remark = normalizeRemark(input.Remark)
 	}
 
-	now := time.Now()
 	record.UpdateBy = sanitizeOperator(input.Operator)
-	record.UpdateTime = &now
 
 	if err := s.repo.SaveNotice(ctx, record); err != nil {
 		return nil, err
@@ -222,21 +217,21 @@ func noticeFromModel(record *model.SysNotice) *Notice {
 	}
 
 	var created time.Time
-	if record.CreateTime != nil {
-		created = *record.CreateTime
+	if !record.CreatedAt.IsZero() {
+		created = record.CreatedAt
 	}
 
 	return &Notice{
-		NoticeID:      record.NoticeID,
+		NoticeID:      int64(record.ID),
 		NoticeTitle:   record.NoticeTitle,
 		NoticeType:    record.NoticeType,
 		NoticeContent: string(record.NoticeContent),
 		Status:        record.Status,
 		Remark:        record.Remark,
 		CreateBy:      record.CreateBy,
-		CreateTime:    created,
+		CreatedAt:     created,
 		UpdateBy:      record.UpdateBy,
-		UpdateTime:    record.UpdateTime,
+		UpdatedAt:     &record.UpdatedAt,
 	}
 }
 

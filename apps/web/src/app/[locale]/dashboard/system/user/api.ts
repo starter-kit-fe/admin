@@ -33,20 +33,20 @@ export function listUsers(params: UserListParams = {}) {
   return get<UserListResponse>('/v1/system/users', buildQuery(params));
 }
 
-export function getUserDetail(userId: number) {
-  return get<User>(`/v1/system/users/${userId}`);
+export function getUserDetail(id: number) {
+  return get<User>(`/v1/system/users/${id}`);
 }
 
 export function createUser(payload: CreateUserPayload) {
   return post<User>('/v1/system/users', payload);
 }
 
-export function updateUser(userId: number, payload: UpdateUserPayload) {
-  return put<User>(`/v1/system/users/${userId}`, payload);
+export function updateUser(id: number, payload: UpdateUserPayload) {
+  return put<User>(`/v1/system/users/${id}`, payload);
 }
 
-export function removeUser(userId: number) {
-  return del<void>(`/v1/system/users/${userId}`);
+export function removeUser(id: number) {
+  return del<void>(`/v1/system/users/${id}`);
 }
 
 export function listDeptOptions(keyword?: string) {
@@ -70,6 +70,6 @@ export function listPostOptions(keyword?: string) {
   );
 }
 
-export function resetUserPassword(userId: number, payload: ResetPasswordPayload) {
-  return post<void>(`/v1/system/users/${userId}/reset-password`, payload);
+export function resetUserPassword(id: number, payload: ResetPasswordPayload) {
+  return post<void>(`/v1/system/users/${id}/reset-password`, payload);
 }

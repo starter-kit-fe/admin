@@ -1,12 +1,13 @@
-package job
+package executor
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
-	"strings"
+	"github.com/starter-kit-fe/admin/internal/system/job/types"
 )
 
 // BackupDemoParams 备份参数（演示用）
@@ -16,7 +17,7 @@ type BackupDemoParams struct {
 }
 
 // BackupDatabaseExecutor 数据库备份执行器
-func BackupDatabaseExecutor(ctx context.Context, payload ExecutionPayload) error {
+func BackupDatabaseExecutor(ctx context.Context, payload types.ExecutionPayload) error {
 	stepLogger := payload.StepLogger
 	if stepLogger == nil {
 		return fmt.Errorf("step logger not available")

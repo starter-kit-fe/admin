@@ -1,7 +1,7 @@
 export type PostStatus = '0' | '1';
 
 export interface Post {
-  postId: number;
+  id: number;
   postCode: string;
   postName: string;
   postSort: number;
@@ -10,7 +10,7 @@ export interface Post {
 }
 
 export interface PostListResponse {
-  items: Post[];
+  list: Post[];
   total: number;
   pageNum: number;
   pageSize: number;

@@ -1,5 +1,5 @@
 export interface OperLog {
-  operId: number;
+  id: number;
   title: string;
   businessType: number;
   method: string;
@@ -14,12 +14,12 @@ export interface OperLog {
   jsonResult: string;
   status: number;
   errorMsg: string;
-  operTime?: string | null;
+  createdAt?: string | null;
   costTime: number;
 }
 
 export interface OperLogListResponse {
-  items: OperLog[];
+  list: OperLog[];
   total: number;
   pageNum: number;
   pageSize: number;

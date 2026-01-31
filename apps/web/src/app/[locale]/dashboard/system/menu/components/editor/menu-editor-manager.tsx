@@ -64,13 +64,8 @@ export function MenuEditorManager() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({
-      menuId,
-      payload,
-    }: {
-      menuId: number;
-      payload: CreateMenuPayload;
-    }) => updateMenu(menuId, payload),
+    mutationFn: ({ id, payload }: { id: number; payload: CreateMenuPayload }) =>
+      updateMenu(id, payload),
     onMutate: () => {
       beginMutation();
     },
@@ -114,13 +109,13 @@ export function MenuEditorManager() {
       }
       const fallbackNode = findMenuNodeById(menuTree, fallbackId);
       return {
-        parentId: fallbackNode ? fallbackNode.menuId : fallbackId,
+        parentId: fallbackNode ? fallbackNode.id : fallbackId,
         parentType: fallbackNode?.menuType,
       };
     }
 
     return {
-      parentId: requestedNode.menuId,
+      parentId: requestedNode.id,
       parentType: requestedNode.menuType,
     };
   }, [editorState, menuTree]);
@@ -136,11 +131,7 @@ export function MenuEditorManager() {
       return toFormValues(editorState.menu);
     }
     const defaultMenuType: MenuFormValues['menuType'] =
-      createParentType === 'C'
-        ? 'F'
-        : createParentId === 0
-          ? 'M'
-          : 'C';
+      createParentType === 'C' ? 'F' : createParentId === 0 ? 'M' : 'C';
     return {
       menuName: '',
       parentId: String(createParentId ?? 0),
@@ -169,7 +160,7 @@ export function MenuEditorManager() {
     }
     if (editorState.mode === 'edit') {
       const excludeIds = new Set<number>([
-        editorState.menu.menuId,
+        editorState.menu.id,
         ...collectDescendantIds(editorState.menu),
       ]);
       return filterParentOptions(baseParentOptions, excludeIds);
@@ -182,7 +173,7 @@ export function MenuEditorManager() {
     if (editorState.open) {
       if (editorState.mode === 'edit') {
         updateMutation.mutate({
-          menuId: editorState.menu.menuId,
+          id: editorState.menu.id,
           payload,
         });
         return;

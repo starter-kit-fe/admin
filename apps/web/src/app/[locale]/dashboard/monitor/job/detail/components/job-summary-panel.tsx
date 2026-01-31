@@ -106,6 +106,7 @@ export function JobSummaryPanel({
           value={resolveConcurrentLabel(t, job.concurrent)}
         />
         <SummaryItem
+<<<<<<<< HEAD:apps/web/src/app/[locale]/dashboard/monitor/job/detail/components/job-summary-panel.tsx
           label={t('detail.summary.labels.invokeTarget')}
           value={job.invokeTarget || '—'}
         />
@@ -117,6 +118,15 @@ export function JobSummaryPanel({
         <SummaryItem
           label={t('detail.summary.labels.updated')}
           value={job.updateTime || '—'}
+========
+          label="创建"
+          value={job.createdAt || '—'}
+          hint={job.createBy || ''}
+        />
+        <SummaryItem
+          label="更新"
+          value={job.updatedAt || '—'}
+>>>>>>>> main:apps/web/src/app/dashboard/monitor/job/detail/components/job-summary-panel.tsx
           hint={job.updateBy || ''}
         />
         {job.remark ? (

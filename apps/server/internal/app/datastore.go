@@ -18,9 +18,21 @@ func initDatabase(ctx context.Context, cfg *config.Config, logger *slog.Logger) 
 		return nil, nil
 	}
 
-	sqlDB, err := db.LoadPostgres(cfg.Database.DSN)
+	var sqlDB *gorm.DB
+	var err error
+
+	switch cfg.Database.Driver {
+	case "sqlite":
+		sqlDB, err = db.LoadSqlite(cfg.Database.DSN)
+	case "postgres":
+		sqlDB, err = db.LoadPostgres(cfg.Database.DSN)
+	default:
+		// Default to postgres for backward compatibility
+		sqlDB, err = db.LoadPostgres(cfg.Database.DSN)
+	}
+
 	if err != nil {
-		return nil, fmt.Errorf("connect postgres: %w", err)
+		return nil, fmt.Errorf("connect %s: %w", cfg.Database.Driver, err)
 	}
 	if err := db.AutoMigrate(sqlDB); err != nil {
 		return nil, fmt.Errorf("auto migrate postgres: %w", err)

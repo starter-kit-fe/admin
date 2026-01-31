@@ -265,6 +265,20 @@ func changedFloat(a, b float64) bool {
 	return math.Abs(a-b) > 0.01
 }
 
+func resolveSystemUptime(startTime time.Time) time.Duration {
+	now := time.Now()
+	if runtime.GOOS == "linux" {
+		if uptime, err := readProcUptime(); err == nil && uptime > 0 {
+			return uptime
+		}
+	}
+	if uptime, ok := resolveDarwinUptime(now); ok {
+		return uptime
+	}
+	// fallback to process lifetime when platform-specific uptime is unavailable
+	return now.Sub(startTime)
+}
+
 func readProcUptime() (time.Duration, error) {
 	data, err := os.ReadFile("/proc/uptime")
 	if err != nil {

@@ -1,4 +1,4 @@
-package job
+package executor
 
 import (
 	"bytes"
@@ -23,6 +23,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/starter-kit-fe/admin/internal/config"
+	"github.com/starter-kit-fe/admin/internal/system/job/types"
 )
 
 const (
@@ -36,7 +37,7 @@ type BackupExecutor struct {
 	db         *gorm.DB
 	cfg        *config.Config
 	logger     *slog.Logger
-	stepLogger *StepLogger
+	stepLogger types.StepLoggerInterface
 }
 
 // BackupParams 备份任务参数
@@ -60,8 +61,8 @@ type BackupParams struct {
 }
 
 // NewBackupExecutor 创建备份执行器
-func NewBackupExecutor(db *gorm.DB, cfg *config.Config) Executor {
-	return func(ctx context.Context, payload ExecutionPayload) error {
+func NewBackupExecutor(db *gorm.DB, cfg *config.Config) types.Executor {
+	return func(ctx context.Context, payload types.ExecutionPayload) error {
 		executor := &BackupExecutor{
 			db:         db,
 			cfg:        cfg,
@@ -483,14 +484,14 @@ func (e *BackupExecutor) cleanupOldBackups(ctx context.Context, params *BackupPa
 	return nil
 }
 
-func (e *BackupExecutor) startStep(name string) *Step {
+func (e *BackupExecutor) startStep(name string) types.StepInterface {
 	if e == nil || e.stepLogger == nil {
 		return nil
 	}
 	return e.stepLogger.StartStep(name)
 }
 
-func (e *BackupExecutor) logStep(step *Step, format string, args ...interface{}) {
+func (e *BackupExecutor) logStep(step types.StepInterface, format string, args ...interface{}) {
 	if step != nil {
 		step.Log(format, args...)
 		return
@@ -500,21 +501,21 @@ func (e *BackupExecutor) logStep(step *Step, format string, args ...interface{})
 	}
 }
 
-func (e *BackupExecutor) successStep(step *Step) {
+func (e *BackupExecutor) successStep(step types.StepInterface) {
 	if step == nil {
 		return
 	}
 	if err := step.Success(); err != nil && e.logger != nil {
-		e.logger.Warn("mark step success failed", "step", step.stepName, "error", err)
+		// e.logger.Warn("mark step success failed", "error", err)
 	}
 }
 
-func (e *BackupExecutor) failStep(step *Step, err error) {
+func (e *BackupExecutor) failStep(step types.StepInterface, err error) {
 	if step == nil {
 		return
 	}
 	if closeErr := step.Fail(err); closeErr != nil && e.logger != nil {
-		e.logger.Warn("mark step failed failed", "step", step.stepName, "error", closeErr)
+		// e.logger.Warn("mark step failed failed", "error", closeErr)
 	}
 }
 

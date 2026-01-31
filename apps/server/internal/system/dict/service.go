@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"time"
 
 	"gorm.io/gorm"
 
@@ -56,7 +55,7 @@ type QueryOptions struct {
 }
 
 type DictType struct {
-	DictID   int64   `json:"dictId"`
+	ID       int64   `json:"id"`
 	DictName string  `json:"dictName"`
 	DictType string  `json:"dictType"`
 	Status   string  `json:"status"`
@@ -64,7 +63,7 @@ type DictType struct {
 }
 
 type DictData struct {
-	DictCode  int64   `json:"dictCode"`
+	ID        int64   `json:"id"`
 	DictSort  int     `json:"dictSort"`
 	DictLabel string  `json:"dictLabel"`
 	DictValue string  `json:"dictValue"`
@@ -77,8 +76,8 @@ type DictData struct {
 }
 
 type DictDataList struct {
-	Type  *DictType  `json:"type"`
-	Items []DictData `json:"items"`
+	Type *DictType  `json:"type"`
+	List []DictData `json:"list"`
 }
 
 type DictDataQueryOptions struct {
@@ -119,7 +118,7 @@ type CreateDictDataInput struct {
 
 type UpdateDictDataInput struct {
 	DictID    int64
-	DictCode  int64
+	ID        int64
 	DictLabel *string
 	DictValue *string
 	DictSort  *int
@@ -192,17 +191,14 @@ func (s *Service) CreateDictType(ctx context.Context, input CreateDictTypeInput)
 
 	remark := normalizeRemark(input.Remark)
 	operator := sanitizeOperator(input.Operator)
-	now := time.Now()
 
 	record := &model.SysDictType{
-		DictName:   name,
-		DictType:   dictTypeValue,
-		Status:     status,
-		Remark:     remark,
-		CreateBy:   operator,
-		UpdateBy:   operator,
-		CreateTime: &now,
-		UpdateTime: &now,
+		DictName: name,
+		DictType: dictTypeValue,
+		Status:   status,
+		Remark:   remark,
+		CreateBy: operator,
+		UpdateBy: operator,
 	}
 
 	if err := s.repo.CreateDictType(ctx, record); err != nil {
@@ -235,7 +231,7 @@ func (s *Service) UpdateDictType(ctx context.Context, input UpdateDictTypeInput)
 		if dictTypeValue == "" {
 			return nil, ErrDictTypeRequired
 		}
-		if exists, err := s.repo.ExistsDictType(ctx, dictTypeValue, record.DictID); err != nil {
+		if exists, err := s.repo.ExistsDictType(ctx, dictTypeValue, int64(record.ID)); err != nil {
 			return nil, err
 		} else if exists {
 			return nil, ErrDuplicateDictType
@@ -256,9 +252,7 @@ func (s *Service) UpdateDictType(ctx context.Context, input UpdateDictTypeInput)
 	}
 
 	operator := sanitizeOperator(input.Operator)
-	now := time.Now()
 	record.UpdateBy = operator
-	record.UpdateTime = &now
 
 	if err := s.repo.SaveDictType(ctx, record); err != nil {
 		return nil, err
@@ -277,7 +271,7 @@ func (s *Service) DeleteDictType(ctx context.Context, id int64) error {
 		return err
 	}
 
-	return s.repo.DeleteDictType(ctx, record.DictID, record.DictType)
+	return s.repo.DeleteDictType(ctx, int64(record.ID), record.DictType)
 }
 
 func (s *Service) ListDictData(ctx context.Context, dictID int64, opts DictDataQueryOptions) (*DictDataList, error) {
@@ -306,8 +300,8 @@ func (s *Service) ListDictData(ctx context.Context, dictID int64, opts DictDataQ
 	}
 
 	return &DictDataList{
-		Type:  dictTypeFromModel(dictTypeRecord),
-		Items: result,
+		Type: dictTypeFromModel(dictTypeRecord),
+		List: result,
 	}, nil
 }
 
@@ -361,22 +355,19 @@ func (s *Service) CreateDictData(ctx context.Context, input CreateDictDataInput)
 	listClass := normalizeOptionalString(input.ListClass)
 	cssClass := normalizeOptionalString(input.CSSClass)
 	operator := sanitizeOperator(input.Operator)
-	now := time.Now()
 
 	record := &model.SysDictData{
-		DictSort:   input.DictSort,
-		DictLabel:  label,
-		DictValue:  value,
-		DictType:   dictTypeRecord.DictType,
-		Status:     status,
-		IsDefault:  defaultFlag,
-		Remark:     remark,
-		ListClass:  listClass,
-		CSSClass:   cssClass,
-		CreateBy:   operator,
-		UpdateBy:   operator,
-		CreateTime: &now,
-		UpdateTime: &now,
+		DictSort:  input.DictSort,
+		DictLabel: label,
+		DictValue: value,
+		DictType:  dictTypeRecord.DictType,
+		Status:    status,
+		IsDefault: defaultFlag,
+		Remark:    remark,
+		ListClass: listClass,
+		CSSClass:  cssClass,
+		CreateBy:  operator,
+		UpdateBy:  operator,
 	}
 
 	if err := s.repo.CreateDictData(ctx, record); err != nil {
@@ -396,7 +387,7 @@ func (s *Service) UpdateDictData(ctx context.Context, input UpdateDictDataInput)
 		return nil, err
 	}
 
-	record, err := s.repo.GetDictData(ctx, input.DictCode)
+	record, err := s.repo.GetDictData(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -411,7 +402,7 @@ func (s *Service) UpdateDictData(ctx context.Context, input UpdateDictDataInput)
 			return nil, ErrDictLabelRequired
 		}
 		if !strings.EqualFold(label, record.DictLabel) {
-			if exists, err := s.repo.ExistsDictDataByLabel(ctx, dictTypeRecord.DictType, label, record.DictCode); err != nil {
+			if exists, err := s.repo.ExistsDictDataByLabel(ctx, dictTypeRecord.DictType, label, int64(record.ID)); err != nil {
 				return nil, err
 			} else if exists {
 				return nil, ErrDuplicateDictLabel
@@ -426,7 +417,7 @@ func (s *Service) UpdateDictData(ctx context.Context, input UpdateDictDataInput)
 			return nil, ErrDictValueRequired
 		}
 		if value != record.DictValue {
-			if exists, err := s.repo.ExistsDictDataByValue(ctx, dictTypeRecord.DictType, value, record.DictCode); err != nil {
+			if exists, err := s.repo.ExistsDictDataByValue(ctx, dictTypeRecord.DictType, value, int64(record.ID)); err != nil {
 				return nil, err
 			} else if exists {
 				return nil, ErrDuplicateDictValue
@@ -471,9 +462,7 @@ func (s *Service) UpdateDictData(ctx context.Context, input UpdateDictDataInput)
 	}
 
 	operator := sanitizeOperator(input.Operator)
-	now := time.Now()
 	record.UpdateBy = operator
-	record.UpdateTime = &now
 
 	if err := s.repo.SaveDictData(ctx, record); err != nil {
 		return nil, err
@@ -482,7 +471,7 @@ func (s *Service) UpdateDictData(ctx context.Context, input UpdateDictDataInput)
 	return dictDataFromModel(record), nil
 }
 
-func (s *Service) DeleteDictData(ctx context.Context, dictID, dictCode int64) error {
+func (s *Service) DeleteDictData(ctx context.Context, dictID, id int64) error {
 	if s == nil || s.repo == nil {
 		return ErrServiceUnavailable
 	}
@@ -492,7 +481,7 @@ func (s *Service) DeleteDictData(ctx context.Context, dictID, dictCode int64) er
 		return err
 	}
 
-	record, err := s.repo.GetDictData(ctx, dictCode)
+	record, err := s.repo.GetDictData(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -501,7 +490,7 @@ func (s *Service) DeleteDictData(ctx context.Context, dictID, dictCode int64) er
 		return gorm.ErrRecordNotFound
 	}
 
-	return s.repo.DeleteDictData(ctx, dictCode)
+	return s.repo.DeleteDictData(ctx, id)
 }
 
 func normalizeStatus(status string) string {
@@ -551,7 +540,7 @@ func dictTypeFromModel(record *model.SysDictType) *DictType {
 		return nil
 	}
 	return &DictType{
-		DictID:   record.DictID,
+		ID:       int64(record.ID),
 		DictName: record.DictName,
 		DictType: record.DictType,
 		Status:   record.Status,
@@ -564,7 +553,7 @@ func dictDataFromModel(record *model.SysDictData) *DictData {
 		return nil
 	}
 	return &DictData{
-		DictCode:  record.DictCode,
+		ID:        int64(record.ID),
 		DictSort:  record.DictSort,
 		DictLabel: record.DictLabel,
 		DictValue: record.DictValue,

@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-
 import {
   useNoticeManagementSetRefreshHandler,
   useNoticeManagementSetRefreshing,
   useNoticeManagementStore,
 } from '@/app/dashboard/system/notice/store';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import { listNotices } from '../../api';
 import { BASE_NOTICE_QUERY_KEY } from '../../constants';
@@ -55,7 +54,7 @@ export function NoticeDataSection() {
   }, [noticeQuery.data, noticeQuery.isLoading, setNotices]);
 
   useEffect(() => {
-    const validIds = new Set(notices.map((notice) => notice.noticeId));
+    const validIds = new Set(notices.map((notice) => notice.id));
     if (validIds.size === 0) {
       clearSelectedIds();
       return;
@@ -119,16 +118,16 @@ export function NoticeDataSection() {
       clearSelectedIds();
       return;
     }
-    const next = new Set<number>(notices.map((notice) => notice.noticeId));
+    const next = new Set<number>(notices.map((notice) => notice.id));
     setSelectedIds(next);
   };
 
-  const handleToggleSelect = (noticeId: number, checked: boolean) => {
+  const handleToggleSelect = (id: number, checked: boolean) => {
     setSelectedIds((prev) => {
       if (checked) {
-        prev.add(noticeId);
+        prev.add(id);
       } else {
-        prev.delete(noticeId);
+        prev.delete(id);
       }
       return prev;
     });

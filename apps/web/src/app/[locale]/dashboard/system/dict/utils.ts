@@ -43,7 +43,7 @@ export function normalizeOptional(value: string): string | undefined {
 
 export const emptyDictDataList: DictDataList = {
   type: undefined,
-  items: [],
+  list: [],
   total: 0,
 };
 
@@ -65,7 +65,7 @@ export function areDictDataListsEqual(
     const a = next[index];
     const b = prev[index];
     if (
-      a.dictCode !== b.dictCode ||
+      a.id !== b.id ||
       a.dictSort !== b.dictSort ||
       a.dictLabel !== b.dictLabel ||
       a.dictValue !== b.dictValue ||

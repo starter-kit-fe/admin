@@ -3,7 +3,7 @@ import { z } from 'zod';
 export type DepartmentStatus = '0' | '1';
 
 export interface DepartmentNode {
-  deptId: number;
+  id: number;
   parentId: number;
   deptName: string;
   leader?: string | null;

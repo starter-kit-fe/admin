@@ -1,4 +1,4 @@
-import { OnlineUserManagement } from './online-user-management';
+import { OnlineUserManagement } from './components/online-user-management';
 
 export default function Page() {
   return <OnlineUserManagement />;

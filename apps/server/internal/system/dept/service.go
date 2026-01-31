@@ -46,7 +46,7 @@ type QueryOptions struct {
 }
 
 type Department struct {
-	DeptID   int64         `json:"deptId"`
+	ID       int64         `json:"id"`
 	ParentID int64         `json:"parentId"`
 	DeptName string        `json:"deptName"`
 	Leader   *string       `json:"leader,omitempty"`
@@ -161,7 +161,7 @@ func (s *Service) CreateDepartment(ctx context.Context, input CreateDepartmentIn
 		if err != nil {
 			return nil, err
 		}
-		ancestors = composeAncestors(parent.Ancestors, parent.DeptID)
+		ancestors = composeAncestors(parent.Ancestors, int64(parent.ID))
 	}
 
 	if exists, err := s.repo.ExistsByName(ctx, input.ParentID, name, 0); err != nil {
@@ -175,23 +175,20 @@ func (s *Service) CreateDepartment(ctx context.Context, input CreateDepartmentIn
 	email := normalizeOptionalStringPtr(input.Email)
 	remark := normalizeOptionalStringPtr(input.Remark)
 	operator := sanitizeOperator(input.Operator)
-	now := time.Now()
 
 	record := &model.SysDept{
-		ParentID:   input.ParentID,
-		Ancestors:  ancestors,
-		DeptName:   name,
-		OrderNum:   input.OrderNum,
-		Leader:     leader,
-		Phone:      phone,
-		Email:      email,
-		Status:     status,
-		Remark:     remark,
-		DelFlag:    "0",
-		CreateBy:   operator,
-		UpdateBy:   operator,
-		CreateTime: &now,
-		UpdateTime: &now,
+		ParentID:  input.ParentID,
+		Ancestors: ancestors,
+		DeptName:  name,
+		OrderNum:  input.OrderNum,
+		Leader:    leader,
+		Phone:     phone,
+		Email:     email,
+		Status:    status,
+		Remark:    remark,
+
+		CreateBy: operator,
+		UpdateBy: operator,
 	}
 
 	if err := s.repo.CreateDepartment(ctx, record); err != nil {
@@ -237,14 +234,14 @@ func (s *Service) UpdateDepartment(ctx context.Context, input UpdateDepartmentIn
 			if err != nil {
 				return nil, err
 			}
-			if candidate == current.DeptID || ancestorsContains(parent.Ancestors, current.DeptID) {
+			if candidate == int64(current.ID) || ancestorsContains(parent.Ancestors, int64(current.ID)) {
 				return nil, ErrInvalidParentDepartment
 			}
 		}
 		if candidate == 0 {
 			newAncestors = defaultAncestor
 		} else {
-			newAncestors = composeAncestors(parent.Ancestors, parent.DeptID)
+			newAncestors = composeAncestors(parent.Ancestors, int64(parent.ID))
 		}
 		effectiveParentID = candidate
 		parentChanged = true
@@ -263,7 +260,7 @@ func (s *Service) UpdateDepartment(ctx context.Context, input UpdateDepartmentIn
 	}
 
 	if parentChanged || input.DeptName != nil {
-		exists, err := s.repo.ExistsByName(ctx, effectiveParentID, effectiveName, current.DeptID)
+		exists, err := s.repo.ExistsByName(ctx, effectiveParentID, effectiveName, int64(current.ID))
 		if err != nil {
 			return nil, err
 		}
@@ -308,7 +305,7 @@ func (s *Service) UpdateDepartment(ctx context.Context, input UpdateDepartmentIn
 	}
 
 	if parentChanged {
-		if err := s.repo.UpdateDescendantAncestors(ctx, oldAncestors, newAncestors, current.DeptID, operator, now); err != nil {
+		if err := s.repo.UpdateDescendantAncestors(ctx, oldAncestors, newAncestors, int64(current.ID), operator, now); err != nil {
 			return nil, err
 		}
 	}
@@ -365,7 +362,7 @@ func buildTree(records []model.SysDept) []*Department {
 		copy := record
 		node := departmentFromModel(&copy)
 		w := &wrapper{dept: record, node: node}
-		cache[record.DeptID] = w
+		cache[int64(record.ID)] = w
 		ordered = append(ordered, w)
 	}
 
@@ -394,7 +391,7 @@ func departmentFromModel(record *model.SysDept) *Department {
 		return nil
 	}
 	return &Department{
-		DeptID:   record.DeptID,
+		ID:       int64(record.ID),
 		ParentID: record.ParentID,
 		DeptName: record.DeptName,
 		Leader:   record.Leader,

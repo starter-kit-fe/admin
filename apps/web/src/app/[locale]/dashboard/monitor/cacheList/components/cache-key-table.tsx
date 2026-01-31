@@ -1,5 +1,6 @@
 'use client';
 
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -21,7 +22,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import {
   createColumnHelper,
   flexRender,
@@ -33,7 +33,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
-import type { CacheKeyItem } from '../../cache/api/types';
+import type { CacheKeyItem } from '../../cache/type';
 import { formatBytes, formatDuration } from '../utils';
 
 interface CacheKeyTableProps {

@@ -76,8 +76,8 @@ services:
         COMMIT: ${APP_COMMIT:-local}
     restart: unless-stopped
     environment:
-      PORT: ${SERVER_PORT:-27401}
-      HTTP_ADDR: ":${SERVER_PORT:-27401}"
+      PORT: ${SERVER_PORT:-27507}
+      HTTP_ADDR: ":${SERVER_PORT:-27507}"
       APP_MODE: release
       GIN_MODE: release
       DB_URL: ${DB_URL:-postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-changeme}@db:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-admin}?sslmode=disable}
@@ -89,7 +89,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "${SERVER_PORT:-27401}:27401"
+      - "${SERVER_PORT:-27507}:27507"
 
   web:
     image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-starter-kit-fe}/admin-web:${IMAGE_TAG:-latest}
@@ -102,9 +102,9 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
-      BASE_URL: ${BASE_URL:-http://server:${SERVER_PORT:-27401}}
+      BASE_URL: ${BASE_URL:-http://server:${SERVER_PORT:-27507}}
     ports:
-      - "${WEB_PORT:-3000}:3000"
+      - "${WEB_PORT:-3000}:80"
 
 volumes:
   db_data:

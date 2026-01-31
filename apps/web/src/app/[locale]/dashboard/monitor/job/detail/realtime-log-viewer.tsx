@@ -15,9 +15,9 @@ import {
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
-import type { JobLogStep } from '../type';
-import { useJobLogStream } from '../hooks/use-job-log-stream';
-import { formatDuration, getLogStatusMeta } from './components/log-meta';
+import { useJobLogStream } from '../../hooks/use-job-log-stream';
+import type { JobLogStep } from '../../type';
+import { formatDuration, getLogStatusMeta } from './log-meta';
 
 interface RealtimeLogViewerProps {
   jobLogId: number;
@@ -177,12 +177,17 @@ function StepItem({
           <span className={cn('font-medium', meta.stepTextClass)}>
             {meta.label}
           </span>
+<<<<<<<< HEAD:apps/web/src/app/[locale]/dashboard/monitor/job/detail/realtime-log-viewer.tsx
           {durationText ? (
             <span>
               {t('detail.live.steps.duration', { value: durationText })}
             </span>
           ) : null}
           {step.createTime ? <span>{step.createTime}</span> : null}
+========
+          {durationText ? <span>耗时 {durationText}</span> : null}
+          {step.createdAt ? <span>{step.createdAt}</span> : null}
+>>>>>>>> main:apps/web/src/app/dashboard/monitor/job/detail/components/realtime-log-viewer.tsx
           {hasDetails ? (
             <button
               type="button"

@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/font/gofont/gobold"
@@ -30,14 +31,18 @@ type Options struct {
 	NoiseDots    int
 	FontSize     float64
 	AllowedRunes []rune
+	Redis        *redis.Client
+	KeyPrefix    string
 }
 
 type Service struct {
-	opts  Options
-	mu    sync.RWMutex
-	store map[string]entry
-	rand  *rand.Rand
-	face  font.Face
+	opts      Options
+	mu        sync.RWMutex
+	store     map[string]entry
+	rand      *rand.Rand
+	face      font.Face
+	redis     *redis.Client
+	keyPrefix string
 }
 
 type entry struct {
@@ -76,11 +81,16 @@ func New(opts Options) *Service {
 	if len(opts.AllowedRunes) == 0 {
 		opts.AllowedRunes = []rune("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
 	}
+	if opts.KeyPrefix == "" {
+		opts.KeyPrefix = "captcha"
+	}
 
 	svc := &Service{
-		opts:  opts,
-		store: make(map[string]entry),
-		rand:  rand.New(rand.NewSource(time.Now().UnixNano())),
+		opts:      opts,
+		store:     make(map[string]entry),
+		rand:      rand.New(rand.NewSource(time.Now().UnixNano())),
+		redis:     opts.Redis,
+		keyPrefix: strings.TrimSuffix(opts.KeyPrefix, ":"),
 	}
 
 	if face := loadFontFace(opts.FontSize); face != nil {
@@ -92,7 +102,7 @@ func New(opts Options) *Service {
 	return svc
 }
 
-func (s *Service) Generate(_ context.Context) (*Captcha, error) {
+func (s *Service) Generate(ctx context.Context) (*Captcha, error) {
 	answer := s.randomString(s.opts.CharCount)
 	img := s.drawCaptcha(answer)
 
@@ -103,13 +113,19 @@ func (s *Service) Generate(_ context.Context) (*Captcha, error) {
 	imageEncoded := "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
 	id := s.randomString(16)
 
-	s.mu.Lock()
-	s.cleanupLocked()
-	s.store[id] = entry{
-		answer:  strings.ToLower(answer),
-		expires: time.Now().Add(s.opts.TTL),
+	if s.redis != nil {
+		if err := s.redis.SetEx(ctx, s.redisKey(id), strings.ToLower(answer), s.opts.TTL).Err(); err != nil {
+			return nil, err
+		}
+	} else {
+		s.mu.Lock()
+		s.cleanupLocked()
+		s.store[id] = entry{
+			answer:  strings.ToLower(answer),
+			expires: time.Now().Add(s.opts.TTL),
+		}
+		s.mu.Unlock()
 	}
-	s.mu.Unlock()
 
 	return &Captcha{
 		ID:        id,
@@ -118,7 +134,21 @@ func (s *Service) Generate(_ context.Context) (*Captcha, error) {
 	}, nil
 }
 
-func (s *Service) Verify(_ context.Context, id, answer string, clear bool) bool {
+func (s *Service) Verify(ctx context.Context, id, answer string, clear bool) bool {
+	if s.redis != nil {
+		val, err := s.redis.Get(ctx, s.redisKey(id)).Result()
+		if err != nil {
+			return false
+		}
+		if strings.EqualFold(val, strings.TrimSpace(answer)) {
+			if clear {
+				_, _ = s.redis.Del(ctx, s.redisKey(id)).Result()
+			}
+			return true
+		}
+		return false
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -148,6 +178,13 @@ func (s *Service) cleanupLocked() {
 			delete(s.store, id)
 		}
 	}
+}
+
+func (s *Service) redisKey(id string) string {
+	if s.keyPrefix == "" {
+		return id
+	}
+	return s.keyPrefix + ":" + id
 }
 
 func (s *Service) randomString(n int) string {

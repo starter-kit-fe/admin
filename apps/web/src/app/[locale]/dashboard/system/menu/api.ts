@@ -29,12 +29,12 @@ export function createMenu(payload: CreateMenuPayload) {
   return post<MenuTreeNode>('/v1/system/menus', payload);
 }
 
-export function updateMenu(menuId: number, payload: UpdateMenuPayload) {
-  return put<MenuTreeNode>(`/v1/system/menus/${menuId}`, payload);
+export function updateMenu(id: number, payload: UpdateMenuPayload) {
+  return put<MenuTreeNode>(`/v1/system/menus/${id}`, payload);
 }
 
-export function removeMenu(menuId: number) {
-  return del<void>(`/v1/system/menus/${menuId}`);
+export function removeMenu(id: number) {
+  return del<void>(`/v1/system/menus/${id}`);
 }
 
 export function reorderMenus(payload: MenuOrderUpdate[]) {

@@ -1,15 +1,15 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
-import { removeDepartment } from '../../api';
 import {
   useDepartmentDeleteState,
   useDepartmentManagementMutationCounter,
   useDepartmentManagementRefresh,
 } from '@/app/dashboard/system/dept/store';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
+import { removeDepartment } from '../../api';
 import { resolveErrorMessage } from '../../utils';
 import { useTranslations } from 'next-intl';
 
@@ -21,7 +21,7 @@ export function DepartmentDeleteDialog() {
     useDepartmentManagementMutationCounter();
 
   const deleteMutation = useMutation({
-    mutationFn: (deptId: number) => removeDepartment(deptId),
+    mutationFn: (id: number) => removeDepartment(id),
     onMutate: () => {
       beginMutation();
     },
@@ -55,7 +55,7 @@ export function DepartmentDeleteDialog() {
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (deleteTarget) {
-          deleteMutation.mutate(deleteTarget.deptId);
+          deleteMutation.mutate(deleteTarget.id);
         }
       }}
     />

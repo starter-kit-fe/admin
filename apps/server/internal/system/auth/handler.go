@@ -256,12 +256,12 @@ func (h *Handler) Login(ctx *gin.Context) {
 		return
 	}
 
-	session, refreshToken, err := h.sessions.Create(ctx.Request.Context(), uint(user.UserID))
+	session, refreshToken, err := h.sessions.Create(ctx.Request.Context(), uint(user.ID))
 	if err != nil {
 		resp.InternalServerError(ctx, resp.WithMessage("failed to create session"))
 		return
 	}
-	accessToken, expiresAt, err := h.issueAccessToken(uint(user.UserID), session.SessionID)
+	accessToken, expiresAt, err := h.issueAccessToken(uint(user.ID), session.SessionID)
 	if err != nil {
 		resp.InternalServerError(ctx, resp.WithMessage("failed to issue token"))
 		return
@@ -464,7 +464,7 @@ func (h *Handler) GetInfo(ctx *gin.Context) {
 			"permissions": permissions,
 			"roles":       roles,
 			"user": gin.H{
-				"userId":      user.UserID,
+				"userId":      int64(user.ID),
 				"deptId":      user.DeptID,
 				"userName":    user.UserName,
 				"nickName":    user.NickName,
@@ -539,7 +539,7 @@ func buildMenuTree(ctx *gin.Context, menus []model.SysMenu) []*MenuNode {
 			menu: menu,
 			node: node,
 		}
-		cache[menu.MenuID] = wrapper
+		cache[int64(menu.ID)] = wrapper
 		ordered = append(ordered, wrapper)
 	}
 
@@ -783,7 +783,7 @@ func (h *Handler) recordOnlineSession(ctx *gin.Context, token string, user *mode
 	session := online.Session{
 		SessionID:      sessionID,
 		TokenHash:      tokenHash,
-		UserID:         user.UserID,
+		UserID:         int64(user.ID),
 		UserName:       user.UserName,
 		NickName:       user.NickName,
 		IPAddr:         clientIP(ctx),

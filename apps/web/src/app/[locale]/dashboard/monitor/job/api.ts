@@ -44,23 +44,23 @@ export interface RunJobResponse {
   jobLogId: number;
 }
 
-export function runJob(jobId: number) {
-  return post<RunJobResponse>(`/v1/monitor/jobs/${jobId}/run`);
+export function runJob(id: number) {
+  return post<RunJobResponse>(`/v1/monitor/jobs/${id}/run`);
 }
 
-export function changeJobStatus(jobId: number, status: string) {
-  return patch(`/v1/monitor/jobs/${jobId}/status`, { status });
+export function changeJobStatus(id: number, status: string) {
+  return patch(`/v1/monitor/jobs/${id}/status`, { status });
 }
 
-export function deleteJob(jobId: number) {
-  return del(`/v1/monitor/jobs/${jobId}`);
+export function deleteJob(id: number) {
+  return del(`/v1/monitor/jobs/${id}`);
 }
 
-export function getJob(jobId: number) {
-  return get<Job>(`/v1/monitor/jobs/${jobId}`);
+export function getJob(id: number) {
+  return get<Job>(`/v1/monitor/jobs/${id}`);
 }
 
-export function getJobDetail(jobId: number, params: JobDetailParams = {}) {
+export function getJobDetail(id: number, params: JobDetailParams = {}) {
   const query: Record<string, string> = {};
   if (params.logPageNum) {
     query.logPageNum = String(params.logPageNum);
@@ -68,7 +68,7 @@ export function getJobDetail(jobId: number, params: JobDetailParams = {}) {
   if (params.logPageSize) {
     query.logPageSize = String(params.logPageSize);
   }
-  return get<JobDetailResponse>(`/v1/monitor/jobs/${jobId}/detail`, query);
+  return get<JobDetailResponse>(`/v1/monitor/jobs/${id}/detail`, query);
 }
 
 export interface JobPayload {
@@ -87,12 +87,12 @@ export function createJob(payload: JobPayload) {
   return post('/v1/monitor/jobs', payload);
 }
 
-export function updateJob(jobId: number, payload: JobPayload) {
-  return put(`/v1/monitor/jobs/${jobId}`, payload);
+export function updateJob(id: number, payload: JobPayload) {
+  return put(`/v1/monitor/jobs/${id}`, payload);
 }
 
-export function clearJobLogs(jobId: number) {
-  return del(`/v1/monitor/jobs/${jobId}/logs`);
+export function clearJobLogs(id: number) {
+  return del(`/v1/monitor/jobs/${id}/logs`);
 }
 
 export function getJobLogSteps(jobLogId: number) {

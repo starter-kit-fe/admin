@@ -73,7 +73,7 @@ func (r *Repository) ListLoginLogs(ctx context.Context, opts ListOptions) ([]mod
 		}
 
 		return query.
-			Order("login_time DESC").
+			Order("created_at DESC").
 			Offset((pageNum - 1) * pageSize).
 			Limit(pageSize).
 			Find(&records).Error

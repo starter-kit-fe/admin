@@ -1,15 +1,15 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
-import { removeNotice } from '../../api';
 import {
   useNoticeManagementMutationCounter,
   useNoticeManagementRefresh,
   useNoticeManagementStore,
 } from '@/app/dashboard/system/notice/store';
+import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+import { removeNotice } from '../../api';
 import { resolveErrorMessage } from '../../utils';
 import { useTranslations } from 'next-intl';
 
@@ -17,8 +17,7 @@ export function NoticeDeleteDialog() {
   const t = useTranslations('NoticeManagement');
   const { deleteTarget, setDeleteTarget } = useNoticeManagementStore();
   const refresh = useNoticeManagementRefresh();
-  const { beginMutation, endMutation } =
-    useNoticeManagementMutationCounter();
+  const { beginMutation, endMutation } = useNoticeManagementMutationCounter();
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => removeNotice(id),
@@ -55,7 +54,7 @@ export function NoticeDeleteDialog() {
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (deleteTarget) {
-          deleteMutation.mutate(deleteTarget.noticeId);
+          deleteMutation.mutate(deleteTarget.id);
         }
       }}
     />
