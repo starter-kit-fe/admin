@@ -29,8 +29,8 @@ WORKDIR /app
 COPY --from=builder /app/bin/admin ./admin
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-EXPOSE 27401
-ENV PORT=27401
+EXPOSE 27507
+ENV PORT=27507
 
 ENTRYPOINT ["./admin"]
-CMD ["start", "--addr", ":27401"]
+CMD ["start", "--addr", ":27507"]
