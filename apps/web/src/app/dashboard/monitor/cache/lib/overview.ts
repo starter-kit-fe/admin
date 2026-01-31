@@ -1,4 +1,4 @@
-import type { CacheOverview, CacheOverviewPatch } from '../api/types';
+import type { CacheOverview, CacheOverviewPatch } from '../type';
 
 export const DEFAULT_OVERVIEW: CacheOverview = {
   server: {},

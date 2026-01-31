@@ -1,5 +1,5 @@
-import { JobManagement } from "./job-management"
+import { JobManagement } from './job-management';
 
 export default function Page() {
-  return <JobManagement />
+  return <JobManagement />;
 }

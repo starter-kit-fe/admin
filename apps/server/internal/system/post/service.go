@@ -46,7 +46,7 @@ type QueryOptions struct {
 }
 
 type ListResult struct {
-	Items    []Post `json:"items"`
+	List     []Post `json:"list"`
 	Total    int64  `json:"total"`
 	PageNum  int    `json:"pageNum"`
 	PageSize int    `json:"pageSize"`
@@ -113,7 +113,7 @@ func (s *Service) ListPosts(ctx context.Context, opts QueryOptions) (*ListResult
 	items := make([]Post, 0, len(records))
 	for _, record := range records {
 		items = append(items, Post{
-			PostID:   record.PostID,
+			PostID:   int64(record.ID),
 			PostCode: record.PostCode,
 			PostName: record.PostName,
 			PostSort: record.PostSort,
@@ -123,7 +123,7 @@ func (s *Service) ListPosts(ctx context.Context, opts QueryOptions) (*ListResult
 	}
 
 	return &ListResult{
-		Items:    items,
+		List:     items,
 		Total:    total,
 		PageNum:  pageNum,
 		PageSize: pageSize,
@@ -179,18 +179,15 @@ func (s *Service) CreatePost(ctx context.Context, input CreatePostInput) (*Post,
 
 	remark := normalizeRemark(input.Remark)
 	operator := sanitizeOperator(input.Operator)
-	now := time.Now()
 
 	record := &model.SysPost{
-		PostCode:   code,
-		PostName:   name,
-		PostSort:   input.PostSort,
-		Status:     status,
-		Remark:     remark,
-		CreateBy:   operator,
-		UpdateBy:   operator,
-		CreateTime: &now,
-		UpdateTime: &now,
+		PostCode: code,
+		PostName: name,
+		PostSort: input.PostSort,
+		Status:   status,
+		Remark:   remark,
+		CreateBy: operator,
+		UpdateBy: operator,
 	}
 
 	if err := s.repo.CreatePost(ctx, record); err != nil {
@@ -264,7 +261,7 @@ func (s *Service) UpdatePost(ctx context.Context, input UpdatePostInput) (*Post,
 	}
 
 	now := time.Now()
-	updates["update_time"] = now
+	updates["updated_at"] = now
 	if operator := sanitizeOperator(input.Operator); operator != "" {
 		updates["update_by"] = operator
 	}
@@ -317,7 +314,7 @@ func postFromModel(record *model.SysPost) *Post {
 		return nil
 	}
 	return &Post{
-		PostID:   record.PostID,
+		PostID:   int64(record.ID),
 		PostCode: record.PostCode,
 		PostName: record.PostName,
 		PostSort: record.PostSort,

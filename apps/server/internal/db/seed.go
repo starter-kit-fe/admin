@@ -52,13 +52,13 @@ func SeedDefaults(ctx context.Context, db *gorm.DB, logger *slog.Logger) error {
 
 			roleMenuTable := prefix + "sys_role_menu"
 			menuTable := prefix + "sys_menu"
-			if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, menu_id) SELECT 1, menu_id FROM %s ON CONFLICT DO NOTHING;", roleMenuTable, menuTable)).Error; err != nil {
+			if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, menu_id) SELECT 1, id FROM %s ON CONFLICT DO NOTHING;", roleMenuTable, menuTable)).Error; err != nil {
 				return fmt.Errorf("seed role menus: %w", err)
 			}
 
 			roleDeptTable := prefix + "sys_role_dept"
 			deptTable := prefix + "sys_dept"
-			if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, dept_id) SELECT 1, dept_id FROM %s ON CONFLICT DO NOTHING;", roleDeptTable, deptTable)).Error; err != nil {
+			if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, dept_id) SELECT 1, id FROM %s ON CONFLICT DO NOTHING;", roleDeptTable, deptTable)).Error; err != nil {
 				return fmt.Errorf("seed role depts: %w", err)
 			}
 
@@ -213,19 +213,19 @@ func alreadySeeded(ctx context.Context, db *gorm.DB, prefix string) (bool, error
 
 func syncSequences(ctx context.Context, db *gorm.DB, prefix string, logger *slog.Logger) error {
 	sequenceTargets := map[string]string{
-		"sys_dept":       "dept_id",
-		"sys_user":       "user_id",
-		"sys_post":       "post_id",
-		"sys_role":       "role_id",
-		"sys_menu":       "menu_id",
-		"sys_dict_type":  "dict_id",
+		"sys_dept":       "id",
+		"sys_user":       "id",
+		"sys_post":       "id",
+		"sys_role":       "id",
+		"sys_menu":       "id",
+		"sys_dict_type":  "id",
 		"sys_dict_data":  "dict_code",
-		"sys_config":     "config_id",
-		"sys_logininfor": "info_id",
-		"sys_oper_log":   "oper_id",
-		"sys_job":        "job_id",
+		"sys_config":     "id",
+		"sys_logininfor": "id",
+		"sys_oper_log":   "id",
+		"sys_job":        "job_name",
 		"sys_job_log":    "job_log_id",
-		"sys_notice":     "notice_id",
+		"sys_notice":     "id",
 	}
 
 	for table, column := range sequenceTargets {

@@ -1,15 +1,11 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo } from 'react';
 
-import {
-  listCacheKeys,
-  type CacheKeyListParams,
-} from '../../cache/api';
-import type { CacheKeyListResponse } from '../../cache/api/types';
+import { type CacheKeyListParams, listCacheKeys } from '../../cache/api';
+import type { CacheKeyListResponse } from '../../cache/type';
 import {
   CACHE_LIST_PAGE_SIZE_OPTIONS,
   CACHE_LIST_QUERY_KEY,
@@ -37,11 +33,7 @@ export function CacheListDataSection() {
       params.pattern = trimmedPattern;
     }
     return params;
-  }, [
-    appliedFilters.pattern,
-    pagination.pageNum,
-    pagination.pageSize,
-  ]);
+  }, [appliedFilters.pattern, pagination.pageNum, pagination.pageSize]);
 
   const query = useQuery({
     queryKey: [...CACHE_LIST_QUERY_KEY, queryParams],

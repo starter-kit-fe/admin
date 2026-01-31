@@ -5,6 +5,7 @@ import {
   PINNED_ACTION_COLUMN_META,
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,14 +22,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -37,8 +30,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { usePermissions } from '@/hooks/use-permissions';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -50,7 +51,6 @@ import { format, isValid, parse, parseISO } from 'date-fns';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import type { Notice } from '../../type';
 
 interface NoticeTableProps {
@@ -60,7 +60,7 @@ interface NoticeTableProps {
   headerCheckboxState: boolean | 'indeterminate';
   onToggleSelectAll: (checked: boolean) => void;
   selectedIds: Set<number>;
-  onToggleSelect: (noticeId: number, checked: boolean) => void;
+  onToggleSelect: (id: number, checked: boolean) => void;
   onEdit: (notice: Notice) => void;
   onDelete: (notice: Notice) => void;
 }
@@ -186,7 +186,9 @@ function NoticeActions({
                   <Pencil className="size-4" />
                   编辑公告
                 </span>
-                <span className="text-xs text-muted-foreground">修改标题或内容</span>
+                <span className="text-xs text-muted-foreground">
+                  修改标题或内容
+                </span>
               </Button>
             ) : null}
             {canDelete ? (
@@ -277,13 +279,13 @@ export function NoticeTable({
         ),
         cell: ({ row }) => {
           const notice = row.original;
-          const isSelected = selectedIds.has(notice.noticeId);
+          const isSelected = selectedIds.has(notice.id);
           return (
             <Checkbox
               aria-label={`选择 ${notice.noticeTitle}`}
               checked={isSelected}
               onCheckedChange={(checked) =>
-                onToggleSelect(notice.noticeId, checked === true)
+                onToggleSelect(notice.id, checked === true)
               }
             />
           );
@@ -303,7 +305,7 @@ export function NoticeTable({
             <div className="flex flex-col gap-2">
               <EllipsisText
                 value={notice.noticeTitle}
-                className="w-full max-w-[260px] font-medium text-foreground"
+                className="w-full max-w-[260px] text-sm font-medium text-foreground"
                 tooltipClassName="max-w-lg text-sm leading-relaxed text-foreground"
               />
               <div className="flex flex-wrap items-center gap-2">
@@ -352,7 +354,7 @@ export function NoticeTable({
         id: 'updatedAt',
         header: () => '更新时间',
         cell: ({ row }) => {
-          const timeLabel = row.original.updateTime ?? row.original.createTime;
+          const timeLabel = row.original.updatedAt ?? row.original.createdAt;
           return (
             <span className="text-sm text-muted-foreground">
               {formatNoticeDate(timeLabel)}

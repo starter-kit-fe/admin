@@ -17,11 +17,6 @@ import {
 } from '@/components/ui/empty';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -30,13 +25,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useState } from 'react';
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
-import { Skeleton } from '@/components/ui/skeleton';
 import { TYPE_STATUS_TABS } from '../../constants';
 
 interface DictTypeListProps {
@@ -112,7 +112,7 @@ export function DictTypeList({
           </Empty>
         ) : (
           items.map((dict) => {
-            const isActive = dict.dictId === selectedId;
+            const isActive = dict.id === selectedId;
             const badge =
               dict.status !== '0' ? renderStatusBadge(dict.status) : null;
             const remarkContent = dict.remark?.trim() || '暂无备注';
@@ -125,7 +125,7 @@ export function DictTypeList({
 
             return (
               <div
-                key={dict.dictId}
+                key={dict.id}
                 className={cn(
                   'group flex flex-col gap-1.5 rounded-lg px-3 py-2 transition-colors',
                   isActive ? 'bg-primary/10' : 'hover:bg-muted/40',
@@ -241,7 +241,9 @@ function DictTypeActions({
                   <Plus className="size-4" />
                   新增字典项
                 </span>
-                <span className="text-xs text-muted-foreground">添加新的键值</span>
+                <span className="text-xs text-muted-foreground">
+                  添加新的键值
+                </span>
               </Button>
             ) : null}
             {canEditType ? (

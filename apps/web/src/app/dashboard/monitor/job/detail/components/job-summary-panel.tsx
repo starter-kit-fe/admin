@@ -101,12 +101,12 @@ export function JobSummaryPanel({
         <SummaryItem label="调用目标" value={job.invokeTarget || '—'} />
         <SummaryItem
           label="创建"
-          value={job.createTime || '—'}
+          value={job.createdAt || '—'}
           hint={job.createBy || ''}
         />
         <SummaryItem
           label="更新"
-          value={job.updateTime || '—'}
+          value={job.updatedAt || '—'}
           hint={job.updateBy || ''}
         />
         {job.remark ? <SummaryItem label="备注" value={job.remark} /> : null}

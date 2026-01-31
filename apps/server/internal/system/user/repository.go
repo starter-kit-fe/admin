@@ -49,8 +49,7 @@ func (r *Repository) ListUsers(ctx context.Context, opts ListUsersOptions) ([]mo
 		pageSize = 0
 	}
 
-	base := r.db.WithContext(ctx).Model(&model.SysUser{}).
-		Where("del_flag = ?", "0")
+	base := r.db.WithContext(ctx).Model(&model.SysUser{})
 
 	if userName := strings.TrimSpace(opts.UserName); userName != "" {
 		base = base.Where("user_name ILIKE ?", "%"+userName+"%")
@@ -77,7 +76,7 @@ func (r *Repository) ListUsers(ctx context.Context, opts ListUsersOptions) ([]mo
 	}
 
 	var users []model.SysUser
-	if err := dataQuery.Order("create_time DESC, user_id DESC").Find(&users).Error; err != nil {
+	if err := dataQuery.Order("created_at DESC, id DESC").Find(&users).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -112,14 +111,14 @@ func (r *Repository) GetDepartments(ctx context.Context, ids []int64) (map[int64
 
 	var depts []model.SysDept
 	if err := r.db.WithContext(ctx).
-		Where("dept_id IN ?", finalIDs).
+		Where("id IN ?", finalIDs).
 		Find(&depts).Error; err != nil {
 		return nil, err
 	}
 
 	result := make(map[int64]model.SysDept, len(depts))
 	for _, dept := range depts {
-		result[dept.DeptID] = dept
+		result[int64(dept.ID)] = dept
 	}
 	return result, nil
 }
@@ -134,7 +133,7 @@ func (r *Repository) GetUser(ctx context.Context, id int64) (*model.SysUser, err
 
 	var user model.SysUser
 	err := r.db.WithContext(ctx).
-		Where("user_id = ? AND del_flag <> ?", id, "2").
+		Where("id = ?", id).
 		First(&user).Error
 	if err != nil {
 		return nil, err
@@ -164,15 +163,14 @@ func (r *Repository) ListDepartments(ctx context.Context, keyword string, limit 
 	}
 
 	query := r.db.WithContext(ctx).Model(&model.SysDept{}).
-		Where("status = ?", "0").
-		Where("del_flag = ?", "0")
+		Where("status = ?", "0")
 
 	if trimmed := strings.TrimSpace(keyword); trimmed != "" {
 		query = query.Where("dept_name ILIKE ?", "%"+trimmed+"%")
 	}
 
 	var depts []model.SysDept
-	if err := query.Order("order_num ASC, dept_id ASC").Limit(limit).Find(&depts).Error; err != nil {
+	if err := query.Order("order_num ASC, id ASC").Limit(limit).Find(&depts).Error; err != nil {
 		return nil, err
 	}
 
@@ -189,15 +187,14 @@ func (r *Repository) ListRoles(ctx context.Context, keyword string, limit int) (
 	}
 
 	query := r.db.WithContext(ctx).Model(&model.SysRole{}).
-		Where("status = ?", "0").
-		Where("del_flag = ?", "0")
+		Where("status = ?", "0")
 
 	if trimmed := strings.TrimSpace(keyword); trimmed != "" {
 		query = query.Where("role_name ILIKE ?", "%"+trimmed+"%")
 	}
 
 	var roles []model.SysRole
-	if err := query.Order("role_sort ASC, role_id ASC").Limit(limit).Find(&roles).Error; err != nil {
+	if err := query.Order("role_sort ASC, id ASC").Limit(limit).Find(&roles).Error; err != nil {
 		return nil, err
 	}
 
@@ -221,7 +218,7 @@ func (r *Repository) ListPosts(ctx context.Context, keyword string, limit int) (
 	}
 
 	var posts []model.SysPost
-	if err := query.Order("post_sort ASC, post_id ASC").Limit(limit).Find(&posts).Error; err != nil {
+	if err := query.Order("post_sort ASC, id ASC").Limit(limit).Find(&posts).Error; err != nil {
 		return nil, err
 	}
 
@@ -252,8 +249,7 @@ func (r *Repository) GetRolesByIDs(ctx context.Context, ids []int64) (map[int64]
 
 	var roles []model.SysRole
 	if err := r.db.WithContext(ctx).
-		Where("role_id IN ?", filtered).
-		Where("del_flag = ?", "0").
+		Where("id IN ?", filtered).
 		Find(&roles).Error; err != nil {
 		return nil, err
 	}
@@ -263,7 +259,7 @@ func (r *Repository) GetRolesByIDs(ctx context.Context, ids []int64) (map[int64]
 		if role.Status != "0" {
 			continue
 		}
-		roleMap[role.RoleID] = role
+		roleMap[int64(role.ID)] = role
 	}
 	return roleMap, nil
 }
@@ -292,7 +288,7 @@ func (r *Repository) GetPostsByIDs(ctx context.Context, ids []int64) (map[int64]
 
 	var posts []model.SysPost
 	if err := r.db.WithContext(ctx).
-		Where("post_id IN ?", filtered).
+		Where("id IN ?", filtered).
 		Find(&posts).Error; err != nil {
 		return nil, err
 	}
@@ -302,7 +298,7 @@ func (r *Repository) GetPostsByIDs(ctx context.Context, ids []int64) (map[int64]
 		if post.Status != "0" {
 			continue
 		}
-		postMap[post.PostID] = post
+		postMap[int64(post.ID)] = post
 	}
 	return postMap, nil
 }
@@ -500,7 +496,7 @@ func (r *Repository) UpdateUser(ctx context.Context, userID int64, updates map[s
 
 	result := r.db.WithContext(ctx).
 		Model(&model.SysUser{}).
-		Where("user_id = ? AND del_flag <> ?", userID, "2").
+		Where("id = ?", userID).
 		Updates(updates)
 	if result.Error != nil {
 		return result.Error
@@ -519,18 +515,18 @@ func (r *Repository) SoftDeleteUser(ctx context.Context, userID int64, operator 
 		return gorm.ErrRecordNotFound
 	}
 
+	// Update the updater info first
 	updates := map[string]interface{}{
-		"del_flag":    "2",
+		"updated_at":  time.Now(),
 		"update_time": at,
 	}
 	if strings.TrimSpace(operator) != "" {
 		updates["update_by"] = strings.TrimSpace(operator)
 	}
+	r.db.WithContext(ctx).Model(&model.SysUser{}).Where("id = ?", userID).Updates(updates)
 
-	result := r.db.WithContext(ctx).
-		Model(&model.SysUser{}).
-		Where("user_id = ? AND del_flag <> ?", userID, "2").
-		Updates(updates)
+	// Perform soft delete
+	result := r.db.WithContext(ctx).Delete(&model.SysUser{}, userID)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -563,7 +559,7 @@ func (r *Repository) UpdateUserPassword(ctx context.Context, userID int64, hashe
 
 	result := r.db.WithContext(ctx).
 		Model(&model.SysUser{}).
-		Where("user_id = ? AND del_flag <> ?", userID, "2").
+		Where("id = ?", userID).
 		Updates(updates)
 	if result.Error != nil {
 		return result.Error
@@ -586,11 +582,10 @@ func (r *Repository) ExistsByUsername(ctx context.Context, username string, excl
 
 	query := r.db.WithContext(ctx).
 		Model(&model.SysUser{}).
-		Where("user_name = ?", username).
-		Where("del_flag <> ?", "2")
+		Where("user_name = ?", username)
 
 	if excludeID > 0 {
-		query = query.Where("user_id <> ?", excludeID)
+		query = query.Where("id <> ?", excludeID)
 	}
 
 	var count int64

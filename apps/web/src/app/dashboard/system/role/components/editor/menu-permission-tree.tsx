@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-
+import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,8 +9,14 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
-
-import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  type ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 interface MenuPermissionTreeProps {
   nodes: MenuTreeNode[];
@@ -25,10 +29,15 @@ const INDENT_PX = 20;
 
 type FlatNode = { node: MenuTreeNode; parentId: number };
 
-export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPermissionTreeProps) {
+export function MenuPermissionTree({
+  nodes,
+  value,
+  onChange,
+  disabled,
+}: MenuPermissionTreeProps) {
   const flatNodes = useMemo(() => flattenNodes(nodes), [nodes]);
   const allIds = useMemo(
-    () => flatNodes.map((entry) => entry.node.menuId),
+    () => flatNodes.map((entry) => entry.node.id),
     [flatNodes],
   );
   const parentMap = useMemo(() => buildParentMap(flatNodes), [flatNodes]);
@@ -100,7 +109,9 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
         next.add(menuId);
         if (linkage) {
           collectDescendants(menuId).forEach((childId) => next.add(childId));
-          collectAncestors(menuId).forEach((ancestorId) => next.add(ancestorId));
+          collectAncestors(menuId).forEach((ancestorId) =>
+            next.add(ancestorId),
+          );
         }
       } else {
         next.delete(menuId);
@@ -108,7 +119,9 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
           collectDescendants(menuId).forEach((childId) => next.delete(childId));
           collectAncestors(menuId).forEach((ancestorId) => {
             const children = childrenMap.get(ancestorId) ?? [];
-            const hasCheckedChild = children.some((childId) => next.has(childId));
+            const hasCheckedChild = children.some((childId) =>
+              next.has(childId),
+            );
             if (!hasCheckedChild) {
               next.delete(ancestorId);
             }
@@ -118,7 +131,14 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
       const sorted = Array.from(next).sort((a, b) => a - b);
       onChange(sorted);
     },
-    [childrenMap, collectAncestors, collectDescendants, linkage, onChange, valueSet],
+    [
+      childrenMap,
+      collectAncestors,
+      collectDescendants,
+      linkage,
+      onChange,
+      valueSet,
+    ],
   );
 
   const handleToggleExpandAll = useCallback(
@@ -156,46 +176,63 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
     (items: MenuTreeNode[], depth = 0): ReactElement[] => {
       return items.map((item) => {
         const hasChildren = Boolean(item.children && item.children.length > 0);
-        const isExpanded = !hasChildren || expanded.has(item.menuId);
-        const checked = valueSet.has(item.menuId);
+        const isExpanded = !hasChildren || expanded.has(item.id);
+        const checked = valueSet.has(item.id);
 
         return (
-          <div key={item.menuId} className="text-sm">
-            <div className="flex items-center gap-2 py-1" style={{ paddingLeft: depth * INDENT_PX }}>
+          <div key={item.id} className="text-sm">
+            <div
+              className="flex items-center gap-2 py-1"
+              style={{ paddingLeft: depth * INDENT_PX }}
+            >
               {hasChildren ? (
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 shrink-0 text-muted-foreground"
-                  onClick={() => toggleNode(item.menuId)}
+                  onClick={() => toggleNode(item.id)}
                   disabled={disabled}
                 >
-                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
                 </Button>
               ) : (
                 <span className="h-6 w-6" />
               )}
               <Checkbox
                 checked={checked}
-                onCheckedChange={(nextChecked) => applySelection(item.menuId, nextChecked === true)}
+                onCheckedChange={(nextChecked) =>
+                  applySelection(item.id, nextChecked === true)
+                }
                 disabled={disabled}
               />
               <span className="truncate text-foreground" title={item.menuName}>
                 {item.menuName}
               </span>
               {item.menuType === 'F' ? (
-                <Badge variant="secondary" className="ml-1 h-5 px-2 text-[11px]">
+                <Badge
+                  variant="secondary"
+                  className="ml-1 h-5 px-2 text-[11px]"
+                >
                   按钮
                 </Badge>
               ) : null}
               {item.perms ? (
-                <span className="ml-auto truncate text-xs text-muted-foreground" title={item.perms}>
+                <span
+                  className="ml-auto truncate text-xs text-muted-foreground"
+                  title={item.perms}
+                >
                   {item.perms}
                 </span>
               ) : null}
             </div>
-            {hasChildren && isExpanded ? renderNodes(item.children!, depth + 1) : null}
+            {hasChildren && isExpanded
+              ? renderNodes(item.children!, depth + 1)
+              : null}
           </div>
         );
       });
@@ -237,7 +274,9 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
           <Empty className="h-48 border-0 bg-transparent p-2">
             <EmptyHeader>
               <EmptyTitle>暂无可配置菜单</EmptyTitle>
-              <EmptyDescription>启用菜单后可在此为角色分配权限。</EmptyDescription>
+              <EmptyDescription>
+                启用菜单后可在此为角色分配权限。
+              </EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
@@ -254,7 +293,7 @@ function flattenNodes(nodes: MenuTreeNode[]): FlatNode[] {
     items.forEach((item) => {
       entries.push({ node: item, parentId });
       if (item.children && item.children.length > 0) {
-        walk(item.children, item.menuId);
+        walk(item.children, item.id);
       }
     });
   };
@@ -265,7 +304,7 @@ function flattenNodes(nodes: MenuTreeNode[]): FlatNode[] {
 function buildParentMap(entries: FlatNode[]) {
   const map = new Map<number, number>();
   entries.forEach(({ node, parentId }) => {
-    map.set(node.menuId, parentId);
+    map.set(node.id, parentId);
   });
   return map;
 }
@@ -276,7 +315,7 @@ function buildChildrenMap(entries: FlatNode[]) {
     if (!map.has(parentId)) {
       map.set(parentId, []);
     }
-    map.get(parentId)!.push(node.menuId);
+    map.get(parentId)!.push(node.id);
   });
   return map;
 }
@@ -285,7 +324,7 @@ function extractParentIds(entries: FlatNode[]) {
   const ids: number[] = [];
   entries.forEach(({ node }) => {
     if (node.children && node.children.length > 0) {
-      ids.push(node.menuId);
+      ids.push(node.id);
     }
   });
   return ids;

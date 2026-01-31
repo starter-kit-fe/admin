@@ -30,8 +30,8 @@ import {
   Users,
 } from 'lucide-react';
 
-import type { CacheKeyspaceInfo } from '../api/types';
 import { useCacheOverviewStream } from '../hooks/use-cache-overview-stream';
+import type { CacheKeyspaceInfo, CacheOverview } from '../type';
 import {
   formatBytes,
   formatNumber,

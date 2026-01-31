@@ -1,15 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { Clipboard, TimerReset } from 'lucide-react';
-import { toast } from 'sonner';
-
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -26,9 +17,18 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { Clipboard, TimerReset } from 'lucide-react';
+import { useMemo } from 'react';
+import { toast } from 'sonner';
 
-import type { CacheKeyItem } from '../api/types';
+import { listCacheKeys } from '../api';
+import type { CacheKeyItem } from '../type';
 import { formatBytes, formatDuration } from '../utils';
 
 interface CacheKeyTableProps {
@@ -211,10 +211,7 @@ export function CacheKeyTable({
                       | undefined,
                   )}
                 >
-                  {flexRender(
-                    cell.column.columnDef.cell,
-                    cell.getContext(),
-                  )}
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}
             </TableRow>

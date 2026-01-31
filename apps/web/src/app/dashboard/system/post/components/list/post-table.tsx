@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  PINNED_ACTION_COLUMN_META,
+  PINNED_TABLE_CLASS,
+} from '@/components/table/pinned-actions';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -16,6 +21,15 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import {
   Table,
   TableBody,
   TableCell,
@@ -23,6 +37,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -33,23 +49,6 @@ import {
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-import {
-  PINNED_ACTION_COLUMN_META,
-  PINNED_TABLE_CLASS,
-} from '@/components/table/pinned-actions';
-import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-import { usePermissions } from '@/hooks/use-permissions';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { useIsMobile } from '@/hooks/use-mobile';
-
 import type { Post } from '../../type';
 
 interface PostTableProps {
@@ -59,7 +58,7 @@ interface PostTableProps {
   selectedIds: Set<number>;
   headerCheckboxState: boolean | 'indeterminate';
   onToggleSelectAll: (checked: boolean) => void;
-  onToggleSelect: (postId: number, checked: boolean) => void;
+  onToggleSelect: (id: number, checked: boolean) => void;
   loading?: boolean;
   isError?: boolean;
 }
@@ -122,9 +121,7 @@ function PostActions({
         >
           <SheetHeader className="px-4 pb-2 pt-3 text-left">
             <SheetTitle>操作</SheetTitle>
-            <SheetDescription>
-              选择要对该岗位执行的操作。
-            </SheetDescription>
+            <SheetDescription>选择要对该岗位执行的操作。</SheetDescription>
           </SheetHeader>
           <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
             {canEdit ? (
@@ -237,13 +234,13 @@ export function PostTable({
       ),
       cell: ({ row }) => {
         const post = row.original;
-        const isSelected = selectedIds.has(post.postId);
+        const isSelected = selectedIds.has(post.id);
         return (
           <Checkbox
             aria-label={`选择 ${post.postName}`}
             checked={isSelected}
             onCheckedChange={(checked) =>
-              onToggleSelect(post.postId, checked === true)
+              onToggleSelect(post.id, checked === true)
             }
           />
         );
@@ -319,7 +316,9 @@ export function PostTable({
 
   return (
     <div className="w-full overflow-x-auto rounded-xl border border-border/60 bg-card dark:border-border/40 scrollbar-thin">
-      <Table className={`${PINNED_TABLE_CLASS} min-w-[640px] sm:min-w-[760px] table-fixed`}>
+      <Table
+        className={`${PINNED_TABLE_CLASS} min-w-[640px] sm:min-w-[760px] table-fixed`}
+      >
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-muted/40">

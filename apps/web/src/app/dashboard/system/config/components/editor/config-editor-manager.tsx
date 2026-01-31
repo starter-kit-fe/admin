@@ -1,31 +1,30 @@
 'use client';
 
-import { useMemo } from 'react';
+import {
+  useConfigEditorActions,
+  useConfigEditorState,
+  useConfigManagementMutationCounter,
+  useConfigManagementRefresh,
+} from '@/app/dashboard/system/config/store';
 import { useMutation } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { toast } from 'sonner';
 
 import {
-  createConfig,
-  updateConfig,
   type CreateConfigPayload,
   type UpdateConfigPayload,
+  createConfig,
+  updateConfig,
 } from '../../api';
-import {
-  useConfigManagementMutationCounter,
-  useConfigManagementRefresh,
-  useConfigEditorActions,
-  useConfigEditorState,
-} from '@/app/dashboard/system/config/store';
-import { resolveErrorMessage, toFormValues } from '../../utils';
 import type { ConfigFormValues } from '../../type';
+import { resolveErrorMessage, toFormValues } from '../../utils';
 import { ConfigEditorDialog } from './config-editor-dialog';
 
 export function ConfigEditorManager() {
   const editorState = useConfigEditorState();
   const { closeEditor } = useConfigEditorActions();
   const refresh = useConfigManagementRefresh();
-  const { beginMutation, endMutation } =
-    useConfigManagementMutationCounter();
+  const { beginMutation, endMutation } = useConfigManagementMutationCounter();
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateConfigPayload) => createConfig(payload),
@@ -79,8 +78,7 @@ export function ConfigEditorManager() {
     return toFormValues(editorState.config);
   }, [editorState]);
 
-  const submitting =
-    createMutation.isPending || updateMutation.isPending;
+  const submitting = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = (values: ConfigFormValues) => {
     const payload: CreateConfigPayload = {
@@ -92,7 +90,7 @@ export function ConfigEditorManager() {
     };
     if (editorState.open && editorState.mode === 'edit') {
       updateMutation.mutate({
-        id: editorState.config.configId,
+        id: editorState.config.id,
         payload,
       });
       return;

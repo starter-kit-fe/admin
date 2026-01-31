@@ -1,19 +1,19 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import { createRole, getRoleDetail, updateRole } from '../../api';
 import { listMenuTree } from '@/app/dashboard/system/menu/api';
-import { RoleEditorDialog } from './role-editor-dialog';
 import {
   useRoleManagementMutationCounter,
   useRoleManagementRefresh,
   useRoleManagementStore,
 } from '@/app/dashboard/system/role/store';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { toast } from 'sonner';
+
+import { createRole, getRoleDetail, updateRole } from '../../api';
 import type { RoleFormValues } from '../../type';
 import { toCreatePayload, toFormValues, toUpdatePayload } from '../../utils';
+import { RoleEditorDialog } from './role-editor-dialog';
 
 export function RoleEditorManager() {
   const { editorState, closeEditor } = useRoleManagementStore();
@@ -28,23 +28,21 @@ export function RoleEditorManager() {
 
   const roleDetailQuery = useQuery({
     queryKey:
-      editorState.open && editorState.mode === 'edit' && editorState.roleId != null
-        ? ['system', 'roles', 'detail', editorState.roleId]
+      editorState.open && editorState.mode === 'edit' && editorState.id != null
+        ? ['system', 'roles', 'detail', editorState.id]
         : ['system', 'roles', 'detail', 'skip'],
     queryFn: async () => {
       if (
         !editorState.open ||
         editorState.mode !== 'edit' ||
-        editorState.roleId == null
+        editorState.id == null
       ) {
         return null;
       }
-      return getRoleDetail(editorState.roleId);
+      return getRoleDetail(editorState.id);
     },
     enabled:
-      editorState.open &&
-      editorState.mode === 'edit' &&
-      editorState.roleId != null,
+      editorState.open && editorState.mode === 'edit' && editorState.id != null,
     staleTime: 30_000,
   });
 
@@ -69,13 +67,8 @@ export function RoleEditorManager() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({
-      roleId,
-      values,
-    }: {
-      roleId: number;
-      values: RoleFormValues;
-    }) => updateRole(roleId, toUpdatePayload(values)),
+    mutationFn: ({ id, values }: { id: number; values: RoleFormValues }) =>
+      updateRole(id, toUpdatePayload(values)),
     onMutate: () => {
       beginMutation();
     },
@@ -108,8 +101,8 @@ export function RoleEditorManager() {
   }, [editorState, roleDetailQuery.data]);
 
   const handleSubmit = (values: RoleFormValues) => {
-    if (editorState.open && editorState.mode === 'edit' && editorState.roleId) {
-      updateMutation.mutate({ roleId: editorState.roleId, values });
+    if (editorState.open && editorState.mode === 'edit' && editorState.id) {
+      updateMutation.mutate({ id: editorState.id, values });
       return;
     }
     createMutation.mutate(values);

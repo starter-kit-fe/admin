@@ -6,7 +6,7 @@ export interface UserListParams {
 }
 
 export interface User {
-  userId: number;
+  id: number;
   deptId?: number | null;
   deptName?: string | null;
   userName: string;
@@ -22,15 +22,15 @@ export interface User {
   loginDate?: string | null;
   pwdUpdateDate?: string | null;
   createBy: string;
-  createTime?: string | null;
+  createdAt?: string | null;
   updateBy: string;
-  updateTime?: string | null;
+  updatedAt?: string | null;
   roles: UserRole[];
   posts: UserPost[];
 }
 
 export interface UserListResponse {
-  items: User[];
+  list: User[];
   total: number;
   pageNum: number;
   pageSize: number;

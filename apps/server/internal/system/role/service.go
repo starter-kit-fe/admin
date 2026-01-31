@@ -53,7 +53,7 @@ type QueryOptions struct {
 }
 
 type ListResult struct {
-	Items    []Role `json:"items"`
+	List     []Role `json:"list"`
 	Total    int64  `json:"total"`
 	PageNum  int    `json:"pageNum"`
 	PageSize int    `json:"pageSize"`
@@ -70,9 +70,9 @@ type Role struct {
 	Status            string     `json:"status"`
 	Remark            *string    `json:"remark,omitempty"`
 	CreateBy          string     `json:"createBy"`
-	CreateTime        *time.Time `json:"createTime,omitempty"`
+	CreatedAt         *time.Time `json:"createdAt,omitempty"`
 	UpdateBy          string     `json:"updateBy"`
-	UpdateTime        *time.Time `json:"updateTime,omitempty"`
+	UpdatedAt         *time.Time `json:"updatedAt,omitempty"`
 	MenuIDs           []int64    `json:"menuIds"`
 }
 
@@ -140,7 +140,7 @@ func (s *Service) ListRoles(ctx context.Context, opts QueryOptions) (*ListResult
 	roles := make([]Role, 0, len(records))
 	for _, record := range records {
 		role := Role{
-			RoleID:            record.RoleID,
+			RoleID:            int64(record.ID),
 			RoleName:          record.RoleName,
 			RoleKey:           record.RoleKey,
 			RoleSort:          record.RoleSort,
@@ -150,16 +150,16 @@ func (s *Service) ListRoles(ctx context.Context, opts QueryOptions) (*ListResult
 			Status:            record.Status,
 			Remark:            record.Remark,
 			CreateBy:          record.CreateBy,
-			CreateTime:        record.CreateTime,
+			CreatedAt:         &record.CreatedAt,
 			UpdateBy:          record.UpdateBy,
-			UpdateTime:        record.UpdateTime,
+			UpdatedAt:         &record.UpdatedAt,
 			MenuIDs:           []int64{},
 		}
 		roles = append(roles, role)
 	}
 
 	return &ListResult{
-		Items:    roles,
+		List:     roles,
 		Total:    total,
 		PageNum:  pageNum,
 		PageSize: pageSize,
@@ -185,7 +185,7 @@ func (s *Service) GetRole(ctx context.Context, id int64) (*Role, error) {
 	}
 
 	return &Role{
-		RoleID:            record.RoleID,
+		RoleID:            int64(record.ID),
 		RoleName:          record.RoleName,
 		RoleKey:           record.RoleKey,
 		RoleSort:          record.RoleSort,
@@ -195,9 +195,9 @@ func (s *Service) GetRole(ctx context.Context, id int64) (*Role, error) {
 		Status:            record.Status,
 		Remark:            record.Remark,
 		CreateBy:          record.CreateBy,
-		CreateTime:        record.CreateTime,
+		CreatedAt:         &record.CreatedAt,
 		UpdateBy:          record.UpdateBy,
-		UpdateTime:        record.UpdateTime,
+		UpdatedAt:         &record.UpdatedAt,
 		MenuIDs:           menuIDs,
 	}, nil
 }
@@ -252,7 +252,6 @@ func (s *Service) CreateRole(ctx context.Context, input CreateRoleInput) (*Role,
 
 	remark := normalizeRemark(input.Remark)
 	operator := sanitizeOperator(input.Operator)
-	now := time.Now()
 
 	record := &model.SysRole{
 		RoleName:          roleName,
@@ -263,11 +262,9 @@ func (s *Service) CreateRole(ctx context.Context, input CreateRoleInput) (*Role,
 		DeptCheckStrictly: input.DeptCheckStrictly,
 		Status:            status,
 		Remark:            remark,
-		DelFlag:           "0",
-		CreateBy:          operator,
-		CreateTime:        &now,
-		UpdateBy:          operator,
-		UpdateTime:        &now,
+
+		CreateBy: operator,
+		UpdateBy: operator,
 	}
 
 	if err := s.repo.CreateRole(ctx, record); err != nil {
@@ -277,11 +274,11 @@ func (s *Service) CreateRole(ctx context.Context, input CreateRoleInput) (*Role,
 		return nil, err
 	}
 
-	if err := s.repo.ReplaceRoleMenus(ctx, record.RoleID, menuIDs); err != nil {
+	if err := s.repo.ReplaceRoleMenus(ctx, int64(record.ID), menuIDs); err != nil {
 		return nil, err
 	}
 
-	return s.GetRole(ctx, record.RoleID)
+	return s.GetRole(ctx, int64(record.ID))
 }
 
 func (s *Service) UpdateRole(ctx context.Context, input UpdateRoleInput) (*Role, error) {
@@ -363,7 +360,7 @@ func (s *Service) UpdateRole(ctx context.Context, input UpdateRoleInput) (*Role,
 		operator := sanitizeOperator(input.Operator)
 		now := time.Now()
 		updates["update_by"] = operator
-		updates["update_time"] = now
+		updates["updated_at"] = now
 
 		if err := s.repo.UpdateRole(ctx, input.ID, updates); err != nil {
 			if errors.Is(err, gorm.ErrDuplicatedKey) {

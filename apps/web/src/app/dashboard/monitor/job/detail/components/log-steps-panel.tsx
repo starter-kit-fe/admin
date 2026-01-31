@@ -99,9 +99,9 @@ export function LogStepsPanel({ log }: { log: JobLog }) {
                           耗时 {durationText}
                         </span>
                       ) : null}
-                      {step.createTime ? (
+                      {step.createdAt ? (
                         <span className="text-muted-foreground sm:ml-auto sm:text-right">
-                          {step.createTime}
+                          {step.createdAt}
                         </span>
                       ) : null}
                     </div>

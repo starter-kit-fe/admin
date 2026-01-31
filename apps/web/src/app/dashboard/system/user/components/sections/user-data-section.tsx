@@ -91,7 +91,7 @@ export function UserDataSection() {
       const hasMoreByTotal =
         typeof lastPage.total === 'number'
           ? lastPage.pageNum * lastPage.pageSize < lastPage.total
-          : lastPage.items.length === lastPage.pageSize;
+          : lastPage.list.length === lastPage.pageSize;
       return hasMoreByTotal ? lastPage.pageNum + 1 : undefined;
     },
     initialPageParam: 1,
@@ -156,10 +156,10 @@ export function UserDataSection() {
 
   const rows = useMemo(() => {
     if (isMobile) {
-      return mobileData?.pages.flatMap((page) => page.items) ?? [];
+      return mobileData?.pages.flatMap((page) => page.list) ?? [];
     }
-    return userListQuery.data?.items ?? [];
-  }, [isMobile, mobileData?.pages, userListQuery.data?.items]);
+    return userListQuery.data?.list ?? [];
+  }, [isMobile, mobileData?.pages, userListQuery.data?.list]);
 
   const computedRoleOptions = useMemo(() => {
     const labels = new Set<string>();
@@ -200,8 +200,8 @@ export function UserDataSection() {
     setSelectedIds((prev) => {
       const next = new Set<number>();
       filteredRows.forEach((user) => {
-        if (prev.has(user.userId)) {
-          next.add(user.userId);
+        if (prev.has(user.id)) {
+          next.add(user.id);
         }
       });
       return next;
@@ -211,7 +211,7 @@ export function UserDataSection() {
   const selectedCount = selectedIds.size;
   const isAllSelected =
     filteredRows.length > 0 &&
-    filteredRows.every((row) => selectedIds.has(row.userId));
+    filteredRows.every((row) => selectedIds.has(row.id));
   const headerCheckboxState = isAllSelected
     ? true
     : selectedCount > 0
@@ -220,19 +220,19 @@ export function UserDataSection() {
 
   const handleToggleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(new Set(filteredRows.map((row) => row.userId)));
+      setSelectedIds(new Set(filteredRows.map((row) => row.id)));
     } else {
       setSelectedIds(new Set());
     }
   };
 
-  const handleToggleSelectRow = (userId: number, checked: boolean) => {
+  const handleToggleSelectRow = (id: number, checked: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (checked) {
-        next.add(userId);
+        next.add(id);
       } else {
-        next.delete(userId);
+        next.delete(id);
       }
       return next;
     });

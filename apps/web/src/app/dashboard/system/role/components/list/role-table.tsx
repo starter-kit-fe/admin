@@ -62,7 +62,7 @@ interface RoleTableProps {
   headerCheckboxState: boolean | 'indeterminate';
   onToggleSelectAll: (checked: boolean) => void;
   selectedIds: Set<number>;
-  onToggleSelect: (roleId: number, checked: boolean) => void;
+  onToggleSelect: (id: number, checked: boolean) => void;
   onEdit: (role: Role) => void;
   onDelete: (role: Role) => void;
   isLoading?: boolean;
@@ -142,20 +142,20 @@ function RoleRowActions({
             side="bottom"
             className="h-auto w-full max-w-full rounded-t-2xl border-t p-0"
           >
-          <SheetHeader className="px-4 pb-2 pt-3 text-left">
-            <SheetTitle>操作</SheetTitle>
-            <SheetDescription>为该角色选择要执行的操作。</SheetDescription>
-          </SheetHeader>
-          <SheetFooter className="mt-0 flex-row items-center justify-between gap-3 px-4 pb-4">
-            {canEdit ? (
-              <Button
-                variant="secondary"
-                className="flex-1 justify-between"
-                onClick={() => {
-                  onEdit(role);
-                  setOpen(false);
-                }}
-              >
+            <SheetHeader className="px-4 pb-2 pt-3 text-left">
+              <SheetTitle>操作</SheetTitle>
+              <SheetDescription>为该角色选择要执行的操作。</SheetDescription>
+            </SheetHeader>
+            <SheetFooter className="mt-0 flex-row items-center justify-between gap-3 px-4 pb-4">
+              {canEdit ? (
+                <Button
+                  variant="secondary"
+                  className="flex-1 justify-between"
+                  onClick={() => {
+                    onEdit(role);
+                    setOpen(false);
+                  }}
+                >
                   <span className="flex items-center gap-2">
                     <Pencil className="size-4" />
                     编辑
@@ -243,13 +243,13 @@ export function RoleTable({
         ),
         cell: ({ row }) => {
           const role = row.original;
-          const isSelected = selectedIds.has(role.roleId);
+          const isSelected = selectedIds.has(role.id);
           return (
             <Checkbox
               aria-label={`选择 ${role.roleName}`}
               checked={isSelected}
               onCheckedChange={(checked) =>
-                onToggleSelect(role.roleId, checked === true)
+                onToggleSelect(role.id, checked === true)
               }
             />
           );
@@ -266,7 +266,7 @@ export function RoleTable({
               {row.original.roleName}
             </span>
             <span className="text-xs text-muted-foreground">
-              #{row.original.roleId}
+              #{row.original.id}
             </span>
           </div>
         ),
@@ -301,7 +301,7 @@ export function RoleTable({
         enableSorting: false,
         meta: { headerClassName: 'w-[120px]' },
       }),
-      columnHelper.accessor('createTime', {
+      columnHelper.accessor('createdAt', {
         header: '创建时间',
         cell: ({ getValue }) => (
           <span className="text-sm text-muted-foreground">
@@ -417,7 +417,7 @@ export function RoleTable({
           ) : (
             table.getRowModel().rows.map((row) => {
               const role = row.original;
-              const isSelected = selectedIds.has(role.roleId);
+              const isSelected = selectedIds.has(role.id);
               return (
                 <TableRow
                   key={row.id}

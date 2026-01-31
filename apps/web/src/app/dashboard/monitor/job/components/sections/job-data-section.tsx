@@ -84,7 +84,7 @@ export function JobDataSection() {
     };
   }, [jobListQuery.refetch, setRefreshHandler]);
 
-  const rows = jobListQuery.data?.items ?? [];
+  const rows = jobListQuery.data?.list ?? [];
   const total = jobListQuery.data?.total ?? 0;
 
   const handlePageChange = (pageNum: number) => {
@@ -103,10 +103,10 @@ export function JobDataSection() {
   };
 
   const runJobMutation = useMutation({
-    mutationFn: (jobId: number) => runJob(jobId),
-    onMutate: (jobId) => {
+    mutationFn: (id: number) => runJob(id),
+    onMutate: (id) => {
       beginMutation();
-      setPendingRunId(jobId);
+      setPendingRunId(id);
     },
     onSuccess: (data) => {
       const logIdText = data?.jobLogId ? `（日志 #${data.jobLogId}）` : '';
@@ -126,18 +126,18 @@ export function JobDataSection() {
 
   const statusMutation = useMutation({
     mutationFn: async ({
-      jobId,
+      id,
       nextStatus,
     }: {
-      jobId: number;
+      id: number;
       nextStatus: string;
     }) => {
-      await changeJobStatus(jobId, nextStatus);
+      await changeJobStatus(id, nextStatus);
       return { nextStatus };
     },
-    onMutate: ({ jobId }) => {
+    onMutate: ({ id }) => {
       beginMutation();
-      setPendingStatusId(jobId);
+      setPendingStatusId(id);
     },
     onSuccess: ({ nextStatus }) => {
       toast.success(nextStatus === '0' ? '任务已恢复' : '任务已暂停');
@@ -162,19 +162,18 @@ export function JobDataSection() {
       toast.info('当前任务执行中且禁止并发，稍后再试');
       return;
     }
-    runJobMutation.mutate(job.jobId);
+    runJobMutation.mutate(job.id);
   };
 
-  const handleToggleStatus = (jobId: number, nextStatus: string) => {
+  const handleToggleStatus = (id: number, nextStatus: string) => {
     if (statusMutation.isPending) {
       return;
     }
-    statusMutation.mutate({ jobId, nextStatus });
+    statusMutation.mutate({ id, nextStatus });
   };
 
   const isTableLoading = jobListQuery.isLoading && rows.length === 0;
-  const showPagination =
-    !isTableLoading && !jobListQuery.isError && total > 0;
+  const showPagination = !isTableLoading && !jobListQuery.isError && total > 0;
 
   return (
     <div className="flex flex-col gap-4">

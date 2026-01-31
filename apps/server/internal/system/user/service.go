@@ -44,7 +44,7 @@ type ListOptions struct {
 }
 
 type ListResult struct {
-	Items    []User `json:"items"`
+	List     []User `json:"list"`
 	Total    int64  `json:"total"`
 	PageNum  int    `json:"pageNum"`
 	PageSize int    `json:"pageSize"`
@@ -84,9 +84,9 @@ type User struct {
 	LoginDate     *time.Time   `json:"loginDate,omitempty"`
 	PwdUpdateDate *time.Time   `json:"pwdUpdateDate,omitempty"`
 	CreateBy      string       `json:"createBy"`
-	CreateTime    *time.Time   `json:"createTime,omitempty"`
+	CreatedAt     *time.Time   `json:"createdAt,omitempty"`
 	UpdateBy      string       `json:"updateBy"`
-	UpdateTime    *time.Time   `json:"updateTime,omitempty"`
+	UpdatedAt     *time.Time   `json:"updatedAt,omitempty"`
 	Roles         []RoleOption `json:"roles"`
 	Posts         []PostOption `json:"posts"`
 }
@@ -183,7 +183,7 @@ func (s *Service) ListUsers(ctx context.Context, opts ListOptions) (*ListResult,
 	}
 
 	return &ListResult{
-		Items:    users,
+		List:     users,
 		Total:    total,
 		PageNum:  pageNum,
 		PageSize: pageSize,
@@ -286,23 +286,21 @@ func (s *Service) CreateUser(ctx context.Context, input CreateUserInput) (*User,
 	}
 
 	user := &model.SysUser{
-		DeptID:        input.DeptID,
-		UserName:      username,
-		NickName:      nickname,
-		UserType:      primaryRoleKey,
-		Email:         email,
-		Phonenumber:   phone,
-		Sex:           sex,
-		Avatar:        "",
-		Password:      string(hashedPassword),
-		Status:        status,
-		DelFlag:       "0",
+		DeptID:      input.DeptID,
+		UserName:    username,
+		NickName:    nickname,
+		UserType:    primaryRoleKey,
+		Email:       email,
+		Phonenumber: phone,
+		Sex:         sex,
+		Avatar:      "",
+		Password:    string(hashedPassword),
+		Status:      status,
+
 		LoginIP:       "",
 		PwdUpdateDate: &now,
 		CreateBy:      operator,
-		CreateTime:    &now,
 		UpdateBy:      operator,
-		UpdateTime:    &now,
 		Remark:        remark,
 	}
 
@@ -313,15 +311,15 @@ func (s *Service) CreateUser(ctx context.Context, input CreateUserInput) (*User,
 		return nil, err
 	}
 
-	if err := s.repo.ReplaceUserRoles(ctx, user.UserID, roleIDs); err != nil {
+	if err := s.repo.ReplaceUserRoles(ctx, int64(user.ID), roleIDs); err != nil {
 		return nil, err
 	}
 
-	if err := s.repo.ReplaceUserPosts(ctx, user.UserID, postIDs); err != nil {
+	if err := s.repo.ReplaceUserPosts(ctx, int64(user.ID), postIDs); err != nil {
 		return nil, err
 	}
 
-	return s.GetUser(ctx, user.UserID)
+	return s.GetUser(ctx, int64(user.ID))
 }
 
 func (s *Service) UpdateUser(ctx context.Context, input UpdateUserInput) (*User, error) {
@@ -442,7 +440,7 @@ func (s *Service) UpdateUser(ctx context.Context, input UpdateUserInput) (*User,
 	operator := sanitizeOperator(input.Operator)
 	now := time.Now()
 	updates["update_by"] = operator
-	updates["update_time"] = now
+	updates["updated_at"] = now
 
 	if len(updates) > 0 {
 		if err := s.repo.UpdateUser(ctx, input.ID, updates); err != nil {
@@ -546,7 +544,7 @@ func (s *Service) UpdateProfile(ctx context.Context, input UpdateProfileInput) (
 	operator := sanitizeOperator(strconv.FormatInt(input.UserID, 10))
 	now := time.Now()
 	updates["update_by"] = operator
-	updates["update_time"] = now
+	updates["updated_at"] = now
 
 	if err := s.repo.UpdateUser(ctx, input.UserID, updates); err != nil {
 		return nil, err
@@ -671,14 +669,14 @@ func collectUserIDs(users []model.SysUser) []int64 {
 	result := make([]int64, 0, len(users))
 
 	for _, user := range users {
-		if user.UserID <= 0 {
+		if user.ID <= 0 {
 			continue
 		}
-		if _, ok := seen[user.UserID]; ok {
+		if _, ok := seen[int64(user.ID)]; ok {
 			continue
 		}
-		seen[user.UserID] = struct{}{}
-		result = append(result, user.UserID)
+		seen[int64(user.ID)] = struct{}{}
+		result = append(result, int64(user.ID))
 	}
 
 	return result
@@ -729,11 +727,11 @@ func buildUserRoles(userRoleIDs []int64, roleMap map[int64]model.SysRole) []Role
 		if !ok {
 			continue
 		}
-		if role.Status != "0" || role.DelFlag != "0" {
+		if role.Status != "0" {
 			continue
 		}
 		roles = append(roles, RoleOption{
-			RoleID:   role.RoleID,
+			RoleID:   int64(role.ID),
 			RoleName: role.RoleName,
 			RoleKey:  role.RoleKey,
 		})
@@ -756,7 +754,7 @@ func buildUserPosts(userPostIDs []int64, postMap map[int64]model.SysPost) []Post
 			continue
 		}
 		posts = append(posts, PostOption{
-			PostID:   post.PostID,
+			PostID:   int64(post.ID),
 			PostName: post.PostName,
 			PostCode: post.PostCode,
 		})
@@ -780,8 +778,8 @@ func toUserDTO(
 		}
 	}
 
-	roles := buildUserRoles(roleIDMap[user.UserID], roleMap)
-	posts := buildUserPosts(postIDMap[user.UserID], postMap)
+	roles := buildUserRoles(roleIDMap[int64(user.ID)], roleMap)
+	posts := buildUserPosts(postIDMap[int64(user.ID)], postMap)
 	userType := user.UserType
 	if len(roles) > 0 {
 		primaryKey := strings.TrimSpace(roles[0].RoleKey)
@@ -791,7 +789,7 @@ func toUserDTO(
 	}
 
 	return User{
-		UserID:        user.UserID,
+		UserID:        int64(user.ID),
 		DeptID:        user.DeptID,
 		DeptName:      deptName,
 		UserName:      user.UserName,
@@ -807,9 +805,9 @@ func toUserDTO(
 		LoginDate:     user.LoginDate,
 		PwdUpdateDate: user.PwdUpdateDate,
 		CreateBy:      user.CreateBy,
-		CreateTime:    user.CreateTime,
+		CreatedAt:     &user.CreatedAt,
 		UpdateBy:      user.UpdateBy,
-		UpdateTime:    user.UpdateTime,
+		UpdatedAt:     &user.UpdatedAt,
 		Roles:         roles,
 		Posts:         posts,
 	}
@@ -869,7 +867,7 @@ func (s *Service) ListDepartmentOptions(ctx context.Context, keyword string, lim
 
 	options := make([]DeptOption, len(depts))
 	for i, dept := range depts {
-		options[i] = DeptOption{DeptID: dept.DeptID, DeptName: dept.DeptName}
+		options[i] = DeptOption{DeptID: int64(dept.ID), DeptName: dept.DeptName}
 	}
 	return options, nil
 }
@@ -890,11 +888,11 @@ func (s *Service) ListRoleOptions(ctx context.Context, keyword string, limit int
 
 	options := make([]RoleOption, 0, len(roles))
 	for _, role := range roles {
-		if role.Status != "0" || role.DelFlag != "0" {
+		if role.Status != "0" {
 			continue
 		}
 		options = append(options, RoleOption{
-			RoleID:   role.RoleID,
+			RoleID:   int64(role.ID),
 			RoleName: role.RoleName,
 			RoleKey:  role.RoleKey,
 		})
@@ -922,7 +920,7 @@ func (s *Service) ListPostOptions(ctx context.Context, keyword string, limit int
 			continue
 		}
 		options = append(options, PostOption{
-			PostID:   post.PostID,
+			PostID:   int64(post.ID),
 			PostName: post.PostName,
 			PostCode: post.PostCode,
 		})

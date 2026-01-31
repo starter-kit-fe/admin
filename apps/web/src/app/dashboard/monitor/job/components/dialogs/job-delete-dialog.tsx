@@ -17,7 +17,7 @@ export function JobDeleteDialog() {
   const { beginMutation, endMutation } = useJobManagementMutationCounter();
 
   const deleteMutation = useMutation({
-    mutationFn: (jobId: number) => deleteJob(jobId),
+    mutationFn: (id: number) => deleteJob(id),
     onMutate: () => {
       beginMutation();
     },
@@ -53,7 +53,7 @@ export function JobDeleteDialog() {
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (deleteTarget) {
-          deleteMutation.mutate(deleteTarget.jobId);
+          deleteMutation.mutate(deleteTarget.id);
         }
       }}
     />

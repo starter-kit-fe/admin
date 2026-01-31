@@ -1,4 +1,4 @@
-import type { CacheKeyspaceInfo } from './api/types';
+import { CacheKeyspaceInfo, CacheMemoryInfo, CacheOverview } from './type';
 
 type FormatBytesOptions = {
   decimals?: number;
@@ -18,17 +18,12 @@ export function formatBytes(
     units.length - 1,
   );
   const decimals =
-    power === 0
-      ? options.smallUnitDecimals ?? 0
-      : options.decimals ?? 2;
+    power === 0 ? (options.smallUnitDecimals ?? 0) : (options.decimals ?? 2);
   const adjusted = value / Math.pow(1024, power);
   return `${adjusted.toFixed(decimals)} ${units[power]}`;
 }
 
-export function formatPercent(
-  value?: number | null,
-  fractionDigits = 1,
-) {
+export function formatPercent(value?: number | null, fractionDigits = 1) {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return '0%';
   }

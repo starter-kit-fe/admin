@@ -1,6 +1,6 @@
 {
   "name": "admin",
-  "version": "26.0131.0945",
+  "version": "26.0131.1732",
   "private": true,
   "scripts": {
     "build": "turbo run build",
@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "prettier": "^3.6.2",
-    "turbo": "^2.6.1",
+    "turbo": "^2.8.1",
     "typescript": "5.9.2"
   },
   "packageManager": "pnpm@9.0.0",

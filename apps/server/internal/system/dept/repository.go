@@ -38,8 +38,7 @@ func (r *Repository) ListDepartments(ctx context.Context, opts ListOptions) ([]m
 		return nil, ErrRepositoryUnavailable
 	}
 
-	query := r.db.WithContext(ctx).Model(&model.SysDept{}).
-		Where("del_flag = ?", "0")
+	query := r.db.WithContext(ctx).Model(&model.SysDept{})
 
 	if status := strings.TrimSpace(opts.Status); status != "" && status != "all" {
 		query = query.Where("status = ?", status)
@@ -50,7 +49,7 @@ func (r *Repository) ListDepartments(ctx context.Context, opts ListOptions) ([]m
 	}
 
 	var depts []model.SysDept
-	if err := query.Order("parent_id ASC, order_num ASC, dept_id ASC").Find(&depts).Error; err != nil {
+	if err := query.Order("parent_id ASC, order_num ASC, id ASC").Find(&depts).Error; err != nil {
 		return nil, err
 	}
 	return depts, nil
@@ -66,7 +65,7 @@ func (r *Repository) GetDepartment(ctx context.Context, id int64) (*model.SysDep
 
 	var dept model.SysDept
 	if err := r.db.WithContext(ctx).
-		Where("dept_id = ? AND del_flag = ?", id, "0").
+		Where("id = ?", id).
 		First(&dept).Error; err != nil {
 		return nil, err
 	}
@@ -97,7 +96,7 @@ func (r *Repository) UpdateDepartment(ctx context.Context, id int64, updates map
 
 	result := r.db.WithContext(ctx).
 		Model(&model.SysDept{}).
-		Where("dept_id = ? AND del_flag = ?", id, "0").
+		Where("id = ?", id).
 		Updates(updates)
 	if result.Error != nil {
 		return result.Error
@@ -131,7 +130,7 @@ func (r *Repository) UpdateDescendantAncestors(
 
 	result := r.db.WithContext(ctx).
 		Model(&model.SysDept{}).
-		Where("ancestors LIKE ? AND del_flag = ?", oldPath+"%", "0").
+		Where("ancestors LIKE ?", oldPath+"%").
 		Updates(map[string]interface{}{
 			"ancestors":   gorm.Expr("REPLACE(ancestors, ?, ?)", oldPath, newPath),
 			"update_by":   operator,
@@ -150,12 +149,16 @@ func (r *Repository) SoftDeleteDepartment(ctx context.Context, id int64, operato
 
 	result := r.db.WithContext(ctx).
 		Model(&model.SysDept{}).
-		Where("dept_id = ? AND del_flag = ?", id, "0").
+		Where("id = ?", id).
 		Updates(map[string]interface{}{
-			"del_flag":    "2",
 			"update_by":   operator,
 			"update_time": ts,
 		})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	result = r.db.WithContext(ctx).Delete(&model.SysDept{}, id)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -176,7 +179,7 @@ func (r *Repository) CountChildren(ctx context.Context, parentID int64) (int64, 
 	var total int64
 	err := r.db.WithContext(ctx).
 		Model(&model.SysDept{}).
-		Where("parent_id = ? AND del_flag = ?", parentID, "0").
+		Where("parent_id = ?", parentID).
 		Count(&total).Error
 	return total, err
 }
@@ -209,10 +212,10 @@ func (r *Repository) ExistsByName(ctx context.Context, parentID int64, name stri
 
 	query := r.db.WithContext(ctx).
 		Model(&model.SysDept{}).
-		Where("dept_name = ? AND parent_id = ? AND del_flag = ?", trimmed, parentID, "0")
+		Where("dept_name = ? AND parent_id = ?", trimmed, parentID)
 
 	if excludeID > 0 {
-		query = query.Where("dept_id <> ?", excludeID)
+		query = query.Where("id <> ?", excludeID)
 	}
 
 	var count int64

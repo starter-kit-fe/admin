@@ -1,18 +1,15 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import {
-  createPost,
-  updatePost,
-} from '../../api';
 import {
   usePostManagementMutationCounter,
   usePostManagementRefresh,
   usePostManagementStore,
 } from '@/app/dashboard/system/post/store';
+import { useMutation } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { toast } from 'sonner';
+
+import { createPost, updatePost } from '../../api';
 import type { PostFormValues } from '../../type';
 import {
   computeNextSort,
@@ -24,15 +21,9 @@ import {
 import { PostEditorDialog } from './post-editor-dialog';
 
 export function PostEditorManager() {
-  const {
-    editorState,
-    closeEditor,
-    posts,
-    total,
-  } = usePostManagementStore();
+  const { editorState, closeEditor, posts, total } = usePostManagementStore();
   const refresh = usePostManagementRefresh();
-  const { beginMutation, endMutation } =
-    usePostManagementMutationCounter();
+  const { beginMutation, endMutation } = usePostManagementMutationCounter();
 
   const createMutation = useMutation({
     mutationFn: (values: PostFormValues) => {
@@ -56,18 +47,12 @@ export function PostEditorManager() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({
-      postId,
-      values,
-    }: {
-      postId: number;
-      values: PostFormValues;
-    }) => {
+    mutationFn: ({ id, values }: { id: number; values: PostFormValues }) => {
       const sort =
         editorState.open && editorState.mode === 'edit'
-          ? editorState.post.postSort ?? 0
+          ? (editorState.post.postSort ?? 0)
           : 0;
-      return updatePost(postId, toUpdatePayload(values, sort));
+      return updatePost(id, toUpdatePayload(values, sort));
     },
     onMutate: () => {
       beginMutation();
@@ -99,7 +84,7 @@ export function PostEditorManager() {
     if (!editorState.open) return;
     if (editorState.mode === 'edit') {
       updateMutation.mutate({
-        postId: editorState.post.postId,
+        id: editorState.post.id,
         values,
       });
       return;

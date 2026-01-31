@@ -3,13 +3,13 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { DeleteConfirmDialog } from '../delete-confirm-dialog';
 import { removeUser } from '../../api';
 import {
   useUserManagementMutationCounter,
   useUserManagementRefresh,
   useUserManagementStore,
 } from '../../store';
+import { DeleteConfirmDialog } from '../delete-confirm-dialog';
 
 export function UserDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = useUserManagementStore();
@@ -17,7 +17,7 @@ export function UserDeleteDialog() {
   const { beginMutation, endMutation } = useUserManagementMutationCounter();
 
   const deleteMutation = useMutation({
-    mutationFn: (userId: number) => removeUser(userId),
+    mutationFn: (id: number) => removeUser(id),
     onMutate: () => {
       beginMutation();
     },
@@ -53,7 +53,7 @@ export function UserDeleteDialog() {
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (deleteTarget) {
-          deleteMutation.mutate(deleteTarget.userId);
+          deleteMutation.mutate(deleteTarget.id);
         }
       }}
     />

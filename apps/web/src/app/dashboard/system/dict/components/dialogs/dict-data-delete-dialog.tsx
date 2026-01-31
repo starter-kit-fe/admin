@@ -1,31 +1,25 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
-import { removeDictData } from '../../api';
 import {
   useDictDataDeleteState,
   useDictManagementMutationCounter,
   useDictManagementRefresh,
 } from '@/app/dashboard/system/dict/store';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
+import { removeDictData } from '../../api';
 import { resolveErrorMessage } from '../../utils';
 
 export function DictDataDeleteDialog() {
   const { dataDeleteTarget, setDataDeleteTarget } = useDictDataDeleteState();
   const refresh = useDictManagementRefresh();
-  const { beginMutation, endMutation } =
-    useDictManagementMutationCounter();
+  const { beginMutation, endMutation } = useDictManagementMutationCounter();
 
   const deleteMutation = useMutation({
-    mutationFn: ({
-      dictTypeId,
-      dictCode,
-    }: {
-      dictTypeId: number;
-      dictCode: number;
-    }) => removeDictData(dictTypeId, dictCode),
+    mutationFn: ({ dictTypeId, id }: { dictTypeId: number; id: number }) =>
+      removeDictData(dictTypeId, id),
     onMutate: () => {
       beginMutation();
     },
@@ -60,8 +54,8 @@ export function DictDataDeleteDialog() {
       onConfirm={() => {
         if (dataDeleteTarget) {
           deleteMutation.mutate({
-            dictTypeId: dataDeleteTarget.dictType.dictId,
-            dictCode: dataDeleteTarget.dictData.dictCode,
+            dictTypeId: dataDeleteTarget.dictType.id,
+            id: dataDeleteTarget.dictData.id,
           });
         }
       }}

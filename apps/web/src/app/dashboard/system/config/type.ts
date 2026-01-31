@@ -3,7 +3,7 @@ import { z } from 'zod';
 export type ConfigType = 'Y' | 'N';
 
 export interface SystemConfig {
-  configId: number;
+  id: number;
   configName: string;
   configKey: string;
   configValue: string;
@@ -28,10 +28,7 @@ export const configFormSchema = z.object({
     .min(1, '请输入参数键值')
     .max(500, '参数键值过长'),
   configType: z.enum(['Y', 'N']),
-  remark: z
-    .string()
-    .trim()
-    .max(255, '备注不能超过 255 个字符'),
+  remark: z.string().trim().max(255, '备注不能超过 255 个字符'),
 });
 
 export type ConfigFormValues = z.infer<typeof configFormSchema>;

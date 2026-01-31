@@ -255,13 +255,13 @@ export function OperLogTable({
           cellClassName: 'min-w-[280px] max-w-[360px]',
         },
       }),
-      columnHelper.accessor('operTime', {
+      columnHelper.accessor('createdAt', {
         header: () => '操作时间',
         cell: ({ row }) => {
           const log = row.original;
           return (
             <div className="space-y-1 text-sm text-foreground">
-              <p>{log.operTime || '-'}</p>
+              <p>{log.createdAt || '-'}</p>
               {log.costTime ? (
                 <p className="text-xs text-muted-foreground">
                   耗时：{log.costTime}ms

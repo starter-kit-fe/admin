@@ -49,7 +49,7 @@ func (r *Repository) ListConfigs(ctx context.Context, opts ListOptions) ([]model
 	}
 
 	var records []model.SysConfig
-	if err := query.Order("config_id ASC").Find(&records).Error; err != nil {
+	if err := query.Order("id ASC").Find(&records).Error; err != nil {
 		return nil, err
 	}
 	return records, nil
@@ -74,7 +74,7 @@ func (r *Repository) ExistsByKey(ctx context.Context, key string, excludeID int6
 	var count int64
 	query := r.db.WithContext(ctx).Model(&model.SysConfig{}).Where("config_key = ?", key)
 	if excludeID > 0 {
-		query = query.Where("config_id <> ?", excludeID)
+		query = query.Where("id <> ?", excludeID)
 	}
 	if err := query.Count(&count).Error; err != nil {
 		return false, err

@@ -43,10 +43,10 @@ export function createPost(payload: CreatePostPayload) {
   return postRequest<Post>('/v1/system/posts', payload);
 }
 
-export function updatePost(postId: number, payload: UpdatePostPayload) {
-  return put<Post>(`/v1/system/posts/${postId}`, payload);
+export function updatePost(id: number, payload: UpdatePostPayload) {
+  return put<Post>(`/v1/system/posts/${id}`, payload);
 }
 
-export function removePost(postId: number) {
-  return del<void>(`/v1/system/posts/${postId}`);
+export function removePost(id: number) {
+  return del<void>(`/v1/system/posts/${id}`);
 }

@@ -1,9 +1,8 @@
 'use client';
 
+import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-
-import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
 
 import { removeOperLog } from '../../api';
 import {
@@ -16,8 +15,7 @@ import { resolveErrorMessage } from '../../utils';
 export function OperLogDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = useOperLogManagementStore();
   const refresh = useOperLogManagementRefresh();
-  const { beginMutation, endMutation } =
-    useOperLogManagementMutationCounter();
+  const { beginMutation, endMutation } = useOperLogManagementMutationCounter();
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => removeOperLog(id),
@@ -54,7 +52,7 @@ export function OperLogDeleteDialog() {
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (deleteTarget) {
-          deleteMutation.mutate(deleteTarget.operId);
+          deleteMutation.mutate(deleteTarget.id);
         }
       }}
     />

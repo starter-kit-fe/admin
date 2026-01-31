@@ -1,12 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { toast } from 'sonner';
-
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -18,9 +11,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
-import { cn } from '@/lib/utils';
-
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { cn } from '@/lib/utils';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 import { resetUserPassword } from '../../api';
 import {
@@ -51,10 +49,8 @@ const DEFAULT_VALUES: ResetPasswordFormValues = {
 };
 
 export function UserResetPasswordDialog() {
-  const {
-    resetPasswordTarget,
-    setResetPasswordTarget,
-  } = useUserManagementStore();
+  const { resetPasswordTarget, setResetPasswordTarget } =
+    useUserManagementStore();
   const refresh = useUserManagementRefresh();
   const { beginMutation, endMutation } = useUserManagementMutationCounter();
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -74,8 +70,8 @@ export function UserResetPasswordDialog() {
   }, [form, open]);
 
   const mutation = useMutation({
-    mutationFn: ({ userId, password }: { userId: number; password: string }) =>
-      resetUserPassword(userId, { password }),
+    mutationFn: ({ id, password }: { id: number; password: string }) =>
+      resetUserPassword(id, { password }),
     onMutate: () => {
       beginMutation();
     },
@@ -95,13 +91,13 @@ export function UserResetPasswordDialog() {
   });
 
   const handleSubmit = form.handleSubmit((values) => {
-    const userId = resetPasswordTarget?.userId;
-    if (!userId) {
+    const id = resetPasswordTarget?.id;
+    if (!id) {
       toast.error('未找到需要重置的用户');
       return;
     }
     mutation.mutate({
-      userId,
+      id,
       password: values.password.trim(),
     });
   });

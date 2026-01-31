@@ -1,9 +1,8 @@
 'use client';
 
+import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-
-import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
 
 import { removeLoginLog } from '../../api';
 import {
@@ -16,8 +15,7 @@ import { resolveErrorMessage } from '../../utils';
 export function LoginLogDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = useLoginLogManagementStore();
   const refresh = useLoginLogManagementRefresh();
-  const { beginMutation, endMutation } =
-    useLoginLogManagementMutationCounter();
+  const { beginMutation, endMutation } = useLoginLogManagementMutationCounter();
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => removeLoginLog(id),
@@ -30,9 +28,7 @@ export function LoginLogDeleteDialog() {
       refresh();
     },
     onError: (error) => {
-      toast.error(
-        resolveErrorMessage(error, '删除登录日志失败，请稍后再试'),
-      );
+      toast.error(resolveErrorMessage(error, '删除登录日志失败，请稍后再试'));
     },
     onSettled: () => {
       endMutation();
@@ -56,7 +52,7 @@ export function LoginLogDeleteDialog() {
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (deleteTarget) {
-          deleteMutation.mutate(deleteTarget.infoId);
+          deleteMutation.mutate(deleteTarget.id);
         }
       }}
     />

@@ -47,56 +47,56 @@ type QueryOptions struct {
 }
 
 type Menu struct {
-	MenuID    int64   `json:"menuId"`
-	MenuName  string  `json:"menuName"`
-	ParentID  int64   `json:"parentId"`
-	OrderNum  int     `json:"orderNum"`
-	Path      string  `json:"path"`
-	Query     *string `json:"query,omitempty"`
-	IsFrame   bool    `json:"isFrame"`
-	IsCache   bool    `json:"isCache"`
-	MenuType  string  `json:"menuType"`
-	Visible   string  `json:"visible"`
-	Status    string  `json:"status"`
-	Perms     *string `json:"perms,omitempty"`
-	Icon      string  `json:"icon"`
-	Remark    string  `json:"remark"`
-	Children  []*Menu `json:"children,omitempty"`
+	ID       int64   `json:"id"`
+	MenuName string  `json:"menuName"`
+	ParentID int64   `json:"parentId"`
+	OrderNum int     `json:"orderNum"`
+	Path     string  `json:"path"`
+	Query    *string `json:"query,omitempty"`
+	IsFrame  bool    `json:"isFrame"`
+	IsCache  bool    `json:"isCache"`
+	MenuType string  `json:"menuType"`
+	Visible  string  `json:"visible"`
+	Status   string  `json:"status"`
+	Perms    *string `json:"perms,omitempty"`
+	Icon     string  `json:"icon"`
+	Remark   string  `json:"remark"`
+	Children []*Menu `json:"children,omitempty"`
 }
 
 type CreateMenuInput struct {
-	MenuName  string
-	ParentID  int64
-	OrderNum  *int
-	Path      string
-	Query     *string
-	IsFrame   bool
-	IsCache   bool
-	MenuType  string
-	Visible   string
-	Status    string
-	Perms     *string
-	Icon      string
-	Remark    *string
-	Operator  string
+	MenuName string
+	ParentID int64
+	OrderNum *int
+	Path     string
+	Query    *string
+	IsFrame  bool
+	IsCache  bool
+	MenuType string
+	Visible  string
+	Status   string
+	Perms    *string
+	Icon     string
+	Remark   *string
+	Operator string
 }
 
 type UpdateMenuInput struct {
-	ID        int64
-	MenuName  *string
-	ParentID  *int64
-	OrderNum  *int
-	Path      *string
-	Query     *string
-	IsFrame   *bool
-	IsCache   *bool
-	MenuType  *string
-	Visible   *string
-	Status    *string
-	Perms     *string
-	Icon      *string
-	Remark    *string
-	Operator  string
+	ID       int64
+	MenuName *string
+	ParentID *int64
+	OrderNum *int
+	Path     *string
+	Query    *string
+	IsFrame  *bool
+	IsCache  *bool
+	MenuType *string
+	Visible  *string
+	Status   *string
+	Perms    *string
+	Icon     *string
+	Remark   *string
+	Operator string
 }
 
 type MenuOrderItem struct {
@@ -201,24 +201,21 @@ func (s *Service) CreateMenu(ctx context.Context, input CreateMenuInput) (*Menu,
 	if operator == "" {
 		operator = defaultOperator
 	}
-	now := time.Now()
 
 	record := &model.SysMenu{
-		MenuName:   name,
-		ParentID:   input.ParentID,
-		OrderNum:   orderNum,
-		Path:       truncate(strings.TrimSpace(input.Path), maxPathLength),
-		IsFrame:    input.IsFrame,
-		IsCache:    input.IsCache,
-		MenuType:   menuType,
-		Visible:    visible,
-		Status:     status,
-		Icon:       truncate(strings.TrimSpace(input.Icon), maxIconLength),
-		Remark:     truncate(strings.TrimSpace(pointerValue(input.Remark)), maxRemarkLength),
-		CreateBy:   operator,
-		CreateTime: &now,
-		UpdateBy:   operator,
-		UpdateTime: &now,
+		MenuName: name,
+		ParentID: input.ParentID,
+		OrderNum: orderNum,
+		Path:     truncate(strings.TrimSpace(input.Path), maxPathLength),
+		IsFrame:  input.IsFrame,
+		IsCache:  input.IsCache,
+		MenuType: menuType,
+		Visible:  visible,
+		Status:   status,
+		Icon:     truncate(strings.TrimSpace(input.Icon), maxIconLength),
+		Remark:   truncate(strings.TrimSpace(pointerValue(input.Remark)), maxRemarkLength),
+		CreateBy: operator,
+		UpdateBy: operator,
 	}
 
 	if query := strings.TrimSpace(pointerValue(input.Query)); query != "" {
@@ -232,7 +229,7 @@ func (s *Service) CreateMenu(ctx context.Context, input CreateMenuInput) (*Menu,
 		return nil, err
 	}
 
-	created, err := s.repo.GetMenu(ctx, record.MenuID)
+	created, err := s.repo.GetMenu(ctx, int64(record.ID))
 	if err != nil {
 		return nil, err
 	}
@@ -375,9 +372,8 @@ func (s *Service) UpdateMenu(ctx context.Context, input UpdateMenuInput) (*Menu,
 	if operator == "" {
 		operator = defaultOperator
 	}
-	now := time.Now()
 	updates["update_by"] = operator
-	updates["update_time"] = now
+	updates["updated_at"] = time.Now()
 
 	if err := s.repo.UpdateMenu(ctx, input.ID, updates); err != nil {
 		return nil, err
@@ -432,20 +428,20 @@ func menuFromModel(menu *model.SysMenu) *Menu {
 		return nil
 	}
 	result := &Menu{
-		MenuID:    menu.MenuID,
-		MenuName:  menu.MenuName,
-		ParentID:  menu.ParentID,
-		OrderNum:  menu.OrderNum,
-		Path:      menu.Path,
-		Query:     menu.Query,
-		IsFrame:   menu.IsFrame,
-		IsCache:   menu.IsCache,
-		MenuType:  menu.MenuType,
-		Visible:   menu.Visible,
-		Status:    menu.Status,
-		Perms:     menu.Perms,
-		Icon:      menu.Icon,
-		Remark:    menu.Remark,
+		ID:       int64(menu.ID),
+		MenuName: menu.MenuName,
+		ParentID: menu.ParentID,
+		OrderNum: menu.OrderNum,
+		Path:     menu.Path,
+		Query:    menu.Query,
+		IsFrame:  menu.IsFrame,
+		IsCache:  menu.IsCache,
+		MenuType: menu.MenuType,
+		Visible:  menu.Visible,
+		Status:   menu.Status,
+		Perms:    menu.Perms,
+		Icon:     menu.Icon,
+		Remark:   menu.Remark,
 	}
 	return result
 }
@@ -467,26 +463,26 @@ func buildMenuTree(menus []model.SysMenu) []*Menu {
 
 	for _, menu := range menus {
 		node := &Menu{
-			MenuID:    menu.MenuID,
-			MenuName:  menu.MenuName,
-			ParentID:  menu.ParentID,
-			OrderNum:  menu.OrderNum,
-			Path:      menu.Path,
-			Query:     menu.Query,
-			IsFrame:   menu.IsFrame,
-			IsCache:   menu.IsCache,
-			MenuType:  menu.MenuType,
-			Visible:   menu.Visible,
-			Status:    menu.Status,
-			Perms:     menu.Perms,
-			Icon:      menu.Icon,
-			Remark:    menu.Remark,
+			ID:       int64(menu.ID),
+			MenuName: menu.MenuName,
+			ParentID: menu.ParentID,
+			OrderNum: menu.OrderNum,
+			Path:     menu.Path,
+			Query:    menu.Query,
+			IsFrame:  menu.IsFrame,
+			IsCache:  menu.IsCache,
+			MenuType: menu.MenuType,
+			Visible:  menu.Visible,
+			Status:   menu.Status,
+			Perms:    menu.Perms,
+			Icon:     menu.Icon,
+			Remark:   menu.Remark,
 		}
 		w := &wrapper{
 			menu: menu,
 			node: node,
 		}
-		cache[menu.MenuID] = w
+		cache[int64(menu.ID)] = w
 		ordered = append(ordered, w)
 	}
 

@@ -4,7 +4,7 @@ export type DictStatus = '0' | '1';
 export type DictDefaultFlag = 'Y' | 'N';
 
 export interface DictType {
-  dictId: number;
+  id: number;
   dictName: string;
   dictType: string;
   status: DictStatus;
@@ -12,7 +12,7 @@ export interface DictType {
 }
 
 export interface DictData {
-  dictCode: number;
+  id: number;
   dictSort: number;
   dictLabel: string;
   dictValue: string;
@@ -26,7 +26,7 @@ export interface DictData {
 
 export interface DictDataList {
   type?: DictType;
-  items: DictData[];
+  list: DictData[];
   total: number;
 }
 
@@ -59,10 +59,7 @@ export const dictDataFormSchema = z.object({
   dictSort: z
     .string()
     .trim()
-    .refine(
-      (value) => value === '' || /^\d+$/.test(value),
-      '排序需为非负整数',
-    ),
+    .refine((value) => value === '' || /^\d+$/.test(value), '排序需为非负整数'),
   status: z.enum(['0', '1']),
   isDefault: z.enum(['Y', 'N']),
   remark: z.string().trim().max(255, '备注不能超过 255 个字符'),

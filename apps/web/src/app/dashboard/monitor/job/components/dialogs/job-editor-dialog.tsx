@@ -1,12 +1,7 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
 import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -16,10 +11,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import {
   Select,
   SelectContent,
@@ -27,7 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+import { useEffect, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
+import { type JobPayload, createJob, updateJob } from '../../api';
 import {
   CONCURRENT_LABELS,
   MISFIRE_POLICY_LABELS,
@@ -39,9 +39,8 @@ import {
   useJobManagementRefresh,
   useJobManagementStore,
 } from '../../store';
-import { createJob, updateJob, type JobPayload } from '../../api';
 import type { Job } from '../../type';
-import { jobFormSchema, type JobFormValues } from '../../type';
+import { type JobFormValues, jobFormSchema } from '../../type';
 import { stringifyInvokeParams } from '../../utils';
 import { CronInputWithGenerator } from './cron-input-with-generator';
 
@@ -116,7 +115,10 @@ export function JobEditorDialog() {
       }
       form.setValue('jobGroup', selectedType.defaultGroup);
       form.setValue('cronExpression', selectedType.defaultCron);
-      form.setValue('invokeParams', JSON.stringify(selectedType.defaultParams, null, 2));
+      form.setValue(
+        'invokeParams',
+        JSON.stringify(selectedType.defaultParams, null, 2),
+      );
     }
   };
 
@@ -141,13 +143,8 @@ export function JobEditorDialog() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({
-      jobId,
-      payload,
-    }: {
-      jobId: number;
-      payload: JobPayload;
-    }) => updateJob(jobId, payload),
+    mutationFn: ({ id, payload }: { id: number; payload: JobPayload }) =>
+      updateJob(id, payload),
     onMutate: () => {
       beginMutation();
     },
@@ -166,15 +163,14 @@ export function JobEditorDialog() {
     },
   });
 
-  const submitting =
-    createMutation.isPending || updateMutation.isPending;
+  const submitting = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = form.handleSubmit((values) => {
     const payload = buildPayload(values);
     if (mode === 'create') {
       createMutation.mutate(payload);
     } else if (job) {
-      updateMutation.mutate({ jobId: job.jobId, payload });
+      updateMutation.mutate({ id: job.id, payload });
     }
   });
 
@@ -183,7 +179,10 @@ export function JobEditorDialog() {
     '配置定时任务的执行规则和参数。选择任务类型后会自动填充默认参数。';
 
   return (
-    <ResponsiveDialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+    <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={(open) => !open && handleClose()}
+    >
       <FormDialogLayout
         title={title}
         description={description}
@@ -212,7 +211,11 @@ export function JobEditorDialog() {
         }
       >
         <Form {...form}>
-          <form onSubmit={handleSubmit} id="job-editor-form" className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            id="job-editor-form"
+            className="space-y-6"
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2 flex items-center gap-2 pb-2 border-b">
                 <span className="font-semibold text-lg">基础信息</span>
@@ -235,7 +238,11 @@ export function JobEditorDialog() {
                         <SelectTrigger>
                           {field.value ? (
                             <span className="font-medium">
-                              {PREDEFINED_JOB_TYPES.find((t) => t.value === field.value)?.label}
+                              {
+                                PREDEFINED_JOB_TYPES.find(
+                                  (t) => t.value === field.value,
+                                )?.label
+                              }
                             </span>
                           ) : (
                             <SelectValue placeholder="选择任务类型" />
@@ -294,7 +301,10 @@ export function JobEditorDialog() {
                     <FormItem className="sm:col-span-2">
                       <FormLabel>调用目标</FormLabel>
                       <FormControl>
-                        <Input placeholder="例如 jobService.handleReport" {...field} />
+                        <Input
+                          placeholder="例如 jobService.handleReport"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -340,21 +350,26 @@ export function JobEditorDialog() {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        {STATUS_TABS.filter((tab) => tab.value !== 'all').map((tab) => (
-                          <FormItem
-                            key={tab.value}
-                            className="flex items-center gap-2 space-y-0"
-                          >
-                            <FormControl>
-                              <RadioGroupItem value={tab.value} />
-                            </FormControl>
-                            <FormLabel className="font-normal">{tab.label}</FormLabel>
-                          </FormItem>
-                        ))}
+                        {STATUS_TABS.filter((tab) => tab.value !== 'all').map(
+                          (tab) => (
+                            <FormItem
+                              key={tab.value}
+                              className="flex items-center gap-2 space-y-0"
+                            >
+                              <FormControl>
+                                <RadioGroupItem value={tab.value} />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                {tab.label}
+                              </FormLabel>
+                            </FormItem>
+                          ),
+                        )}
                       </RadioGroup>
                     </FormControl>
                     <p className="text-xs text-muted-foreground">
-                      正常状态的任务会按照 Cron 表达式自动执行，暂停状态的任务不会自动执行
+                      正常状态的任务会按照 Cron
+                      表达式自动执行，暂停状态的任务不会自动执行
                     </p>
                     <FormMessage />
                   </FormItem>
@@ -375,17 +390,21 @@ export function JobEditorDialog() {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        {Object.entries(MISFIRE_POLICY_LABELS).map(([value, label]) => (
-                          <FormItem
-                            key={value}
-                            className="flex items-center gap-2 space-y-0"
-                          >
-                            <FormControl>
-                              <RadioGroupItem value={value} />
-                            </FormControl>
-                            <FormLabel className="font-normal">{label}</FormLabel>
-                          </FormItem>
-                        ))}
+                        {Object.entries(MISFIRE_POLICY_LABELS).map(
+                          ([value, label]) => (
+                            <FormItem
+                              key={value}
+                              className="flex items-center gap-2 space-y-0"
+                            >
+                              <FormControl>
+                                <RadioGroupItem value={value} />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                {label}
+                              </FormLabel>
+                            </FormItem>
+                          ),
+                        )}
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
@@ -407,17 +426,21 @@ export function JobEditorDialog() {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        {Object.entries(CONCURRENT_LABELS).map(([value, label]) => (
-                          <FormItem
-                            key={value}
-                            className="flex items-center gap-2 space-y-0"
-                          >
-                            <FormControl>
-                              <RadioGroupItem value={value} />
-                            </FormControl>
-                            <FormLabel className="font-normal">{label}</FormLabel>
-                          </FormItem>
-                        ))}
+                        {Object.entries(CONCURRENT_LABELS).map(
+                          ([value, label]) => (
+                            <FormItem
+                              key={value}
+                              className="flex items-center gap-2 space-y-0"
+                            >
+                              <FormControl>
+                                <RadioGroupItem value={value} />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                {label}
+                              </FormLabel>
+                            </FormItem>
+                          ),
+                        )}
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
@@ -456,7 +479,11 @@ export function JobEditorDialog() {
                   <FormItem className="sm:col-span-2">
                     <FormLabel>备注 (可选)</FormLabel>
                     <FormControl>
-                      <Textarea rows={2} placeholder="任务说明或注意事项" {...field} />
+                      <Textarea
+                        rows={2}
+                        placeholder="任务说明或注意事项"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

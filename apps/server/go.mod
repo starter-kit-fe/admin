@@ -5,6 +5,7 @@ go 1.24.5
 require (
 	github.com/aws/aws-sdk-go-v2 v1.40.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.0
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.92.0
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
@@ -29,7 +30,6 @@ require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.3 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.14 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.14 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.14 // indirect

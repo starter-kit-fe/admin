@@ -1,11 +1,11 @@
 'use client';
 
+import { EllipsisText } from '@/components/table/ellipsis-text';
 import {
   PINNED_ACTION_COLUMN_META,
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-import { EllipsisText } from '@/components/table/ellipsis-text';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,15 +20,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { Spinner } from '@/components/ui/spinner';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Sheet,
   SheetContent,
@@ -38,8 +29,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { usePermissions } from '@/hooks/use-permissions';
+import { Spinner } from '@/components/ui/spinner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -66,7 +66,7 @@ interface JobTableProps {
   pendingRunId: number | null;
   pendingStatusId: number | null;
   onRunJob: (job: Job) => void;
-  onToggleStatus: (jobId: number, nextStatus: string) => void;
+  onToggleStatus: (id: number, nextStatus: string) => void;
   onDelete: (job: Job) => void;
   onEdit: (job: Job) => void;
 }
@@ -149,7 +149,9 @@ export function JobTable({
       columnHelper.accessor('concurrent', {
         header: () => '并发',
         cell: ({ getValue }) => (
-          <span className="text-[12px]">{resolveConcurrentLabel(getValue())}</span>
+          <span className="text-[12px]">
+            {resolveConcurrentLabel(getValue())}
+          </span>
         ),
         meta: {
           headerClassName: 'w-[120px]',
@@ -184,11 +186,11 @@ export function JobTable({
           return (
             <div className="space-y-1 text-xs text-muted-foreground">
               <EllipsisText
-                value={`创建：${job.createTime || '-'}`}
+                value={`创建：${job.createdAt || '-'}`}
                 className="max-w-[220px]"
               />
               <EllipsisText
-                value={`更新：${job.updateTime || '-'}`}
+                value={`更新：${job.updatedAt || '-'}`}
                 className="max-w-[220px]"
               />
             </div>
@@ -201,44 +203,46 @@ export function JobTable({
       }),
       ...(showActions
         ? [
-          columnHelper.display({
-            id: 'actions',
-            header: () => <span className="block text-right">操作</span>,
-            cell: ({ row }) => {
-              const job = row.original;
-              const jobId = job.jobId;
-              const isRunPending = pendingRunId === jobId;
-              const isUpdatingStatus = pendingStatusId === jobId;
-              const nextStatus = job.status === '0' ? '1' : '0';
-              const concurrencyLocked =
-                job.isRunning && job.concurrent === '1';
+            columnHelper.display({
+              id: 'actions',
+              header: () => <span className="block text-right">操作</span>,
+              cell: ({ row }) => {
+                const job = row.original;
+                const id = job.id;
+                const isRunPending = pendingRunId === id;
+                const isUpdatingStatus = pendingStatusId === id;
+                const nextStatus = job.status === '0' ? '1' : '0';
+                const concurrencyLocked =
+                  job.isRunning && job.concurrent === '1';
 
-              return (
-                <div className="flex items-center justify-end">
-                  <JobRowActions
-                    job={job}
-                    canViewDetail={canViewDetail}
-                    canEdit={canEditJob}
-                    canRun={canRunJob}
-                    canChangeStatus={canChangeStatus}
-                    canDelete={canDeleteJob}
-                    isRunPending={isRunPending}
-                    isUpdatingStatus={isUpdatingStatus}
-                    concurrencyLocked={concurrencyLocked}
-                    onViewDetail={() => router.push(`/dashboard/monitor/job/${jobId}`)}
-                    onEdit={() => onEdit(job)}
-                    onRun={() => onRunJob(job)}
-                    onToggleStatus={() => onToggleStatus(jobId, nextStatus)}
-                    onDelete={() => onDelete(job)}
-                  />
-                </div>
-              );
-            },
-            meta: {
-              ...PINNED_ACTION_COLUMN_META,
-            },
-          }),
-        ]
+                return (
+                  <div className="flex items-center justify-end">
+                    <JobRowActions
+                      job={job}
+                      canViewDetail={canViewDetail}
+                      canEdit={canEditJob}
+                      canRun={canRunJob}
+                      canChangeStatus={canChangeStatus}
+                      canDelete={canDeleteJob}
+                      isRunPending={isRunPending}
+                      isUpdatingStatus={isUpdatingStatus}
+                      concurrencyLocked={concurrencyLocked}
+                      onViewDetail={() =>
+                        router.push(`/dashboard/monitor/job/${id}`)
+                      }
+                      onEdit={() => onEdit(job)}
+                      onRun={() => onRunJob(job)}
+                      onToggleStatus={() => onToggleStatus(id, nextStatus)}
+                      onDelete={() => onDelete(job)}
+                    />
+                  </div>
+                );
+              },
+              meta: {
+                ...PINNED_ACTION_COLUMN_META,
+              },
+            }),
+          ]
         : []),
     ],
     [
@@ -280,16 +284,16 @@ export function JobTable({
                     key={header.id}
                     className={cn(
                       header.column.columnDef.meta?.headerClassName as
-                      | string
-                      | undefined,
+                        | string
+                        | undefined,
                     )}
                   >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -334,8 +338,8 @@ export function JobTable({
                       key={cell.id}
                       className={cn(
                         cell.column.columnDef.meta?.cellClassName as
-                        | string
-                        | undefined,
+                          | string
+                          | undefined,
                       )}
                     >
                       {flexRender(
@@ -416,7 +420,9 @@ function JobRowActions({
         >
           <SheetHeader className="px-4 pb-2 pt-3 text-left">
             <SheetTitle>任务操作</SheetTitle>
-            <SheetDescription>对「{job.jobName || '未命名任务'}」执行操作。</SheetDescription>
+            <SheetDescription>
+              对「{job.jobName || '未命名任务'}」执行操作。
+            </SheetDescription>
           </SheetHeader>
           <SheetFooter className="mt-0 flex-col gap-2 px-4 pb-4">
             {canViewDetail ? (
@@ -432,7 +438,9 @@ function JobRowActions({
                   <Eye className="size-4" />
                   查看详情
                 </span>
-                <span className="text-xs text-muted-foreground">跳转至任务详情</span>
+                <span className="text-xs text-muted-foreground">
+                  跳转至任务详情
+                </span>
               </Button>
             ) : null}
             {canEdit ? (

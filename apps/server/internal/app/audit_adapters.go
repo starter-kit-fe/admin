@@ -37,7 +37,7 @@ func (a operationLoggerAdapter) RecordOperation(ctx context.Context, entry audit
 	}
 	if entry.OccurredAt > 0 {
 		ts := time.UnixMilli(entry.OccurredAt)
-		payload.OperTime = &ts
+		payload.CreateTime = &ts
 	}
 	return a.svc.RecordOperLog(ctx, payload)
 }
@@ -61,7 +61,7 @@ func (a loginLoggerAdapter) RecordLogin(ctx context.Context, entry audit.LoginEn
 	}
 	if entry.OccurredAt > 0 {
 		ts := time.UnixMilli(entry.OccurredAt)
-		payload.LoginTime = &ts
+		payload.CreateTime = &ts
 	}
 	return a.svc.RecordLoginLog(ctx, payload)
 }

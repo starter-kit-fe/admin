@@ -48,8 +48,7 @@ func (r *Repository) ListRoles(ctx context.Context, opts ListOptions) ([]model.S
 	}
 
 	query := r.db.WithContext(ctx).
-		Model(&model.SysRole{}).
-		Where("del_flag = ?", "0")
+		Model(&model.SysRole{})
 
 	if name := strings.TrimSpace(opts.RoleName); name != "" {
 		query = query.Where("role_name ILIKE ?", "%"+name+"%")
@@ -76,7 +75,7 @@ func (r *Repository) ListRoles(ctx context.Context, opts ListOptions) ([]model.S
 	}
 
 	var roles []model.SysRole
-	if err := dataQuery.Order("role_sort ASC, role_id ASC").Find(&roles).Error; err != nil {
+	if err := dataQuery.Order("role_sort ASC, id ASC").Find(&roles).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -93,7 +92,7 @@ func (r *Repository) GetRole(ctx context.Context, id int64) (*model.SysRole, err
 
 	var role model.SysRole
 	err := r.db.WithContext(ctx).
-		Where("role_id = ? AND del_flag <> ?", id, "2").
+		Where("id = ?", id).
 		First(&role).Error
 	if err != nil {
 		return nil, err
@@ -126,7 +125,7 @@ func (r *Repository) UpdateRole(ctx context.Context, roleID int64, updates map[s
 
 	result := r.db.WithContext(ctx).
 		Model(&model.SysRole{}).
-		Where("role_id = ? AND del_flag <> ?", roleID, "2").
+		Where("id = ?", roleID).
 		Updates(updates)
 	if result.Error != nil {
 		return result.Error
@@ -147,17 +146,15 @@ func (r *Repository) SoftDeleteRole(ctx context.Context, roleID int64, operator 
 	}
 
 	updates := map[string]interface{}{
-		"del_flag":    "2",
 		"update_time": at,
 	}
 	if trimmed := strings.TrimSpace(operator); trimmed != "" {
 		updates["update_by"] = trimmed
 	}
 
-	result := r.db.WithContext(ctx).
-		Model(&model.SysRole{}).
-		Where("role_id = ? AND del_flag <> ?", roleID, "2").
-		Updates(updates)
+	r.db.WithContext(ctx).Model(&model.SysRole{}).Where("id = ?", roleID).Updates(updates)
+
+	result := r.db.WithContext(ctx).Delete(&model.SysRole{}, roleID)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -180,9 +177,9 @@ func (r *Repository) ExistsByName(ctx context.Context, roleName string, excludeI
 	query := r.db.WithContext(ctx).
 		Model(&model.SysRole{}).
 		Where("role_name = ?", name).
-		Where("del_flag <> ?", "2")
+		Where("role_name = ?", name)
 	if excludeID > 0 {
-		query = query.Where("role_id <> ?", excludeID)
+		query = query.Where("id <> ?", excludeID)
 	}
 
 	var count int64
@@ -205,9 +202,9 @@ func (r *Repository) ExistsByKey(ctx context.Context, roleKey string, excludeID 
 	query := r.db.WithContext(ctx).
 		Model(&model.SysRole{}).
 		Where("role_key = ?", key).
-		Where("del_flag <> ?", "2")
+		Where("role_key = ?", key)
 	if excludeID > 0 {
-		query = query.Where("role_id <> ?", excludeID)
+		query = query.Where("id <> ?", excludeID)
 	}
 
 	var count int64

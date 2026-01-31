@@ -26,7 +26,8 @@ export function ConfigDataSection() {
   const { configs, setConfigs } = useConfigsState();
   const { openEdit } = useConfigEditorActions();
   const { setDeleteTarget } = useConfigDeleteState();
-  const { selectedIds, setSelectedIds, clearSelectedIds } = useConfigSelection();
+  const { selectedIds, setSelectedIds, clearSelectedIds } =
+    useConfigSelection();
   const { setBulkDeleteOpen } = useConfigBulkDeleteState();
   const setRefreshing = useConfigManagementSetRefreshing();
   const setRefreshHandler = useConfigManagementSetRefreshHandler();
@@ -81,8 +82,8 @@ export function ConfigDataSection() {
     setSelectedIds((prev) => {
       const next = new Set<number>();
       configs.forEach((config) => {
-        if (prev.has(config.configId)) {
-          next.add(config.configId);
+        if (prev.has(config.id)) {
+          next.add(config.id);
         }
       });
       return next;
@@ -91,8 +92,7 @@ export function ConfigDataSection() {
 
   const selectedCount = selectedIds.size;
   const isAllSelected =
-    configs.length > 0 &&
-    configs.every((config) => selectedIds.has(config.configId));
+    configs.length > 0 && configs.every((config) => selectedIds.has(config.id));
   const headerCheckboxState = isAllSelected
     ? true
     : selectedCount > 0
@@ -101,19 +101,19 @@ export function ConfigDataSection() {
 
   const handleToggleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(new Set(configs.map((config) => config.configId)));
+      setSelectedIds(new Set(configs.map((config) => config.id)));
     } else {
       setSelectedIds(new Set());
     }
   };
 
-  const handleToggleSelect = (configId: number, checked: boolean) => {
+  const handleToggleSelect = (id: number, checked: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (checked) {
-        next.add(configId);
+        next.add(id);
       } else {
-        next.delete(configId);
+        next.delete(id);
       }
       return next;
     });

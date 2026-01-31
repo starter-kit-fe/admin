@@ -1,11 +1,11 @@
 'use client';
 
+import { startSSE } from '@/lib/sse-client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { startSSE } from '@/lib/sse-client';
-
-import type { CacheOverview, CacheOverviewPatch } from '../api/types';
+import { getCacheOverview } from '../api';
 import { DEFAULT_OVERVIEW, mergeCacheOverview } from '../lib/overview';
+import type { CacheOverview, CacheOverviewPatch } from '../type';
 
 interface UseCacheOverviewStreamResult {
   overview: CacheOverview;
@@ -52,7 +52,10 @@ export function useCacheOverviewStream(): UseCacheOverviewStreamResult {
           return;
         }
         setOverview((prev) =>
-          mergeCacheOverview(prev ?? DEFAULT_OVERVIEW, payload as CacheOverviewPatch),
+          mergeCacheOverview(
+            prev ?? DEFAULT_OVERVIEW,
+            payload as CacheOverviewPatch,
+          ),
         );
         setLastUpdated(Date.now());
       },

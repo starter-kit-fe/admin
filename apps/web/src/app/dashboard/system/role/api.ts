@@ -29,18 +29,18 @@ export function listRoles(params: RoleListParams = {}) {
   return get<RoleListResponse>('/v1/system/roles', buildQuery(params));
 }
 
-export function getRoleDetail(roleId: number) {
-  return get<Role>(`/v1/system/roles/${roleId}`);
+export function getRoleDetail(id: number) {
+  return get<Role>(`/v1/system/roles/${id}`);
 }
 
 export function createRole(payload: CreateRolePayload) {
   return post<Role>('/v1/system/roles', payload);
 }
 
-export function updateRole(roleId: number, payload: UpdateRolePayload) {
-  return put<Role>(`/v1/system/roles/${roleId}`, payload);
+export function updateRole(id: number, payload: UpdateRolePayload) {
+  return put<Role>(`/v1/system/roles/${id}`, payload);
 }
 
-export function removeRole(roleId: number) {
-  return del<void>(`/v1/system/roles/${roleId}`);
+export function removeRole(id: number) {
+  return del<void>(`/v1/system/roles/${id}`);
 }

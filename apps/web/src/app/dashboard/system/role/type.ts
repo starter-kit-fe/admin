@@ -1,5 +1,5 @@
 export interface Role {
-  roleId: number;
+  id: number;
   roleName: string;
   roleKey: string;
   roleSort: number;
@@ -9,14 +9,14 @@ export interface Role {
   status: '0' | '1';
   remark?: string | null;
   createBy: string;
-  createTime?: string | null;
+  createdAt?: string | null;
   updateBy: string;
-  updateTime?: string | null;
+  updatedAt?: string | null;
   menuIds?: number[];
 }
 
 export interface RoleListResponse {
-  items: Role[];
+  list: Role[];
   total: number;
   pageNum: number;
   pageSize: number;

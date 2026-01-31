@@ -42,7 +42,7 @@ export function DictDataSection() {
     if (selectedDictId == null) {
       return undefined;
     }
-    return dictTypes.find((item) => item.dictId === selectedDictId);
+    return dictTypes.find((item) => item.id === selectedDictId);
   }, [dictTypes, selectedDictId]);
 
   useEffect(() => {
@@ -88,7 +88,7 @@ export function DictDataSection() {
 
   useEffect(() => {
     if (dataQuery.data) {
-      const items = dataQuery.data.items ?? [];
+      const items = dataQuery.data.list ?? [];
       if (!areDictDataListsEqual(items, dictData)) {
         setDictData(items);
       }

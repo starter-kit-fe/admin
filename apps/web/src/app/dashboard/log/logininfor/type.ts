@@ -1,5 +1,5 @@
 export interface LoginLog {
-  infoId: number;
+  id: number;
   userName: string;
   ipaddr: string;
   loginLocation: string;
@@ -7,11 +7,11 @@ export interface LoginLog {
   os: string;
   status: string;
   msg: string;
-  loginTime?: string | null;
+  createdAt?: string | null;
 }
 
 export interface LoginLogListResponse {
-  items: LoginLog[];
+  list: LoginLog[];
   total: number;
   pageNum: number;
   pageSize: number;

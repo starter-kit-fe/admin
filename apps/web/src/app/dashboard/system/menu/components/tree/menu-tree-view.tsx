@@ -15,7 +15,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Sheet,
   SheetContent,
@@ -25,6 +24,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { resolveLucideIcon } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';
@@ -137,28 +137,7 @@ export function MenuTreeView({
   canReorder = true,
 }: MenuTreeViewProps) {
   const isMobile = useIsMobile();
-  if (loading && nodes.length === 0) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <div
-            key={index}
-            className="flex items-start gap-3 rounded-lg border border-dashed border-border/70 bg-muted/40 px-3 py-2"
-          >
-            <Skeleton className="h-6 w-6 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-40 rounded" />
-              <div className="flex gap-2">
-                <Skeleton className="h-3 w-20 rounded" />
-                <Skeleton className="h-3 w-16 rounded" />
-                <Skeleton className="h-3 w-14 rounded" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
+
   const parentIds = useMemo(() => {
     const ids: number[] = [];
     const walk = (items: MenuTreeNode[]) => {
@@ -168,7 +147,7 @@ export function MenuTreeView({
             (child) => child.menuType !== 'F',
           );
           if (hasNonButtonChild) {
-            ids.push(item.menuId);
+            ids.push(item.id);
           }
           walk(item.children);
         }
@@ -220,7 +199,7 @@ export function MenuTreeView({
       if (targetIndex < 0 || targetIndex >= siblings.length) {
         return;
       }
-      const orderedIds = siblings.map((item) => item.menuId);
+      const orderedIds = siblings.map((item) => item.id);
       const [moved] = orderedIds.splice(index, 1);
       orderedIds.splice(targetIndex, 0, moved);
       onReorder(parentId, orderedIds);
@@ -238,7 +217,7 @@ export function MenuTreeView({
     ): ReactElement[] => {
       return items.map((node, index) => {
         const hasChildren = Boolean(node.children?.length);
-        const isExpanded = hasChildren ? expanded.has(node.menuId) : false;
+        const isExpanded = hasChildren ? expanded.has(node.id) : false;
         const typeMeta = TYPE_META[node.menuType] ?? {
           label: node.menuType,
           variant: 'default',
@@ -281,7 +260,7 @@ export function MenuTreeView({
         const Icon = resolveLucideIcon(node.icon);
 
         return (
-          <div key={node.menuId} className="text-sm">
+          <div key={node.id} className="text-sm">
             <div className="flex items-stretch">
               <TreeLines depth={depth} ancestors={ancestors} isLast={isLast} />
               <div className="flex flex-1 flex-col gap-1 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/40 dark:hover:bg-muted/20">
@@ -292,7 +271,7 @@ export function MenuTreeView({
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 shrink-0 text-muted-foreground"
-                      onClick={() => toggleNode(node.menuId)}
+                      onClick={() => toggleNode(node.id)}
                     >
                       {isExpanded ? (
                         <ChevronDown className="h-4 w-4" />
@@ -364,25 +343,27 @@ export function MenuTreeView({
                               未配置
                             </span>
                           )}
-                </span>
-              ) : null}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
 
-                <MenuActions
-                  node={node}
-                  canAddChild={!isButton && canAddChild}
-                  canEdit={canEdit}
-                  canDelete={canDelete}
-                  canMoveUp={canReorder && canMoveUp}
-                  canMoveDown={canReorder && canMoveDown}
-                  onAddChild={() => onAddChild(node)}
-                  onEdit={() => onEdit(node)}
-                  onDelete={() => onDelete(node)}
-                  onMoveUp={() => handleMove(parentId, items, index, 'up')}
-                  onMoveDown={() => handleMove(parentId, items, index, 'down')}
-                  isMobile={isMobile}
-                />
+                  <MenuActions
+                    node={node}
+                    canAddChild={!isButton && canAddChild}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    canMoveUp={canReorder && canMoveUp}
+                    canMoveDown={canReorder && canMoveDown}
+                    onAddChild={() => onAddChild(node)}
+                    onEdit={() => onEdit(node)}
+                    onDelete={() => onDelete(node)}
+                    onMoveUp={() => handleMove(parentId, items, index, 'up')}
+                    onMoveDown={() =>
+                      handleMove(parentId, items, index, 'down')
+                    }
+                    isMobile={isMobile}
+                  />
                 </div>
                 {node.remark ? (
                   <div className="pl-8 pr-2 text-xs text-muted-foreground">
@@ -395,7 +376,7 @@ export function MenuTreeView({
               ? renderNodes(
                   node.children!,
                   depth + 1,
-                  node.menuId,
+                  node.id,
                   [...ancestors, !isLast],
                   nextPathSegments,
                 )
@@ -418,6 +399,29 @@ export function MenuTreeView({
     ],
   );
 
+  if (loading && nodes.length === 0) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div
+            key={index}
+            className="flex items-start gap-3 rounded-lg border border-dashed border-border/70 bg-muted/40 px-3 py-2"
+          >
+            <Skeleton className="h-6 w-6 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-40 rounded" />
+              <div className="flex gap-2">
+                <Skeleton className="h-3 w-20 rounded" />
+                <Skeleton className="h-3 w-16 rounded" />
+                <Skeleton className="h-3 w-14 rounded" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-[200px] items-center justify-center text-sm text-muted-foreground">
@@ -436,8 +440,8 @@ export function MenuTreeView({
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
-  );
-}
+    );
+  }
 
   return <div>{renderNodes(nodes)}</div>;
 }

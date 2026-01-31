@@ -11,14 +11,11 @@ import {
   useUserManagementStore,
 } from '../../store';
 import type { UserFormValues } from '../../type';
-import { sanitizeDeptId, sanitizeIdList, toFormValues } from '../utils';
 import { UserEditorDialog } from '../dialogs/user-editor-dialog';
+import { sanitizeDeptId, sanitizeIdList, toFormValues } from '../utils';
 
 export function UserEditorManager() {
-  const {
-    editorState,
-    closeEditor,
-  } = useUserManagementStore();
+  const { editorState, closeEditor } = useUserManagementStore();
   const refresh = useUserManagementRefresh();
   const { beginMutation, endMutation } = useUserManagementMutationCounter();
   const submitLockRef = useRef(false);
@@ -102,9 +99,7 @@ export function UserEditorManager() {
   });
 
   const isEditMode =
-    editorState.open &&
-    'mode' in editorState &&
-    editorState.mode === 'edit';
+    editorState.open && 'mode' in editorState && editorState.mode === 'edit';
 
   const editorDefaultValues = useMemo<UserFormValues | undefined>(() => {
     if (!isEditMode) {
@@ -126,7 +121,7 @@ export function UserEditorManager() {
 
     if (isEditMode) {
       updateMutation.mutate({
-        id: editorState.user.userId,
+        id: editorState.user.id,
         values,
       });
       return;

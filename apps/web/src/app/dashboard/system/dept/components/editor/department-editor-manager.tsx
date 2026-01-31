@@ -1,13 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import {
-  createDepartment,
-  updateDepartment,
-} from '../../api';
 import {
   useDepartmentEditorActions,
   useDepartmentEditorState,
@@ -15,6 +7,11 @@ import {
   useDepartmentManagementRefresh,
   useDepartmentTreeState,
 } from '@/app/dashboard/system/dept/store';
+import { useMutation } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { toast } from 'sonner';
+
+import { createDepartment, updateDepartment } from '../../api';
 import type { DepartmentFormValues } from '../../type';
 import {
   buildParentOptions,
@@ -55,12 +52,12 @@ export function DepartmentEditorManager() {
 
   const updateMutation = useMutation({
     mutationFn: ({
-      deptId,
+      id,
       values,
     }: {
-      deptId: number;
+      id: number;
       values: DepartmentFormValues;
-    }) => updateDepartment(deptId, toUpdatePayload(values)),
+    }) => updateDepartment(id, toUpdatePayload(values)),
     onMutate: () => {
       beginMutation();
     },
@@ -102,7 +99,7 @@ export function DepartmentEditorManager() {
   const parentOptions = useMemo(() => {
     const exclude = new Set<number>();
     if (editorState.open && editorState.mode === 'edit') {
-      exclude.add(editorState.node.deptId);
+      exclude.add(editorState.node.id);
       collectDescendantIds(editorState.node).forEach((id) => exclude.add(id));
     }
     return buildParentOptions(departmentTree, exclude);
@@ -115,7 +112,7 @@ export function DepartmentEditorManager() {
       return;
     }
     updateMutation.mutate({
-      deptId: editorState.node.deptId,
+      id: editorState.node.id,
       values,
     });
   };

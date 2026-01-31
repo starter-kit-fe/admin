@@ -110,7 +110,7 @@ export function MenuTreeSection() {
       }
       setMenuTree((prev) => reorderTree(prev, parentId, orderedIds));
       const payload: MenuOrderUpdate[] = orderedIds.map((id, index) => ({
-        menuId: id,
+        id: id,
         parentId,
         orderNum: index + 1,
       }));
@@ -142,7 +142,7 @@ export function MenuTreeSection() {
       <MenuTreeView
         nodes={menuTree}
         loading={menuQuery.isLoading}
-        onAddChild={(parent) => openCreate(parent.menuId)}
+        onAddChild={(parent) => openCreate(parent.id)}
         onEdit={openEdit}
         onDelete={setDeleteTarget}
         onReorder={handleReorder}

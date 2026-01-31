@@ -1,10 +1,10 @@
 'use client';
 
+import { EllipsisText } from '@/components/table/ellipsis-text';
 import {
   PINNED_ACTION_COLUMN_META,
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
-import { EllipsisText } from '@/components/table/ellipsis-text';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -24,14 +24,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -40,8 +32,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { usePermissions } from '@/hooks/use-permissions';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import {
   createColumnHelper,
@@ -75,7 +75,7 @@ interface UserTableProps {
   headerCheckboxState: boolean | 'indeterminate';
   onToggleSelectAll: (checked: boolean) => void;
   selectedIds: Set<number>;
-  onToggleSelect: (userId: number, checked: boolean) => void;
+  onToggleSelect: (id: number, checked: boolean) => void;
   onEdit: (user: User) => void;
   onResetPassword?: (user: User) => void;
   onDelete: (user: User) => void;
@@ -150,7 +150,9 @@ function RowActions({
                     <Pencil className="size-4" />
                     修改
                   </span>
-                  <span className="text-xs text-muted-foreground">编辑信息</span>
+                  <span className="text-xs text-muted-foreground">
+                    编辑信息
+                  </span>
                 </Button>
               ) : null}
               {canResetPassword ? (
@@ -279,13 +281,13 @@ export function UserTable({
         cell: ({ row }) => {
           const user = row.original;
           const label = getAccountLabel(user, getDisplayName(user));
-          const isSelected = selectedIds.has(user.userId);
+          const isSelected = selectedIds.has(user.id);
           return (
             <Checkbox
               aria-label={`选择 ${label}`}
               checked={isSelected}
               onCheckedChange={(checked) =>
-                onToggleSelect(user.userId, checked === true)
+                onToggleSelect(user.id, checked === true)
               }
             />
           );
@@ -438,7 +440,7 @@ export function UserTable({
           header: () => <span className="block text-right">操作</span>,
           cell: ({ row }) => {
             const user = row.original;
-            const isSuperAdmin = user.userId === 1 || user.userName === 'admin';
+            const isSuperAdmin = user.id === 1 || user.userName === 'admin';
             return (
               <RowActions
                 user={user}
@@ -541,7 +543,7 @@ export function UserTable({
           ) : (
             table.getRowModel().rows.map((row) => {
               const user = row.original;
-              const isSelected = selectedIds.has(user.userId);
+              const isSelected = selectedIds.has(user.id);
               return (
                 <TableRow
                   key={row.id}

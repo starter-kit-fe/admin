@@ -1,25 +1,24 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
-import { removeDictType } from '../../api';
 import {
   useDictManagementMutationCounter,
   useDictManagementRefresh,
   useDictTypeDeleteState,
 } from '@/app/dashboard/system/dict/store';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
+import { removeDictType } from '../../api';
 import { resolveErrorMessage } from '../../utils';
 
 export function DictTypeDeleteDialog() {
   const { typeDeleteTarget, setTypeDeleteTarget } = useDictTypeDeleteState();
   const refresh = useDictManagementRefresh();
-  const { beginMutation, endMutation } =
-    useDictManagementMutationCounter();
+  const { beginMutation, endMutation } = useDictManagementMutationCounter();
 
   const deleteMutation = useMutation({
-    mutationFn: (dictId: number) => removeDictType(dictId),
+    mutationFn: (id: number) => removeDictType(id),
     onMutate: () => {
       beginMutation();
     },
@@ -53,7 +52,7 @@ export function DictTypeDeleteDialog() {
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (typeDeleteTarget) {
-          deleteMutation.mutate(typeDeleteTarget.dictId);
+          deleteMutation.mutate(typeDeleteTarget.id);
         }
       }}
     />

@@ -1,15 +1,14 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
 import { removeMenu } from '@/app/dashboard/system/menu/api';
 import {
   useMenuManagementMutationCounter,
   useMenuManagementRefresh,
   useMenuManagementStore,
 } from '@/app/dashboard/system/menu/store';
+import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export function MenuDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = useMenuManagementStore();
@@ -17,7 +16,7 @@ export function MenuDeleteDialog() {
   const { beginMutation, endMutation } = useMenuManagementMutationCounter();
 
   const deleteMutation = useMutation({
-    mutationFn: (menuId: number) => removeMenu(menuId),
+    mutationFn: (id: number) => removeMenu(id),
     onMutate: () => {
       beginMutation();
     },
@@ -53,7 +52,7 @@ export function MenuDeleteDialog() {
       }}
       onConfirm={() => {
         if (deleteTarget) {
-          deleteMutation.mutate(deleteTarget.menuId);
+          deleteMutation.mutate(deleteTarget.id);
         }
       }}
     />

@@ -43,7 +43,9 @@ import {
 
 import type { DepartmentNode, DepartmentStatus } from '../../type';
 
-const STATUS_META: Partial<Record<DepartmentStatus, { label: string; className: string }>> = {
+const STATUS_META: Partial<
+  Record<DepartmentStatus, { label: string; className: string }>
+> = {
   '1': {
     label: '停用',
     className:
@@ -57,7 +59,6 @@ interface DepartmentTreeViewProps {
   onEdit: (node: DepartmentNode) => void;
   onDelete: (node: DepartmentNode) => void;
 }
-
 
 function TreeLines({
   depth,
@@ -105,14 +106,15 @@ export function DepartmentTreeView({
   onDelete,
 }: DepartmentTreeViewProps) {
   const isMobile = useIsMobile();
-  const [mobileActionNode, setMobileActionNode] = useState<DepartmentNode | null>(null);
+  const [mobileActionNode, setMobileActionNode] =
+    useState<DepartmentNode | null>(null);
 
   const parentIds = useMemo(() => {
     const ids: number[] = [];
     const walk = (items: DepartmentNode[]) => {
       items.forEach((item) => {
         if (item.children && item.children.length > 0) {
-          ids.push(item.deptId);
+          ids.push(item.id);
           walk(item.children);
         }
       });
@@ -140,13 +142,13 @@ export function DepartmentTreeView({
     });
   }, [parentKey, parentIds]);
 
-  const toggleNode = useCallback((deptId: number) => {
+  const toggleNode = useCallback((id: number) => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      if (next.has(deptId)) {
-        next.delete(deptId);
+      if (next.has(id)) {
+        next.delete(id);
       } else {
-        next.add(deptId);
+        next.add(id);
       }
       return next;
     });
@@ -160,12 +162,12 @@ export function DepartmentTreeView({
     ): ReactElement[] => {
       return items.map((item, index) => {
         const hasChildren = Boolean(item.children?.length);
-        const isExpanded = hasChildren ? expanded.has(item.deptId) : false;
+        const isExpanded = hasChildren ? expanded.has(item.id) : false;
         const statusMeta = STATUS_META[item.status];
         const isLast = index === items.length - 1;
 
         return (
-          <div key={item.deptId} className="space-y-1">
+          <div key={item.id} className="space-y-1">
             <div className="flex items-stretch">
               <TreeLines depth={depth} ancestors={ancestors} isLast={isLast} />
               <div className="flex flex-1 items-start gap-2 rounded-md px-2 py-2 transition-colors hover:bg-muted/40 dark:hover:bg-muted/20">
@@ -175,7 +177,7 @@ export function DepartmentTreeView({
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 shrink-0 text-muted-foreground"
-                    onClick={() => toggleNode(item.deptId)}
+                    onClick={() => toggleNode(item.id)}
                   >
                     {isExpanded ? (
                       <ChevronDown className="h-4 w-4" />
@@ -225,7 +227,10 @@ export function DepartmentTreeView({
             </div>
             {hasChildren && isExpanded ? (
               <div className="space-y-1">
-                {renderNodes(item.children!, depth + 1, [...ancestors, !isLast])}
+                {renderNodes(item.children!, depth + 1, [
+                  ...ancestors,
+                  !isLast,
+                ])}
               </div>
             ) : null}
           </div>
@@ -240,7 +245,9 @@ export function DepartmentTreeView({
       <Empty className="h-60 border border-dashed border-border/60">
         <EmptyHeader>
           <EmptyTitle>暂无部门数据</EmptyTitle>
-          <EmptyDescription>创建组织结构后即可在此维护上下级关系。</EmptyDescription>
+          <EmptyDescription>
+            创建组织结构后即可在此维护上下级关系。
+          </EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
@@ -396,7 +403,9 @@ function MobileDepartmentActionSheet({
               <Trash2 className="h-4 w-4" />
               删除
             </span>
-            <span className="text-xs text-muted-foreground">删除并移除子部门</span>
+            <span className="text-xs text-muted-foreground">
+              删除并移除子部门
+            </span>
           </Button>
         </SheetFooter>
       </SheetContent>

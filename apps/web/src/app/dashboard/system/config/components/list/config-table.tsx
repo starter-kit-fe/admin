@@ -73,7 +73,7 @@ interface ConfigTableProps {
   selectedIds: Set<number>;
   headerCheckboxState: boolean | 'indeterminate';
   onToggleSelectAll: (checked: boolean) => void;
-  onToggleSelect: (configId: number, checked: boolean) => void;
+  onToggleSelect: (id: number, checked: boolean) => void;
 }
 
 function renderTypeBadge(type: string) {
@@ -124,13 +124,13 @@ export function ConfigTable({
         ),
         cell: ({ row }) => {
           const config = row.original;
-          const isSelected = selectedIds.has(config.configId);
+          const isSelected = selectedIds.has(config.id);
           return (
             <Checkbox
               aria-label={`选择 ${config.configName}`}
               checked={isSelected}
               onCheckedChange={(checked) =>
-                onToggleSelect(config.configId, checked === true)
+                onToggleSelect(config.id, checked === true)
               }
             />
           );

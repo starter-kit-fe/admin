@@ -1,29 +1,28 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import {
-  createNotice,
-  updateNotice,
-  type CreateNoticePayload,
-  type UpdateNoticePayload,
-} from '../../api';
 import {
   useNoticeManagementMutationCounter,
   useNoticeManagementRefresh,
   useNoticeManagementStore,
 } from '@/app/dashboard/system/notice/store';
-import { resolveErrorMessage, toFormValues } from '../../utils';
+import { useMutation } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { toast } from 'sonner';
+
+import {
+  type CreateNoticePayload,
+  type UpdateNoticePayload,
+  createNotice,
+  updateNotice,
+} from '../../api';
 import type { NoticeFormValues } from '../../type';
+import { resolveErrorMessage, toFormValues } from '../../utils';
 import { NoticeEditorDialog } from './notice-editor-dialog';
 
 export function NoticeEditorManager() {
   const { editorState, closeEditor } = useNoticeManagementStore();
   const refresh = useNoticeManagementRefresh();
-  const { beginMutation, endMutation } =
-    useNoticeManagementMutationCounter();
+  const { beginMutation, endMutation } = useNoticeManagementMutationCounter();
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateNoticePayload) => createNotice(payload),
@@ -77,8 +76,7 @@ export function NoticeEditorManager() {
     return toFormValues(editorState.notice);
   }, [editorState]);
 
-  const submitting =
-    createMutation.isPending || updateMutation.isPending;
+  const submitting = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = (values: NoticeFormValues) => {
     const payload: CreateNoticePayload = {
@@ -90,7 +88,7 @@ export function NoticeEditorManager() {
     };
     if (editorState.open && editorState.mode === 'edit') {
       updateMutation.mutate({
-        id: editorState.notice.noticeId,
+        id: editorState.notice.id,
         payload,
       });
       return;

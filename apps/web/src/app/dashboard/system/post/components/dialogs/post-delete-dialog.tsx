@@ -1,15 +1,15 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
-import { removePost } from '../../api';
 import {
   usePostManagementMutationCounter,
   usePostManagementRefresh,
   usePostManagementStore,
 } from '@/app/dashboard/system/post/store';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+import { DeleteConfirmDialog } from '../../../user/components/delete-confirm-dialog';
+import { removePost } from '../../api';
 import { resolveErrorMessage } from '../../utils';
 
 export function PostDeleteDialog() {
@@ -18,7 +18,7 @@ export function PostDeleteDialog() {
   const { beginMutation, endMutation } = usePostManagementMutationCounter();
 
   const deleteMutation = useMutation({
-    mutationFn: (postId: number) => removePost(postId),
+    mutationFn: (id: number) => removePost(id),
     onMutate: () => {
       beginMutation();
     },
@@ -52,7 +52,7 @@ export function PostDeleteDialog() {
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (deleteTarget) {
-          deleteMutation.mutate(deleteTarget.postId);
+          deleteMutation.mutate(deleteTarget.id);
         }
       }}
     />

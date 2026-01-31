@@ -60,7 +60,7 @@ export function buildParentOptions(nodes: MenuTreeNode[]): MenuParentOption[] {
     items.forEach((item) => {
       const currentPath = [...ancestors, item.menuName];
       options.push({
-        value: String(item.menuId),
+        value: String(item.id),
         label: item.menuName,
         level: depth,
         path: currentPath,
@@ -69,7 +69,7 @@ export function buildParentOptions(nodes: MenuTreeNode[]): MenuParentOption[] {
         menuType: item.menuType,
       });
       if (item.children && item.children.length > 0) {
-        walk(item.children, depth + 1, currentPath, item.menuId);
+        walk(item.children, depth + 1, currentPath, item.id);
       }
     });
   };
@@ -109,7 +109,7 @@ export function collectDescendantIds(node?: MenuTreeNode): number[] {
   const stack = [...node.children];
   while (stack.length > 0) {
     const current = stack.pop()!;
-    result.push(current.menuId);
+    result.push(current.id);
     if (current.children) {
       stack.push(...current.children);
     }
@@ -119,14 +119,14 @@ export function collectDescendantIds(node?: MenuTreeNode): number[] {
 
 export function findMenuNodeById(
   nodes: MenuTreeNode[],
-  menuId: number,
+  id: number,
 ): MenuTreeNode | null {
   for (const node of nodes) {
-    if (node.menuId === menuId) {
+    if (node.id === id) {
       return node;
     }
     if (node.children && node.children.length > 0) {
-      const found = findMenuNodeById(node.children, menuId);
+      const found = findMenuNodeById(node.children, id);
       if (found) {
         return found;
       }
@@ -141,7 +141,7 @@ export function reorderTree(
   orderedIds: number[],
 ): MenuTreeNode[] {
   if (parentId === 0) {
-    const map = new Map(nodes.map((node) => [node.menuId, node]));
+    const map = new Map(nodes.map((node) => [node.id, node]));
     return orderedIds
       .map((id, index) => {
         const current = map.get(id);
@@ -156,9 +156,9 @@ export function reorderTree(
   }
 
   return nodes.map((node) => {
-    if (node.menuId === parentId) {
+    if (node.id === parentId) {
       const childMap = new Map(
-        (node.children ?? []).map((child) => [child.menuId, child]),
+        (node.children ?? []).map((child) => [child.id, child]),
       );
       const newChildren = orderedIds
         .map((id, index) => {

@@ -67,7 +67,7 @@ export function normalizeOnlineUserResponse(
   }
 
   return {
-    rows: data.items ?? [],
-    total: typeof data.total === 'number' ? data.total : data.items.length,
+    rows: data.list ?? [],
+    total: typeof data.total === 'number' ? data.total : data.list.length,
   };
 }

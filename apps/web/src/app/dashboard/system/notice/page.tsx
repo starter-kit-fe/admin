@@ -1,4 +1,4 @@
-import { NoticeManagement } from './notice-management';
+import { NoticeManagement } from './components/notice-management';
 
 export default function Page() {
   return <NoticeManagement />;

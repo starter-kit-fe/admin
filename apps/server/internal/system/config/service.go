@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"time"
 
 	"github.com/starter-kit-fe/admin/internal/model"
 )
@@ -124,7 +123,7 @@ func (s *Service) CreateConfig(ctx context.Context, input CreateConfigInput) (*C
 	}
 
 	operator := sanitizeOperator(input.Operator)
-	now := time.Now()
+
 	record := &model.SysConfig{
 		ConfigName:  name,
 		ConfigKey:   key,
@@ -133,8 +132,6 @@ func (s *Service) CreateConfig(ctx context.Context, input CreateConfigInput) (*C
 		Remark:      normalizeRemark(input.Remark),
 		CreateBy:    operator,
 		UpdateBy:    operator,
-		CreateTime:  &now,
-		UpdateTime:  &now,
 	}
 
 	if err := s.repo.CreateConfig(ctx, record); err != nil {
@@ -168,7 +165,7 @@ func (s *Service) UpdateConfig(ctx context.Context, input UpdateConfigInput) (*C
 			return nil, ErrConfigKeyRequired
 		}
 		if !strings.EqualFold(key, record.ConfigKey) {
-			if exists, err := s.repo.ExistsByKey(ctx, key, record.ConfigID); err != nil {
+			if exists, err := s.repo.ExistsByKey(ctx, key, int64(record.ID)); err != nil {
 				return nil, err
 			} else if exists {
 				return nil, ErrDuplicateConfigKey
@@ -198,8 +195,6 @@ func (s *Service) UpdateConfig(ctx context.Context, input UpdateConfigInput) (*C
 	}
 
 	record.UpdateBy = sanitizeOperator(input.Operator)
-	now := time.Now()
-	record.UpdateTime = &now
 
 	if err := s.repo.SaveConfig(ctx, record); err != nil {
 		return nil, err
@@ -243,7 +238,7 @@ func configFromModel(record *model.SysConfig) *Config {
 		return nil
 	}
 	return &Config{
-		ConfigID:    record.ConfigID,
+		ConfigID:    int64(record.ID),
 		ConfigName:  record.ConfigName,
 		ConfigKey:   record.ConfigKey,
 		ConfigValue: record.ConfigValue,

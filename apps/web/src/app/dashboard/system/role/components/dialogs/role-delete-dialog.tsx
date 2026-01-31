@@ -1,15 +1,15 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-
-import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
-import { removeRole } from '../../api';
 import {
   useRoleManagementMutationCounter,
   useRoleManagementRefresh,
   useRoleManagementStore,
 } from '@/app/dashboard/system/role/store';
+import { DeleteConfirmDialog } from '@/app/dashboard/system/user/components/delete-confirm-dialog';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+import { removeRole } from '../../api';
 
 export function RoleDeleteDialog() {
   const { deleteTarget, setDeleteTarget } = useRoleManagementStore();
@@ -17,7 +17,7 @@ export function RoleDeleteDialog() {
   const { beginMutation, endMutation } = useRoleManagementMutationCounter();
 
   const deleteMutation = useMutation({
-    mutationFn: (roleId: number) => removeRole(roleId),
+    mutationFn: (id: number) => removeRole(id),
     onMutate: () => {
       beginMutation();
     },
@@ -53,7 +53,7 @@ export function RoleDeleteDialog() {
       loading={deleteMutation.isPending}
       onConfirm={() => {
         if (deleteTarget) {
-          deleteMutation.mutate(deleteTarget.roleId);
+          deleteMutation.mutate(deleteTarget.id);
         }
       }}
     />

@@ -67,7 +67,7 @@ export function JobLogsSection({
   canClearLogs: boolean;
   clearing: boolean;
 }) {
-  const rows = logs?.items ?? [];
+  const rows = logs?.list ?? [];
   const total = logs?.total ?? 0;
   const showSkeleton = isLoading && rows.length === 0;
 
@@ -88,7 +88,7 @@ export function JobLogsSection({
           return (
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">
-                {log.createTime || '—'}
+                {log.createdAt || '—'}
               </p>
               <p className="text-xs text-muted-foreground">
                 {log.invokeTarget || job.invokeTarget}

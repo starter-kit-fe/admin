@@ -80,7 +80,7 @@ func (r *Repository) ListPosts(ctx context.Context, opts ListOptions) ([]model.S
 	}
 
 	var posts []model.SysPost
-	if err := dataQuery.Order("post_sort ASC, post_id ASC").Find(&posts).Error; err != nil {
+	if err := dataQuery.Order("post_sort ASC, id ASC").Find(&posts).Error; err != nil {
 		return nil, 0, err
 	}
 	return posts, total, nil
@@ -95,7 +95,7 @@ func (r *Repository) GetPost(ctx context.Context, id int64) (*model.SysPost, err
 	}
 
 	var post model.SysPost
-	if err := r.db.WithContext(ctx).Where("post_id = ?", id).First(&post).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("id = ?", id).First(&post).Error; err != nil {
 		return nil, err
 	}
 	return &post, nil
@@ -124,7 +124,7 @@ func (r *Repository) UpdatePost(ctx context.Context, id int64, updates map[strin
 
 	result := r.db.WithContext(ctx).
 		Model(&model.SysPost{}).
-		Where("post_id = ?", id).
+		Where("id = ?", id).
 		Updates(updates)
 	if result.Error != nil {
 		return result.Error
@@ -143,7 +143,7 @@ func (r *Repository) DeletePost(ctx context.Context, id int64) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	result := r.db.WithContext(ctx).Where("post_id = ?", id).Delete(&model.SysPost{})
+	result := r.db.WithContext(ctx).Where("id = ?", id).Delete(&model.SysPost{})
 	if result.Error != nil {
 		return result.Error
 	}
@@ -167,7 +167,7 @@ func (r *Repository) ExistsByCode(ctx context.Context, code string, excludeID in
 		Model(&model.SysPost{}).
 		Where("post_code = ?", trimmed)
 	if excludeID > 0 {
-		query = query.Where("post_id <> ?", excludeID)
+		query = query.Where("id <> ?", excludeID)
 	}
 
 	var count int64
@@ -191,7 +191,7 @@ func (r *Repository) ExistsByName(ctx context.Context, name string, excludeID in
 		Model(&model.SysPost{}).
 		Where("post_name = ?", trimmed)
 	if excludeID > 0 {
-		query = query.Where("post_id <> ?", excludeID)
+		query = query.Where("id <> ?", excludeID)
 	}
 
 	var count int64

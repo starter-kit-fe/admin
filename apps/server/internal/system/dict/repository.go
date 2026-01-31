@@ -51,7 +51,7 @@ func (r *Repository) ListDictTypes(ctx context.Context, opts ListOptions) ([]mod
 	}
 
 	var types []model.SysDictType
-	if err := query.Order("dict_id ASC").Find(&types).Error; err != nil {
+	if err := query.Order("id ASC").Find(&types).Error; err != nil {
 		return nil, err
 	}
 
@@ -85,7 +85,7 @@ func (r *Repository) ListDictData(ctx context.Context, opts ListDataOptions) ([]
 	}
 
 	var items []model.SysDictData
-	if err := query.Order("dict_sort ASC, dict_code ASC").Find(&items).Error; err != nil {
+	if err := query.Order("dict_sort ASC, id ASC").Find(&items).Error; err != nil {
 		return nil, err
 	}
 
@@ -113,7 +113,7 @@ func (r *Repository) ExistsDictType(ctx context.Context, dictType string, exclud
 	var count int64
 	query := r.db.WithContext(ctx).Model(&model.SysDictType{}).Where("dict_type = ?", dictType)
 	if excludeID > 0 {
-		query = query.Where("dict_id <> ?", excludeID)
+		query = query.Where("id <> ?", excludeID)
 	}
 	if err := query.Count(&count).Error; err != nil {
 		return false, err
@@ -185,7 +185,7 @@ func (r *Repository) ExistsDictDataByLabel(ctx context.Context, dictType, label 
 		Model(&model.SysDictData{}).
 		Where("dict_type = ? AND dict_label = ?", dictType, label)
 	if excludeCode > 0 {
-		query = query.Where("dict_code <> ?", excludeCode)
+		query = query.Where("id <> ?", excludeCode)
 	}
 	if err := query.Count(&count).Error; err != nil {
 		return false, err
@@ -203,7 +203,7 @@ func (r *Repository) ExistsDictDataByValue(ctx context.Context, dictType, value 
 		Model(&model.SysDictData{}).
 		Where("dict_type = ? AND dict_value = ?", dictType, value)
 	if excludeCode > 0 {
-		query = query.Where("dict_code <> ?", excludeCode)
+		query = query.Where("id <> ?", excludeCode)
 	}
 	if err := query.Count(&count).Error; err != nil {
 		return false, err

@@ -85,7 +85,7 @@ func (r *Repository) ListOperLogs(ctx context.Context, opts ListOptions) ([]mode
 		}
 
 		return query.
-			Order("oper_time DESC").
+			Order("created_at DESC").
 			Offset((pageNum - 1) * pageSize).
 			Limit(pageSize).
 			Find(&records).Error

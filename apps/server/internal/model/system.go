@@ -2,30 +2,22 @@ package model
 
 import (
 	"time"
-
-	"github.com/starter-kit-fe/admin/constant"
 )
 
-func tableName(suffix string) string {
-	return constant.DB_PREFIX + suffix
-}
-
 type SysDept struct {
-	DeptID     int64      `gorm:"column:dept_id;primaryKey;autoIncrement" json:"dept_id"`
-	ParentID   int64      `gorm:"column:parent_id" json:"parent_id"`
-	Ancestors  string     `gorm:"column:ancestors" json:"ancestors"`
-	DeptName   string     `gorm:"column:dept_name" json:"dept_name"`
-	OrderNum   int        `gorm:"column:order_num" json:"order_num"`
-	Leader     *string    `gorm:"column:leader" json:"leader,omitempty"`
-	Phone      *string    `gorm:"column:phone" json:"phone,omitempty"`
-	Email      *string    `gorm:"column:email" json:"email,omitempty"`
-	Status     string     `gorm:"column:status" json:"status"`
-	Remark     *string    `gorm:"column:remark" json:"remark,omitempty"`
-	DelFlag    string     `gorm:"column:del_flag" json:"del_flag"`
-	CreateBy   string     `gorm:"column:create_by" json:"create_by"`
-	CreateTime *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`
-	UpdateBy   string     `gorm:"column:update_by" json:"update_by"`
-	UpdateTime *time.Time `gorm:"column:update_time" json:"update_time,omitempty"`
+	ParentID  int64   `gorm:"column:parent_id" json:"parent_id"`
+	Ancestors string  `gorm:"column:ancestors" json:"ancestors"`
+	DeptName  string  `gorm:"column:dept_name" json:"dept_name"`
+	OrderNum  int     `gorm:"column:order_num" json:"order_num"`
+	Leader    *string `gorm:"column:leader" json:"leader,omitempty"`
+	Phone     *string `gorm:"column:phone" json:"phone,omitempty"`
+	Email     *string `gorm:"column:email" json:"email,omitempty"`
+	Status    string  `gorm:"column:status" json:"status"`
+	Remark    *string `gorm:"column:remark" json:"remark,omitempty"`
+
+	BaseModel
+	CreateBy string `gorm:"column:create_by" json:"create_by"`
+	UpdateBy string `gorm:"column:update_by" json:"update_by"`
 }
 
 func (SysDept) TableName() string {
@@ -33,26 +25,24 @@ func (SysDept) TableName() string {
 }
 
 type SysUser struct {
-	UserID        int64      `gorm:"column:user_id;primaryKey;autoIncrement" json:"user_id"`
-	DeptID        *int64     `gorm:"column:dept_id" json:"dept_id,omitempty"`
-	UserName      string     `gorm:"column:user_name" json:"user_name"`
-	NickName      string     `gorm:"column:nick_name" json:"nick_name"`
-	UserType      string     `gorm:"column:user_type" json:"user_type"`
-	Email         string     `gorm:"column:email" json:"email"`
-	Phonenumber   string     `gorm:"column:phonenumber" json:"phonenumber"`
-	Sex           string     `gorm:"column:sex" json:"sex"`
-	Avatar        string     `gorm:"column:avatar" json:"avatar"`
-	Password      string     `gorm:"column:password" json:"password"`
-	Status        string     `gorm:"column:status" json:"status"`
-	DelFlag       string     `gorm:"column:del_flag" json:"del_flag"`
+	DeptID      *int64 `gorm:"column:dept_id" json:"dept_id,omitempty"`
+	UserName    string `gorm:"column:user_name" json:"user_name"`
+	NickName    string `gorm:"column:nick_name" json:"nick_name"`
+	UserType    string `gorm:"column:user_type" json:"user_type"`
+	Email       string `gorm:"column:email" json:"email"`
+	Phonenumber string `gorm:"column:phonenumber" json:"phonenumber"`
+	Sex         string `gorm:"column:sex" json:"sex"`
+	Avatar      string `gorm:"column:avatar" json:"avatar"`
+	Password    string `gorm:"column:password" json:"password"`
+	Status      string `gorm:"column:status" json:"status"`
+
 	LoginIP       string     `gorm:"column:login_ip" json:"login_ip"`
 	LoginDate     *time.Time `gorm:"column:login_date" json:"login_date,omitempty"`
 	PwdUpdateDate *time.Time `gorm:"column:pwd_update_date" json:"pwd_update_date,omitempty"`
-	CreateBy      string     `gorm:"column:create_by" json:"create_by"`
-	CreateTime    *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`
-	UpdateBy      string     `gorm:"column:update_by" json:"update_by"`
-	UpdateTime    *time.Time `gorm:"column:update_time" json:"update_time,omitempty"`
-	Remark        *string    `gorm:"column:remark" json:"remark,omitempty"`
+	BaseModel
+	CreateBy string  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
+	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
 }
 
 func (SysUser) TableName() string {
@@ -60,16 +50,14 @@ func (SysUser) TableName() string {
 }
 
 type SysPost struct {
-	PostID     int64      `gorm:"column:post_id;primaryKey;autoIncrement" json:"post_id"`
-	PostCode   string     `gorm:"column:post_code" json:"post_code"`
-	PostName   string     `gorm:"column:post_name" json:"post_name"`
-	PostSort   int        `gorm:"column:post_sort" json:"post_sort"`
-	Status     string     `gorm:"column:status" json:"status"`
-	CreateBy   string     `gorm:"column:create_by" json:"create_by"`
-	CreateTime *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`
-	UpdateBy   string     `gorm:"column:update_by" json:"update_by"`
-	UpdateTime *time.Time `gorm:"column:update_time" json:"update_time,omitempty"`
-	Remark     *string    `gorm:"column:remark" json:"remark,omitempty"`
+	PostCode string `gorm:"column:post_code" json:"post_code"`
+	PostName string `gorm:"column:post_name" json:"post_name"`
+	PostSort int    `gorm:"column:post_sort" json:"post_sort"`
+	Status   string `gorm:"column:status" json:"status"`
+	BaseModel
+	CreateBy string  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
+	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
 }
 
 func (SysPost) TableName() string {
@@ -77,20 +65,18 @@ func (SysPost) TableName() string {
 }
 
 type SysRole struct {
-	RoleID            int64      `gorm:"column:role_id;primaryKey;autoIncrement" json:"role_id"`
-	RoleName          string     `gorm:"column:role_name" json:"role_name"`
-	RoleKey           string     `gorm:"column:role_key" json:"role_key"`
-	RoleSort          int        `gorm:"column:role_sort" json:"role_sort"`
-	DataScope         string     `gorm:"column:data_scope" json:"data_scope"`
-	MenuCheckStrictly bool       `gorm:"column:menu_check_strictly" json:"menu_check_strictly"`
-	DeptCheckStrictly bool       `gorm:"column:dept_check_strictly" json:"dept_check_strictly"`
-	Status            string     `gorm:"column:status" json:"status"`
-	DelFlag           string     `gorm:"column:del_flag" json:"del_flag"`
-	CreateBy          string     `gorm:"column:create_by" json:"create_by"`
-	CreateTime        *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`
-	UpdateBy          string     `gorm:"column:update_by" json:"update_by"`
-	UpdateTime        *time.Time `gorm:"column:update_time" json:"update_time,omitempty"`
-	Remark            *string    `gorm:"column:remark" json:"remark,omitempty"`
+	RoleName          string `gorm:"column:role_name" json:"role_name"`
+	RoleKey           string `gorm:"column:role_key" json:"role_key"`
+	RoleSort          int    `gorm:"column:role_sort" json:"role_sort"`
+	DataScope         string `gorm:"column:data_scope" json:"data_scope"`
+	MenuCheckStrictly bool   `gorm:"column:menu_check_strictly" json:"menu_check_strictly"`
+	DeptCheckStrictly bool   `gorm:"column:dept_check_strictly" json:"dept_check_strictly"`
+	Status            string `gorm:"column:status" json:"status"`
+
+	BaseModel
+	CreateBy string  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
+	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
 }
 
 func (SysRole) TableName() string {
@@ -98,24 +84,22 @@ func (SysRole) TableName() string {
 }
 
 type SysMenu struct {
-	MenuID     int64      `gorm:"column:menu_id;primaryKey;autoIncrement" json:"menu_id"`
-	MenuName   string     `gorm:"column:menu_name" json:"menu_name"`
-	ParentID   int64      `gorm:"column:parent_id" json:"parent_id"`
-	OrderNum   int        `gorm:"column:order_num" json:"order_num"`
-	Path       string     `gorm:"column:path" json:"path"`
-	Query      *string    `gorm:"column:query" json:"query,omitempty"`
-	IsFrame    bool       `gorm:"column:is_frame" json:"is_frame"`
-	IsCache    bool       `gorm:"column:is_cache" json:"is_cache"`
-	MenuType   string     `gorm:"column:menu_type" json:"menu_type"`
-	Visible    string     `gorm:"column:visible" json:"visible"`
-	Status     string     `gorm:"column:status" json:"status"`
-	Perms      *string    `gorm:"column:perms" json:"perms,omitempty"`
-	Icon       string     `gorm:"column:icon" json:"icon"`
-	CreateBy   string     `gorm:"column:create_by" json:"create_by"`
-	CreateTime *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`
-	UpdateBy   string     `gorm:"column:update_by" json:"update_by"`
-	UpdateTime *time.Time `gorm:"column:update_time" json:"update_time,omitempty"`
-	Remark     string     `gorm:"column:remark" json:"remark"`
+	MenuName string  `gorm:"column:menu_name" json:"menu_name"`
+	ParentID int64   `gorm:"column:parent_id" json:"parent_id"`
+	OrderNum int     `gorm:"column:order_num" json:"order_num"`
+	Path     string  `gorm:"column:path" json:"path"`
+	Query    *string `gorm:"column:query" json:"query,omitempty"`
+	IsFrame  bool    `gorm:"column:is_frame" json:"is_frame"`
+	IsCache  bool    `gorm:"column:is_cache" json:"is_cache"`
+	MenuType string  `gorm:"column:menu_type" json:"menu_type"`
+	Visible  string  `gorm:"column:visible" json:"visible"`
+	Status   string  `gorm:"column:status" json:"status"`
+	Perms    *string `gorm:"column:perms" json:"perms,omitempty"`
+	Icon     string  `gorm:"column:icon" json:"icon"`
+	BaseModel
+	CreateBy string `gorm:"column:create_by" json:"create_by"`
+	UpdateBy string `gorm:"column:update_by" json:"update_by"`
+	Remark   string `gorm:"column:remark" json:"remark"`
 }
 
 func (SysMenu) TableName() string {
@@ -159,15 +143,13 @@ func (SysUserPost) TableName() string {
 }
 
 type SysDictType struct {
-	DictID     int64      `gorm:"column:dict_id;primaryKey;autoIncrement" json:"dict_id"`
-	DictName   string     `gorm:"column:dict_name" json:"dict_name"`
-	DictType   string     `gorm:"column:dict_type;unique" json:"dict_type"`
-	Status     string     `gorm:"column:status" json:"status"`
-	CreateBy   string     `gorm:"column:create_by" json:"create_by"`
-	CreateTime *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`
-	UpdateBy   string     `gorm:"column:update_by" json:"update_by"`
-	UpdateTime *time.Time `gorm:"column:update_time" json:"update_time,omitempty"`
-	Remark     *string    `gorm:"column:remark" json:"remark,omitempty"`
+	DictName string `gorm:"column:dict_name" json:"dict_name"`
+	DictType string `gorm:"column:dict_type;unique" json:"dict_type"`
+	Status   string `gorm:"column:status" json:"status"`
+	BaseModel
+	CreateBy string  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
+	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
 }
 
 func (SysDictType) TableName() string {
@@ -175,20 +157,18 @@ func (SysDictType) TableName() string {
 }
 
 type SysDictData struct {
-	DictCode   int64      `gorm:"column:dict_code;primaryKey;autoIncrement" json:"dict_code"`
-	DictSort   int        `gorm:"column:dict_sort" json:"dict_sort"`
-	DictLabel  string     `gorm:"column:dict_label" json:"dict_label"`
-	DictValue  string     `gorm:"column:dict_value" json:"dict_value"`
-	DictType   string     `gorm:"column:dict_type" json:"dict_type"`
-	CSSClass   *string    `gorm:"column:css_class" json:"css_class,omitempty"`
-	ListClass  *string    `gorm:"column:list_class" json:"list_class,omitempty"`
-	IsDefault  string     `gorm:"column:is_default" json:"is_default"`
-	Status     string     `gorm:"column:status" json:"status"`
-	CreateBy   string     `gorm:"column:create_by" json:"create_by"`
-	CreateTime *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`
-	UpdateBy   string     `gorm:"column:update_by" json:"update_by"`
-	UpdateTime *time.Time `gorm:"column:update_time" json:"update_time,omitempty"`
-	Remark     *string    `gorm:"column:remark" json:"remark,omitempty"`
+	DictSort  int     `gorm:"column:dict_sort" json:"dict_sort"`
+	DictLabel string  `gorm:"column:dict_label" json:"dict_label"`
+	DictValue string  `gorm:"column:dict_value" json:"dict_value"`
+	DictType  string  `gorm:"column:dict_type" json:"dict_type"`
+	CSSClass  *string `gorm:"column:css_class" json:"css_class,omitempty"`
+	ListClass *string `gorm:"column:list_class" json:"list_class,omitempty"`
+	IsDefault string  `gorm:"column:is_default" json:"is_default"`
+	Status    string  `gorm:"column:status" json:"status"`
+	BaseModel
+	CreateBy string  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
+	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
 }
 
 func (SysDictData) TableName() string {
@@ -196,16 +176,14 @@ func (SysDictData) TableName() string {
 }
 
 type SysConfig struct {
-	ConfigID    int64      `gorm:"column:config_id;primaryKey;autoIncrement" json:"config_id"`
-	ConfigName  string     `gorm:"column:config_name" json:"config_name"`
-	ConfigKey   string     `gorm:"column:config_key" json:"config_key"`
-	ConfigValue string     `gorm:"column:config_value" json:"config_value"`
-	ConfigType  string     `gorm:"column:config_type" json:"config_type"`
-	CreateBy    string     `gorm:"column:create_by" json:"create_by"`
-	CreateTime  *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`
-	UpdateBy    string     `gorm:"column:update_by" json:"update_by"`
-	UpdateTime  *time.Time `gorm:"column:update_time" json:"update_time,omitempty"`
-	Remark      *string    `gorm:"column:remark" json:"remark,omitempty"`
+	ConfigName  string `gorm:"column:config_name" json:"config_name"`
+	ConfigKey   string `gorm:"column:config_key" json:"config_key"`
+	ConfigValue string `gorm:"column:config_value" json:"config_value"`
+	ConfigType  string `gorm:"column:config_type" json:"config_type"`
+	BaseModel
+	CreateBy string  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
+	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
 }
 
 func (SysConfig) TableName() string {
@@ -213,20 +191,18 @@ func (SysConfig) TableName() string {
 }
 
 type SysJob struct {
-	JobID          int64      `gorm:"column:job_id;primaryKey;autoIncrement" json:"job_id"`
-	JobName        string     `gorm:"column:job_name;primaryKey" json:"job_name"`
-	JobGroup       string     `gorm:"column:job_group;primaryKey" json:"job_group"`
-	InvokeTarget   string     `gorm:"column:invoke_target" json:"invoke_target"`
-	InvokeParams   string     `gorm:"column:invoke_params" json:"invoke_params"`
-	CronExpression string     `gorm:"column:cron_expression" json:"cron_expression"`
-	MisfirePolicy  string     `gorm:"column:misfire_policy" json:"misfire_policy"`
-	Concurrent     string     `gorm:"column:concurrent" json:"concurrent"`
-	Status         string     `gorm:"column:status" json:"status"`
-	CreateBy       string     `gorm:"column:create_by" json:"create_by"`
-	CreateTime     *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`
-	UpdateBy       string     `gorm:"column:update_by" json:"update_by"`
-	UpdateTime     *time.Time `gorm:"column:update_time" json:"update_time,omitempty"`
-	Remark         string     `gorm:"column:remark" json:"remark"`
+	JobName        string `gorm:"column:job_name;primaryKey" json:"job_name"`
+	JobGroup       string `gorm:"column:job_group;primaryKey" json:"job_group"`
+	InvokeTarget   string `gorm:"column:invoke_target" json:"invoke_target"`
+	InvokeParams   string `gorm:"column:invoke_params" json:"invoke_params"`
+	CronExpression string `gorm:"column:cron_expression" json:"cron_expression"`
+	MisfirePolicy  string `gorm:"column:misfire_policy" json:"misfire_policy"`
+	Concurrent     string `gorm:"column:concurrent" json:"concurrent"`
+	Status         string `gorm:"column:status" json:"status"`
+	BaseModel
+	CreateBy string `gorm:"column:create_by" json:"create_by"`
+	UpdateBy string `gorm:"column:update_by" json:"update_by"`
+	Remark   string `gorm:"column:remark" json:"remark"`
 }
 
 func (SysJob) TableName() string {
@@ -234,16 +210,15 @@ func (SysJob) TableName() string {
 }
 
 type SysJobLog struct {
-	JobLogID      int64      `gorm:"column:job_log_id;primaryKey;autoIncrement" json:"job_log_id"`
-	JobID         int64      `gorm:"column:job_id" json:"job_id"`
-	JobName       string     `gorm:"column:job_name" json:"job_name"`
-	JobGroup      string     `gorm:"column:job_group" json:"job_group"`
-	InvokeTarget  string     `gorm:"column:invoke_target" json:"invoke_target"`
-	InvokeParams  string     `gorm:"column:invoke_params" json:"invoke_params"`
-	JobMessage    *string    `gorm:"column:job_message" json:"job_message,omitempty"`
-	Status        string     `gorm:"column:status" json:"status"`
-	ExceptionInfo string     `gorm:"column:exception_info" json:"exception_info"`
-	CreateTime    *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`
+	JobID         int64   `gorm:"column:job_id" json:"job_id"`
+	JobName       string  `gorm:"column:job_name" json:"job_name"`
+	JobGroup      string  `gorm:"column:job_group" json:"job_group"`
+	InvokeTarget  string  `gorm:"column:invoke_target" json:"invoke_target"`
+	InvokeParams  string  `gorm:"column:invoke_params" json:"invoke_params"`
+	JobMessage    *string `gorm:"column:job_message" json:"job_message,omitempty"`
+	Status        string  `gorm:"column:status" json:"status"`
+	ExceptionInfo string  `gorm:"column:exception_info" json:"exception_info"`
+	BaseModel
 }
 
 func (SysJobLog) TableName() string {
@@ -252,7 +227,7 @@ func (SysJobLog) TableName() string {
 
 // SysJobLogStep 定时任务执行步骤日志
 type SysJobLogStep struct {
-	StepID     int64      `gorm:"column:step_id;primaryKey;autoIncrement" json:"stepId"`
+	BaseModel
 	JobLogID   int64      `gorm:"column:job_log_id;not null;index" json:"jobLogId"`
 	StepName   string     `gorm:"column:step_name;type:varchar(200);not null" json:"stepName"`
 	StepOrder  int        `gorm:"column:step_order;not null;index:idx_job_log_step_order" json:"stepOrder"`
@@ -263,7 +238,6 @@ type SysJobLogStep struct {
 	StartTime  *time.Time `gorm:"column:start_time" json:"startTime"`
 	EndTime    *time.Time `gorm:"column:end_time" json:"endTime,omitempty"`
 	DurationMs *int64     `gorm:"column:duration_ms" json:"durationMs,omitempty"`
-	CreateTime *time.Time `gorm:"column:create_time;autoCreateTime" json:"createTime"`
 }
 
 // TableName 指定表名
@@ -272,16 +246,14 @@ func (SysJobLogStep) TableName() string {
 }
 
 type SysNotice struct {
-	NoticeID      int64      `gorm:"column:notice_id;primaryKey;autoIncrement" json:"notice_id"`
-	NoticeTitle   string     `gorm:"column:notice_title" json:"notice_title"`
-	NoticeType    string     `gorm:"column:notice_type" json:"notice_type"`
-	NoticeContent []byte     `gorm:"column:notice_content" json:"notice_content"`
-	Status        string     `gorm:"column:status" json:"status"`
-	CreateBy      string     `gorm:"column:create_by" json:"create_by"`
-	CreateTime    *time.Time `gorm:"column:create_time" json:"create_time,omitempty"`
-	UpdateBy      string     `gorm:"column:update_by" json:"update_by"`
-	UpdateTime    *time.Time `gorm:"column:update_time" json:"update_time,omitempty"`
-	Remark        *string    `gorm:"column:remark" json:"remark,omitempty"`
+	NoticeTitle   string `gorm:"column:notice_title" json:"notice_title"`
+	NoticeType    string `gorm:"column:notice_type" json:"notice_type"`
+	NoticeContent []byte `gorm:"column:notice_content" json:"notice_content"`
+	Status        string `gorm:"column:status" json:"status"`
+	BaseModel
+	CreateBy string  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
+	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
 }
 
 func (SysNotice) TableName() string {

@@ -221,7 +221,7 @@ export function LoginLogTable({
           cellClassName: 'max-w-[320px]',
         },
       }),
-      columnHelper.accessor('loginTime', {
+      columnHelper.accessor('createdAt', {
         header: () => '登录时间',
         cell: ({ getValue }) => (
           <span className="text-sm text-foreground">{getValue() ?? '-'}</span>

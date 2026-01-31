@@ -81,15 +81,15 @@ export function DictTypeSection() {
     }
 
     setSelectedDictId((prev) => {
-      if (prev != null && dictTypes.some((item) => item.dictId === prev)) {
+      if (prev != null && dictTypes.some((item) => item.id === prev)) {
         return prev;
       }
-      return dictTypes[0]?.dictId ?? null;
+      return dictTypes[0]?.id ?? null;
     });
   }, [dictTypes, setSelectedDictId]);
 
   const handleSelect = (dict: DictType) => {
-    setSelectedDictId(dict.dictId ?? null);
+    setSelectedDictId(dict.id ?? null);
     setDataFilterForm({ dictLabel: '', dictValue: '' });
     applyDataFilters({ dictLabel: '', dictValue: '' }, { force: true });
   };

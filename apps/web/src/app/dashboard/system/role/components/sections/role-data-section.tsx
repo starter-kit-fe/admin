@@ -71,16 +71,16 @@ export function RoleDataSection() {
   }, [setRefreshHandler, roleListQuery.refetch]);
 
   const rows = useMemo(
-    () => roleListQuery.data?.items ?? [],
-    [roleListQuery.data?.items],
+    () => roleListQuery.data?.list ?? [],
+    [roleListQuery.data?.list],
   );
 
   useEffect(() => {
     setSelectedIds((prev) => {
       const next = new Set<number>();
       rows.forEach((role) => {
-        if (prev.has(role.roleId)) {
-          next.add(role.roleId);
+        if (prev.has(role.id)) {
+          next.add(role.id);
         }
       });
       return next;
@@ -89,7 +89,7 @@ export function RoleDataSection() {
 
   const selectedCount = selectedIds.size;
   const isAllSelected =
-    rows.length > 0 && rows.every((row) => selectedIds.has(row.roleId));
+    rows.length > 0 && rows.every((row) => selectedIds.has(row.id));
   const headerCheckboxState = isAllSelected
     ? true
     : selectedCount > 0
@@ -98,19 +98,19 @@ export function RoleDataSection() {
 
   const handleToggleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(new Set(rows.map((row) => row.roleId)));
+      setSelectedIds(new Set(rows.map((row) => row.id)));
     } else {
       setSelectedIds(new Set());
     }
   };
 
-  const handleToggleSelectRow = (roleId: number, checked: boolean) => {
+  const handleToggleSelectRow = (id: number, checked: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (checked) {
-        next.add(roleId);
+        next.add(id);
       } else {
-        next.delete(roleId);
+        next.delete(id);
       }
       return next;
     });
@@ -141,7 +141,7 @@ export function RoleDataSection() {
   };
 
   const handleEdit = (role: Role) => {
-    openEdit(role.roleId);
+    openEdit(role.id);
   };
 
   return (
