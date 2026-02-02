@@ -26,6 +26,21 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-admin}
       POSTGRES_USER: ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
+    shm_size: "1gb"
+    command: >
+      postgres
+      -c shared_buffers=1GB
+      -c effective_cache_size=3GB
+      -c work_mem=8MB
+      -c maintenance_work_mem=256MB
+      -c wal_compression=on
+      -c synchronous_commit=on
+      -c max_wal_size=2GB
+      -c min_wal_size=256MB
+      -c checkpoint_timeout=10min
+      -c checkpoint_completion_target=0.9
+      -c random_page_cost=1.1
+      -c jit=off
     networks:
       default:
         aliases:
