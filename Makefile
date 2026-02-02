@@ -49,3 +49,7 @@ docs:
 
 deploy:
 	@$(NPM) run deploy
+
+# Docker 打包（构建单体镜像）
+docker-build:
+	@docker compose --env-file .env build

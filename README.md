@@ -2,10 +2,8 @@
 
 ## 项目概览
 
-- `apps/web`: Next.js 前端，镜像名 `admin-web`
-- `apps/server`: Go 后端，镜像名 `admin-server`
-- `deployments/docker/postgres`: PostgreSQL 封装镜像 `admin-postgres`
-- `deployments/docker/redis`: Redis 封装镜像 `admin-redis`
+- `apps/web`: Next.js 前端（构建产物由后端镜像打包）
+- `apps/server`: Go 后端 + 前端静态产物打包入口，镜像名 `admin`
 
 ## 系统架构
 
@@ -13,7 +11,7 @@
 
 - 使用 `pnpm` + Turborepo 管理前后端与共享包，根目录脚本统一通过 `pnpm <task>` 驱动（例如 `pnpm dev` 同时拉起 web/server）。
 - `apps/web`、`apps/server`、`apps/docs` 处于同一工作区，`packages/` 目录则提供 UI 组件库（`packages/ui`）、ESLint 配置与 TS 配置，供各应用通过 `workspace:*` 方式直接复用。
-- Dockerfile（`apps/web/Dockerfile`、`apps/server/Dockerfile`）和 `deployments/docker/*` 的 Postgres/Redis 封装镜像确保 CI/CD 能独立构建所有运行时镜像，`docker-compose.yml` 负责在本地或服务器上把这些镜像编排为完整环境。
+- Dockerfile（`apps/server/Dockerfile`）负责在单一镜像中构建 web 与 server，`docker-compose.yml` 负责编排 `app + postgres + redis` 环境。
 
 ### Web（`apps/web`）
 
@@ -30,9 +28,9 @@
 
 ### 数据与基础设施
 
-- PostgreSQL（`deployments/docker/postgres`）作为主数据存储，容器预置性能参数、数据卷与健康检查，Go 服务通过 `DB_URL` 环境变量连入；`internal/db/migrate.go`、`seed.go` 提供迁移与初始化脚本。
-- Redis（`deployments/docker/redis`）承载会话、验证码、在线用户、缓存等，服务层的 session store（`internal/system/auth/session_store.go`）及缓存模块共用一个地址，通过 `REDIS_URL` 配置。
-- `docker-compose.yml` 串联 `web → server → (db, redis)` 并允许覆盖 `IMAGE_OWNER/IMAGE_TAG`，同时支持本地 `docker compose build` 直接构建所有镜像用于离线环境。
+- PostgreSQL 使用官方 `postgres:16-alpine`（见 `docker-compose.yml`）作为主数据存储，容器预置数据卷与健康检查，Go 服务通过 `DB_URL` 环境变量连入；`internal/db/migrate.go`、`seed.go` 提供迁移与初始化脚本。
+- Redis 使用官方 `redis:7-alpine`（见 `docker-compose.yml`）承载会话、验证码、在线用户、缓存等，服务层的 session store（`internal/system/auth/session_store.go`）及缓存模块共用一个地址，通过 `REDIS_URL` 配置。
+- `docker-compose.yml` 编排 `app → (db, redis)`，支持本地 `docker compose build` 构建单体 `admin` 镜像用于离线环境。
 
 ### 架构数据流
 
@@ -86,10 +84,7 @@ Cloudflare Worker 运行 Next.js 构建产物并作为 BFF，负责：
    git push origin vX.Y.Z
    ```
 3. GitHub Actions 会为 tag 构建并推送多架构镜像到 GHCR：
-   - `ghcr.io/<owner>/admin-web:<tag>` 与 `:latest`
-   - `ghcr.io/<owner>/admin-server:<tag>` 与 `:latest`
-   - `ghcr.io/<owner>/admin-postgres:<tag>` 与 `:latest`
-   - `ghcr.io/<owner>/admin-redis:<tag>` 与 `:latest`
+   - `ghcr.io/<owner>/admin:<tag>` 与 `:latest`
 
 ## 一键部署（Docker Compose）
 
@@ -127,7 +122,6 @@ Cloudflare Worker 运行 Next.js 构建产物并作为 BFF，负责：
 1. Install dependencies (Node ≥ 18, pnpm):
 
 ```sh
-<<<<<<< HEAD
 pnpm install
 ```
 
@@ -160,17 +154,16 @@ pnpm --filter server dev
 - Project repo: https://github.com/starter-kit-fe/admin
 - # Swagger UI (when running backend): `/dashboard/tool/swagger`
 
-# 1) 准备环境变量（可在 .env 中覆盖默认镜像前缀/tag）
+# 1) 准备环境变量（可在 .env 中覆盖默认构建元信息）
 
 cp env.docker.example .env
 
-# 例：本地构建用本地主机仓库名
+# 例：覆盖构建元信息
 
-echo "IMAGE_REGISTRY=local" >> .env
-echo "IMAGE_OWNER=admin-local" >> .env
 echo "IMAGE_TAG=dev" >> .env
+echo "IMAGE_COMMIT=local" >> .env
 
-# 2) 构建镜像（包含 web/server/db/redis）
+# 2) 构建镜像（包含 app/db/redis）
 
 docker compose --env-file .env build
 
@@ -184,7 +177,7 @@ docker compose ps
 
 ````
 
-端口默认：前端 3000、后端 27507、Postgres 5432、Redis 6379，可在 `.env` 中调整。若需清理本地数据卷：
+端口默认：服务 27507（含前端）、Postgres 5432、Redis 6379，可在 `.env` 中调整。若需清理本地数据卷：
 
 ```sh
 docker compose --env-file .env down -v

@@ -8,7 +8,8 @@ let refreshPromise: Promise<boolean> | null = null;
 let hasTriggeredUnauthorizedRedirect = false;
 
 function normalizeBaseURL(baseURL?: string): string {
-  const base = baseURL || process.env.NEXT_PUBLIC_API_URL || '/api';
+  const base =
+    baseURL ?? process.env.NEXT_PUBLIC_API_URL ?? '/api';
   return base.replace(/\/$/, '');
 }
 
