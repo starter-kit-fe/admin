@@ -37,7 +37,7 @@ export function startSSE<T = unknown>(options: SSEClientOptions<T>): SSEConnecti
     onClose,
   } = options;
 
-  const base = process.env.NEXT_PUBLIC_API_URL || '/api';
+  const base = process.env.NEXT_PUBLIC_API_URL ?? '/api';
   const url = `${base.replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
   let attemptedAuthRefresh = false;
   let silenceUnauthorizedError = false;

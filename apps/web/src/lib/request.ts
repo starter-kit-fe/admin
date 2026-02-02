@@ -450,7 +450,7 @@ export class HttpClient {
 
 // 创建默认实例
 export const http = new HttpClient({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL || '/api'}`,
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL ?? '/api'}`,
 });
 
 // 快捷导出函数

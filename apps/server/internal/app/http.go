@@ -49,6 +49,7 @@ func buildRouterEngine(cfg *config.Config, logger *slog.Logger, modules moduleSe
 		}
 	}
 
+	frontendDir := resolveFrontendDir()
 	return router.New(router.Options{
 		Logger:             logger,
 		HealthHandler:      modules.healthHandler,
@@ -77,6 +78,7 @@ func buildRouterEngine(cfg *config.Config, logger *slog.Logger, modules moduleSe
 		PublicMWs:          publicMWs,
 		ProtectedMWs:       protectedMWs,
 		LoginMiddlewares:   loginMiddlewares,
+		FrontendDir:        frontendDir,
 	})
 }
 

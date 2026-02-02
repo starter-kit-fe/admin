@@ -15,6 +15,10 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -69,6 +73,7 @@ type Options struct {
 	PublicMWs          []gin.HandlerFunc
 	ProtectedMWs       []gin.HandlerFunc
 	LoginMiddlewares   []gin.HandlerFunc
+	FrontendDir        string
 }
 
 func New(opts Options) *gin.Engine {
@@ -80,6 +85,7 @@ func New(opts Options) *gin.Engine {
 	engine.Use(gin.Recovery())
 	engine.Use(middleware.RequestLogger(opts.Logger))
 
+	frontend := newFrontendHandler(opts.FrontendDir)
 	for _, mw := range opts.Middlewares {
 		if mw != nil {
 			engine.Use(mw)
@@ -87,14 +93,31 @@ func New(opts Options) *gin.Engine {
 	}
 	engine.GET("/healthz", opts.HealthHandler.Status)
 	engine.GET("/", func(ctx *gin.Context) {
+		if frontend != nil {
+			frontend.ServeIndex(ctx)
+			return
+		}
 		ctx.Redirect(http.StatusFound, "/docs")
 	})
 
 	registerAPIRoutes(engine, opts)
 
-	engine.NoRoute(func(ctx *gin.Context) {
-		resp.NotFound(ctx, resp.WithMessage("resource not found"))
-	})
+	if frontend != nil {
+		engine.NoRoute(func(ctx *gin.Context) {
+			if isAPIRoute(ctx.Request.URL.Path) {
+				resp.NotFound(ctx, resp.WithMessage("resource not found"))
+				return
+			}
+			if frontend.Serve(ctx) {
+				return
+			}
+			resp.NotFound(ctx, resp.WithMessage("resource not found"))
+		})
+	} else {
+		engine.NoRoute(func(ctx *gin.Context) {
+			resp.NotFound(ctx, resp.WithMessage("resource not found"))
+		})
+	}
 	engine.NoMethod(func(ctx *gin.Context) {
 		resp.MethodNotAllowed(ctx, resp.WithMessage("method not allowed"))
 	})
@@ -157,6 +180,108 @@ func registerDocsRoutes(engine *gin.Engine, opts Options) {
 	}
 	engine.GET("/docs/openapi.json", opts.DocsHandler.SwaggerJSON)
 	engine.GET("/docs", opts.DocsHandler.SwaggerUI)
+}
+
+func isAPIRoute(pathname string) bool {
+	if pathname == apiVersionPrefix || strings.HasPrefix(pathname, apiVersionPrefix+"/") {
+		return true
+	}
+	if pathname == "/docs" || strings.HasPrefix(pathname, "/docs/") {
+		return true
+	}
+	return false
+}
+
+type frontendHandler struct {
+	baseDir      string
+	indexPath    string
+	notFoundPath string
+	hasIndex     bool
+	hasNotFound  bool
+}
+
+func newFrontendHandler(baseDir string) *frontendHandler {
+	baseDir = strings.TrimSpace(baseDir)
+	if baseDir == "" {
+		return nil
+	}
+	info, err := os.Stat(baseDir)
+	if err != nil || !info.IsDir() {
+		return nil
+	}
+	handler := &frontendHandler{
+		baseDir:      baseDir,
+		indexPath:    filepath.Join(baseDir, "index.html"),
+		notFoundPath: filepath.Join(baseDir, "404.html"),
+	}
+	if fileExists(handler.indexPath) {
+		handler.hasIndex = true
+	} else {
+		return nil
+	}
+	if fileExists(handler.notFoundPath) {
+		handler.hasNotFound = true
+	}
+	return handler
+}
+
+func (h *frontendHandler) ServeIndex(ctx *gin.Context) {
+	if h == nil || !h.hasIndex {
+		resp.NotFound(ctx, resp.WithMessage("resource not found"))
+		return
+	}
+	ctx.File(h.indexPath)
+}
+
+func (h *frontendHandler) Serve(ctx *gin.Context) bool {
+	if h == nil {
+		return false
+	}
+	if ctx.Request.Method != http.MethodGet && ctx.Request.Method != http.MethodHead {
+		return false
+	}
+	if target := h.resolvePath(ctx.Request.URL.Path); target != "" {
+		ctx.File(target)
+		return true
+	}
+	if h.hasNotFound {
+		ctx.Status(http.StatusNotFound)
+		ctx.File(h.notFoundPath)
+		return true
+	}
+	return false
+}
+
+func (h *frontendHandler) resolvePath(requestPath string) string {
+	cleanPath := path.Clean("/" + requestPath)
+	cleanPath = strings.TrimPrefix(cleanPath, "/")
+	if cleanPath == "" {
+		if h.hasIndex {
+			return h.indexPath
+		}
+		return ""
+	}
+	fullPath := filepath.Join(h.baseDir, filepath.FromSlash(cleanPath))
+	info, err := os.Stat(fullPath)
+	if err != nil {
+		return ""
+	}
+	if info.IsDir() {
+		indexPath := filepath.Join(fullPath, "index.html")
+		if fileExists(indexPath) {
+			return indexPath
+		}
+		return ""
+	}
+	return fullPath
+}
+
+func fileExists(pathname string) bool {
+	info, err := os.Stat(pathname)
+	if err != nil {
+		return false
+	}
+	return !info.IsDir()
 }
 
 func registerPublicRoutes(api *gin.RouterGroup, opts Options) {

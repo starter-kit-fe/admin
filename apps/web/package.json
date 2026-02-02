@@ -5,6 +5,8 @@
     "dev": "next dev -p 27508",
     "build": "next build --webpack",
     "start": "next start",
+    "build:stage": "NODE_ENV=production sh -c 'set -a; . .env.stage; set +a; next build'",
+    "build:docker": "NODE_ENV=production sh -c 'set -a; . .env.docker; set +a; next build'",
     "lint": "eslint",
     "deploy": "next build && npx wrangler deploy"
   },
