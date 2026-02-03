@@ -117,76 +117,21 @@ Cloudflare Worker 运行 Next.js 构建产物并作为 BFF，负责：
 
 无需推送镜像即可本地起全栈：
 
-## Getting Started
+## Local Development
 
-1. Install dependencies (Node ≥ 18, pnpm):
+1. Install dependencies:
 
-```sh
-pnpm install
-```
+   ```sh
+   pnpm install
+   ```
 
-2. Run the whole workspace in dev mode or scope to a single app:
+2. Start development server:
+   ```sh
+   pnpm dev
+   ```
 
-```sh
-pnpm dev
-# or only frontend
-pnpm --filter web dev
-# or only backend (requires air)
-pnpm --filter server dev
-```
+## Other Commands
 
-## Development Commands
-
-- `pnpm build` — Build all apps/packages via Turbo.
-- `pnpm lint` — ESLint checks for the monorepo.
-- `pnpm check-types` — TypeScript project references check.
-- `pnpm docs` — Regenerate Swagger JSON for the Go API.
-- `cd apps/server && go test ./...` — Run Go unit tests.
-
-## i18n Notes
-
-- Locale-aware routes live under `apps/web/src/app/[locale]`.
-- Translation messages are in `apps/web/src/messages/{locale}`.
-- User locale preference is saved via cookies for consistent redirects.
-
-## Links
-
-- Project repo: https://github.com/starter-kit-fe/admin
-- # Swagger UI (when running backend): `/dashboard/tool/swagger`
-
-# 1) 准备环境变量（可在 .env 中覆盖默认构建元信息）
-
-cp env.docker.example .env
-
-# 例：覆盖构建元信息
-
-echo "IMAGE_TAG=dev" >> .env
-echo "IMAGE_COMMIT=local" >> .env
-
-# 2) 构建镜像（包含 app/db/redis）
-
-docker compose --env-file .env build
-
-# 3) 启动并映射端口
-
-docker compose --env-file .env up -d
-
-# 4) 查看服务
-
-docker compose ps
-
-````
-
-端口默认：服务 27507（含前端）、Postgres 5432、Redis 6379，可在 `.env` 中调整。若需清理本地数据卷：
-
-```sh
-docker compose --env-file .env down -v
-````
-
-## 其他命令
-
-- 本地开发：`pnpm install` 然后 `pnpm dev`
-- 仅启动单个服务开发：
-  - 前端：`pnpm --filter web dev`
-  - 后端：进入 `apps/server` 后 `air` 或 `go run ./cmd`
-    > > > > > > > main
+- `pnpm build`: Build all apps
+- `pnpm lint`: Run ESLint
+- `docker compose up -d`: Start database and redis
