@@ -83,17 +83,32 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	onlineHandler := online.NewHandler(onlineSvc)
 	jobRepo := job.NewRepository(sqlDB)
 
-	// Parse Redis address from URL for Asynq
-	redisAddr := ""
+	// Parse Redis configuration for Asynq
+	var (
+		redisAddr     string
+		redisPassword string
+		redisDB       int
+	)
+
 	if cfg.Redis.URL != "" {
-		redisAddr = parseRedisAddr(cfg.Redis.URL)
+		if opt, err := redis.ParseURL(cfg.Redis.URL); err == nil {
+			redisAddr = opt.Addr
+			redisPassword = opt.Password
+			redisDB = opt.DB
+		} else {
+			// Fallback if parsing fails
+			redisAddr = parseRedisAddr(cfg.Redis.URL)
+		}
 	}
 
 	jobSvc := job.NewService(jobRepo, job.ServiceOptions{
-		Logger:    logger,
-		Redis:     redisCache,
-		RedisAddr: redisAddr,
+		Logger:        logger,
+		Redis:         redisCache,
+		RedisAddr:     redisAddr,
+		RedisPassword: redisPassword,
+		RedisDB:       redisDB,
 	})
+
 	// 注册定时任务执行器
 	if err := jobSvc.RegisterExecutor("db.backup", job.NewBackupExecutor(sqlDB, cfg)); err != nil {
 		logger.Error("register backup executor failed", "error", err)
