@@ -11,12 +11,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
-	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 
-	"github.com/starter-kit-fe/admin/internal/model"
-	"github.com/starter-kit-fe/admin/internal/system/job/executor"
+	jobasynq "github.com/starter-kit-fe/admin/internal/system/job/asynq"
 	"github.com/starter-kit-fe/admin/internal/system/job/repository"
 	"github.com/starter-kit-fe/admin/internal/system/job/types"
 )
@@ -25,6 +24,7 @@ var (
 	ErrServiceUnavailable = errors.New("job service is not initialized")
 	ErrJobRunningConflict = errors.New("job is running and concurrency is disabled")
 	ErrJobRunningActive   = errors.New("job is running; stop it before clearing logs")
+	errInvalidJSON        = errors.New("invoke params must be valid JSON")
 
 	validStatusValues      = map[string]struct{}{"0": {}, "1": {}}
 	validMisfirePolicies   = map[string]struct{}{"1": {}, "2": {}, "3": {}}
@@ -41,6 +41,7 @@ return 0
 `)
 )
 
+// Service manages scheduled jobs with Asynq-based task queue
 type Service struct {
 	repo           *repository.Repository
 	registry       *executorRegistry
@@ -49,24 +50,36 @@ type Service struct {
 	defaultLockTTL time.Duration
 	streams        *logStreamHub
 
+	// Asynq components
+	asynqClient    *jobasynq.Client
+	asynqServer    *jobasynq.Server
+	asynqScheduler *jobasynq.Scheduler
+	redisOpt       asynq.RedisClientOpt
+
 	mu         sync.RWMutex
-	scheduler  *cron.Cron
-	jobs       map[int64]*jobSchedule
+	jobs       map[int64]*jobScheduleEntry
 	lockMisses map[int64]uint64
 	started    bool
 }
 
+// ServiceOptions configures the job service
 type ServiceOptions struct {
 	Logger         *slog.Logger
 	Redis          *redis.Client
+	RedisAddr      string
+	RedisPassword  string
+	RedisDB        int
 	DefaultLockTTL time.Duration
+	Concurrency    int
 }
 
-type jobSchedule struct {
+// jobScheduleEntry tracks a scheduled job
+type jobScheduleEntry struct {
 	job     types.Job
-	entryID cron.EntryID
+	entryID string
 }
 
+// jobRunContext holds metadata about a job run
 type jobRunContext struct {
 	Source  string
 	Message string
@@ -74,10 +87,12 @@ type jobRunContext struct {
 
 type jobRunContextKey struct{}
 
+// jobRunOptions holds options for a job run
 type jobRunOptions struct {
 	logID int64
 }
 
+// NewService creates a new job service with Asynq integration
 func NewService(repo *repository.Repository, opts ServiceOptions) *Service {
 	if repo == nil {
 		return nil
@@ -93,6 +108,24 @@ func NewService(repo *repository.Repository, opts ServiceOptions) *Service {
 		logger = slog.Default()
 	}
 
+	// Build Redis connection options for Asynq
+	redisAddr := opts.RedisAddr
+	if redisAddr == "" && opts.Redis != nil {
+		// Try to get from Redis client options
+		redisAddr = "localhost:6379"
+	}
+
+	redisOpt := asynq.RedisClientOpt{
+		Addr:     redisAddr,
+		Password: opts.RedisPassword,
+		DB:       opts.RedisDB,
+	}
+
+	concurrency := opts.Concurrency
+	if concurrency <= 0 {
+		concurrency = 10
+	}
+
 	return &Service{
 		repo:           repo,
 		registry:       newExecutorRegistry(),
@@ -100,11 +133,16 @@ func NewService(repo *repository.Repository, opts ServiceOptions) *Service {
 		redis:          opts.Redis,
 		defaultLockTTL: lockTTL,
 		streams:        newLogStreamHub(),
-		jobs:           make(map[int64]*jobSchedule),
+		redisOpt:       redisOpt,
+		asynqClient:    jobasynq.NewClientFromRedisOpt(redisOpt),
+		asynqServer:    jobasynq.NewServerFromRedisOpt(redisOpt, concurrency, logger),
+		asynqScheduler: jobasynq.NewSchedulerFromRedisOpt(redisOpt, logger),
+		jobs:           make(map[int64]*jobScheduleEntry),
 		lockMisses:     make(map[int64]uint64),
 	}
 }
 
+// RegisterExecutor registers an executor for a job type
 func (s *Service) RegisterExecutor(key string, exec types.Executor) error {
 	if s == nil {
 		return ErrServiceUnavailable
@@ -112,12 +150,28 @@ func (s *Service) RegisterExecutor(key string, exec types.Executor) error {
 	return s.registry.Register(key, exec)
 }
 
+// GetAsynqServer returns the Asynq server for external handler registration
+func (s *Service) GetAsynqServer() *jobasynq.Server {
+	if s == nil {
+		return nil
+	}
+	return s.asynqServer
+}
+
+// GetAsynqClient returns the Asynq client for enqueueing tasks
+func (s *Service) GetAsynqClient() *jobasynq.Client {
+	if s == nil {
+		return nil
+	}
+	return s.asynqClient
+}
+
+// ListJobs returns a paginated list of jobs
 func (s *Service) ListJobs(ctx context.Context, opts types.ListJobsOptions) (*types.ListResult, error) {
 	if s == nil || s.repo == nil {
 		return nil, ErrServiceUnavailable
 	}
 
-	// Use types.ListJobsOptions directly as it matches repository expectations
 	records, total, err := s.repo.ListJobs(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -147,6 +201,7 @@ func (s *Service) ListJobs(ctx context.Context, opts types.ListJobsOptions) (*ty
 	}, nil
 }
 
+// GetJob returns a single job by ID
 func (s *Service) GetJob(ctx context.Context, id int64) (*types.Job, error) {
 	if s == nil || s.repo == nil {
 		return nil, ErrServiceUnavailable
@@ -159,6 +214,7 @@ func (s *Service) GetJob(ctx context.Context, id int64) (*types.Job, error) {
 	return &job, nil
 }
 
+// GetJobLog returns a single job log by ID
 func (s *Service) GetJobLog(ctx context.Context, id int64) (*types.JobLog, error) {
 	if s == nil || s.repo == nil {
 		return nil, ErrServiceUnavailable
@@ -173,6 +229,7 @@ func (s *Service) GetJobLog(ctx context.Context, id int64) (*types.JobLog, error
 	return &log, nil
 }
 
+// GetJobLogSteps returns the steps for a job log
 func (s *Service) GetJobLogSteps(ctx context.Context, logID int64) ([]types.JobLogStep, error) {
 	if s == nil || s.repo == nil {
 		return nil, ErrServiceUnavailable
@@ -195,6 +252,7 @@ func (s *Service) GetJobLogSteps(ctx context.Context, logID int64) ([]types.JobL
 	return steps, nil
 }
 
+// GetJobDetail returns a job with its logs
 func (s *Service) GetJobDetail(ctx context.Context, id int64, opts types.ListJobLogsOptions) (*types.JobDetail, error) {
 	job, err := s.GetJob(ctx, id)
 	if err != nil {
@@ -253,6 +311,7 @@ func (s *Service) GetJobDetail(ctx context.Context, id int64, opts types.ListJob
 	}, nil
 }
 
+// CreateJob creates a new scheduled job
 func (s *Service) CreateJob(ctx context.Context, input types.CreateJobInput) (*types.Job, error) {
 	if s == nil || s.repo == nil {
 		return nil, ErrServiceUnavailable
@@ -280,6 +339,7 @@ func (s *Service) CreateJob(ctx context.Context, input types.CreateJobInput) (*t
 	return job, nil
 }
 
+// UpdateJob updates an existing job
 func (s *Service) UpdateJob(ctx context.Context, input types.UpdateJobInput) (*types.Job, error) {
 	if s == nil || s.repo == nil {
 		return nil, ErrServiceUnavailable
@@ -354,6 +414,7 @@ func (s *Service) UpdateJob(ctx context.Context, input types.UpdateJobInput) (*t
 	return job, nil
 }
 
+// DeleteJob removes a job
 func (s *Service) DeleteJob(ctx context.Context, id int64) error {
 	if s == nil || s.repo == nil {
 		return ErrServiceUnavailable
@@ -367,6 +428,7 @@ func (s *Service) DeleteJob(ctx context.Context, id int64) error {
 	return nil
 }
 
+// ClearJobLogs removes all logs for a job
 func (s *Service) ClearJobLogs(ctx context.Context, id int64, operator string) error {
 	if s == nil || s.repo == nil {
 		return ErrServiceUnavailable
@@ -390,6 +452,7 @@ func (s *Service) ClearJobLogs(ctx context.Context, id int64, operator string) e
 	})
 }
 
+// ChangeStatus changes a job's status
 func (s *Service) ChangeStatus(ctx context.Context, id int64, status, operator string) error {
 	if s == nil || s.repo == nil {
 		return ErrServiceUnavailable
@@ -414,6 +477,7 @@ func (s *Service) ChangeStatus(ctx context.Context, id int64, status, operator s
 	return nil
 }
 
+// TriggerJob manually triggers a job execution
 func (s *Service) TriggerJob(ctx context.Context, id int64, operator string) (int64, error) {
 	if s == nil || s.repo == nil {
 		return 0, ErrServiceUnavailable
@@ -438,7 +502,31 @@ func (s *Service) TriggerJob(ctx context.Context, id int64, operator string) (in
 		return 0, err
 	}
 
-	s.dispatchJob(*job, meta, jobRunOptions{logID: logID})
+	// Enqueue task via Asynq
+	payload := jobasynq.JobExecutionPayload{
+		JobID:        job.JobID,
+		JobName:      job.JobName,
+		JobGroup:     job.JobGroup,
+		InvokeTarget: job.InvokeTarget,
+		InvokeParams: job.InvokeParams,
+		Source:       "manual",
+		Message:      "手动触发",
+		LogID:        logID,
+	}
+
+	if s.asynqClient != nil {
+		_, err := s.asynqClient.EnqueueTask(ctx, jobasynq.TypeJobExecution, payload,
+			asynq.Queue(jobasynq.QueueDefault),
+			asynq.MaxRetry(0), // No retry for manual triggers
+		)
+		if err != nil {
+			s.logger.Error("enqueue job task failed", "jobID", job.JobID, "error", err)
+			// Fall back to direct execution
+			s.dispatchJob(*job, meta, jobRunOptions{logID: logID})
+		}
+	} else {
+		s.dispatchJob(*job, meta, jobRunOptions{logID: logID})
+	}
 
 	return logID, s.repo.UpdateJob(ctx, id, map[string]interface{}{
 		"update_by":  sanitizeOperator(operator),
@@ -446,305 +534,7 @@ func (s *Service) TriggerJob(ctx context.Context, id int64, operator string) (in
 	})
 }
 
-type validateOptions struct {
-	isCreate bool
-	create   *types.CreateJobInput
-	update   *types.UpdateJobInput
-}
-
-func (s *Service) validateAndBuildRecord(ctx context.Context, opts validateOptions) (*model.SysJob, error) {
-	if s == nil || s.repo == nil {
-		return nil, ErrServiceUnavailable
-	}
-
-	if opts.isCreate {
-		input := opts.create
-		if input == nil {
-			return nil, errors.New("job payload is required")
-		}
-
-		jobName := strings.TrimSpace(input.JobName)
-		if jobName == "" {
-			return nil, errors.New("job name is required")
-		}
-		if len(jobName) > 64 {
-			jobName = jobName[:64]
-		}
-
-		jobGroup := normalizeJobGroup(input.JobGroup)
-
-		invokeTarget := strings.TrimSpace(input.InvokeTarget)
-		if invokeTarget == "" {
-			return nil, errors.New("invoke target is required")
-		}
-		if len(invokeTarget) > 500 {
-			invokeTarget = invokeTarget[:500]
-		}
-
-		cronExpr := strings.TrimSpace(input.CronExpression)
-		if cronExpr == "" {
-			return nil, errors.New("cron expression is required")
-		}
-		if len(cronExpr) > 255 {
-			cronExpr = cronExpr[:255]
-		}
-
-		misfirePolicy := strings.TrimSpace(input.MisfirePolicy)
-		if misfirePolicy == "" {
-			misfirePolicy = "3"
-		}
-		if _, ok := validMisfirePolicies[misfirePolicy]; !ok {
-			return nil, errors.New("invalid misfire policy")
-		}
-
-		concurrent := strings.TrimSpace(input.Concurrent)
-		if concurrent == "" {
-			concurrent = "1"
-		}
-		if _, ok := validConcurrentOptions[concurrent]; !ok {
-			return nil, errors.New("invalid concurrent flag")
-		}
-
-		status := strings.TrimSpace(input.Status)
-		if status == "" {
-			status = "0"
-		}
-		if _, ok := validStatusValues[status]; !ok {
-			return nil, errors.New("invalid status")
-		}
-
-		params, err := sanitizeInvokeParams(input.InvokeParams)
-		if err != nil {
-			return nil, err
-		}
-
-		remark := sanitizeRemark(input.Remark)
-		operator := sanitizeOperator(input.Operator)
-
-		return &model.SysJob{
-			JobName:        jobName,
-			JobGroup:       jobGroup,
-			InvokeTarget:   invokeTarget,
-			InvokeParams:   params,
-			CronExpression: cronExpr,
-			MisfirePolicy:  misfirePolicy,
-			Concurrent:     concurrent,
-			Status:         status,
-			Remark:         remark,
-			CreateBy:       operator,
-			UpdateBy:       operator,
-		}, nil
-	}
-
-	if opts.update != nil {
-		if opts.update.JobName != nil {
-			name := strings.TrimSpace(*opts.update.JobName)
-			if name == "" {
-				return nil, errors.New("job name is required")
-			}
-		}
-		if opts.update.InvokeTarget != nil {
-			target := strings.TrimSpace(*opts.update.InvokeTarget)
-			if target == "" {
-				return nil, errors.New("invoke target is required")
-			}
-		}
-		if opts.update.CronExpression != nil {
-			cron := strings.TrimSpace(*opts.update.CronExpression)
-			if cron == "" {
-				return nil, errors.New("cron expression is required")
-			}
-		}
-		if opts.update.MisfirePolicy != nil {
-			policy := strings.TrimSpace(*opts.update.MisfirePolicy)
-			if _, ok := validMisfirePolicies[policy]; !ok {
-				return nil, errors.New("invalid misfire policy")
-			}
-		}
-		if opts.update.Concurrent != nil {
-			flag := strings.TrimSpace(*opts.update.Concurrent)
-			if _, ok := validConcurrentOptions[flag]; !ok {
-				return nil, errors.New("invalid concurrent flag")
-			}
-		}
-		if opts.update.Status != nil {
-			status := strings.TrimSpace(*opts.update.Status)
-			if _, ok := validStatusValues[status]; !ok {
-				return nil, errors.New("invalid status")
-			}
-		}
-		if opts.update.InvokeParams != nil {
-			if _, err := sanitizeInvokeParams(*opts.update.InvokeParams); err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return nil, nil
-}
-
-func jobFromModel(record *model.SysJob) types.Job {
-	if record == nil {
-		return types.Job{}
-	}
-
-	var remark *string
-	if strings.TrimSpace(record.Remark) != "" {
-		r := strings.TrimSpace(record.Remark)
-		remark = &r
-	}
-
-	var params json.RawMessage
-	if trimmed := strings.TrimSpace(record.InvokeParams); trimmed != "" {
-		raw := []byte(trimmed)
-		if json.Valid(raw) {
-			buf := make([]byte, len(raw))
-			copy(buf, raw)
-			params = json.RawMessage(buf)
-		}
-	}
-
-	return types.Job{
-		JobID:          int64(record.ID),
-		JobName:        record.JobName,
-		JobGroup:       record.JobGroup,
-		InvokeTarget:   record.InvokeTarget,
-		InvokeParams:   params,
-		CronExpression: record.CronExpression,
-		MisfirePolicy:  record.MisfirePolicy,
-		Concurrent:     record.Concurrent,
-		Status:         record.Status,
-		Remark:         remark,
-		CreateBy:       record.CreateBy,
-		CreatedAt:      &record.CreatedAt,
-		UpdateBy:       record.UpdateBy,
-		UpdatedAt:      &record.UpdatedAt,
-	}
-}
-
-func jobLogFromModel(record *model.SysJobLog) types.JobLog {
-	if record == nil {
-		return types.JobLog{}
-	}
-
-	var params json.RawMessage
-	if trimmed := strings.TrimSpace(record.InvokeParams); trimmed != "" {
-		raw := []byte(trimmed)
-		if json.Valid(raw) {
-			buf := make([]byte, len(raw))
-			copy(buf, raw)
-			params = json.RawMessage(buf)
-		}
-	}
-
-	message := record.JobMessage
-	exception := strings.TrimSpace(record.ExceptionInfo)
-
-	return types.JobLog{
-		JobLogID:     int64(record.ID),
-		JobID:        record.JobID,
-		JobName:      record.JobName,
-		JobGroup:     record.JobGroup,
-		InvokeTarget: record.InvokeTarget,
-		InvokeParams: params,
-		JobMessage:   message,
-		Status:       record.Status,
-		Exception:    exception,
-		CreatedAt:    &record.CreatedAt,
-	}
-}
-
-func jobLogStepFromModel(record *model.SysJobLogStep) types.JobLogStep {
-	if record == nil {
-		return types.JobLogStep{}
-	}
-
-	return types.JobLogStep{
-		StepID:     int64(record.ID),
-		JobLogID:   record.JobLogID,
-		StepName:   record.StepName,
-		StepOrder:  record.StepOrder,
-		Status:     record.Status,
-		Message:    record.Message,
-		Output:     record.Output,
-		Error:      record.Error,
-		StartTime:  formatTime(record.StartTime),
-		EndTime:    formatTime(record.EndTime),
-		DurationMs: record.DurationMs,
-		CreatedAt:  &record.CreatedAt,
-	}
-}
-
-func formatTime(value *time.Time) string {
-	if value == nil || value.IsZero() {
-		return ""
-	}
-	return value.Format("2006-01-02 15:04:05")
-}
-
-func sanitizeRemark(remark *string) string {
-	if remark == nil {
-		return ""
-	}
-	return strings.TrimSpace(*remark)
-}
-
-func sanitizeOperator(operator string) string {
-	operator = strings.TrimSpace(operator)
-	if operator == "" {
-		return defaultOperator
-	}
-	if len(operator) > 64 {
-		return operator[:64]
-	}
-	return operator
-}
-
-func normalizeJobGroup(value string) string {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		value = defaultJobGroup
-	}
-	if len(value) > 64 {
-		value = value[:64]
-	}
-	return strings.ToUpper(value)
-}
-
-func withRunContext(ctx context.Context, meta jobRunContext) context.Context {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	return context.WithValue(ctx, jobRunContextKey{}, meta)
-}
-
-func runContextFrom(ctx context.Context) jobRunContext {
-	if ctx == nil {
-		return jobRunContext{}
-	}
-	if meta, ok := ctx.Value(jobRunContextKey{}).(jobRunContext); ok {
-		return meta
-	}
-	return jobRunContext{}
-}
-
-func resolveRunMessage(meta jobRunContext) string {
-	message := strings.TrimSpace(meta.Message)
-	if message != "" {
-		return message
-	}
-
-	source := strings.TrimSpace(meta.Source)
-	if source == "manual" {
-		return "手动触发"
-	}
-	if source == "cron" {
-		return "定时调度"
-	}
-
-	return "任务执行"
-}
-
+// Start starts the job scheduler
 func (s *Service) Start(ctx context.Context) error {
 	if s == nil || s.repo == nil {
 		return ErrServiceUnavailable
@@ -755,25 +545,36 @@ func (s *Service) Start(ctx context.Context) error {
 		s.mu.Unlock()
 		return nil
 	}
-	logger := s.cronLogger()
-	s.scheduler = cron.New(
-		cron.WithSeconds(),
-		cron.WithChain(cron.Recover(logger)),
-	)
 	s.started = true
 	s.mu.Unlock()
 
+	// Register job execution handler
+	s.asynqServer.HandleFunc(jobasynq.TypeJobExecution, s.handleJobExecution)
+	s.asynqServer.Use(jobasynq.LoggingMiddleware(s.logger))
+	s.asynqServer.Use(jobasynq.RecoveryMiddleware(s.logger))
+
+	// Start Asynq server
+	if err := s.asynqServer.Start(); err != nil {
+		s.logger.Error("failed to start asynq server", "error", err)
+		return err
+	}
+
+	// Start Asynq scheduler
+	if err := s.asynqScheduler.Start(); err != nil {
+		s.logger.Error("failed to start asynq scheduler", "error", err)
+		return err
+	}
+
+	// Load enabled jobs into scheduler
 	if err := s.loadEnabledJobs(ctx); err != nil {
 		return err
 	}
 
-	s.scheduler.Start()
-	if s.logger != nil {
-		s.logger.Info("job scheduler started")
-	}
+	s.logger.Info("job scheduler started with Asynq")
 	return nil
 }
 
+// Stop stops the job scheduler
 func (s *Service) Stop() {
 	if s == nil {
 		return
@@ -781,23 +582,55 @@ func (s *Service) Stop() {
 
 	s.mu.Lock()
 	s.started = false
-	s.jobs = make(map[int64]*jobSchedule)
+	s.jobs = make(map[int64]*jobScheduleEntry)
 	s.lockMisses = make(map[int64]uint64)
-	scheduler := s.scheduler
-	s.scheduler = nil
 	s.mu.Unlock()
 
-	if scheduler != nil {
-		ctx := scheduler.Stop()
-		if ctx != nil {
-			<-ctx.Done()
-		}
-		if s.logger != nil {
-			s.logger.Info("job scheduler stopped")
-		}
+	if s.asynqScheduler != nil {
+		_ = s.asynqScheduler.Stop()
 	}
+
+	if s.asynqServer != nil {
+		s.asynqServer.Stop()
+	}
+
+	if s.asynqClient != nil {
+		_ = s.asynqClient.Close()
+	}
+
+	s.logger.Info("job scheduler stopped")
 }
 
+// handleJobExecution is the Asynq handler for job execution tasks
+func (s *Service) handleJobExecution(ctx context.Context, task *asynq.Task) error {
+	payload, err := jobasynq.ParseJobExecutionPayload(task)
+	if err != nil {
+		return fmt.Errorf("parse job execution payload: %w", err)
+	}
+
+	job := types.Job{
+		JobID:        payload.JobID,
+		JobName:      payload.JobName,
+		JobGroup:     payload.JobGroup,
+		InvokeTarget: payload.InvokeTarget,
+		InvokeParams: payload.InvokeParams,
+	}
+
+	meta := jobRunContext{
+		Source:  payload.Source,
+		Message: payload.Message,
+	}
+
+	opts := jobRunOptions{
+		logID: payload.LogID,
+	}
+
+	runCtx := withRunContext(ctx, meta)
+	s.executeJob(runCtx, job, opts)
+	return nil
+}
+
+// loadEnabledJobs loads all enabled jobs into the scheduler
 func (s *Service) loadEnabledJobs(ctx context.Context) error {
 	if s == nil || s.repo == nil {
 		return ErrServiceUnavailable
@@ -815,6 +648,7 @@ func (s *Service) loadEnabledJobs(ctx context.Context) error {
 	return nil
 }
 
+// configureSchedule adds or removes a job from the scheduler
 func (s *Service) configureSchedule(job types.Job) error {
 	if s == nil {
 		return nil
@@ -825,59 +659,52 @@ func (s *Service) configureSchedule(job types.Job) error {
 
 	s.detachLocked(job.JobID)
 
-	schedule := &jobSchedule{job: job}
-	if job.Status == "0" && s.scheduler != nil {
-		runner := s.newCronJob(job, jobRunContext{
-			Source:  "cron",
-			Message: "定时调度",
-		}, jobRunOptions{})
-		entryID, err := s.scheduler.AddJob(job.CronExpression, runner)
+	entry := &jobScheduleEntry{job: job}
+
+	// Only schedule if job is enabled (status = "0")
+	if job.Status == "0" && s.asynqScheduler != nil {
+		payload := jobasynq.JobExecutionPayload{
+			JobID:        job.JobID,
+			JobName:      job.JobName,
+			JobGroup:     job.JobGroup,
+			InvokeTarget: job.InvokeTarget,
+			InvokeParams: job.InvokeParams,
+			Source:       "cron",
+			Message:      "定时调度",
+		}
+
+		err := s.asynqScheduler.ScheduleJob(job.JobID, job.CronExpression, payload,
+			asynq.Queue(jobasynq.QueueDefault),
+		)
 		if err != nil {
 			return err
 		}
-		schedule.entryID = entryID
+
+		if entryID, ok := s.asynqScheduler.GetEntryID(job.JobID); ok {
+			entry.entryID = entryID
+		}
+
 		if s.logger != nil {
 			s.logger.Info("job scheduled", "jobID", job.JobID, "spec", job.CronExpression)
 		}
 	}
 
-	s.jobs[job.JobID] = schedule
+	s.jobs[job.JobID] = entry
 	return nil
 }
 
+// detachLocked removes a job from the scheduler (must hold lock)
 func (s *Service) detachLocked(jobID int64) {
-	if schedule, ok := s.jobs[jobID]; ok {
-		if schedule.entryID != 0 && s.scheduler != nil {
-			s.scheduler.Remove(schedule.entryID)
+	if entry, ok := s.jobs[jobID]; ok {
+		if s.asynqScheduler != nil {
+			_ = s.asynqScheduler.UnscheduleJob(jobID)
 		}
-		schedule.entryID = 0
+		entry.entryID = ""
 		delete(s.jobs, jobID)
 	}
 }
 
-func (s *Service) newCronJob(job types.Job, meta jobRunContext, opts jobRunOptions) cron.Job {
-	if s == nil {
-		return cron.FuncJob(func() {})
-	}
-
-	if strings.TrimSpace(meta.Source) == "" {
-		meta.Source = "cron"
-	}
-	if strings.TrimSpace(meta.Message) == "" {
-		meta.Message = "定时调度"
-	}
-
-	runner := cron.FuncJob(func() {
-		ctx := withRunContext(context.Background(), meta)
-		s.executeJob(ctx, job, opts)
-	})
-
-	if strings.TrimSpace(job.Concurrent) == "1" {
-		return cron.NewChain(cron.SkipIfStillRunning(s.cronLogger())).Then(runner)
-	}
-	return runner
-}
-
+// dispatchJob runs a job directly (fallback when Asynq is unavailable)
 func (s *Service) dispatchJob(job types.Job, meta jobRunContext, opts jobRunOptions) {
 	if s == nil {
 		return
@@ -888,266 +715,13 @@ func (s *Service) dispatchJob(job types.Job, meta jobRunContext, opts jobRunOpti
 	if strings.TrimSpace(meta.Message) == "" {
 		meta.Message = "手动触发"
 	}
-	go s.newCronJob(job, meta, opts).Run()
-}
-
-func (s *Service) executeJob(ctx context.Context, job types.Job, opts jobRunOptions) {
-	if s == nil {
-		return
-	}
-
-	runCtx := runContextFrom(ctx)
-	startTime := time.Now()
-	var execErr error
-	var logID int64 = opts.logID
-
-	var release func(context.Context) error
-	var proceed bool = true
-	var err error
-
-	if s.redis != nil && strings.TrimSpace(job.Concurrent) == "1" {
-		release, proceed, err = s.tryAcquireLock(ctx, job)
-		if err != nil {
-			execErr = fmt.Errorf("acquire job lock failed: %w", err)
-			s.finishJobRun(context.Background(), job, runCtx, logID, startTime, execErr)
-			return
-		}
-		if !proceed {
-			count := s.incrementLockMiss(job.JobID)
-			if s.logger != nil {
-				s.logger.Info("job lock busy", "jobID", job.JobID, "misses", count)
-			}
-			execErr = fmt.Errorf("job is already running")
-			s.finishJobRun(context.Background(), job, runCtx, logID, startTime, execErr)
-			return
-		}
-		defer func() {
-			if release != nil {
-				if err := release(context.Background()); err != nil && s.logger != nil {
-					s.logger.Error("release job lock failed", "jobID", job.JobID, "error", err)
-				}
-			}
-		}()
-	}
-
-	logID, stepLogger, startErr := s.startJobRun(ctx, job, runCtx, opts)
-	if startErr != nil {
-		execErr = startErr
-		s.finishJobRun(context.Background(), job, runCtx, logID, startTime, execErr)
-		return
-	}
-
-	if stepLogger != nil {
-		defer stepLogger.Close()
-	}
-	defer func() {
-		s.finishJobRun(context.Background(), job, runCtx, logID, startTime, execErr)
+	go func() {
+		ctx := withRunContext(context.Background(), meta)
+		s.executeJob(ctx, job, opts)
 	}()
-
-	exec, ok := s.registry.Resolve(job.InvokeTarget)
-	if !ok {
-		if s.logger != nil {
-			s.logger.Warn("no executor registered", "jobID", job.JobID, "target", job.InvokeTarget)
-		}
-		execErr = fmt.Errorf("no executor registered for %s", job.InvokeTarget)
-		return
-	}
-
-	payload := types.ExecutionPayload{
-		Job:        job,
-		Logger:     s.logger,
-		StepLogger: stepLogger,
-	}
-	if len(job.InvokeParams) > 0 {
-		payload.Params = cloneParams(job.InvokeParams)
-	}
-
-	if err := exec(ctx, payload); err != nil {
-		execErr = err
-		if s.logger != nil {
-			s.logger.Error("job execution failed", "jobID", job.JobID, "error", err)
-		}
-	} else if s.logger != nil {
-		s.logger.Info("job executed", "jobID", job.JobID)
-	}
 }
 
-func (s *Service) startJobRun(ctx context.Context, job types.Job, meta jobRunContext, opts jobRunOptions) (int64, *executor.StepLogger, error) {
-	if s == nil || s.repo == nil {
-		return 0, nil, ErrServiceUnavailable
-	}
-
-	if opts.logID > 0 {
-		return opts.logID, s.newStepLogger(opts.logID), nil
-	}
-
-	logID, err := s.createRunningLogRecord(ctx, job, meta)
-	if err != nil {
-		return 0, nil, err
-	}
-
-	return logID, s.newStepLogger(logID), nil
-}
-
-func (s *Service) finishJobRun(ctx context.Context, job types.Job, meta jobRunContext, logID int64, startTime time.Time, execErr error) {
-	if s == nil {
-		return
-	}
-
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	status := "0"
-	resultLabel := "成功"
-	if execErr != nil {
-		status = "1"
-		resultLabel = "失败"
-	}
-
-	if logID > 0 && s.streams != nil {
-		s.streams.Publish(logID, &types.StepEvent{
-			Type:      "complete",
-			JobLogID:  logID,
-			Status:    status,
-			Timestamp: time.Now().Format(time.RFC3339),
-			Data: map[string]interface{}{
-				"durationMs": time.Since(startTime).Milliseconds(),
-				"result":     resultLabel,
-			},
-		})
-		s.streams.Close(logID)
-	}
-
-	if s.repo == nil || logID == 0 {
-		return
-	}
-
-	message := resolveRunMessage(meta)
-	durationText := time.Since(startTime).Round(time.Millisecond)
-	detail := fmt.Sprintf("%s | %s | 用时 %s", message, resultLabel, durationText)
-
-	updates := map[string]interface{}{
-		"status":      status,
-		"job_message": detail,
-	}
-
-	if execErr != nil {
-		updates["exception_info"] = truncateString(execErr.Error(), maxExceptionInfoLen)
-	}
-
-	if err := s.repo.UpdateJobLog(ctx, logID, updates); err != nil && s.logger != nil {
-		s.logger.Error("update job log failed", "jobID", job.JobID, "jobLogID", logID, "error", err)
-	}
-}
-
-func (s *Service) createRunningLogRecord(ctx context.Context, job types.Job, meta jobRunContext) (int64, error) {
-	if s == nil || s.repo == nil {
-		return 0, ErrServiceUnavailable
-	}
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	message := resolveRunMessage(meta)
-	detail := fmt.Sprintf("%s | 执行中", message)
-
-	record := &model.SysJobLog{
-		JobID:        job.JobID,
-		JobName:      job.JobName,
-		JobGroup:     job.JobGroup,
-		InvokeTarget: job.InvokeTarget,
-		InvokeParams: rawJSONText(job.InvokeParams),
-		Status:       "2",
-		JobMessage:   &detail,
-	}
-
-	now := time.Now()
-	record.CreatedAt = now
-
-	if err := s.repo.CreateJobLog(ctx, record); err != nil {
-		if s.logger != nil {
-			s.logger.Error("create running job log failed", "jobID", job.JobID, "error", err)
-		}
-		return 0, err
-	}
-
-	return int64(record.ID), nil
-}
-
-func (s *Service) newStepLogger(jobLogID int64) *executor.StepLogger {
-	if s == nil || jobLogID == 0 {
-		return nil
-	}
-
-	return executor.NewStepLogger(jobLogID, s.repo, s.logger, func(event *types.StepEvent) {
-		if s.streams != nil && event != nil {
-			s.streams.Publish(jobLogID, event)
-		}
-	})
-}
-
-func (s *Service) attachRunningState(ctx context.Context, jobs []types.Job) {
-	if s == nil || s.repo == nil || len(jobs) == 0 {
-		return
-	}
-
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	ids := make([]int64, 0, len(jobs))
-	for i := range jobs {
-		ids = append(ids, jobs[i].JobID)
-	}
-
-	runningLogs, err := s.repo.GetLatestLogsByStatus(ctx, ids, []string{"2"})
-	if err != nil {
-		if s.logger != nil {
-			s.logger.Warn("load running job logs failed", "error", err)
-		}
-		return
-	}
-
-	for i := range jobs {
-		if log, ok := runningLogs[jobs[i].JobID]; ok {
-			jobs[i].IsRunning = true
-			logID := int64(log.ID)
-			jobs[i].CurrentLogID = &logID
-		}
-	}
-}
-
-func (s *Service) isJobRunning(ctx context.Context, jobID int64) bool {
-	if s == nil || s.repo == nil || jobID == 0 {
-		return false
-	}
-
-	ids := []int64{jobID}
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	logs, err := s.repo.GetLatestLogsByStatus(ctx, ids, []string{"2"})
-	if err != nil {
-		if s.logger != nil {
-			s.logger.Warn("check running job failed", "jobID", jobID, "error", err)
-		}
-		return false
-	}
-
-	_, ok := logs[jobID]
-	return ok
-}
-
-func (s *Service) SubscribeLogStream(jobLogID int64) (<-chan *types.StepEvent, func()) {
-	if s == nil || s.streams == nil || jobLogID <= 0 {
-		return nil, func() {}
-	}
-
-	return s.streams.Subscribe(jobLogID)
-}
-
+// tryAcquireLock attempts to acquire a distributed lock for a job
 func (s *Service) tryAcquireLock(ctx context.Context, job types.Job) (func(context.Context) error, bool, error) {
 	if s.redis == nil {
 		return nil, true, nil
@@ -1172,6 +746,7 @@ func (s *Service) tryAcquireLock(ctx context.Context, job types.Job) (func(conte
 	return release, true, nil
 }
 
+// resolveLockTTL determines the lock TTL for a job
 func (s *Service) resolveLockTTL(job types.Job) time.Duration {
 	ttl := s.defaultLockTTL
 	if len(job.InvokeParams) == 0 {
@@ -1193,6 +768,7 @@ func (s *Service) resolveLockTTL(job types.Job) time.Duration {
 	return ttl
 }
 
+// incrementLockMiss tracks lock miss counts
 func (s *Service) incrementLockMiss(jobID int64) uint64 {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1201,78 +777,39 @@ func (s *Service) incrementLockMiss(jobID int64) uint64 {
 	return next
 }
 
-func (s *Service) cronLogger() cron.Logger {
-	return slogCronLogger{logger: s.logger}
+// withRunContext adds run context to a context
+func withRunContext(ctx context.Context, meta jobRunContext) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return context.WithValue(ctx, jobRunContextKey{}, meta)
 }
 
-type slogCronLogger struct {
-	logger *slog.Logger
+// runContextFrom extracts run context from a context
+func runContextFrom(ctx context.Context) jobRunContext {
+	if ctx == nil {
+		return jobRunContext{}
+	}
+	if meta, ok := ctx.Value(jobRunContextKey{}).(jobRunContext); ok {
+		return meta
+	}
+	return jobRunContext{}
 }
 
-func (l slogCronLogger) Info(msg string, keysAndValues ...interface{}) {
-	if l.logger == nil {
-		return
+// resolveRunMessage determines the message for a job run
+func resolveRunMessage(meta jobRunContext) string {
+	message := strings.TrimSpace(meta.Message)
+	if message != "" {
+		return message
 	}
-	l.logger.Info(msg, normalizeKV(keysAndValues)...)
-}
 
-func (l slogCronLogger) Error(err error, msg string, keysAndValues ...interface{}) {
-	if l.logger == nil {
-		return
+	source := strings.TrimSpace(meta.Source)
+	if source == "manual" {
+		return "手动触发"
 	}
-	args := append(keysAndValues, "error", err)
-	l.logger.Error(msg, normalizeKV(args)...)
-}
+	if source == "cron" {
+		return "定时调度"
+	}
 
-func normalizeKV(pairs []interface{}) []interface{} {
-	if len(pairs) == 0 {
-		return nil
-	}
-	args := make([]interface{}, 0, len(pairs))
-	for i := 0; i < len(pairs); i += 2 {
-		key := fmt.Sprint(pairs[i])
-		var val interface{}
-		if i+1 < len(pairs) {
-			val = pairs[i+1]
-		}
-		args = append(args, key, val)
-	}
-	return args
-}
-
-func sanitizeInvokeParams(raw json.RawMessage) (string, error) {
-	trimmed := strings.TrimSpace(string(raw))
-	if trimmed == "" {
-		return "", nil
-	}
-	if !json.Valid([]byte(trimmed)) {
-		return "", errors.New("invoke params must be valid JSON")
-	}
-	return trimmed, nil
-}
-
-func cloneParams(raw json.RawMessage) json.RawMessage {
-	if len(raw) == 0 {
-		return nil
-	}
-	buf := make([]byte, len(raw))
-	copy(buf, raw)
-	return json.RawMessage(buf)
-}
-
-func rawJSONText(raw json.RawMessage) string {
-	if len(raw) == 0 {
-		return ""
-	}
-	return strings.TrimSpace(string(raw))
-}
-
-func truncateString(value string, max int) string {
-	if max <= 0 {
-		return ""
-	}
-	if len(value) <= max {
-		return value
-	}
-	return value[:max]
+	return "任务执行"
 }

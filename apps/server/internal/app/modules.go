@@ -2,6 +2,7 @@ package app
 
 import (
 	"log/slog"
+	"strings"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -81,9 +82,17 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	onlineSvc := online.NewService(onlineRepo, newSessionManager(sessionStore))
 	onlineHandler := online.NewHandler(onlineSvc)
 	jobRepo := job.NewRepository(sqlDB)
+
+	// Parse Redis address from URL for Asynq
+	redisAddr := ""
+	if cfg.Redis.URL != "" {
+		redisAddr = parseRedisAddr(cfg.Redis.URL)
+	}
+
 	jobSvc := job.NewService(jobRepo, job.ServiceOptions{
-		Logger: logger,
-		Redis:  redisCache,
+		Logger:    logger,
+		Redis:     redisCache,
+		RedisAddr: redisAddr,
 	})
 	// 注册定时任务执行器
 	if err := jobSvc.RegisterExecutor("db.backup", job.NewBackupExecutor(sqlDB, cfg)); err != nil {
@@ -178,4 +187,45 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 		permissionProvider: authRepo,
 		sessionValidator:   newSessionValidator(sessionStore, onlineSvc),
 	}
+}
+
+// parseRedisAddr extracts host:port from a Redis URL
+func parseRedisAddr(redisURL string) string {
+	if redisURL == "" {
+		return "localhost:6379"
+	}
+
+	// Handle redis:// or rediss:// URLs
+	url := redisURL
+	if strings.HasPrefix(url, "redis://") {
+		url = strings.TrimPrefix(url, "redis://")
+	} else if strings.HasPrefix(url, "rediss://") {
+		url = strings.TrimPrefix(url, "rediss://")
+	}
+
+	// Remove auth if present (user:pass@)
+	if idx := strings.Index(url, "@"); idx != -1 {
+		url = url[idx+1:]
+	}
+
+	// Remove path if present
+	if idx := strings.Index(url, "/"); idx != -1 {
+		url = url[:idx]
+	}
+
+	// Remove query string if present
+	if idx := strings.Index(url, "?"); idx != -1 {
+		url = url[:idx]
+	}
+
+	if url == "" {
+		return "localhost:6379"
+	}
+
+	// Add default port if not present
+	if !strings.Contains(url, ":") {
+		url = url + ":6379"
+	}
+
+	return url
 }
