@@ -22,16 +22,20 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { type JobPayload, createJob, updateJob } from '../../api';
+import {
+  type JobPayload,
+  createJob,
+  listJobExecutors,
+  updateJob,
+} from '../../api';
 import {
   CONCURRENT_LABELS,
   MISFIRE_POLICY_LABELS,
-  PREDEFINED_JOB_TYPES,
   STATUS_TABS,
 } from '../../constants';
 import {
@@ -39,17 +43,15 @@ import {
   useJobManagementRefresh,
   useJobManagementStore,
 } from '../../store';
-import type { Job } from '../../type';
 import { type JobFormValues, jobFormSchema } from '../../type';
 import { stringifyInvokeParams } from '../../utils';
 import { CronInputWithGenerator } from './cron-input-with-generator';
 
 const DEFAULT_VALUES: JobFormValues = {
-  jobType: 'custom',
   jobName: '',
   jobGroup: 'DEFAULT',
   invokeTarget: '',
-  cronExpression: '',
+  cronExpression: '0 2 * * *',
   misfirePolicy: '3',
   concurrent: '1',
   status: '0',
@@ -70,15 +72,11 @@ export function JobEditorDialog() {
     if (!job) {
       return DEFAULT_VALUES;
     }
-    const detectedType = PREDEFINED_JOB_TYPES.find(
-      (t) => t.value === job.invokeTarget && t.value !== 'custom',
-    );
     return {
-      jobType: detectedType?.value ?? 'custom',
       jobName: job.jobName ?? '',
       jobGroup: job.jobGroup ?? 'DEFAULT',
       invokeTarget: job.invokeTarget ?? '',
-      cronExpression: job.cronExpression ?? '',
+      cronExpression: job.cronExpression ?? DEFAULT_VALUES.cronExpression,
       misfirePolicy: (job.misfirePolicy ?? '3') as '1' | '2' | '3',
       concurrent: (job.concurrent ?? '1') as '0' | '1',
       status: (job.status ?? '0') as '0' | '1',
@@ -98,28 +96,50 @@ export function JobEditorDialog() {
     }
   }, [defaultValues, form, isOpen]);
 
+  const executorsQuery = useQuery({
+    queryKey: ['monitor', 'jobs', 'executors'],
+    queryFn: listJobExecutors,
+    staleTime: 60 * 1000,
+    enabled: isOpen,
+  });
+
+  const executorOptions = useMemo(() => {
+    const options = executorsQuery.data ?? [];
+    if (
+      job?.invokeTarget &&
+      !options.some((executor) => executor.key === job.invokeTarget)
+    ) {
+      return [
+        {
+          key: job.invokeTarget,
+          description: '当前任务使用的执行器（未注册或已下线）',
+        },
+        ...options,
+      ];
+    }
+    return options;
+  }, [executorsQuery.data, job?.invokeTarget]);
+
+  useEffect(() => {
+    if (!isOpen || mode !== 'create') {
+      return;
+    }
+    if (form.getValues('invokeTarget')?.trim()) {
+      return;
+    }
+    if (executorOptions.length === 0) {
+      return;
+    }
+    form.setValue('invokeTarget', executorOptions[0].key, {
+      shouldValidate: true,
+    });
+  }, [executorOptions, form, isOpen, mode]);
+
   const handleClose = () => {
     if (createMutation.isPending || updateMutation.isPending) {
       return;
     }
     closeEditor();
-  };
-
-  const handleJobTypeChange = (jobType: string) => {
-    const selectedType = PREDEFINED_JOB_TYPES.find((t) => t.value === jobType);
-    if (selectedType) {
-      if (jobType !== 'custom') {
-        form.setValue('invokeTarget', selectedType.value);
-      } else {
-        form.setValue('invokeTarget', '');
-      }
-      form.setValue('jobGroup', selectedType.defaultGroup);
-      form.setValue('cronExpression', selectedType.defaultCron);
-      form.setValue(
-        'invokeParams',
-        JSON.stringify(selectedType.defaultParams, null, 2),
-      );
-    }
   };
 
   const createMutation = useMutation({
@@ -178,6 +198,13 @@ export function JobEditorDialog() {
   const description =
     '配置定时任务的执行规则和参数。选择任务类型后会自动填充默认参数。';
 
+  const selectedInvokeTarget = form.watch('invokeTarget');
+  const selectedExecutor = useMemo(
+    () =>
+      executorOptions.find((executor) => executor.key === selectedInvokeTarget),
+    [executorOptions, selectedInvokeTarget],
+  );
+
   return (
     <ResponsiveDialog
       open={isOpen}
@@ -223,45 +250,63 @@ export function JobEditorDialog() {
 
               <FormField
                 control={form.control}
-                name="jobType"
+                name="invokeTarget"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="sm:col-span-2">
                     <FormLabel>任务类型</FormLabel>
                     <Select
                       value={field.value}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        handleJobTypeChange(value);
-                      }}
+                      onValueChange={field.onChange}
+                      disabled={
+                        executorsQuery.isLoading ||
+                        executorOptions.length === 0
+                      }
                     >
                       <FormControl>
-                        <SelectTrigger>
-                          {field.value ? (
+                        <SelectTrigger className="cursor-pointer">
+                          {selectedExecutor ? (
                             <span className="font-medium">
-                              {
-                                PREDEFINED_JOB_TYPES.find(
-                                  (t) => t.value === field.value,
-                                )?.label
-                              }
+                              {selectedExecutor.description ||
+                                selectedExecutor.key}
                             </span>
+                          ) : field.value ? (
+                            <span className="font-medium">{field.value}</span>
                           ) : (
-                            <SelectValue placeholder="选择任务类型" />
+                            <SelectValue
+                              placeholder={
+                                executorsQuery.isLoading
+                                  ? '加载任务类型中...'
+                                  : '选择任务类型'
+                              }
+                            />
                           )}
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {PREDEFINED_JOB_TYPES.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
+                        {executorOptions.map((executor) => (
+                          <SelectItem key={executor.key} value={executor.key}>
                             <div className="flex flex-col gap-0.5 text-left">
-                              <span className="font-medium">{type.label}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {type.description}
+                              <span className="font-medium">
+                                {executor.description || executor.key}
                               </span>
+                              {executor.description ? (
+                                <span className="text-xs text-muted-foreground">
+                                  {executor.key}
+                                </span>
+                              ) : null}
                             </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {executorsQuery.isLoading
+                        ? '正在加载可用执行器...'
+                        : executorsQuery.isError
+                          ? '获取任务类型失败，请刷新重试。'
+                          : selectedExecutor?.description ||
+                            '任务类型由后端注册执行器提供'}
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -292,25 +337,6 @@ export function JobEditorDialog() {
                   </FormItem>
                 )}
               />
-
-              {form.watch('jobType') === 'custom' ? (
-                <FormField
-                  control={form.control}
-                  name="invokeTarget"
-                  render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
-                      <FormLabel>调用目标</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="例如 jobService.handleReport"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : null}
 
               <div className="sm:col-span-2 flex items-center gap-2 pt-4 pb-2 border-b">
                 <span className="font-semibold text-lg">调度配置</span>

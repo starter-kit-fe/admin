@@ -459,6 +459,7 @@ func registerMonitorRoutes(group *gin.RouterGroup, opts Options) {
 
 	jobs := monitor.Group("/jobs")
 	registerRouteWithPermissions(jobs, http.MethodGet, "", []string{"monitor:job:list"}, opts.JobHandler.List, "list jobs")
+	registerRouteWithPermissions(jobs, http.MethodGet, "/executors", []string{"monitor:job:query"}, opts.JobHandler.ListAvailableExecutors, "list job executors")
 	registerRouteWithPermissions(jobs, http.MethodPost, "", []string{"monitor:job:add"}, opts.JobHandler.Create, "create job")
 	registerRouteWithPermissions(jobs, http.MethodGet, "/:id", []string{"monitor:job:query"}, opts.JobHandler.Get, "get job")
 	registerRouteWithPermissions(jobs, http.MethodGet, "/:id/detail", []string{"monitor:job:query"}, opts.JobHandler.Detail, "get job detail")

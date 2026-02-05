@@ -132,6 +132,25 @@ func (h *Handler) List(ctx *gin.Context) {
 	resp.OK(ctx, resp.WithData(result))
 }
 
+// ListAvailableExecutors godoc
+// @Summary 获取可用的任务执行器列表
+// @Description 返回系统中已注册的所有执行器，用于前端下拉选择 invokeTarget
+// @Tags Monitor/Job
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} resp.Response
+// @Failure 503 {object} resp.Response
+// @Router /v1/monitor/jobs/executors [get]
+func (h *Handler) ListAvailableExecutors(ctx *gin.Context) {
+	if h == nil || h.service == nil {
+		resp.ServiceUnavailable(ctx, resp.WithMessage("job service unavailable"))
+		return
+	}
+
+	executors := h.service.ListAvailableExecutors()
+	resp.OK(ctx, resp.WithData(executors))
+}
+
 // Create godoc
 // @Summary 新增定时任务
 // @Description 创建任务并保存调度规则

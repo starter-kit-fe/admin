@@ -83,6 +83,11 @@ export interface JobLogList {
   pageSize: number;
 }
 
+export interface JobExecutor {
+  key: string;
+  description?: string;
+}
+
 export interface JobDetailResponse {
   job: Job;
   invokeParamsText: string;
@@ -94,27 +99,20 @@ export interface JobDetailParams {
   logPageSize?: number;
 }
 
-const jsonTextSchema = z
-  .string()
-  .default('')
-  .refine(
-    (value) => {
-      const trimmed = value?.trim() ?? '';
-      if (!trimmed) {
-        return true;
-      }
-      try {
-        JSON.parse(trimmed);
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    { message: '请输入有效的 JSON 字符串' },
-  );
+const jsonTextSchema = z.string().default('').refine((value) => {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    return true;
+  }
+  try {
+    JSON.parse(trimmed);
+    return true;
+  } catch {
+    return false;
+  }
+});
 
 export const jobFormSchema = z.object({
-  jobType: z.string().min(1, '请选择任务类型'),
   jobName: z.string().trim().min(1, '请输入任务名称'),
   jobGroup: z.string().trim().min(1, '请输入任务分组'),
   invokeTarget: z.string().trim().min(1, '请输入调用目标'),

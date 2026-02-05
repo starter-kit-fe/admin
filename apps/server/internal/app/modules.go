@@ -95,7 +95,11 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 		RedisAddr: redisAddr,
 	})
 	// 注册定时任务执行器
-	if err := jobSvc.RegisterExecutor("db.backup", job.NewBackupExecutor(sqlDB, cfg)); err != nil {
+	if err := jobSvc.RegisterExecutorWithDesc(
+		"db.backup",
+		"数据库备份",
+		job.NewBackupExecutor(sqlDB, cfg),
+	); err != nil {
 		logger.Error("register backup executor failed", "error", err)
 	}
 	jobHandler := job.NewHandler(jobSvc)
