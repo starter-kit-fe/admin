@@ -28,13 +28,14 @@ export function CronInputWithGenerator({
                 <InputGroupInput
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    placeholder="0 0 2 * * ?"
-                    className="font-mono"
+                    placeholder="0 2 * * *"
+                    className="font-mono cursor-text"
                 />
                 <InputGroupButton
                     type="button"
                     variant="ghost"
                     size="icon-sm"
+                    className="cursor-pointer"
                     onClick={() => setGeneratorOpen(true)}
                     aria-label="打开 Cron 生成器"
                 >

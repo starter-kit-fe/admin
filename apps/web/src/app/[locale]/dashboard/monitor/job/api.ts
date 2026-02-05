@@ -5,6 +5,7 @@ import type {
   JobDetailParams,
   JobDetailResponse,
   JobListResponse,
+  JobExecutor,
   JobLogStep,
 } from './type';
 
@@ -58,6 +59,10 @@ export function deleteJob(id: number) {
 
 export function getJob(id: number) {
   return get<Job>(`/v1/monitor/jobs/${id}`);
+}
+
+export function listJobExecutors() {
+  return get<JobExecutor[]>('/v1/monitor/jobs/executors');
 }
 
 export function getJobDetail(id: number, params: JobDetailParams = {}) {

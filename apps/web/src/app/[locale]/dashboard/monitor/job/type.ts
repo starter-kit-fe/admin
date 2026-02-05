@@ -64,7 +64,7 @@ export interface JobLogWithSteps extends JobLog {
 
 export interface StepEvent {
   type: 'step_start' | 'step_log' | 'step_end' | 'complete' | 'heartbeat';
-  id: number;
+  jobLogId: number;
   stepId?: number;
   stepOrder: number;
   stepName?: string;
@@ -83,6 +83,11 @@ export interface JobLogList {
   pageSize: number;
 }
 
+export interface JobExecutor {
+  key: string;
+  description?: string;
+}
+
 export interface JobDetailResponse {
   job: Job;
   invokeParamsText: string;
@@ -96,8 +101,20 @@ export interface JobDetailParams {
 
 const baseJsonSchema = z.string().default('');
 
+const jsonTextSchema = baseJsonSchema.refine((value) => {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    return true;
+  }
+  try {
+    JSON.parse(trimmed);
+    return true;
+  } catch {
+    return false;
+  }
+});
+
 export const jobFormSchema = z.object({
-  jobType: z.string(),
   jobName: z.string(),
   jobGroup: z.string(),
   invokeTarget: z.string(),
@@ -106,12 +123,11 @@ export const jobFormSchema = z.object({
   concurrent: z.enum(['0', '1']),
   status: z.enum(['0', '1']),
   remark: z.string().optional(),
-  invokeParams: baseJsonSchema.optional(),
+  invokeParams: jsonTextSchema.optional(),
 });
 
 export const createJobFormSchema = (t: (key: string) => string) =>
   jobFormSchema.extend({
-    jobType: jobFormSchema.shape.jobType.min(1, t('editor.validation.jobType')),
     jobName: jobFormSchema.shape.jobName
       .trim()
       .min(1, t('editor.validation.jobName')),

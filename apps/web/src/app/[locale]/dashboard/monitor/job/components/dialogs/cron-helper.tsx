@@ -385,7 +385,7 @@ export function CronHelper({
                   <ToggleGroupItem
                     key={day.value}
                     value={day.value}
-                    className="flex-1 items-center justify-center min-w-[90px]"
+                    className="flex-1 items-center justify-center min-w-[90px] cursor-pointer"
                   >
                     {day.label}
                   </ToggleGroupItem>
@@ -507,7 +507,7 @@ export function CronHelper({
                     <ToggleGroupItem
                       key={option.value}
                       value={option.value}
-                      className="flex-1 min-w-[140px] flex-col items-start gap-0.5 rounded-md border px-3 py-2 text-left shadow-none data-[state=on]:border-primary"
+                      className="flex-1 min-w-[140px] flex-col items-start gap-0.5 rounded-md border px-3 py-2 text-left shadow-none data-[state=on]:border-primary cursor-pointer"
                     >
                       <span className="text-sm font-medium text-foreground">
                         {option.label}
@@ -545,7 +545,7 @@ export function CronHelper({
                   value={isPreset ? value : 'custom'}
                   onValueChange={handlePresetChange}
                 >
-                  <SelectTrigger className="w-full sm:w-[240px]">
+                  <SelectTrigger className="w-full sm:w-[240px] cursor-pointer">
                     <SelectValue placeholder="选择预设" />
                   </SelectTrigger>
                   <SelectContent>
@@ -561,7 +561,7 @@ export function CronHelper({
               <Input
                 value={value}
                 onChange={handleManualInput}
-                placeholder="0 0 2 * * ?"
+                placeholder="0 2 * * *"
                 className={`font-mono ${
                   error
                     ? 'border-destructive focus-visible:ring-destructive/20'
@@ -569,7 +569,7 @@ export function CronHelper({
                 }`}
               />
               <p className="text-xs text-muted-foreground">
-                💡 格式: 秒 分 时 日 月 周 (例如: 0 0 2 * * ? 表示每天凌晨 2 点)
+                💡 格式: 分 时 日 月 周 (例如: 0 2 * * * 表示每天凌晨 2 点)
               </p>
             </TabsContent>
           </Tabs>
@@ -658,18 +658,19 @@ function buildCronExpression(state: CronBuilderState): string {
   switch (state.frequency) {
     case 'minute': {
       const interval = clampNumber(state.minuteInterval, 1, 59);
-      return `0 */${interval} * * * ?`;
+      const minuteField = interval === 1 ? '*' : `*/${interval}`;
+      return `${minuteField} * * * *`;
     }
     case 'hourly': {
       const minute = clampNumber(state.hourlyMinute, 0, 59);
       const interval = clampNumber(state.hourInterval, 1, 24);
       const hourField = interval === 1 ? '*' : `*/${interval}`;
-      return `0 ${minute} ${hourField} * * ?`;
+      return `${minute} ${hourField} * * *`;
     }
     case 'daily': {
       const minute = clampNumber(state.dailyMinute, 0, 59);
       const hour = clampNumber(state.dailyHour, 0, 23);
-      return `0 ${minute} ${hour} * * ?`;
+      return `${minute} ${hour} * * *`;
     }
     case 'weekly': {
       const minute = clampNumber(state.weeklyMinute, 0, 59);
@@ -677,13 +678,13 @@ function buildCronExpression(state: CronBuilderState): string {
       const days = state.weeklyDays.length
         ? sortWeekdays(state.weeklyDays)
         : DEFAULT_BUILDER_STATE.weeklyDays;
-      return `0 ${minute} ${hour} ? * ${days.join(',')}`;
+      return `${minute} ${hour} * * ${days.join(',')}`;
     }
     case 'monthly': {
       const minute = clampNumber(state.monthlyMinute, 0, 59);
       const hour = clampNumber(state.monthlyHour, 0, 23);
       const day = clampNumber(state.monthlyDay, 1, 31);
-      return `0 ${minute} ${hour} ${day} * ?`;
+      return `${minute} ${hour} ${day} * *`;
     }
     default:
       return assertNever(state.frequency);
@@ -711,20 +712,34 @@ function sortWeekdays(days: CronWeekday[]): CronWeekday[] {
 
 function parseCronExpression(expression: string): CronBuilderState | null {
   const trimmed = expression.trim();
-  const parts = trimmed.split(/\s+/);
-  if (parts.length !== 6) {
+  const rawParts = trimmed.split(/\s+/);
+  const parts =
+    rawParts.length === 6 && rawParts[0] === '0'
+      ? rawParts.slice(1)
+      : rawParts;
+  if (parts.length !== 5) {
     return null;
   }
-  const [second, minute, hour, day, month, weekday] = parts;
-  if (second !== '0' || month !== '*') {
+  const [minute, hour, rawDay, month, rawWeekday] = parts;
+  if (month !== '*') {
     return null;
+  }
+  const day = rawDay === '?' ? '*' : rawDay;
+  const weekday = rawWeekday === '?' ? '*' : rawWeekday;
+
+  if (minute === '*' && hour === '*' && day === '*' && weekday === '*') {
+    return {
+      ...DEFAULT_BUILDER_STATE,
+      frequency: 'minute',
+      minuteInterval: 1,
+    };
   }
 
   const minuteInterval = parseStepField(minute);
   if (
     minuteInterval !== null &&
-    (day === '*' || day === '?') &&
-    (weekday === '?' || weekday === '*') &&
+    day === '*' &&
+    weekday === '*' &&
     hour === '*'
   ) {
     return {
@@ -742,8 +757,8 @@ function parseCronExpression(expression: string): CronBuilderState | null {
   const hourInterval = hour === '*' ? 1 : parseStepField(hour);
   if (
     hourInterval !== null &&
-    (day === '*' || day === '?') &&
-    (weekday === '?' || weekday === '*')
+    day === '*' &&
+    weekday === '*'
   ) {
     return {
       ...DEFAULT_BUILDER_STATE,
@@ -757,7 +772,7 @@ function parseCronExpression(expression: string): CronBuilderState | null {
   if (
     hourNumber !== null &&
     day === '*' &&
-    (weekday === '?' || weekday === '*')
+    weekday === '*'
   ) {
     return {
       ...DEFAULT_BUILDER_STATE,
@@ -767,7 +782,7 @@ function parseCronExpression(expression: string): CronBuilderState | null {
     };
   }
 
-  if (day === '?' && weekday !== '?' && weekday !== '*') {
+  if (day === '*' && weekday !== '*') {
     const parsedWeekdays = parseWeekdays(weekday);
     if (parsedWeekdays.length && hourNumber !== null) {
       return {
@@ -781,7 +796,7 @@ function parseCronExpression(expression: string): CronBuilderState | null {
   }
 
   const dayNumber = parseNumericField(day, 1, 31);
-  if (dayNumber !== null && weekday === '?') {
+  if (dayNumber !== null && weekday === '*') {
     if (hourNumber === null) {
       return null;
     }

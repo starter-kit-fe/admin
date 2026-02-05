@@ -150,6 +150,22 @@ func (s *Service) RegisterExecutor(key string, exec types.Executor) error {
 	return s.registry.Register(key, exec)
 }
 
+// RegisterExecutorWithDesc registers an executor with a description.
+func (s *Service) RegisterExecutorWithDesc(key, description string, exec types.Executor) error {
+	if s == nil {
+		return ErrServiceUnavailable
+	}
+	return s.registry.RegisterWithDesc(key, description, exec)
+}
+
+// ListAvailableExecutors returns all registered executors.
+func (s *Service) ListAvailableExecutors() []types.AvailableExecutor {
+	if s == nil || s.registry == nil {
+		return nil
+	}
+	return s.registry.List()
+}
+
 // GetAsynqServer returns the Asynq server for external handler registration
 func (s *Service) GetAsynqServer() *jobasynq.Server {
 	if s == nil {

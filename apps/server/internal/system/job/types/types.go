@@ -68,17 +68,23 @@ type JobLogStep struct {
 
 // JobLogList DTO
 type JobLogList struct {
-	List     []JobLog `json:"list"`
-	Total    int64    `json:"total"`
-	PageNum  int      `json:"pageNum"`
-	PageSize int      `json:"pageSize"`
+  List     []JobLog `json:"list"`
+  Total    int64    `json:"total"`
+  PageNum  int      `json:"pageNum"`
+  PageSize int      `json:"pageSize"`
+}
+
+// AvailableExecutor represents a registered executor with its metadata.
+type AvailableExecutor struct {
+	Key         string `json:"key"`
+	Description string `json:"description,omitempty"`
 }
 
 // JobDetail DTO
 type JobDetail struct {
-	Job              Job        `json:"job"`
-	InvokeParamsText string     `json:"invokeParamsText"`
-	Logs             JobLogList `json:"logs"`
+  Job              Job        `json:"job"`
+  InvokeParamsText string     `json:"invokeParamsText"`
+  Logs             JobLogList `json:"logs"`
 }
 
 // ListJobLogsOptions

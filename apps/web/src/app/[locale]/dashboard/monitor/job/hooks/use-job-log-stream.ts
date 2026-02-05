@@ -61,7 +61,7 @@ export function useJobLogStream({
             const next = new Map(prev);
             next.set(payload.stepOrder, {
               stepId: payload.stepId!,
-              jobLogId: payload.id,
+              jobLogId: payload.jobLogId,
               stepName: payload.stepName!,
               stepOrder: payload.stepOrder,
               status: '2',
