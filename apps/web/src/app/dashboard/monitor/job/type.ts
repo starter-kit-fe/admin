@@ -73,7 +73,7 @@ export interface StepEvent {
   output?: string;
   error?: string;
   timestamp: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 export interface JobLogList {

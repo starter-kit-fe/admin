@@ -237,7 +237,7 @@ export function DepartmentTreeView({
         );
       });
     },
-    [expanded, onAddChild, onDelete, onEdit, toggleNode],
+    [expanded, isMobile, onAddChild, onDelete, onEdit, toggleNode],
   );
 
   if (nodes.length === 0) {

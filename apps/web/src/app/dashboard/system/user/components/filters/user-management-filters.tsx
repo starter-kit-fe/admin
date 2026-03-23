@@ -1,5 +1,6 @@
 import { StatusTabs } from '@/components/status-tabs';
 import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
 
 import { AppliedFilters } from './applied-filters';
@@ -55,9 +56,30 @@ export function UserManagementFilters({
   titleSlot,
   refreshSlot,
 }: UserManagementFiltersProps) {
+  const hasToolbar = Boolean(titleSlot || refreshSlot || actionSlot);
+
   return (
-    <Card className="rounded-xl border border-border/60 bg-background/80 shadow-none p-4 sm:p-5">
+    <Card
+      className={cn(
+        'rounded-xl border border-border/60 bg-background/80 p-4 shadow-none sm:p-5',
+        variant === 'mobile' && 'rounded-2xl',
+      )}
+    >
       <div className="flex flex-col gap-4">
+        {hasToolbar ? (
+          <div
+            className={cn(
+              'flex flex-wrap items-center justify-between gap-3',
+              variant === 'mobile' && 'sm:hidden',
+            )}
+          >
+            <div className="min-w-0 flex-1">{titleSlot}</div>
+            <div className="flex items-center gap-2">
+              {refreshSlot}
+              {actionSlot}
+            </div>
+          </div>
+        ) : null}
         <StatusTabs
           value={status}
           onValueChange={onStatusChange}

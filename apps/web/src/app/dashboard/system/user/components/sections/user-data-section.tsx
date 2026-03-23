@@ -2,7 +2,6 @@
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { SelectionBanner } from '@/components/selection-banner';
-import { Spinner } from '@/components/ui/spinner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   keepPreviousData,
@@ -281,8 +280,8 @@ export function UserDataSection() {
             onEdit={openEdit}
             onResetPassword={handleResetPassword}
             onDelete={setDeleteTarget}
-            isLoading={userListQuery.isLoading}
-            isError={userListQuery.isError}
+            isLoading={listIsLoading}
+            isError={listIsError}
           />
         </div>
       </section>

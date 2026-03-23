@@ -4,18 +4,8 @@ export interface Env {
   BACKEND_ORIGIN: string; // wrangler.toml 中的 vars
 }
 
-// Minimal ExecutionContext shape for Wrangler without depending on global types.
-interface ExecutionContext {
-  waitUntil(promise: Promise<unknown>): void;
-  passThroughOnException(): void;
-}
-
-export default {
-  async fetch(
-    request: Request,
-    env: Env,
-    ctx: ExecutionContext,
-  ): Promise<Response> {
+const worker = {
+  async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
     // 1. 处理 /api/** 反向代理
@@ -67,3 +57,5 @@ export default {
     return assetResponse;
   },
 };
+
+export default worker;

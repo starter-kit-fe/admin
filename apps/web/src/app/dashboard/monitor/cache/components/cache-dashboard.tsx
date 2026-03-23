@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 
 import { useCacheOverviewStream } from '../hooks/use-cache-overview-stream';
-import type { CacheKeyspaceInfo, CacheOverview } from '../type';
+import type { CacheKeyspaceInfo } from '../type';
 import {
   formatBytes,
   formatNumber,
@@ -132,7 +132,6 @@ export function CacheDashboard() {
   const fragmentationRatio = safeNumber(overview.memory.fragmentationRatio);
   const memoryUsagePercent = safeMemoryGauge(usedMemory, maxMemory);
   const memoryTone = getMemoryTone(memoryUsagePercent);
-  const memoryFillWidth = `${Math.min(100, Math.max(0, memoryUsagePercent))}%`;
   const memoryLimitLabel =
     maxMemory > 0
       ? formatBytes(maxMemory, { decimals: 1 })

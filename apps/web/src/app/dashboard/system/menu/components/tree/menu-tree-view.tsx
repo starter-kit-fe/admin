@@ -349,7 +349,6 @@ export function MenuTreeView({
                   </div>
 
                   <MenuActions
-                    node={node}
                     canAddChild={!isButton && canAddChild}
                     canEdit={canEdit}
                     canDelete={canDelete}
@@ -395,6 +394,7 @@ export function MenuTreeView({
       onAddChild,
       onDelete,
       onEdit,
+      isMobile,
       toggleNode,
     ],
   );
@@ -447,7 +447,6 @@ export function MenuTreeView({
 }
 
 function MenuActions({
-  node,
   canAddChild,
   canEdit,
   canDelete,
@@ -460,7 +459,6 @@ function MenuActions({
   onMoveDown,
   isMobile,
 }: {
-  node: MenuTreeNode;
   canAddChild: boolean;
   canEdit: boolean;
   canDelete: boolean;

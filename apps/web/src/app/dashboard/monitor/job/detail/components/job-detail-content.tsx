@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 
 import { clearJobLogs, getJobDetail, runJob } from '../../api';
 import { BASE_QUERY_KEY, STATUS_BADGE_VARIANT } from '../../constants';
-import type { Job, JobLog } from '../../type';
+import type { JobLog } from '../../type';
 import { resolveStatusLabel, stringifyInvokeParams } from '../../utils';
 import {
   describeCron,

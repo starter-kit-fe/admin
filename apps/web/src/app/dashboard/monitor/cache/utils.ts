@@ -1,4 +1,4 @@
-import { CacheKeyspaceInfo, CacheMemoryInfo, CacheOverview } from './type';
+import type { CacheKeyspaceInfo } from './type';
 
 type FormatBytesOptions = {
   decimals?: number;

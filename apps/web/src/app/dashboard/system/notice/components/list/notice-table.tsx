@@ -488,10 +488,3 @@ export function NoticeTable({
     </div>
   );
 }
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
-}

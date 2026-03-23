@@ -20,7 +20,6 @@ export function PostFiltersSection() {
     appliedFilters,
     applyFilters,
     resetFilters,
-    statusCounts,
   } = usePostManagementStore();
 
   const statusTabs = useMemo(

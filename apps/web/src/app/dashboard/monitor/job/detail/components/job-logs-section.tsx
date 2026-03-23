@@ -37,7 +37,7 @@ import { Activity, Eye, Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import type { Job, JobLog, JobLogList } from '../../type';
-import { formatDuration, getLogStatusMeta } from './log-meta';
+import { getLogStatusMeta } from './log-meta';
 import { AwaitingExecutionState } from './log-states';
 
 const LOG_PAGE_SIZES = [5, 10, 20];
@@ -130,10 +130,7 @@ export function JobLogsSection({
         id: 'actions',
         header: () => <span className="">操作</span>,
         cell: ({ row }) => (
-          <LogRowActions
-            log={row.original}
-            onView={() => onSelectLog(row.original)}
-          />
+          <LogRowActions onView={() => onSelectLog(row.original)} />
         ),
         meta: {
           headerClassName:
@@ -267,7 +264,7 @@ export function JobLogsSection({
   );
 }
 
-function LogRowActions({ log, onView }: { log: JobLog; onView: () => void }) {
+function LogRowActions({ onView }: { onView: () => void }) {
   const isMobile = useIsMobile();
 
   if (isMobile) {

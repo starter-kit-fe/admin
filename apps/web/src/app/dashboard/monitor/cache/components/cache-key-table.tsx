@@ -27,7 +27,6 @@ import { Clipboard, TimerReset } from 'lucide-react';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 
-import { listCacheKeys } from '../api';
 import type { CacheKeyItem } from '../type';
 import { formatBytes, formatDuration } from '../utils';
 

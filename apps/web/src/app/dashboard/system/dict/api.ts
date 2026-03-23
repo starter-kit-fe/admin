@@ -53,7 +53,7 @@ export interface CreateDictTypePayload {
   remark?: string;
 }
 
-export interface UpdateDictTypePayload extends Partial<CreateDictTypePayload> {}
+export type UpdateDictTypePayload = Partial<CreateDictTypePayload>;
 
 export interface CreateDictDataPayload {
   dictLabel: string;
@@ -64,7 +64,7 @@ export interface CreateDictDataPayload {
   remark?: string;
 }
 
-export interface UpdateDictDataPayload extends Partial<CreateDictDataPayload> {}
+export type UpdateDictDataPayload = Partial<CreateDictDataPayload>;
 
 export function getDictType(id: number) {
   return get<DictType>(`/v1/system/dicts/${id}`);

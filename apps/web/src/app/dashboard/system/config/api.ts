@@ -34,7 +34,7 @@ export interface CreateConfigPayload {
   remark?: string;
 }
 
-export interface UpdateConfigPayload extends Partial<CreateConfigPayload> {}
+export type UpdateConfigPayload = Partial<CreateConfigPayload>;
 
 export function createConfig(payload: CreateConfigPayload) {
   return post<SystemConfig>('/v1/system/configs', payload);

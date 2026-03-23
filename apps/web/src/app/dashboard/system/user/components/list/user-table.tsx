@@ -50,7 +50,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { KeyRound, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import type { User } from '../../type';
 import {
@@ -575,11 +575,4 @@ export function UserTable({
       </Table>
     </div>
   );
-}
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
 }

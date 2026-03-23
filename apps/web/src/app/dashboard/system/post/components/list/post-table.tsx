@@ -93,11 +93,12 @@ function PostActions({
   canEdit: boolean;
   canDelete: boolean;
 }) {
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
   if (!canEdit && !canDelete) {
     return null;
   }
-  const isMobile = useIsMobile();
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   if (isMobile) {
     return (
@@ -395,11 +396,4 @@ export function PostTable({
       </Table>
     </div>
   );
-}
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
 }

@@ -34,7 +34,7 @@ export interface CreateNoticePayload {
   remark?: string;
 }
 
-export interface UpdateNoticePayload extends Partial<CreateNoticePayload> {}
+export type UpdateNoticePayload = Partial<CreateNoticePayload>;
 
 export function createNotice(payload: CreateNoticePayload) {
   return post<Notice>('/v1/system/notices', payload);

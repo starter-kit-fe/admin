@@ -62,6 +62,7 @@ export function MenuTreeSection() {
         menuName: debouncedKeyword || undefined,
       }),
   });
+  const { refetch: refetchMenus } = menuQuery;
 
   useEffect(() => {
     if (menuQuery.data) {
@@ -75,13 +76,13 @@ export function MenuTreeSection() {
 
   useEffect(() => {
     const handler = () => {
-      void menuQuery.refetch();
+      void refetchMenus();
     };
     setRefreshHandler(handler);
     return () => {
       setRefreshHandler(() => {});
     };
-  }, [menuQuery.refetch, setRefreshHandler]);
+  }, [refetchMenus, setRefreshHandler]);
 
   const reorderMutation = useMutation({
     mutationFn: (payload: MenuOrderUpdate[]) => reorderMenus(payload),
@@ -90,13 +91,13 @@ export function MenuTreeSection() {
     },
     onSuccess: () => {
       toast.success('菜单排序已更新');
-      void menuQuery.refetch();
+      void refetchMenus();
     },
     onError: (error) => {
       const message =
         error instanceof Error ? error.message : '更新排序失败，请稍后再试';
       toast.error(message);
-      void menuQuery.refetch();
+      void refetchMenus();
     },
     onSettled: () => {
       endMutation();

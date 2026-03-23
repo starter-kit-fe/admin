@@ -11,7 +11,6 @@ import {
 import { InlineLoading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 

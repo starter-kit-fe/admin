@@ -13,7 +13,7 @@ const AUTH_MENU_QUERY_KEY = ['auth', 'menus'] as const;
 
 export function AppBootstrapper() {
   const queryClient = useQueryClient();
-  const { user, setUser, setPermissions, setRoles } = useAuthStore();
+  const { setUser, setPermissions, setRoles } = useAuthStore();
   const hasBootstrappedRef = useRef(false);
   const pathname = usePathname();
 

@@ -11,7 +11,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -73,15 +72,23 @@ const FONT_SIZE_ITEMS = [
 ] as const;
 
 type FontSizeValue = (typeof FONT_SIZE_ITEMS)[number]['value'];
+type ViewTransition = {
+  ready: Promise<void>;
+};
+type DocumentWithViewTransition = Document & {
+  startViewTransition?: (updateTheme: () => void) => ViewTransition;
+};
 
 const runThemeTransition = (
   event: ReactMouseEvent<HTMLElement> | null,
   updateTheme: () => void,
 ) => {
+  const documentWithViewTransition = document as DocumentWithViewTransition;
+
   if (
     typeof document === 'undefined' ||
     typeof window === 'undefined' ||
-    typeof (document as any).startViewTransition !== 'function'
+    typeof documentWithViewTransition.startViewTransition !== 'function'
   ) {
     updateTheme();
     return;
@@ -90,7 +97,7 @@ const runThemeTransition = (
   const pointerX = event?.clientX ?? Math.floor(window.innerWidth / 2);
   const pointerY = event?.clientY ?? Math.floor(window.innerHeight / 2);
 
-  const transition = (document as any).startViewTransition(() => {
+  const transition = documentWithViewTransition.startViewTransition(() => {
     updateTheme();
   });
 
@@ -181,9 +188,6 @@ export function ThemeToggle({ className }: { className?: string }) {
     }
     return theme;
   }, [mounted, theme, systemTheme]);
-
-  const ActiveIcon =
-    THEME_ITEMS.find((item) => item.value === activeTheme)?.icon ?? Monitor;
 
   // 保留原来的亮/暗/系统逻辑 + 动画
   const handleThemeSelection =

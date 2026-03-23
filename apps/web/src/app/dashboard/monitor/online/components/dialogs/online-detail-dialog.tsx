@@ -45,18 +45,17 @@ export function OnlineUserDetailDialog() {
     ? `账号 ${detail.userName || '未命名'} 的会话详情`
     : '查看在线会话详情';
 
-  const statusBadge = detail ? (
-    <Badge variant={resolveStatusBadgeVariant(detail.status)}>
-      {detail.status === '0' || !detail.status ? '在线' : '异常'}
-    </Badge>
-  ) : (
-    '—'
-  );
-
   const sessionFields = useMemo(() => {
     if (!detail) {
       return [];
     }
+
+    const statusBadge = (
+      <Badge variant={resolveStatusBadgeVariant(detail.status)}>
+        {detail.status === '0' || !detail.status ? '在线' : '异常'}
+      </Badge>
+    );
+
     return [
       { label: '登录账号', value: detail.userName || '—' },
       { label: '用户昵称', value: detail.nickName || '—' },
@@ -72,7 +71,7 @@ export function OnlineUserDetailDialog() {
       { label: 'Token ID', value: detail.tokenId || '—' },
       { label: 'UUID', value: detail.uuid || '—' },
     ];
-  }, [detail, statusBadge]);
+  }, [detail]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {

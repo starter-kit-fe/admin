@@ -30,14 +30,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
 import { useMutation } from '@tanstack/react-query';
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles,
-} from 'lucide-react';
+import { BadgeCheck, ChevronsUpDown, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { type ComponentProps, useCallback, useState } from 'react';
 import { toast } from 'sonner';
