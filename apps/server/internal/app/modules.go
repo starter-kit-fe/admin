@@ -2,7 +2,6 @@ package app
 
 import (
 	"log/slog"
-	"strings"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -83,16 +82,16 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	onlineHandler := online.NewHandler(onlineSvc)
 	jobRepo := job.NewRepository(sqlDB)
 
-	// Parse Redis address from URL for Asynq
-	redisAddr := ""
-	if cfg.Redis.URL != "" {
-		redisAddr = parseRedisAddr(cfg.Redis.URL)
-	}
+	redisOpt := parseAsynqRedisOptions(cfg.Redis.URL)
 
 	jobSvc := job.NewService(jobRepo, job.ServiceOptions{
-		Logger:    logger,
-		Redis:     redisCache,
-		RedisAddr: redisAddr,
+		Logger:         logger,
+		Redis:          redisCache,
+		RedisAddr:      redisOpt.Addr,
+		RedisUsername:  redisOpt.Username,
+		RedisPassword:  redisOpt.Password,
+		RedisDB:        redisOpt.DB,
+		RedisTLSConfig: redisOpt.TLSConfig,
 	})
 	// 注册定时任务执行器
 	if err := jobSvc.RegisterExecutorWithDesc(
@@ -193,43 +192,16 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	}
 }
 
-// parseRedisAddr extracts host:port from a Redis URL
-func parseRedisAddr(redisURL string) string {
+// parseAsynqRedisOptions keeps auth, DB, and TLS settings when reusing REDIS_URL for Asynq.
+func parseAsynqRedisOptions(redisURL string) *redis.Options {
 	if redisURL == "" {
-		return "localhost:6379"
+		return &redis.Options{}
 	}
 
-	// Handle redis:// or rediss:// URLs
-	url := redisURL
-	if strings.HasPrefix(url, "redis://") {
-		url = strings.TrimPrefix(url, "redis://")
-	} else if strings.HasPrefix(url, "rediss://") {
-		url = strings.TrimPrefix(url, "rediss://")
+	opt, err := redis.ParseURL(redisURL)
+	if err != nil {
+		return &redis.Options{}
 	}
 
-	// Remove auth if present (user:pass@)
-	if idx := strings.Index(url, "@"); idx != -1 {
-		url = url[idx+1:]
-	}
-
-	// Remove path if present
-	if idx := strings.Index(url, "/"); idx != -1 {
-		url = url[:idx]
-	}
-
-	// Remove query string if present
-	if idx := strings.Index(url, "?"); idx != -1 {
-		url = url[:idx]
-	}
-
-	if url == "" {
-		return "localhost:6379"
-	}
-
-	// Add default port if not present
-	if !strings.Contains(url, ":") {
-		url = url + ":6379"
-	}
-
-	return url
+	return opt
 }

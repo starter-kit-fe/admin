@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -67,8 +68,10 @@ type ServiceOptions struct {
 	Logger         *slog.Logger
 	Redis          *redis.Client
 	RedisAddr      string
+	RedisUsername  string
 	RedisPassword  string
 	RedisDB        int
+	RedisTLSConfig *tls.Config
 	DefaultLockTTL time.Duration
 	Concurrency    int
 }
@@ -108,17 +111,36 @@ func NewService(repo *repository.Repository, opts ServiceOptions) *Service {
 		logger = slog.Default()
 	}
 
-	// Build Redis connection options for Asynq
 	redisAddr := opts.RedisAddr
-	if redisAddr == "" && opts.Redis != nil {
-		// Try to get from Redis client options
-		redisAddr = "localhost:6379"
+	redisUsername := opts.RedisUsername
+	redisPassword := opts.RedisPassword
+	redisDB := opts.RedisDB
+	redisTLSConfig := opts.RedisTLSConfig
+	if opts.Redis != nil {
+		redisClientOpts := opts.Redis.Options()
+		if redisAddr == "" {
+			redisAddr = redisClientOpts.Addr
+		}
+		if redisUsername == "" {
+			redisUsername = redisClientOpts.Username
+		}
+		if redisPassword == "" {
+			redisPassword = redisClientOpts.Password
+		}
+		if redisDB == 0 {
+			redisDB = redisClientOpts.DB
+		}
+		if redisTLSConfig == nil {
+			redisTLSConfig = redisClientOpts.TLSConfig
+		}
 	}
 
 	redisOpt := asynq.RedisClientOpt{
-		Addr:     redisAddr,
-		Password: opts.RedisPassword,
-		DB:       opts.RedisDB,
+		Addr:      redisAddr,
+		Username:  redisUsername,
+		Password:  redisPassword,
+		DB:        redisDB,
+		TLSConfig: redisTLSConfig,
 	}
 
 	concurrency := opts.Concurrency

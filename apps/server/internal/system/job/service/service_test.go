@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/tls"
 	"testing"
 	"time"
 
@@ -111,4 +112,52 @@ func TestService_ManualTrigger(t *testing.T) {
 	// We can't easily verify execution success here because the worker runs in a separate goroutine
 	// and we didn't wait/sync properly, plus Asynq worker might need more setup time.
 	// But asserting log creation proves the service flow works.
+}
+
+func TestNewService_PropagatesRedisConnectionSettings(t *testing.T) {
+	db := setupTestDB(t)
+	repo := repository.NewRepository(db)
+	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
+
+	svc := NewService(repo, ServiceOptions{
+		RedisAddr:      "127.0.0.1:6380",
+		RedisUsername:  "worker",
+		RedisPassword:  "secret",
+		RedisDB:        5,
+		RedisTLSConfig: tlsConfig,
+	})
+	require.NotNil(t, svc)
+
+	assert.Equal(t, "127.0.0.1:6380", svc.redisOpt.Addr)
+	assert.Equal(t, "worker", svc.redisOpt.Username)
+	assert.Equal(t, "secret", svc.redisOpt.Password)
+	assert.Equal(t, 5, svc.redisOpt.DB)
+	assert.Same(t, tlsConfig, svc.redisOpt.TLSConfig)
+}
+
+func TestNewService_UsesRedisClientOptionsAsFallback(t *testing.T) {
+	db := setupTestDB(t)
+	repo := repository.NewRepository(db)
+	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
+	rdb := redis.NewClient(&redis.Options{
+		Addr:      "127.0.0.1:6381",
+		Username:  "worker",
+		Password:  "secret",
+		DB:        6,
+		TLSConfig: tlsConfig,
+	})
+	defer func() {
+		_ = rdb.Close()
+	}()
+
+	svc := NewService(repo, ServiceOptions{
+		Redis: rdb,
+	})
+	require.NotNil(t, svc)
+
+	assert.Equal(t, "127.0.0.1:6381", svc.redisOpt.Addr)
+	assert.Equal(t, "worker", svc.redisOpt.Username)
+	assert.Equal(t, "secret", svc.redisOpt.Password)
+	assert.Equal(t, 6, svc.redisOpt.DB)
+	assert.Same(t, tlsConfig, svc.redisOpt.TLSConfig)
 }
