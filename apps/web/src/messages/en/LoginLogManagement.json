@@ -37,7 +37,9 @@
       "emptyDescription": "New login activity will appear here automatically."
     },
     "actions": {
-      "delete": "Delete login log"
+      "delete": "Delete login log",
+      "more": "More actions",
+      "sheetDescription": "Select an action for this log entry"
     }
   },
   "dialogs": {

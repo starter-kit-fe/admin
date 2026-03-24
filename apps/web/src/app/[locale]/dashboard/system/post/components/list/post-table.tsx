@@ -1,45 +1,28 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { cn } from '@/lib/utils';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
-
 import {
   PINNED_ACTION_COLUMN_META,
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { usePermissions } from '@/hooks/use-permissions';
+import { cn } from '@/lib/utils';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@repo/ui/components/dropdown-menu';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -48,8 +31,24 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
-import { useIsMobile } from '@/hooks/use-mobile';
+} from '@repo/ui/components/sheet';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@repo/ui/components/table';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 import type { Post } from '../../type';
 
@@ -96,11 +95,11 @@ function PostActions({
   canDelete: boolean;
 }) {
   const t = useTranslations('PostManagement');
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
   if (!canEdit && !canDelete) {
     return null;
   }
-  const isMobile = useIsMobile();
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   if (isMobile) {
     return (
@@ -230,7 +229,7 @@ export function PostTable({
     columnHelper.display({
       id: 'select',
       header: () => (
-         <Checkbox
+        <Checkbox
           aria-label={t('table.selection.selectAll')}
           checked={headerCheckboxState}
           onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
@@ -326,7 +325,9 @@ export function PostTable({
 
   return (
     <div className="w-full overflow-x-auto rounded-xl border border-border/60 bg-card dark:border-border/40 scrollbar-thin">
-      <Table className={`${PINNED_TABLE_CLASS} min-w-[640px] sm:min-w-[760px] table-fixed`}>
+      <Table
+        className={`${PINNED_TABLE_CLASS} min-w-[640px] sm:min-w-[760px] table-fixed`}
+      >
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="bg-muted/40">
@@ -403,11 +404,4 @@ export function PostTable({
       </Table>
     </div>
   );
-}
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
 }

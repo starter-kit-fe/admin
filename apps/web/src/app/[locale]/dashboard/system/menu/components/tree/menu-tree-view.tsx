@@ -1,21 +1,21 @@
 'use client';
 
 import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
-import { Skeleton } from '@/components/ui/skeleton';
+} from '@repo/ui/components/empty';
+import { Skeleton } from '@repo/ui/components/skeleton';
 import {
   Sheet,
   SheetContent,
@@ -24,7 +24,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@repo/ui/components/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { resolveLucideIcon } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';
@@ -373,6 +373,7 @@ export function MenuTreeView({
         );
       });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       canAddChild,
       canDelete,
@@ -435,7 +436,8 @@ export function MenuTreeView({
 }
 
 function MenuActions({
-  node,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  node: _node,
   canAddChild,
   canEdit,
   canDelete,

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import { useIsHydrated } from '@/hooks/use-is-hydrated';
 import { usePermissions } from '@/hooks/use-permissions';
 import { forwardRef, useMemo, type ReactNode } from 'react';

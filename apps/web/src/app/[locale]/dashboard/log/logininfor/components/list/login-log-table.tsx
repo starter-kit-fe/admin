@@ -1,24 +1,28 @@
 'use client';
 
+import { EllipsisText } from '@/components/table/ellipsis-text';
 import {
   PINNED_ACTION_COLUMN_META,
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
+import { cn } from '@/lib/utils';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -27,7 +31,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@repo/ui/components/sheet';
 import {
   Table,
   TableBody,
@@ -35,22 +39,20 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { usePermissions } from '@/hooks/use-permissions';
-import { cn } from '@/lib/utils';
+} from '@repo/ui/components/table';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { type Locale, format, formatDistanceToNow } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { useCallback, useMemo, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useMemo, useState } from 'react';
 
 import type { LoginLog } from '../../type';
-import { getLoginStatusBadgeVariant } from '../../utils';
 
 interface LoginLogTableProps {
   rows: LoginLog[];
@@ -130,7 +132,7 @@ function RowActions({ log, onDelete }: RowActionsProps) {
           <MoreHorizontal className="size-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-28">
+      <DropdownMenuContent align="end" className="w-36">
         <DropdownMenuItem
           className="text-destructive focus:text-destructive"
           onSelect={(event) => {
@@ -146,6 +148,25 @@ function RowActions({ log, onDelete }: RowActionsProps) {
   );
 }
 
+function formatRelativeDate(
+  value: string | null | undefined,
+  dateFnsLocale: Locale,
+): { relative: string; absolute: string } | null {
+  if (!value) return null;
+  try {
+    const date = new Date(value);
+    return {
+      relative: formatDistanceToNow(date, {
+        addSuffix: true,
+        locale: dateFnsLocale,
+      }),
+      absolute: format(date, 'yyyy-MM-dd HH:mm:ss'),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function LoginLogTable({
   rows,
   isLoading = false,
@@ -156,43 +177,41 @@ export function LoginLogTable({
   const { hasPermission } = usePermissions();
   const canDeleteLog = hasPermission('monitor:logininfor:remove');
   const t = useTranslations('LoginLogManagement');
-
-  const getStatusLabel = useCallback(
-    (status?: string | null) =>
-      status === '0' ? t('status.success') : t('status.failed'),
-    [t],
-  );
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
 
   const columns = useMemo(
     () => [
       columnHelper.accessor('userName', {
         header: () => t('table.columns.account'),
-        cell: ({ row }) => {
-          const log = row.original;
-          return (
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">
-                {log.userName || '-'}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t('table.locationLabel', {
-                  location: log.loginLocation || t('table.locationUnknown'),
-                })}
-              </p>
-            </div>
-          );
-        },
+        cell: ({ getValue }) => (
+          <span className="text-sm font-medium text-foreground">
+            {getValue() || '—'}
+          </span>
+        ),
         meta: {
-          headerClassName: 'min-w-[200px]',
+          headerClassName: 'w-[140px]',
         },
       }),
       columnHelper.accessor('ipaddr', {
         header: () => t('table.columns.ip'),
-        cell: ({ getValue }) => (
-          <span className="text-sm text-foreground">{getValue() || '-'}</span>
-        ),
+        cell: ({ row }) => {
+          const log = row.original;
+          return (
+            <div className="space-y-0.5">
+              <p className="font-mono text-sm text-foreground">
+                {log.ipaddr || '—'}
+              </p>
+              {log.loginLocation ? (
+                <p className="text-xs text-muted-foreground">
+                  {log.loginLocation}
+                </p>
+              ) : null}
+            </div>
+          );
+        },
         meta: {
-          headerClassName: 'w-[160px]',
+          headerClassName: 'w-[180px]',
         },
       }),
       columnHelper.display({
@@ -201,46 +220,62 @@ export function LoginLogTable({
         cell: ({ row }) => {
           const log = row.original;
           return (
-            <div className="space-y-1">
-              <p className="text-sm text-foreground">{log.browser || '-'}</p>
-              <p className="text-xs text-muted-foreground">{log.os || '-'}</p>
+            <div className="space-y-0.5">
+              <p className="text-sm text-foreground">{log.browser || '—'}</p>
+              <p className="text-xs text-muted-foreground">{log.os || '—'}</p>
             </div>
           );
         },
         meta: {
-          headerClassName: 'min-w-[180px]',
+          headerClassName: 'min-w-[160px]',
         },
       }),
       columnHelper.accessor('status', {
         header: () => t('table.columns.status'),
-        cell: ({ getValue }) => (
-          <Badge variant={getLoginStatusBadgeVariant(getValue())}>
-            {getStatusLabel(getValue())}
-          </Badge>
-        ),
+        cell: ({ getValue }) => {
+          const isSuccess = getValue() === '0';
+          return (
+            <Badge
+              variant={isSuccess ? 'outline' : 'destructive'}
+              className={
+                isSuccess
+                  ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400'
+                  : undefined
+              }
+            >
+              {isSuccess ? t('status.success') : t('status.failed')}
+            </Badge>
+          );
+        },
         meta: {
-          headerClassName: 'w-[120px]',
+          headerClassName: 'w-[100px]',
         },
       }),
       columnHelper.accessor('msg', {
         header: () => t('table.columns.message'),
-        cell: ({ getValue }) => (
-          <span className="line-clamp-2 text-sm text-muted-foreground">
-            {getValue() || '-'}
-          </span>
-        ),
+        cell: ({ getValue }) => <EllipsisText value={getValue()} />,
         meta: {
-          headerClassName: 'min-w-[220px]',
-          cellClassName: 'max-w-[320px]',
+          headerClassName: 'min-w-[200px]',
+          cellClassName: 'max-w-[300px]',
         },
       }),
       columnHelper.accessor('createdAt', {
         header: () => t('table.columns.time'),
-        cell: ({ getValue }) => (
-          <span className="text-sm text-foreground">{getValue() ?? '-'}</span>
-        ),
+        cell: ({ getValue }) => {
+          const formatted = formatRelativeDate(getValue(), dateFnsLocale);
+          if (!formatted)
+            return <span className="text-muted-foreground">—</span>;
+          return (
+            <span
+              className="text-sm tabular-nums text-foreground"
+              title={formatted.absolute}
+            >
+              {formatted.relative}
+            </span>
+          );
+        },
         meta: {
-          headerClassName: 'w-[160px]',
+          headerClassName: 'w-[140px]',
         },
       }),
       ...(canDeleteLog
@@ -250,14 +285,11 @@ export function LoginLogTable({
               header: () => (
                 <div className="text-right">{t('table.columns.actions')}</div>
               ),
-              cell: ({ row }) => {
-                const log = row.original;
-                return (
-                  <div className="flex justify-end">
-                    <RowActions log={log} onDelete={onDelete} />
-                  </div>
-                );
-              },
+              cell: ({ row }) => (
+                <div className="flex justify-end">
+                  <RowActions log={row.original} onDelete={onDelete} />
+                </div>
+              ),
               meta: {
                 ...PINNED_ACTION_COLUMN_META,
                 headerClassName:
@@ -269,7 +301,7 @@ export function LoginLogTable({
           ]
         : []),
     ],
-    [canDeleteLog, columnHelper, getStatusLabel, onDelete, t],
+    [canDeleteLog, columnHelper, dateFnsLocale, onDelete, t],
   );
 
   const table = useReactTable({
@@ -282,10 +314,10 @@ export function LoginLogTable({
     table.getVisibleLeafColumns().length || columns.length;
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
       <div className="w-full overflow-x-auto">
         <Table
-          className={cn(PINNED_TABLE_CLASS, 'min-w-[980px] md:table-fixed')}
+          className={cn(PINNED_TABLE_CLASS, 'min-w-[900px] md:table-fixed')}
         >
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -367,11 +399,4 @@ export function LoginLogTable({
       </div>
     </div>
   );
-}
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
 }

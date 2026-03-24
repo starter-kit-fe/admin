@@ -34,6 +34,7 @@ export interface CreateConfigPayload {
   remark?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateConfigPayload extends Partial<CreateConfigPayload> {}
 
 export function createConfig(payload: CreateConfigPayload) {

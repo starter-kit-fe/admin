@@ -1,9 +1,9 @@
 'use client';
 
 import { InlineLoading } from '@/components/loading';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 
 import { clearJobLogs, getJobDetail, runJob } from '../api';
 import { BASE_QUERY_KEY, STATUS_BADGE_VARIANT } from '../constants';
-import type { Job, JobLog } from '../type';
+import type { JobLog } from '../type';
 import { resolveStatusLabel, stringifyInvokeParams } from '../utils';
 import {
   describeCron,
@@ -222,6 +222,7 @@ export function JobDetailContent({ id }: JobDetailContentProps) {
       setActiveLogId(detail.job.currentLogId);
       setActiveLogName(detail.job.jobName);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     detail?.job?.currentLogId,
     detail?.job?.jobName,

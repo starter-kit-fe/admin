@@ -9,6 +9,8 @@ type LogoMarkProps = SVGProps<SVGSVGElement> & {
   /** 小圆点半径（默认 44） */
   dotRadius?: number;
   gradientIdPrefix?: string;
+  /** 主色覆盖 */
+  primaryColor?: string;
 };
 
 export function LogoMark({
@@ -16,11 +18,13 @@ export function LogoMark({
   mirror = true,
   dotRadius = 44,
   gradientIdPrefix = 'logo-mark',
+  primaryColor = 'var(--primary)',
   ...props
 }: LogoMarkProps) {
   const gMain = `${gradientIdPrefix}-g-main`;
   const gBase = `${gradientIdPrefix}-g-base`;
-  const strokeColor = 'oklch(from var(--primary) l c h / 0.18)'; // 极淡描边
+  const strokeColor = `oklch(from ${primaryColor} l c h / 0.18)`; // 极淡描边
+
 
   return (
     <svg
@@ -41,11 +45,11 @@ export function LogoMark({
           y2="384"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="color-mix(in oklch, var(--primary) 55%, white 45%)" />
-          <stop offset="0.5" stopColor="var(--primary)" />
+          <stop stopColor={`color-mix(in oklch, ${primaryColor} 55%, white 45%)`} />
+          <stop offset="0.5" stopColor={primaryColor} />
           <stop
             offset="1"
-            stopColor="color-mix(in oklch, var(--primary) 80%, black 20%)"
+            stopColor={`color-mix(in oklch, ${primaryColor} 80%, black 20%)`}
           />
         </linearGradient>
 
@@ -58,10 +62,10 @@ export function LogoMark({
           y2="260"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="color-mix(in oklch, var(--primary) 35%, white 65%)" />
+          <stop stopColor={`color-mix(in oklch, ${primaryColor} 35%, white 65%)`} />
           <stop
             offset="1"
-            stopColor="color-mix(in oklch, var(--primary) 70%, white 30%)"
+            stopColor={`color-mix(in oklch, ${primaryColor} 70%, white 30%)`}
           />
         </linearGradient>
       </defs>
@@ -91,7 +95,7 @@ export function LogoMark({
           cx="450"
           cy="336"
           r={dotRadius}
-          fill="var(--primary)"
+          fill={primaryColor}
           stroke={strokeColor}
           strokeWidth="0.8"
         />

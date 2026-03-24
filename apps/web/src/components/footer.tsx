@@ -1,7 +1,7 @@
 'use client';
 
 import pkg from '@/../package.json';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@repo/ui/components/badge';
 import { Link } from '@/i18n/navigation';
 import { Github, Mail, Twitter } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -169,11 +169,6 @@ export default function Footer() {
                 version: gpkg.version,
               })}
             </p>
-            {process.env.NODE_ENV !== 'production' && (
-              <p className="text-[11px] text-muted-foreground/80">
-                Debug · locale: {locale} · font: {fontFamily || 'detecting…'}
-              </p>
-            )}
           </div>
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-4 text-sm">

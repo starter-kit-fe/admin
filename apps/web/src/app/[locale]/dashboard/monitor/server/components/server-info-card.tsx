@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@repo/ui/components/card';
 import { MonitorSmartphone } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 

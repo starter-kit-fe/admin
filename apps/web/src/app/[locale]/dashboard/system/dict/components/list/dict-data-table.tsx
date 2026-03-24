@@ -1,20 +1,24 @@
 'use client';
 
 import type { DictData } from '@/app/dashboard/system/dict/type';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
+import { cn } from '@/lib/utils';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -23,11 +27,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { usePermissions } from '@/hooks/use-permissions';
-import { cn } from '@/lib/utils';
-import { useTranslations } from 'next-intl';
+} from '@repo/ui/components/sheet';
 import {
   createColumnHelper,
   flexRender,
@@ -35,11 +35,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Edit2, MoreHorizontal, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { memo, useMemo, useState } from 'react';
-
-import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-
-import { DATA_STATUS_TABS } from '../../constants';
 
 interface DictDataTableProps {
   rows: DictData[];
@@ -68,6 +65,7 @@ function DictDataTableComponent({
     if (!status || status === 'all') return null;
     return t(`status.${status}`);
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const renderStatusBadge = (status?: string | null) => {
     const label = statusLabel(status);
     if (!label) return null;
@@ -420,11 +418,4 @@ function DictDataMobileActions({
       </SheetContent>
     </Sheet>
   );
-}
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
 }

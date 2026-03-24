@@ -1,13 +1,13 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useTranslations } from 'next-intl';
-
-import { STATUS_TABS } from '../../constants';
 import {
   type StatusValue,
   useDepartmentFilters,
 } from '@/app/dashboard/system/dept/store';
+import { useTranslations } from 'next-intl';
+import { useMemo } from 'react';
+
+import { STATUS_TABS } from '../../constants';
 import { DepartmentAppliedFilters } from '../filters/department-applied-filters';
 import { DepartmentFilters } from '../filters/department-filters';
 
@@ -35,10 +35,6 @@ export function DepartmentFiltersSection() {
   const trimmedKeyword = keyword.trim();
 
   const handleClearStatus = () => setStatus('all');
-  const handleClearAll = () => {
-    setKeyword('');
-    setStatus('all');
-  };
 
   return (
     <div className="flex flex-col gap-3">
@@ -54,7 +50,6 @@ export function DepartmentFiltersSection() {
         status={status}
         onClearKeyword={() => setKeyword('')}
         onClearStatus={handleClearStatus}
-        onClearAll={handleClearAll}
       />
     </div>
   );

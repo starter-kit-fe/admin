@@ -5,20 +5,23 @@ import {
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
+import { cn } from '@/lib/utils';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -27,7 +30,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@repo/ui/components/sheet';
 import {
   Table,
   TableBody,
@@ -35,22 +38,41 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { usePermissions } from '@/hooks/use-permissions';
-import { cn } from '@/lib/utils';
+} from '@repo/ui/components/table';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { format, formatDistanceToNow } from 'date-fns';
+import type { Locale } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
 
 import type { OperLog } from '../../type';
 import { getOperLogStatusBadgeVariant } from '../../utils';
+
+function formatRelativeDate(
+  value: string | null | undefined,
+  dateFnsLocale: Locale,
+): { relative: string; absolute: string } | null {
+  if (!value) return null;
+  try {
+    const date = new Date(value);
+    return {
+      relative: formatDistanceToNow(date, {
+        addSuffix: true,
+        locale: dateFnsLocale,
+      }),
+      absolute: format(date, 'yyyy-MM-dd HH:mm:ss'),
+    };
+  } catch {
+    return null;
+  }
+}
 
 interface RowActionsProps {
   log: OperLog;
@@ -156,6 +178,8 @@ export function OperLogTable({
   const { hasPermission } = usePermissions();
   const canDeleteOperLog = hasPermission('monitor:operlog:remove');
   const t = useTranslations('OperLogManagement');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
 
   const getStatusLabel = useCallback(
     (status?: number | string | null) => {
@@ -280,7 +304,19 @@ export function OperLogTable({
           const log = row.original;
           return (
             <div className="space-y-1 text-sm text-foreground">
-              <p>{log.createdAt || '-'}</p>
+              {(() => {
+                const formatted = formatRelativeDate(
+                  log.createdAt,
+                  dateFnsLocale,
+                );
+                return formatted ? (
+                  <p className="tabular-nums" title={formatted.absolute}>
+                    {formatted.relative}
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground">—</p>
+                );
+              })()}
               {log.costTime ? (
                 <p className="text-xs text-muted-foreground">
                   {t('table.cells.cost', { value: log.costTime })}
@@ -323,6 +359,7 @@ export function OperLogTable({
     [
       canDeleteOperLog,
       columnHelper,
+      dateFnsLocale,
       getBusinessTypeLabel,
       getStatusLabel,
       onDelete,
@@ -425,11 +462,4 @@ export function OperLogTable({
       </div>
     </div>
   );
-}
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
 }

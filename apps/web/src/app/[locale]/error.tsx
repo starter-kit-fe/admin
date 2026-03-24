@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/components/button";
 import { AnimationGeneratorType, motion } from "motion/react";
 import Link from "next/link";
 

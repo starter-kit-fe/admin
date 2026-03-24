@@ -5,22 +5,25 @@ import {
   PINNED_ACTION_COLUMN_META,
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
+import { cn } from '@/lib/utils';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { Card, CardContent } from '@repo/ui/components/card';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -29,7 +32,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@repo/ui/components/sheet';
 import {
   Table,
   TableBody,
@@ -37,10 +40,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { usePermissions } from '@/hooks/use-permissions';
-import { cn } from '@/lib/utils';
+} from '@repo/ui/components/table';
 import {
   createColumnHelper,
   flexRender,
@@ -48,8 +48,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Edit2, MoreHorizontal, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useMemo, useState } from 'react';
 
 import type { SystemConfig } from '../../type';
 
@@ -193,7 +193,9 @@ export function ConfigTable({
         columnHelper.display({
           id: 'actions',
           header: () => (
-            <span className="block text-right">{t('table.columns.actions')}</span>
+            <span className="block text-right">
+              {t('table.columns.actions')}
+            </span>
           ),
           cell: ({ row }) => {
             const config = row.original;
@@ -451,11 +453,4 @@ function ConfigRowActions({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
 }

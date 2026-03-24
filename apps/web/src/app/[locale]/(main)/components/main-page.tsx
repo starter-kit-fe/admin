@@ -1,14 +1,14 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@repo/ui/components/card';
 import { useAuthStore } from '@/stores';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';

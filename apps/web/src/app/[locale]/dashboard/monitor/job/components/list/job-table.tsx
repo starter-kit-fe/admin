@@ -6,20 +6,23 @@ import {
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
+import { cn } from '@/lib/utils';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -28,8 +31,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
-import { Spinner } from '@/components/ui/spinner';
+} from '@repo/ui/components/sheet';
+import { Spinner } from '@repo/ui/components/spinner';
 import {
   Table,
   TableBody,
@@ -37,19 +40,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { usePermissions } from '@/hooks/use-permissions';
-import { cn } from '@/lib/utils';
+} from '@repo/ui/components/table';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { format, formatDistanceToNow } from 'date-fns';
+import type { Locale } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { Clock, Edit2, Eye, MoreHorizontal, Play, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
@@ -60,6 +62,25 @@ import {
   resolveMisfireLabel,
   resolveStatusLabel,
 } from '../../utils';
+
+function formatRelativeDate(
+  value: string | null | undefined,
+  dateFnsLocale: Locale,
+): { relative: string; absolute: string } | null {
+  if (!value) return null;
+  try {
+    const date = new Date(value);
+    return {
+      relative: formatDistanceToNow(date, {
+        addSuffix: true,
+        locale: dateFnsLocale,
+      }),
+      absolute: format(date, 'yyyy-MM-dd HH:mm:ss'),
+    };
+  } catch {
+    return null;
+  }
+}
 
 interface JobTableProps {
   rows: Job[];
@@ -85,6 +106,7 @@ export function JobTable({
   onEdit,
 }: JobTableProps) {
   const locale = useLocale();
+  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
   const t = useTranslations('JobManagement');
   const router = useRouter();
   const columnHelper = useMemo(() => createColumnHelper<Job>(), []);
@@ -191,18 +213,30 @@ export function JobTable({
           const job = row.original;
           return (
             <div className="space-y-1 text-xs text-muted-foreground">
-              <EllipsisText
-                value={t('table.timestamps.created', {
-                  time: job.createdAt || '-',
-                })}
-                className="max-w-[220px]"
-              />
-              <EllipsisText
-                value={t('table.timestamps.updated', {
-                  time: job.updatedAt || '-',
-                })}
-                className="max-w-[220px]"
-              />
+              {(() => {
+                const created = formatRelativeDate(
+                  job.createdAt,
+                  dateFnsLocale,
+                );
+                const updated = formatRelativeDate(
+                  job.updatedAt,
+                  dateFnsLocale,
+                );
+                return (
+                  <>
+                    <p title={created?.absolute}>
+                      {t('table.timestamps.created', {
+                        time: created?.relative ?? '-',
+                      })}
+                    </p>
+                    <p title={updated?.absolute}>
+                      {t('table.timestamps.updated', {
+                        time: updated?.relative ?? '-',
+                      })}
+                    </p>
+                  </>
+                );
+              })()}
             </div>
           );
         },
@@ -262,6 +296,7 @@ export function JobTable({
           ]
         : []),
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       canChangeStatus,
       canDeleteJob,
@@ -649,10 +684,4 @@ function JobRowActions({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
 }

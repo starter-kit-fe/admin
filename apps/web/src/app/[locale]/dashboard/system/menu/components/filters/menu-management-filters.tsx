@@ -6,13 +6,13 @@ import {
   useMenuManagementStore,
 } from '@/app/dashboard/system/menu/store';
 import { StatusTabs } from '@/components/status-tabs';
-import { Card } from '@/components/ui/card';
+import { Card } from '@repo/ui/components/card';
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from '@/components/ui/input-group';
+} from '@repo/ui/components/input-group';
 import { Search, X } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';

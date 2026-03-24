@@ -6,6 +6,7 @@
       "dependsOn": [
         "^build"
       ],
+      "env": ["NEXT_SKIP_TURBOPACK", "BASE_URL", "NODE_ENV"],
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env*"
@@ -18,7 +19,8 @@
     "lint": {
       "dependsOn": [
         "^lint"
-      ]
+      ],
+      "env": ["NEXT_SKIP_TURBOPACK", "BASE_URL", "NODE_ENV"]
     },
     "check-types": {
       "dependsOn": [

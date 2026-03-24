@@ -18,12 +18,6 @@ import type { LoginRequestPayload } from '../type';
 import { LoginAside } from './login-aside';
 import { LoginForm } from './login-form';
 
-const featureHighlights = [
-  '支持账号密码快速登录，登录后自动缓存权限配置。',
-  '登录后可访问 Dashboard、系统日志、Swagger 等后台工具。',
-  '我们通过 React Query 管理鉴权状态，确保请求自动携带 Token。',
-];
-
 const loginImages = [
   'https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1600&q=80',
   'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80',
@@ -85,24 +79,18 @@ export function LoginPage() {
   });
 
   useEffect(() => {
-    if (user) {
-      router.replace('/dashboard');
-    }
+    if (user) router.replace('/dashboard');
   }, [user, router]);
 
   useEffect(() => {
-    if (!captchaData?.captcha_id || !captchaData?.expires_in) {
-      return;
-    }
+    if (!captchaData?.captcha_id || !captchaData?.expires_in) return;
     const duration = Math.max(5, Math.floor(captchaData.expires_in));
     setCaptchaExpired(false);
     setCaptchaCountdown(duration);
 
     const interval = window.setInterval(() => {
       setCaptchaCountdown((prev) => {
-        if (prev === null) {
-          return prev;
-        }
+        if (prev === null) return prev;
         if (prev <= 1) {
           window.clearInterval(interval);
           setCaptchaExpired(true);
@@ -112,15 +100,11 @@ export function LoginPage() {
       });
     }, 1000);
 
-    return () => {
-      window.clearInterval(interval);
-    };
+    return () => window.clearInterval(interval);
   }, [captchaData?.captcha_id, captchaData?.expires_in]);
 
   useEffect(() => {
-    if (loginImages.length <= 1) {
-      return;
-    }
+    if (loginImages.length <= 1) return;
     const index = Math.floor(Math.random() * loginImages.length);
     setLoginImage(loginImages[index] ?? loginImages[0]);
   }, []);
@@ -144,51 +128,44 @@ export function LoginPage() {
         : '验证码已过期'
       : null;
 
-  const description =
-    pkg.seo?.description ??
-    '一套现代化的管理后台模板，集成完善的认证体系与组件库。';
-
   const handleLoginSubmit = handleSubmit((values) =>
     loginMutation.mutate(values),
   );
 
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-y-auto bg-border/40 transition-colors md:flex-row md:overflow-hidden">
-      <div className="absolute inset-0 md:hidden">
+    <div className="relative flex min-h-dvh flex-col md:flex-row">
+      {/* Mobile: full-screen background image — sharp, no blur */}
+      <div className="fixed inset-0 md:hidden">
         <img
           src={loginImage}
-          alt="登录背景"
+          alt=""
+          aria-hidden="true"
           className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-slate-950/85" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/60" />
       </div>
 
-      <div className="absolute  right-4 top-[calc(env(safe-area-inset-top,0)+1rem)] z-30 flex items-center gap-4 md:right-6 md:top-6">
+      {/* Theme toggle */}
+      <div className="fixed right-4 top-4 z-30 md:right-6 md:top-6">
         <ThemeToggle />
       </div>
 
-      <LoginAside
-        image={loginImage}
-        title={loginTitle}
-        description={description}
-        highlights={featureHighlights}
-      />
+      {/* Left aside — desktop only */}
+      <LoginAside image={loginImage} title={loginTitle} />
 
-      <main className="flex min-h-dvh relative flex-1 items-center justify-center transition-colors sm:px-8 md:min-h-full md:px-12">
-        <div className="absolute bg-background/40 inset-0 h-full w-full object-cover md:hidden blur-lg  backdrop-blur"></div>
-        <img
-          src={loginImage}
-          alt="登录背景"
-          className="absolute inset-0 h-full w-full object-cover blur-lg  md:hidden"
-        />
+      {/* Right: form panel */}
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 py-14 md:bg-background md:px-12 md:py-12">
+        {/* Logo — mobile only, above the card */}
         <Link
           href="/"
           aria-label="返回首页"
-          className=" absolute top-2  md:top-4 left-8 p-2 text-foreground  hover:border-primary/50 hover:text-primary"
+          className="mb-6 text-white md:hidden"
         >
-          <LogoMark className="size-14" />
+          <LogoMark className="size-9" />
         </Link>
-        <div className="w-full max-w-md  backdrop-blur md:border-none md:bg-transparent md:p-0 md:shadow-none">
+
+        {/* Form card: glass on mobile, plain on desktop */}
+        <div className="w-full max-w-sm overflow-hidden rounded-2xl bg-background/88 shadow-2xl backdrop-blur-xl ring-1 ring-white/10 md:overflow-visible md:rounded-none md:bg-transparent md:shadow-none md:ring-0 md:[backdrop-filter:none]">
           <LoginForm
             register={register}
             errors={errors}

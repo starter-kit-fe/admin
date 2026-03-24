@@ -4,9 +4,9 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { InlineLoading } from '@/components/loading';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
 import { useTranslations } from 'next-intl';
 
 import { getOnlineUserDetail } from '../../api';
@@ -49,6 +49,7 @@ export function OnlineUserDetailDialog() {
       })
     : t('detail.description.generic');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const statusBadge = detail ? (
     <Badge variant={resolveStatusBadgeVariant(detail.status)}>
       {detail.status === '0' || !detail.status

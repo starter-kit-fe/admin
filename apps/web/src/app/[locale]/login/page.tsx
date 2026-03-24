@@ -158,42 +158,34 @@ export default function Page() {
   );
 
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-y-auto bg-border/40 transition-colors md:flex-row md:overflow-hidden">
+    <div className="relative flex min-h-dvh flex-col overflow-y-auto bg-background md:bg-border/40 transition-colors md:flex-row md:overflow-hidden">
       <div className="absolute inset-0 md:hidden">
         <img
           src={loginImage}
           alt={t('Page.backgroundAlt')}
           className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-slate-950/85" />
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
       </div>
 
-      <div className="absolute  right-4 top-[calc(env(safe-area-inset-top,0)+1rem)] z-30 flex items-center gap-4 md:right-6 md:top-6">
+      <div className="absolute right-4 top-[calc(env(safe-area-inset-top,0)+1rem)] z-40 flex items-center gap-4 md:right-6 md:top-6">
         <ThemeToggle />
       </div>
 
       <LoginAside
         image={loginImage}
         title={loginTitle}
-        description={description}
-        highlights={featureHighlights}
       />
 
-      <main className="flex min-h-dvh relative flex-1 items-center justify-center transition-colors sm:px-8 md:min-h-full md:px-12">
-        <div className="absolute bg-background/40 inset-0 h-full w-full object-cover md:hidden blur-lg  backdrop-blur"></div>
-        <img
-          src={loginImage}
-          alt={t('Page.backgroundAlt')}
-          className="absolute inset-0 h-full w-full object-cover blur-lg  md:hidden"
-        />
+      <main className="flex min-h-dvh relative z-10 flex-1 flex-col items-center justify-center pt-8 transition-colors px-6 sm:px-8 md:min-h-full md:flex-row md:pt-0 md:px-12">
         <Link
           href="/"
           aria-label={t('Page.homeAria')}
-          className=" absolute top-2  md:top-4 left-8 p-2 text-foreground  hover:border-primary/50 hover:text-primary"
+          className="absolute top-4 left-4 z-40 p-2 text-foreground hover:text-primary md:top-6 md:left-8"
         >
-          <LogoMark className="size-14" />
+          <LogoMark className="size-10 md:size-14" />
         </Link>
-        <div className="w-full max-w-md  backdrop-blur md:border-none md:bg-transparent md:p-0 md:shadow-none">
+        <div className="w-full max-w-md md:p-0">
           <LoginForm
             register={register}
             errors={errors}

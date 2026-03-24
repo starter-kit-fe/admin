@@ -53,6 +53,7 @@ export interface CreateDictTypePayload {
   remark?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateDictTypePayload extends Partial<CreateDictTypePayload> {}
 
 export interface CreateDictDataPayload {
@@ -64,6 +65,7 @@ export interface CreateDictDataPayload {
   remark?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateDictDataPayload extends Partial<CreateDictDataPayload> {}
 
 export function getDictType(id: number) {

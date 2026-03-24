@@ -14,20 +14,17 @@ export default {
   async fetch(
     request: Request,
     env: Env,
-    ctx: ExecutionContext,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _ctx: ExecutionContext,
   ): Promise<Response> {
     const url = new URL(request.url);
 
     // 1. 处理 /api/** 反向代理
     if (url.pathname.startsWith('/api/')) {
       // 后端地址，从环境变量读取
-      const backendBase = env.BACKEND_ORIGIN || 'https://admin-api.h06i.com';
-
-      // 去掉 /api 前缀
-      const apiPath = url.pathname.replace(/^\/api/, '') || '/';
-
+      const backendBase = env.BACKEND_ORIGIN || 'https://admin-api.huzhihui.com';
       // 拼目标地址
-      const targetUrl = new URL(apiPath + url.search, backendBase);
+      const targetUrl = new URL(url.pathname + url.search, backendBase);
 
       const init: RequestInit = {
         method: request.method,

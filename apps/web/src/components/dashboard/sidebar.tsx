@@ -7,15 +7,15 @@ import {
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
   SidebarRail,
   useSidebar,
-} from '@/components/ui/sidebar';
-import { Skeleton } from '@/components/ui/skeleton';
+} from '@repo/ui/components/sidebar';
+import { Skeleton } from '@repo/ui/components/skeleton';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { resolveLucideIcon } from '@/lib/lucide-icons';

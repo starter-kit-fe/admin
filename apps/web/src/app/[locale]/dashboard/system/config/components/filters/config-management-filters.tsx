@@ -6,7 +6,7 @@ import {
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from '@/components/ui/input-group';
+} from '@repo/ui/components/input-group';
 import { KeyRound, Search, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 

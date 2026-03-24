@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@repo/ui/components/alert-dialog';
 import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
 

@@ -3,9 +3,9 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@repo/ui/components/button';
+import { Input } from '@repo/ui/components/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@repo/ui/components/popover';
 import { cn } from '@/lib/utils';
 import {
   getLucideIconEntries,

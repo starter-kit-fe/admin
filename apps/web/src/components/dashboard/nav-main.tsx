@@ -4,12 +4,12 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+} from '@repo/ui/components/collapsible';
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from '@/components/ui/hover-card';
+} from '@repo/ui/components/hover-card';
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -20,7 +20,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
-} from '@/components/ui/sidebar';
+} from '@repo/ui/components/sidebar';
 import { cn } from '@/lib/utils';
 import {Link, usePathname} from '@/i18n/navigation';
 import { ChevronRight, ExternalLink } from 'lucide-react';

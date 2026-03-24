@@ -1,5 +1,5 @@
 import { StatusTabs } from '@/components/status-tabs';
-import { Card } from '@/components/ui/card';
+import { Card } from '@repo/ui/components/card';
 import type { ReactNode } from 'react';
 
 import { AppliedFilters } from './applied-filters';
@@ -50,10 +50,14 @@ export function UserManagementFilters({
   appliedFilters,
   onRemoveFilter,
   onResetFilters,
-  variant = 'panel',
-  actionSlot,
-  titleSlot,
-  refreshSlot,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  variant: _variant = 'panel',
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  actionSlot: _actionSlot,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  titleSlot: _titleSlot,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  refreshSlot: _refreshSlot,
 }: UserManagementFiltersProps) {
   return (
     <Card className="rounded-xl border border-border/60 bg-background/80 shadow-none p-4 sm:p-5">

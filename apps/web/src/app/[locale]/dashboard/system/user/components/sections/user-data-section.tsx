@@ -2,7 +2,6 @@
 
 import { PaginationToolbar } from '@/components/pagination/pagination-toolbar';
 import { SelectionBanner } from '@/components/selection-banner';
-import { Spinner } from '@/components/ui/spinner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   keepPreviousData,
@@ -106,6 +105,7 @@ export function UserDataSection() {
     isFetching: mobileIsFetching,
     isFetchingNextPage,
     isLoading: mobileIsLoading,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isError: mobileIsError,
     refetch: mobileRefetch,
   } = mobileUserListQuery;
@@ -259,8 +259,6 @@ export function UserDataSection() {
   const total = isMobile
     ? (mobileData?.pages?.[0]?.total ?? 0)
     : (userListQuery.data?.total ?? 0);
-  const listIsLoading = isMobile ? mobileIsLoading : userListQuery.isLoading;
-  const listIsError = isMobile ? mobileIsError : userListQuery.isError;
 
   return (
     <div className="flex flex-col gap-4">

@@ -37,7 +37,9 @@
       "emptyDescription": "当有新的登录行为时会自动汇总在此。"
     },
     "actions": {
-      "delete": "删除登录日志"
+      "delete": "删除登录日志",
+      "more": "更多操作",
+      "sheetDescription": "选择要对该登录日志执行的操作"
     }
   },
   "dialogs": {

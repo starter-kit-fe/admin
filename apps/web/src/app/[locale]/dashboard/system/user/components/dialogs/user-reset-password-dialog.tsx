@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import {
   Form,
   FormControl,
@@ -15,9 +15,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
+} from '@repo/ui/components/form';
+import { Input } from '@repo/ui/components/input';
+import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
 import { cn } from '@/lib/utils';
 
 import { useMediaQuery } from '@/hooks/use-media-query';

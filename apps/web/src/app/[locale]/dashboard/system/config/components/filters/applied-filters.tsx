@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@repo/ui/components/badge';
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 

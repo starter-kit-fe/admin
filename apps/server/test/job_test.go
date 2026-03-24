@@ -13,11 +13,11 @@ import (
 
 func TestJobModule(t *testing.T) {
 	app, mr := SetupApp(t)
-	CreateUser(t, app, "admin", "admin123")
-	token := Login(t, app, mr, "admin", "admin123")
+	CreateUser(t, app, "job_admin", "admin123")
+	token := Login(t, app, mr, "job_admin", "admin123")
 
 	t.Run("List Jobs Empty", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/v1/monitor/jobs", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/monitor/jobs", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		w := httptest.NewRecorder()
 
@@ -45,7 +45,7 @@ func TestJobModule(t *testing.T) {
 			Remark:         nil,
 		}
 		body, _ := json.Marshal(job)
-		req := httptest.NewRequest(http.MethodPost, "/v1/monitor/jobs", bytes.NewReader(body))
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/monitor/jobs", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+token)
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -56,7 +56,7 @@ func TestJobModule(t *testing.T) {
 	})
 
 	t.Run("List Jobs After Create", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/v1/monitor/jobs", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/monitor/jobs", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		w := httptest.NewRecorder()
 

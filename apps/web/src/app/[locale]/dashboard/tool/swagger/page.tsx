@@ -2,7 +2,8 @@ import { getTranslations } from 'next-intl/server';
 
 export default async function Page() {
   const t = await getTranslations('Tool');
-  const url = process.env.BASE_URL;
+  const url = `${process.env.BASE_URL}/api/docs`;
+  console.log(url)
   return (
     <iframe
       src={url}

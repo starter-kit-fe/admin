@@ -25,10 +25,10 @@ func initDatabase(ctx context.Context, cfg *config.Config, logger *slog.Logger) 
 	case "sqlite":
 		sqlDB, err = db.LoadSqlite(cfg.Database.DSN)
 	case "postgres":
-		sqlDB, err = db.LoadPostgres(cfg.Database.DSN)
+		sqlDB, err = db.LoadPostgres(cfg.Database.DSN, cfg.App.Mode)
 	default:
 		// Default to postgres for backward compatibility
-		sqlDB, err = db.LoadPostgres(cfg.Database.DSN)
+		sqlDB, err = db.LoadPostgres(cfg.Database.DSN, cfg.App.Mode)
 	}
 
 	if err != nil {

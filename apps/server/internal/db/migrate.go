@@ -36,6 +36,13 @@ func AutoMigrate(db *gorm.DB) error {
 		&model.SysNotice{},
 	}
 
+	if db.Dialector.Name() != "postgres" {
+		models = append(models,
+			&model.SysOperLog{},
+			&model.SysLogininfor{},
+		)
+	}
+
 	if err := db.AutoMigrate(models...); err != nil {
 		return err
 	}

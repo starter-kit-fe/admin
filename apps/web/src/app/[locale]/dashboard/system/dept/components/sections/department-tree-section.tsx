@@ -9,9 +9,8 @@ import {
   useDepartmentTreeState,
 } from '@/app/dashboard/system/dept/store';
 import { InlineLoading } from '@/components/loading';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@repo/ui/components/button';
+import { Card } from '@repo/ui/components/card';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 

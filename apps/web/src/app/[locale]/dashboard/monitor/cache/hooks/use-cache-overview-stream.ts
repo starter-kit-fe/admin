@@ -3,7 +3,6 @@
 import { startSSE } from '@/lib/sse-client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getCacheOverview } from '../api';
 import type { CacheOverview, CacheOverviewPatch } from '../api/type';
 import { DEFAULT_OVERVIEW, mergeCacheOverview } from '../lib/overview';
 

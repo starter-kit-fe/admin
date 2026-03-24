@@ -8,14 +8,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@repo/ui/components/card';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
-import { Spinner } from '@/components/ui/spinner';
+} from '@repo/ui/components/empty';
+import { Spinner } from '@repo/ui/components/spinner';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import type { CacheKeyspaceInfo, CacheOverview } from '../api/type';
+import type { CacheKeyspaceInfo } from '../api/type';
 import { useCacheOverviewStream } from '../hooks/use-cache-overview-stream';
 import {
   formatBytes,
@@ -107,7 +107,6 @@ export function CacheDashboard() {
   const fragmentationRatio = safeNumber(overview.memory.fragmentationRatio);
   const memoryUsagePercent = safeMemoryGauge(usedMemory, maxMemory);
   const memoryTone = getMemoryTone(memoryUsagePercent);
-  const memoryFillWidth = `${Math.min(100, Math.max(0, memoryUsagePercent))}%`;
   const memoryLimitLabel =
     maxMemory > 0
       ? formatBytes(maxMemory, { decimals: 1 })

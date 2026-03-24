@@ -3,7 +3,7 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import type { UseFormReturn } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import {
   Command,
   CommandEmpty,
@@ -11,7 +11,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from '@repo/ui/components/command';
 import {
   Form,
   FormControl,
@@ -19,28 +19,28 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from '@repo/ui/components/form';
+import { Input } from '@repo/ui/components/input';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+} from '@repo/ui/components/popover';
+import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+} from '@repo/ui/components/select';
+import { Textarea } from '@repo/ui/components/textarea';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import { cn } from '@/lib/utils';
 
 import type { UserFormValues } from '../../type';

@@ -5,29 +5,25 @@ import {
   PINNED_ACTION_COLUMN_META,
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
+import { cn } from '@/lib/utils';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -36,22 +32,34 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
-import { usePermissions } from '@/hooks/use-permissions';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { cn } from '@/lib/utils';
+} from '@repo/ui/components/sheet';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@repo/ui/components/table';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { format, isValid, parse, parseISO } from 'date-fns';
+import {
+  format,
+  formatDistanceToNow,
+  isValid,
+  parse,
+  parseISO,
+} from 'date-fns';
+import type { Locale } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
 
-import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
 import type { Notice } from '../../type';
 
 interface NoticeTableProps {
@@ -72,14 +80,14 @@ const STATUS_META: Record<Notice['status'], { className: string }> = {
 };
 
 const TYPE_META: Record<Notice['noticeType'], { className: string }> = {
-  '1': { className: 'bg-secondary/70 text-secondary-foreground border-transparent' },
+  '1': {
+    className: 'bg-secondary/70 text-secondary-foreground border-transparent',
+  },
   '2': { className: 'bg-muted text-muted-foreground border-transparent' },
 };
 
 const MINI_BADGE_CLASS =
   'h-5 rounded-full px-2 text-[11px] font-medium tracking-tight';
-
-const DATE_OUTPUT_FORMAT = 'yyyy-MM-dd HH:mm';
 
 const parseNoticeDate = (value: string) => {
   const trimmed = value.trim();
@@ -100,16 +108,24 @@ const parseNoticeDate = (value: string) => {
   return null;
 };
 
-const formatNoticeDate = (value?: string | null) => {
-  if (!value) {
-    return '—';
+function formatRelativeDate(
+  value: string | null | undefined,
+  dateFnsLocale: Locale,
+): { relative: string; absolute: string } | null {
+  if (!value) return null;
+  try {
+    const date = parseNoticeDate(value) ?? new Date(value);
+    return {
+      relative: formatDistanceToNow(date, {
+        addSuffix: true,
+        locale: dateFnsLocale,
+      }),
+      absolute: format(date, 'yyyy-MM-dd HH:mm:ss'),
+    };
+  } catch {
+    return null;
   }
-  const parsed = parseNoticeDate(value);
-  if (!parsed) {
-    return value;
-  }
-  return format(parsed, DATE_OUTPUT_FORMAT);
-};
+}
 
 function NoticeActions({
   notice,
@@ -250,6 +266,8 @@ export function NoticeTable({
   onDelete,
 }: NoticeTableProps) {
   const t = useTranslations('NoticeManagement');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
   const columnHelper = useMemo(() => createColumnHelper<Notice>(), []);
   const { hasPermission } = usePermissions();
   const canEditNotice = hasPermission('system:notice:edit');
@@ -350,9 +368,15 @@ export function NoticeTable({
         cell: ({ row }) => {
           const timeLabel =
             row.original.updatedAt ?? row.original.createdAt ?? null;
+          const formatted = formatRelativeDate(timeLabel, dateFnsLocale);
+          if (!formatted)
+            return <span className="text-muted-foreground">—</span>;
           return (
-            <span className="text-sm text-muted-foreground">
-              {formatNoticeDate(timeLabel)}
+            <span
+              className="text-sm tabular-nums text-foreground"
+              title={formatted.absolute}
+            >
+              {formatted.relative}
             </span>
           );
         },
@@ -365,7 +389,9 @@ export function NoticeTable({
         columnHelper.display({
           id: 'actions',
           header: () => (
-            <span className="block text-right">{t('table.columns.actions')}</span>
+            <span className="block text-right">
+              {t('table.columns.actions')}
+            </span>
           ),
           cell: ({ row }) => (
             <div className="flex justify-end">
@@ -390,6 +416,7 @@ export function NoticeTable({
     canDeleteNotice,
     canEditNotice,
     columnHelper,
+    dateFnsLocale,
     headerCheckboxState,
     onDelete,
     onEdit,
@@ -485,11 +512,4 @@ export function NoticeTable({
       </Table>
     </div>
   );
-}
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
 }

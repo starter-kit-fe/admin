@@ -1,20 +1,19 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from '@/components/ui/drawer';
+} from '@repo/ui/components/drawer';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Monitor, Moon, Settings2, Sun } from 'lucide-react';
@@ -97,7 +96,7 @@ const runThemeTransition = (
   if (
     typeof document === 'undefined' ||
     typeof window === 'undefined' ||
-    typeof (document as any).startViewTransition !== 'function'
+    typeof (document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void> } }).startViewTransition !== 'function'
   ) {
     updateTheme();
     return;
@@ -106,7 +105,7 @@ const runThemeTransition = (
   const pointerX = event?.clientX ?? Math.floor(window.innerWidth / 2);
   const pointerY = event?.clientY ?? Math.floor(window.innerHeight / 2);
 
-  const transition = (document as any).startViewTransition(() => {
+  const transition = (document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void> } }).startViewTransition!(() => {
     updateTheme();
   });
 
@@ -198,9 +197,6 @@ export function ThemeToggle({ className }: { className?: string }) {
     }
     return theme;
   }, [mounted, theme, systemTheme]);
-
-  const ActiveIcon =
-    THEME_ITEMS.find((item) => item.value === activeTheme)?.icon ?? Monitor;
 
   // 保留原来的亮/暗/系统逻辑 + 动画
   const handleThemeSelection =

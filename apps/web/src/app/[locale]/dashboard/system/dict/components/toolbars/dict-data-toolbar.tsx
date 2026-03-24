@@ -1,7 +1,7 @@
 'use client';
 
 import { type StatusTabItem, StatusTabs } from '@/components/status-tabs';
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import { Plus } from 'lucide-react';
 
 interface DictDataToolbarProps {

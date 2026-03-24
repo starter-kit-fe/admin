@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import {Badge} from '@/components/ui/badge';
-import {buttonVariants} from '@/components/ui/button';
+import { Badge } from '@repo/ui/components/badge';
+import { buttonVariants } from '@repo/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import {cn} from '@/lib/utils';
-import {Link} from '@/i18n/navigation';
-import {useAuthStore} from '@/stores';
+} from '@repo/ui/components/card';
+import { cn } from '@/lib/utils';
+import { Link } from '@/i18n/navigation';
+import { useAuthStore } from '@/stores';
 import gsap from 'gsap';
-import {ArrowRight} from 'lucide-react';
-import {useTranslations} from 'next-intl';
+import { ArrowRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   useCallback,
   useEffect,

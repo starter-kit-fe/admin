@@ -8,6 +8,10 @@
     "login": "Sign in",
     "dashboard": "Open dashboard"
   },
+  "tooltip": {
+    "title": "Open dashboard",
+    "description": "Jump into the admin workspace to inspect menus, logs, and system modules."
+  },
   "drawer": {
     "open": "Open navigation menu",
     "close": "Close navigation menu",

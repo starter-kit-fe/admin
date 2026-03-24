@@ -8,7 +8,7 @@ import {
 } from '@/app/dashboard/system/dict/store';
 import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner } from '@repo/ui/components/spinner';
 import { BookMarked, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 

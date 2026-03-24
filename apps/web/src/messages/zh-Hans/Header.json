@@ -8,6 +8,10 @@
     "login": "登录账户",
     "dashboard": "进入 Dashboard"
   },
+  "tooltip": {
+    "title": "进入 Dashboard",
+    "description": "打开后台工作台，快速查看菜单、日志和系统模块。"
+  },
   "drawer": {
     "open": "打开导航菜单",
     "close": "关闭导航菜单",

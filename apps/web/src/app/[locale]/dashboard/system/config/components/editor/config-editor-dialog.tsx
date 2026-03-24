@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 
 import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import {
   Form,
   FormControl,
@@ -14,11 +14,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
-import { Textarea } from '@/components/ui/textarea';
+} from '@repo/ui/components/form';
+import { Input } from '@repo/ui/components/input';
+import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
+import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
+import { Textarea } from '@repo/ui/components/textarea';
 
 import { createConfigFormSchema, type ConfigFormValues } from '../../type';
 

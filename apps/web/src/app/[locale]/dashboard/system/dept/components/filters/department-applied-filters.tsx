@@ -1,17 +1,15 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Trash2, X } from 'lucide-react';
+import { Badge } from '@repo/ui/components/badge';
+import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { STATUS_TABS } from '../../constants';
-import { useTranslations } from 'next-intl';
 
 interface DepartmentAppliedFiltersProps {
   keyword: string;
   status: string;
   onClearKeyword: () => void;
   onClearStatus: () => void;
-  onClearAll: () => void;
 }
 
 export function DepartmentAppliedFilters({
@@ -19,10 +17,14 @@ export function DepartmentAppliedFilters({
   status,
   onClearKeyword,
   onClearStatus,
-  onClearAll,
 }: DepartmentAppliedFiltersProps) {
   const t = useTranslations('DepartmentManagement');
-  const chips: Array<{ key: string; label: string; value: string; onRemove: () => void }> = [];
+  const chips: Array<{
+    key: string;
+    label: string;
+    value: string;
+    onRemove: () => void;
+  }> = [];
   const trimmedKeyword = keyword.trim();
   if (trimmedKeyword) {
     chips.push({
@@ -61,21 +63,15 @@ export function DepartmentAppliedFilters({
           <button
             type="button"
             onClick={chip.onRemove}
-            className={cn('text-muted-foreground/70 transition-colors hover:text-muted-foreground')}
+            className={cn(
+              'text-muted-foreground/70 transition-colors hover:text-muted-foreground',
+            )}
             aria-label={t('filters.chips.remove', { target: chip.label })}
           >
             <X className="size-3.5" />
           </button>
         </Badge>
       ))}
-      <Button
-        type="button"
-        variant="link"
-        className="inline-flex items-center gap-1 px-0 text-sm text-destructive hover:text-destructive dark:text-destructive dark:hover:text-destructive/80"
-        onClick={onClearAll}
-      >
-        <Trash2 className="size-4" /> {t('filters.clearAll')}
-      </Button>
     </div>
   );
 }

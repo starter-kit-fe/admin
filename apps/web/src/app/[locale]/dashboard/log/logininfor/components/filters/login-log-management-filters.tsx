@@ -6,8 +6,8 @@ import {
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from '@/components/ui/input-group';
-import { Button } from '@/components/ui/button';
+} from '@repo/ui/components/input-group';
+import { Button } from '@repo/ui/components/button';
 import { Globe, UserRound, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 

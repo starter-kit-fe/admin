@@ -5,21 +5,24 @@ import {
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/use-permissions';
+import { cn } from '@/lib/utils';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -28,7 +31,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@repo/ui/components/sheet';
 import {
   Table,
   TableBody,
@@ -36,19 +39,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { usePermissions } from '@/hooks/use-permissions';
-import { cn } from '@/lib/utils';
+} from '@repo/ui/components/table';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import {
+  type Locale,
+  format,
+  formatDistanceToNow,
+  isValid,
+  parse,
+  parseISO,
+} from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
 
 import type { Role } from '../../type';
 
@@ -87,16 +96,53 @@ const STATUS_META: Record<
   },
 };
 
-function getDateTimeLabel(value?: string | null) {
-  if (!value) return '-';
+function parseRoleDate(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const normalized = trimmed.includes('T')
+    ? trimmed
+    : trimmed.replace(' ', 'T');
+  const parsedIso = parseISO(normalized);
+  if (isValid(parsedIso)) {
+    return parsedIso;
+  }
+
   try {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return value;
+    const parsed = parse(trimmed, 'yyyy-MM-dd HH:mm:ss', new Date());
+    if (isValid(parsed)) {
+      return parsed;
     }
-    return date.toLocaleString();
   } catch {
-    return value;
+    return null;
+  }
+
+  return null;
+}
+
+function formatRelativeDate(
+  value: string | null | undefined,
+  dateFnsLocale: Locale,
+): { relative: string; absolute: string } | null {
+  if (!value) return null;
+
+  try {
+    const date = parseRoleDate(value) ?? new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+
+    return {
+      relative: formatDistanceToNow(date, {
+        addSuffix: true,
+        locale: dateFnsLocale,
+      }),
+      absolute: format(date, 'yyyy-MM-dd HH:mm:ss'),
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -146,7 +192,9 @@ function RoleRowActions({
           >
             <SheetHeader className="px-4 pb-2 pt-3 text-left">
               <SheetTitle>{t('table.columns.actions')}</SheetTitle>
-              <SheetDescription>{t('table.actions.description')}</SheetDescription>
+              <SheetDescription>
+                {t('table.actions.description')}
+              </SheetDescription>
             </SheetHeader>
             <SheetFooter className="mt-0 flex-row items-center justify-between gap-3 px-4 pb-4">
               {canEdit ? (
@@ -227,6 +275,8 @@ export function RoleTable({
   isError,
 }: RoleTableProps) {
   const t = useTranslations('RoleManagement');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
   const columnHelper = useMemo(() => createColumnHelper<Role>(), []);
   const { hasPermission } = usePermissions();
   const canEditRole = hasPermission('system:role:edit');
@@ -308,11 +358,18 @@ export function RoleTable({
       }),
       columnHelper.accessor('createdAt', {
         header: t('table.columns.createdAt'),
-        cell: ({ getValue }) => (
-          <span className="text-sm text-muted-foreground">
-            {getDateTimeLabel(getValue())}
-          </span>
-        ),
+        cell: ({ getValue }) => {
+          const value = getValue();
+          const formatted = formatRelativeDate(value, dateFnsLocale);
+          return (
+            <span
+              className="text-sm text-muted-foreground"
+              title={formatted?.absolute}
+            >
+              {formatted?.relative ?? value ?? '-'}
+            </span>
+          );
+        },
         meta: {
           headerClassName:
             'hidden sm:table-cell min-w-[140px] md:min-w-[180px]',
@@ -326,7 +383,9 @@ export function RoleTable({
         columnHelper.display({
           id: 'actions',
           header: () => (
-            <span className="block text-right">{t('table.columns.actions')}</span>
+            <span className="block text-right">
+              {t('table.columns.actions')}
+            </span>
           ),
           cell: ({ row }) => (
             <RoleRowActions
@@ -348,6 +407,7 @@ export function RoleTable({
     canDeleteRole,
     canEditRole,
     columnHelper,
+    dateFnsLocale,
     headerCheckboxState,
     onDelete,
     onEdit,
@@ -457,11 +517,4 @@ export function RoleTable({
       </Table>
     </div>
   );
-}
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
 }

@@ -1,9 +1,9 @@
 'use client';
 
 import { InlineLoading } from '@/components/loading';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { FileText } from 'lucide-react';

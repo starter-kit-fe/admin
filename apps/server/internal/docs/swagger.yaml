@@ -1,4 +1,4 @@
-basePath: /
+basePath: /api
 definitions:
   auth.GetInfoResponse:
     properties:
@@ -1302,6 +1302,25 @@ paths:
       security:
       - BearerAuth: []
       summary: 修改任务状态
+      tags:
+      - Monitor/Job
+  /v1/monitor/jobs/executors:
+    get:
+      description: 返回系统中已注册的所有执行器，用于前端下拉选择 invokeTarget
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/resp.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取可用的任务执行器列表
       tags:
       - Monitor/Job
   /v1/monitor/jobs/logs/{id}/steps:

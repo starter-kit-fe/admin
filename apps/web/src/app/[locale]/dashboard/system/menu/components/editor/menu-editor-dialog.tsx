@@ -6,9 +6,9 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
-import { Form } from '@/components/ui/form';
-import { Button } from '@/components/ui/button';
+import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
+import { Form } from '@repo/ui/components/form';
+import { Button } from '@repo/ui/components/button';
 import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 
 import type { MenuFormValues, MenuType } from '@/app/dashboard/system/menu/type';
@@ -176,12 +176,6 @@ export function MenuEditorDialog({
     }
   }, [defaultValues, form, open]);
 
-  const formTitleLabel =
-    menuType === 'M'
-      ? t('types.directory')
-      : menuType === 'F'
-        ? t('types.button')
-        : t('types.menu');
   const dialogTitle =
     mode === 'create'
       ? t(`form.createTitle.${menuType}`)

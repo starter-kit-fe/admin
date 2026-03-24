@@ -650,6 +650,37 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/monitor/jobs/executors": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "返回系统中已注册的所有执行器，用于前端下拉选择 invokeTarget",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Monitor/Job"
+                ],
+                "summary": "获取可用的任务执行器列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/monitor/jobs/logs/{id}/steps": {
             "get": {
                 "security": [
@@ -6133,7 +6164,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "0.1.0",
 	Host:             "",
-	BasePath:         "/",
+	BasePath:         "/api",
 	Schemes:          []string{"http", "https"},
 	Title:            "Admin Service API",
 	Description:      "Internal admin platform API documentation.",

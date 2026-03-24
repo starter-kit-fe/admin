@@ -33,6 +33,19 @@ func CreateUser(t *testing.T, a *app.App, username, password string) *model.SysU
 	if err := a.DB().Create(user).Error; err != nil {
 		t.Fatalf("failed to create user: %v", err)
 	}
+	userID := int64(user.ID)
+	if err := a.DB().Create(&model.SysUserRole{
+		UserID: userID,
+		RoleID: 1,
+	}).Error; err != nil {
+		t.Fatalf("failed to assign user role: %v", err)
+	}
+	if err := a.DB().Create(&model.SysUserPost{
+		UserID: userID,
+		PostID: 1,
+	}).Error; err != nil {
+		t.Fatalf("failed to assign user post: %v", err)
+	}
 
 	return user
 }
@@ -40,7 +53,7 @@ func CreateUser(t *testing.T, a *app.App, username, password string) *model.SysU
 // Login performs login and returns access token
 func Login(t *testing.T, a *app.App, mr *miniredis.Miniredis, username, password string) string {
 	// 1. Generate Captcha
-	reqCaptcha := httptest.NewRequest(http.MethodGet, "/v1/auth/captcha", nil)
+	reqCaptcha := httptest.NewRequest(http.MethodGet, "/api/v1/auth/captcha", nil)
 	wCaptcha := httptest.NewRecorder()
 	a.Handler().ServeHTTP(wCaptcha, reqCaptcha)
 
@@ -75,7 +88,7 @@ func Login(t *testing.T, a *app.App, mr *miniredis.Miniredis, username, password
 	}
 
 	body, _ := json.Marshal(payload)
-	req := httptest.NewRequest(http.MethodPost, "/v1/auth/login", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 

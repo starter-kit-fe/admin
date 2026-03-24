@@ -13,7 +13,7 @@ import { useEffect, useRef } from 'react';
 const AUTH_ME_QUERY_KEY = ['auth', 'me'] as const;
 export function AppBootstrapper() {
   const queryClient = useQueryClient();
-  const { user, setUser, setPermissions, setRoles } = useAuthStore();
+  const { setUser, setPermissions, setRoles } = useAuthStore();
   const lastBootstrappedLocaleRef = useRef<AppLocale | null>(null);
   const pathname = usePathname();
   const locale = useLocale() as AppLocale;

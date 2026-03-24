@@ -34,6 +34,7 @@ export interface CreateNoticePayload {
   remark?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateNoticePayload extends Partial<CreateNoticePayload> {}
 
 export function createNotice(payload: CreateNoticePayload) {

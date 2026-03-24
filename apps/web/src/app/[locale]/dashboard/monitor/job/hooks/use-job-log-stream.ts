@@ -91,7 +91,9 @@ export function useJobLogStream({
               step.status = payload.status!;
               step.error = payload.error;
               step.endTime = payload.timestamp;
-              step.durationMs = payload.data?.durationMs;
+              const durationMs = payload.data?.durationMs;
+              step.durationMs =
+                typeof durationMs === 'number' ? durationMs : undefined;
               next.set(payload.stepOrder, { ...step });
             }
             return next;
@@ -109,7 +111,7 @@ export function useJobLogStream({
         onError?.(error);
       },
     });
-  }, [id, enabled, onEvent, onComplete, onError, disconnect, isComplete]);
+  }, [id, enabled, onEvent, onComplete, onError, disconnect]);
 
   useEffect(() => {
     if (enabled) {

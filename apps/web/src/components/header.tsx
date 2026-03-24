@@ -1,9 +1,13 @@
 'use client';
 
-import {LogoMark} from '@/components/logo-mark';
-import {LanguageSwitcher} from '@/components/language-switcher';
+import pkg from '@/../package.json';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { LogoMark } from '@/components/logo-mark';
 import ThemeToggle from '@/components/theme-toggle';
-import {buttonVariants} from '@/components/ui/button';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
+import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores';
+import { buttonVariants } from '@repo/ui/components/button';
 import {
   Drawer,
   DrawerClose,
@@ -11,15 +15,15 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from '@/components/ui/drawer';
-import {cn} from '@/lib/utils';
-import {Link, usePathname, useRouter} from '@/i18n/navigation';
-import {useAuthStore} from '@/stores';
-import {ArrowRight, LayoutDashboard, LogIn, Menu, X} from 'lucide-react';
-import {useTranslations} from 'next-intl';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-
-import pkg from '@/../package.json';
+} from '@repo/ui/components/drawer';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@repo/ui/components/tooltip';
+import { ArrowRight, LayoutDashboard, LogIn, Menu, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type StaticNavLink = {
   label: string;
@@ -151,6 +155,7 @@ export default function Header() {
   const ctaHref = isAuthenticated ? '/dashboard' : '/login';
   const ctaLabel = isAuthenticated ? t('cta.dashboard') : t('cta.login');
   const CtaIcon = isAuthenticated ? LayoutDashboard : LogIn;
+  const dashboardTooltipTitle = t('tooltip.title');
 
   return (
     <header
@@ -181,16 +186,37 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href={ctaHref}
-            className={cn(
-              buttonVariants({ size: 'sm' }),
-              'inline-flex items-center gap-2 px-4',
-            )}
-          >
-            <CtaIcon className="h-4 w-4" />
-            {ctaLabel}
-          </Link>
+          {isAuthenticated ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={ctaHref}
+                  aria-label={dashboardTooltipTitle}
+                  className={cn(
+                    buttonVariants({ variant: 'outline', size: 'icon' }),
+                    'size-10 rounded-full',
+                  )}
+                >
+                  <LayoutDashboard className="h-[1.1rem] w-[1.1rem]" />
+                  <span className="sr-only">{dashboardTooltipTitle}</span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="end" sideOffset={8}>
+                {dashboardTooltipTitle}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link
+              href={ctaHref}
+              className={cn(
+                buttonVariants({ size: 'sm' }),
+                'inline-flex items-center gap-2 px-4',
+              )}
+            >
+              <CtaIcon className="h-4 w-4" />
+              {ctaLabel}
+            </Link>
+          )}
           <LanguageSwitcher className="hidden md:inline-flex" />
           <ThemeToggle className="hidden md:inline-flex" />
           <Drawer

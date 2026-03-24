@@ -1,13 +1,13 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@repo/ui/components/badge';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@repo/ui/components/card';
 import { useIsHydrated } from '@/hooks/use-is-hydrated';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useTranslations } from 'next-intl';

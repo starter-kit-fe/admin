@@ -6,7 +6,7 @@ import {
     InputGroup,
     InputGroupInput,
     InputGroupButton,
-} from '@/components/ui/input-group';
+} from '@repo/ui/components/input-group';
 import { CronHelper } from './cron-helper';
 
 interface CronInputWithGeneratorProps {

@@ -1,18 +1,18 @@
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@repo/ui/components/card';
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from '@/components/ui/input-group';
-import { Spinner } from '@/components/ui/spinner';
+} from '@repo/ui/components/input-group';
+import { Button } from '@repo/ui/components/button';
+import { Spinner } from '@repo/ui/components/spinner';
 import {
   Eye,
   EyeOff,
@@ -63,7 +63,7 @@ export const LoginForm: FC<LoginFormProps> = ({
     captchaError || isCaptchaExpired || !captchaImage || captchaFetching;
 
   return (
-    <Card className="border-none bg-transparent md:bg-card  shadow-none  ">
+    <Card className="border-none bg-transparent md:bg-card shadow-none">
       <CardHeader className="space-y-2 text-center">
         <CardTitle className="mb-1 text-2xl font-semibold">
           {t('Form.title')}
@@ -74,6 +74,7 @@ export const LoginForm: FC<LoginFormProps> = ({
       </CardHeader>
       <CardContent>
         <form className="space-y-6" onSubmit={onSubmit}>
+          {/* Username */}
           <div className="space-y-2">
             <InputGroup
               data-invalid={errors.username ? 'true' : undefined}
@@ -99,7 +100,8 @@ export const LoginForm: FC<LoginFormProps> = ({
             ) : null}
           </div>
 
-          <div className="">
+          {/* Password */}
+          <div className="space-y-2">
             <InputGroup
               data-invalid={errors.password ? 'true' : undefined}
               className="bg-muted"
@@ -143,26 +145,8 @@ export const LoginForm: FC<LoginFormProps> = ({
             ) : null}
           </div>
 
+          {/* Captcha */}
           <div className="space-y-2">
-            <div className="flex flex-wrap items-center justify-end gap-2 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                  {countdownLabel}
-                </span>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="inline-flex p-0 m-0 text-[11px] gap-0.5 cursor-pointer"
-                  onClick={onRefreshCaptcha}
-                  disabled={captchaFetching}
-                  title={t('Form.captcha.refresh')}
-                >
-                  <RefreshCw className="size-3" />
-                  {t('Form.captcha.refresh')}
-                </Button>
-              </div>
-            </div>
             <InputGroup
               data-invalid={errors.captcha ? 'true' : undefined}
               className="bg-muted"
@@ -179,40 +163,57 @@ export const LoginForm: FC<LoginFormProps> = ({
                 {...register('captcha')}
                 aria-invalid={Boolean(errors.captcha)}
               />
-              <InputGroupAddon
-                align="inline-end"
-                className="min-w-[120px] justify-end pr-0"
-              >
-                <Button
-                  type="button"
+              <InputGroupAddon align="inline-end" className="pr-2">
+                <InputGroupButton
+                  size="icon-sm"
                   variant="ghost"
-                  className="flex h-[30px] w-[100px]  items-center justify-center mr-2"
+                  className="w-20 overflow-hidden"
                   onClick={onRefreshCaptcha}
                   title={t('Form.captcha.tapToRefresh')}
                   disabled={captchaFetching}
                 >
                   {captchaFetching ? (
-                    <Spinner className="h-4 w-4 text-primary" />
+                    <Spinner className="size-4" />
                   ) : captchaInvalid ? (
-                    <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                      <ShieldAlert className="h-3.5 w-3.5" />
-                      {t('Form.captcha.tapToRefresh')}
-                    </span>
+                    <ShieldAlert className="size-4" />
                   ) : (
                     <img
                       src={captchaImage}
                       alt={t('Form.captcha.alt')}
-                      className="h-[40px] w-full rounded-md object-cover"
+                      className="h-full w-full rounded-sm object-cover"
                     />
                   )}
-                </Button>
+                </InputGroupButton>
               </InputGroupAddon>
             </InputGroup>
-            {errors.captcha ? (
-              <p className="text-xs text-destructive">
-                {errors.captcha.message}
-              </p>
-            ) : null}
+
+            <div className="flex items-start justify-between gap-2 min-h-[20px]">
+              <div className="flex-1">
+                {errors.captcha ? (
+                  <p className="text-xs text-destructive">
+                    {errors.captcha.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                {countdownLabel ? (
+                  <span className="rounded-full bg-muted border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
+                    {countdownLabel}
+                  </span>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-auto gap-1 p-0 text-[11px] text-muted-foreground hover:text-foreground"
+                  onClick={onRefreshCaptcha}
+                  disabled={captchaFetching}
+                  title={t('Form.captcha.refresh')}
+                >
+                  <RefreshCw className="size-3" />
+                  {t('Form.captcha.refresh')}
+                </Button>
+              </div>
+            </div>
           </div>
 
           <Button
@@ -245,6 +246,8 @@ export const LoginForm: FC<LoginFormProps> = ({
             terms: (chunks) => (
               <Link
                 href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
                 {chunks}
@@ -253,6 +256,8 @@ export const LoginForm: FC<LoginFormProps> = ({
             privacy: (chunks) => (
               <Link
                 href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
                 {chunks}
@@ -261,6 +266,8 @@ export const LoginForm: FC<LoginFormProps> = ({
             cookies: (chunks) => (
               <Link
                 href="/cookies"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
                 {chunks}

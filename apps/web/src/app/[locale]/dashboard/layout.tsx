@@ -2,7 +2,7 @@
 
 import { Header } from '@/components/dashboard/header';
 import { AppSidebar } from '@/components/dashboard/sidebar';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarInset, SidebarProvider } from '@repo/ui/components/sidebar';
 import NextTopLoader from 'nextjs-toploader';
 import { type ReactNode } from 'react';
 

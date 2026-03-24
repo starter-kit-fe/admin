@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
-import { cn } from '@/lib/utils';
+} from '@repo/ui/components/empty';
 import { useTranslations } from 'next-intl';
 
 import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
@@ -202,6 +201,7 @@ export function MenuPermissionTree({ nodes, value, onChange, disabled }: MenuPer
         );
       });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [applySelection, disabled, expanded, toggleNode, valueSet],
   );
 

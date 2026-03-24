@@ -1,12 +1,12 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+} from '@repo/ui/components/card';
+import { Skeleton } from '@repo/ui/components/skeleton';
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@repo/ui/components/table';
 import { useTranslations } from 'next-intl';
 
 import type { OnlineUser } from '../../monitor/online/type';

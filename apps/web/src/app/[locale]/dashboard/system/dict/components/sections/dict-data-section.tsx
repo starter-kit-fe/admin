@@ -12,7 +12,7 @@ import {
   useDictSelection,
   useDictTypesState,
 } from '@/app/dashboard/system/dict/store';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@repo/ui/components/card';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';

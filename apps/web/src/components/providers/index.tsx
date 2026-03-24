@@ -1,6 +1,6 @@
 import { AppBootstrapper } from '@/components/app-bootstrapper';
 import BuildInfo from '@/components/build-info';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@repo/ui/components/tooltip';
 import { Toaster } from 'sonner';
 
 import { LocaleSyncer } from './locale-syncer';

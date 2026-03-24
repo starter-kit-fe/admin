@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import { Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 

@@ -40,7 +40,7 @@ export const departmentFormSchema = z.object({
         value === '' ||
         /^1\d{10}$/.test(value) ||
         /^0\d{2,3}-?\d{7,8}$/.test(value) ||
-        /^\+?[0-9\-]{6,18}$/.test(value),
+        /^\+?[0-9-]{6,18}$/.test(value),
       '请输入有效联系电话',
     ),
   email: z
