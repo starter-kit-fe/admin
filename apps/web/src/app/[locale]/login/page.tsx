@@ -142,17 +142,6 @@ export default function Page() {
         : t('Page.countdownExpired')
       : null;
 
-  const description = t('Page.description');
-
-  const featureHighlights = useMemo(
-    () => [
-      t('Page.highlights.first'),
-      t('Page.highlights.second'),
-      t('Page.highlights.third'),
-    ],
-    [t],
-  );
-
   const handleLoginSubmit = handleSubmit((values) =>
     loginMutation.mutate(values),
   );

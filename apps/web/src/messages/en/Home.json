@@ -7,29 +7,17 @@
       "interface": {
         "title": "Modern interface system",
         "description": "Built with shadcn/ui and Tailwind for a cohesive, customizable component library.",
-        "highlights": [
-          "shadcn/ui",
-          "Tailwind CSS",
-          "Responsive layouts"
-        ]
+        "highlights": ["shadcn/ui", "Tailwind CSS", "Responsive layouts"]
       },
       "data": {
         "title": "Smart data layer",
         "description": "@tanstack/react-query works with a custom HttpClient to handle caching, retries and auth.",
-        "highlights": [
-          "Data caching",
-          "Auth guard",
-          "Timeout controls"
-        ]
+        "highlights": ["Data caching", "Auth guard", "Timeout controls"]
       },
       "security": {
         "title": "Enterprise-grade safety",
         "description": "Permissions, roles and audit logs pair with the Go backend for full observability.",
-        "highlights": [
-          "Permission checks",
-          "Sign-in logs",
-          "Observability"
-        ]
+        "highlights": ["Permission checks", "Sign-in logs", "Observability"]
       },
       "multilingual": {
         "title": "Built-in multilingual",
@@ -92,7 +80,7 @@
     "cta": {
       "primary": {
         "authenticated": "Enter dashboard",
-        "anonymous": "Sign in"
+        "anonymous": "Get started"
       },
       "secondary": {
         "authenticated": "View system logs",

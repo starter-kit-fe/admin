@@ -4,15 +4,10 @@
     "title": "Admin Template · 现代化管理后台",
     "description": "为现代 Web 应用打造的响应式后台模板，包含可复用组件、图表、表格与认证流程。"
   },
-  "keywords": [
-    "后台模板",
-    "多主题体验",
-    "多语言支持",
-    "React Query"
-  ],
+  "keywords": ["后台模板", "多主题体验", "多语言支持", "React Query"],
   "primaryCta": {
     "authenticated": "进入 Dashboard",
-    "anonymous": "开始使用"
+    "anonymous": "现在开始"
   },
   "secondaryCta": "了解特性",
   "card": {

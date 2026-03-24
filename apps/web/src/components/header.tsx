@@ -21,7 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@repo/ui/components/tooltip';
-import { ArrowRight, LayoutDashboard, LogIn, Menu, X } from 'lucide-react';
+import { ArrowRight, LayoutDashboard, Menu, Rocket, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -154,7 +154,7 @@ export default function Header() {
 
   const ctaHref = isAuthenticated ? '/dashboard' : '/login';
   const ctaLabel = isAuthenticated ? t('cta.dashboard') : t('cta.login');
-  const CtaIcon = isAuthenticated ? LayoutDashboard : LogIn;
+  const CtaIcon = isAuthenticated ? LayoutDashboard : Rocket;
   const dashboardTooltipTitle = t('tooltip.title');
 
   return (

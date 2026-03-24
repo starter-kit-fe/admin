@@ -7,38 +7,22 @@
       "interface": {
         "title": "现代化界面体系",
         "description": "基于 shadcn/ui 与 Tailwind 的设计体系，提供高度一致、可定制的组件库。",
-        "highlights": [
-          "shadcn/ui",
-          "Tailwind CSS",
-          "响应式体验"
-        ]
+        "highlights": ["shadcn/ui", "Tailwind CSS", "响应式体验"]
       },
       "data": {
         "title": "智能数据层",
         "description": "@tanstack/react-query 与自定义 HttpClient 协作，提供缓存、重试与登录态管理。",
-        "highlights": [
-          "数据缓存",
-          "鉴权守护",
-          "请求超时控制"
-        ]
+        "highlights": ["数据缓存", "鉴权守护", "请求超时控制"]
       },
       "security": {
         "title": "企业级安全守护",
         "description": "内置权限、角色、日志体系，配合 Go 服务保障可观测性。",
-        "highlights": [
-          "权限校验",
-          "登录日志",
-          "可观测性"
-        ]
+        "highlights": ["权限校验", "登录日志", "可观测性"]
       },
       "multilingual": {
         "title": "多语言体验",
         "description": "内置多语言路由与文案管理，轻松切换中文/英文，保持一致体验。",
-        "highlights": [
-          "next-intl",
-          "中英双语",
-          "本地化路由"
-        ]
+        "highlights": ["next-intl", "中英双语", "本地化路由"]
       }
     }
   },
@@ -92,7 +76,7 @@
     "cta": {
       "primary": {
         "authenticated": "进入 Dashboard",
-        "anonymous": "登录账户"
+        "anonymous": "现在开始"
       },
       "secondary": {
         "authenticated": "查看系统日志",

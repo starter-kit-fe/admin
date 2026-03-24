@@ -11,7 +11,6 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_OWNER: ${{ github.repository_owner }}
   VERSION: ${{ github.ref_name }}
   COMMIT: ${{ github.sha }}
 
@@ -22,6 +21,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Prepare Compose Env
+        run: cp env.docker.example .env
+
+      - name: Normalize Image Owner
+        id: meta
+        run: echo "image_owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -36,17 +42,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push admin
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: apps/server/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/admin:${{ env.VERSION }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/admin:latest
-          build-args: |
-            VERSION=${{ env.VERSION }}
-            COMMIT=${{ env.COMMIT }}
-          provenance: false
+      - name: Build and push admin from docker-compose
+        env:
+          IMAGE_OWNER: ${{ steps.meta.outputs.image_owner }}
+        run: |
+          docker buildx bake \
+            -f docker-compose.yml \
+            --set app.platform=linux/amd64 \
+            --set app.platform=linux/arm64 \
+            --set app.args.VERSION=${VERSION} \
+            --set app.args.COMMIT=${COMMIT} \
+            --set app.tags=${REGISTRY}/${IMAGE_OWNER}/admin:${VERSION} \
+            --set app.tags=${REGISTRY}/${IMAGE_OWNER}/admin:latest \
+            --set app.output=type=registry \
+            app

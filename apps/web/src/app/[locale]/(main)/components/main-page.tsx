@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuthStore } from '@/stores';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import {
@@ -9,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui/components/card';
-import { useAuthStore } from '@/stores';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
@@ -118,7 +118,7 @@ export function MainPage() {
             variant: 'default',
           }
         : {
-            label: '登录账户',
+            label: '现在开始',
             href: '/login',
             variant: 'default',
           },

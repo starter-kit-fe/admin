@@ -4,8 +4,8 @@ import pkg from '@/../package.json';
 import { Badge } from '@repo/ui/components/badge';
 import { Link } from '@/i18n/navigation';
 import { Github, Mail, Twitter } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useMemo } from 'react';
 
 import gpkg from '../../../../package.json';
 
@@ -29,8 +29,6 @@ const SOCIAL_LINKS = [
 
 export default function Footer() {
   const t = useTranslations('Footer');
-  const locale = useLocale();
-  const [fontFamily, setFontFamily] = useState('');
   const brandTitle = t('brand.title');
   const brandDescription = t('brand.description');
   const brandKeywords = useMemo(() => {
@@ -40,15 +38,6 @@ export default function Footer() {
       ? (localizedKeywords as string[])
       : fallbackKeywords;
   }, [t]);
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    const computed = window.getComputedStyle(document.body);
-    const family =
-      computed.getPropertyValue('font-family') || computed.fontFamily || '';
-    setFontFamily(family.replace(/\s+/g, ' ').trim());
-  }, []);
   const year = new Date().getFullYear();
   const productLinks = [
     { label: t('product.overview'), href: { pathname: '/', hash: 'features' } },
