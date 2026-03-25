@@ -8,7 +8,9 @@ import {
 } from '@repo/ui/components/tooltip';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
+import { useLocale, useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 
 import { STATUS_BADGE_VARIANT } from '../../constants';
@@ -35,6 +37,14 @@ export function JobSummaryPanel({
   formattedParams: string | undefined;
 }) {
   const t = useTranslations('JobManagement');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
+  const toRelative = (value?: string | null) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return formatDistanceToNow(date, { addSuffix: true, locale: dateFnsLocale });
+  };
   const StatusIcon = statusMeta.icon;
   const paramText = formattedParams ?? '';
   const shouldClampParams = paramText.length > 200;
@@ -111,12 +121,12 @@ export function JobSummaryPanel({
         />
         <SummaryItem
           label={t('detail.summary.labels.created')}
-          value={job.createdAt || '—'}
+          value={toRelative(job.createdAt)}
           hint={job.createBy || ''}
         />
         <SummaryItem
           label={t('detail.summary.labels.updated')}
-          value={job.updatedAt || '—'}
+          value={toRelative(job.updatedAt)}
           hint={job.updateBy || ''}
         />
         {job.remark ? (

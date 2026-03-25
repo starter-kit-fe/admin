@@ -1,5 +1,7 @@
 'use client';
 
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -7,7 +9,7 @@ import { InlineLoading } from '@/components/loading';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { getOnlineUserDetail } from '../../api';
 import { ONLINE_USERS_QUERY_KEY } from '../../constants';
@@ -20,6 +22,8 @@ import {
 
 export function OnlineUserDetailDialog() {
   const t = useTranslations('OnlineUserManagement');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
   const { detailDialog, closeDetailDialog } =
     useOnlineUserManagementStore();
   const { canQuery } = useOnlinePermissionFlags();
@@ -74,10 +78,23 @@ export function OnlineUserDetailDialog() {
         label: t('detail.fields.loginLocation'),
         value: detail.loginLocation || '—',
       },
-      { label: t('detail.fields.loginTime'), value: detail.loginTime || '—' },
+      {
+        label: t('detail.fields.loginTime'),
+        value: (() => {
+          if (!detail.loginTime) return '—';
+          const date = new Date(detail.loginTime);
+          if (Number.isNaN(date.getTime())) return detail.loginTime;
+          return formatDistanceToNow(date, { addSuffix: true, locale: dateFnsLocale });
+        })(),
+      },
       {
         label: t('detail.fields.lastAccessTime'),
-        value: detail.lastAccessTime || '—',
+        value: (() => {
+          if (!detail.lastAccessTime) return '—';
+          const date = new Date(detail.lastAccessTime);
+          if (Number.isNaN(date.getTime())) return detail.lastAccessTime;
+          return formatDistanceToNow(date, { addSuffix: true, locale: dateFnsLocale });
+        })(),
       },
       { label: t('detail.fields.browser'), value: detail.browser || '—' },
       { label: t('detail.fields.os'), value: detail.os || '—' },

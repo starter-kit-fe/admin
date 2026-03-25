@@ -12,7 +12,9 @@ import {
   Loader2,
   XCircle,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import { useJobLogStream } from '../hooks/use-job-log-stream';
@@ -31,6 +33,8 @@ export function RealtimeLogViewer({
   onComplete,
 }: RealtimeLogViewerProps) {
   const t = useTranslations('JobManagement');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
   const { steps, isConnected, isComplete } = useJobLogStream({
     id: jobLogId,
     onComplete,
@@ -180,7 +184,20 @@ function StepItem({
               {t('detail.live.steps.duration', { value: durationText })}
             </span>
           ) : null}
-          {step.createdAt ? <span>{step.createdAt}</span> : null}
+          {step.createdAt ? (
+            <span
+              title={(() => {
+                const d = new Date(step.createdAt);
+                return Number.isNaN(d.getTime()) ? step.createdAt : d.toLocaleString();
+              })()}
+            >
+              {(() => {
+                const d = new Date(step.createdAt);
+                if (Number.isNaN(d.getTime())) return step.createdAt;
+                return formatDistanceToNow(d, { addSuffix: true, locale: dateFnsLocale });
+              })()}
+            </span>
+          ) : null}
           {hasDetails ? (
             <button
               type="button"

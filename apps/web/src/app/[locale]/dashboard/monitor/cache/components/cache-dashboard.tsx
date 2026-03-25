@@ -29,7 +29,9 @@ import {
   Server,
   Users,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
+import { useLocale, useTranslations } from 'next-intl';
 
 import type { CacheKeyspaceInfo } from '../api/type';
 import { useCacheOverviewStream } from '../hooks/use-cache-overview-stream';
@@ -97,6 +99,8 @@ const safeNumber = (value?: number | null) =>
 
 export function CacheDashboard() {
   const t = useTranslations('CacheMonitor');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
   const stream = useCacheOverviewStream();
   const overview = stream.overview;
 
@@ -123,7 +127,7 @@ export function CacheDashboard() {
       return t('dashboard.header.waitingStream');
     }
     try {
-      return new Date(value).toLocaleString();
+      return formatDistanceToNow(new Date(value), { addSuffix: true, locale: dateFnsLocale });
     } catch {
       return t('dashboard.header.waitingStream');
     }
@@ -457,8 +461,13 @@ export function CacheDashboard() {
                     {t('dashboard.server.persistence.lastRdb')}
                   </div>
                   <div className="text-sm font-medium text-foreground">
-                    {overview.persistence.rdbLastSaveTime ||
-                      t('common.notExecuted')}
+                    {(() => {
+                      const v = overview.persistence.rdbLastSaveTime;
+                      if (!v) return t('common.notExecuted');
+                      const date = new Date(v);
+                      if (Number.isNaN(date.getTime())) return v;
+                      return formatDistanceToNow(date, { addSuffix: true, locale: dateFnsLocale });
+                    })()}
                   </div>
                 </div>
                 <div>

@@ -13,6 +13,7 @@ env:
   REGISTRY: ghcr.io
   VERSION: ${{ github.ref_name }}
   COMMIT: ${{ github.sha }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-and-push:
@@ -48,11 +49,11 @@ jobs:
         run: |
           docker buildx bake \
             -f docker-compose.yml \
-            --set app.platform=linux/amd64 \
-            --set app.platform=linux/arm64 \
-            --set app.args.VERSION=${VERSION} \
-            --set app.args.COMMIT=${COMMIT} \
-            --set app.tags=${REGISTRY}/${IMAGE_OWNER}/admin:${VERSION} \
-            --set app.tags=${REGISTRY}/${IMAGE_OWNER}/admin:latest \
-            --set app.output=type=registry \
+            --set "app.platforms=linux/amd64,linux/arm64" \
+            --set "app.args.VERSION=${VERSION}" \
+            --set "app.args.COMMIT=${COMMIT}" \
+            --set "app.tags=${REGISTRY}/${IMAGE_OWNER}/admin:${VERSION}" \
+            --set "app.tags=${REGISTRY}/${IMAGE_OWNER}/admin:latest" \
+            --set "app.labels.org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --push \
             app

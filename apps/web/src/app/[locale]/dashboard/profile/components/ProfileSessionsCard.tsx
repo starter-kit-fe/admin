@@ -15,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui/components/table';
-import { useTranslations } from 'next-intl';
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
+import { useLocale, useTranslations } from 'next-intl';
 
 import type { OnlineUser } from '../../monitor/online/type';
 
@@ -39,6 +41,14 @@ export function ProfileSessionsCard({
   pendingSessionId,
 }: ProfileSessionsCardProps) {
   const t = useTranslations('Profile');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
+  const toRelative = (value?: string | null) => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return formatDistanceToNow(date, { addSuffix: true, locale: dateFnsLocale });
+  };
 
   return (
     <Card className="shadow-none  border-none">
@@ -110,11 +120,16 @@ export function ProfileSessionsCard({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>{session.loginTime || t('sessions.fallbacks.time')}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div title={session.loginTime || undefined}>
+                        {toRelative(session.loginTime) || t('sessions.fallbacks.time')}
+                      </div>
+                      <div
+                        className="text-xs text-muted-foreground"
+                        title={session.lastAccessTime || undefined}
+                      >
                         {t('sessions.lastActive', {
                           time:
-                            session.lastAccessTime ||
+                            toRelative(session.lastAccessTime) ||
                             t('sessions.fallbacks.time'),
                         })}
                       </div>

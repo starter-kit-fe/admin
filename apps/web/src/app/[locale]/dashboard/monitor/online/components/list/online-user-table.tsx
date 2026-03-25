@@ -8,6 +8,8 @@ import {
   useReactTable,
   type RowSelectionState,
 } from '@tanstack/react-table';
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { Eye, LogOut, MoreHorizontal } from 'lucide-react';
 
 import { EllipsisText } from '@/components/table/ellipsis-text';
@@ -52,7 +54,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import type { OnlineUser } from '../../type';
 import { getOnlineUserRowId, resolveStatusBadgeVariant } from '../../utils';
@@ -91,6 +93,8 @@ export function OnlineUserTable({
   canViewDetail,
 }: OnlineUserTableProps) {
   const t = useTranslations('OnlineUserManagement');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
   const columnHelper = useMemo(() => createColumnHelper<OnlineUser>(), []);
 
   const columns = useMemo(() => {
@@ -186,19 +190,29 @@ export function OnlineUserTable({
         header: () => t('table.columns.loginTime'),
         cell: ({ row }) => {
           const user = row.original;
+          const toRelative = (value?: string | null) => {
+            if (!value) return { label: '-', title: '-' };
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return { label: value, title: value };
+            return {
+              label: formatDistanceToNow(date, { addSuffix: true, locale: dateFnsLocale }),
+              title: date.toLocaleString(),
+            };
+          };
+          const loginTime = toRelative(user.loginTime);
+          const lastAccess = toRelative(user.lastAccessTime);
           return (
             <div className="space-y-1">
-              <EllipsisText
-                value={user.loginTime || '-'}
-                className="max-w-[200px] text-sm text-foreground"
-              />
+              <p className="text-sm text-foreground" title={loginTime.title}>
+                {loginTime.label}
+              </p>
               {user.lastAccessTime ? (
-                <EllipsisText
-                  value={t('table.rows.lastActive', {
-                    time: user.lastAccessTime,
-                  })}
-                  className="max-w-[220px] text-xs text-muted-foreground"
-                />
+                <p
+                  className="text-xs text-muted-foreground"
+                  title={t('table.rows.lastActive', { time: lastAccess.title })}
+                >
+                  {t('table.rows.lastActive', { time: lastAccess.label })}
+                </p>
               ) : null}
             </div>
           );
