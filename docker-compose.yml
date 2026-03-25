@@ -9,10 +9,12 @@ services:
         VERSION: ${IMAGE_TAG:-dev}
         COMMIT: ${IMAGE_COMMIT:-local}
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
-      DB_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-admin}?sslmode=disable
-      REDIS_URL: redis://:${POSTGRES_PASSWORD:-changeme}@redis:6379/0
+      DB_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      REDIS_URL: redis://:${POSTGRES_PASSWORD}@redis:6379/0
     ports:
       - "${APP_PORT:-27507}:27507"
     depends_on:
@@ -26,9 +28,9 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-admin}
-      POSTGRES_USER: ${POSTGRES_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
     shm_size: "256mb"
@@ -79,14 +81,14 @@ services:
       --maxmemory ${REDIS_MAXMEMORY:-512mb}
       --maxmemory-policy volatile-lru
       --tcp-keepalive 300
-      --requirepass "${POSTGRES_PASSWORD:-changeme}"
+      --requirepass "${POSTGRES_PASSWORD}"
       --notify-keyspace-events KEA
     expose:
       - "6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${POSTGRES_PASSWORD:-changeme}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${POSTGRES_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -98,8 +100,8 @@ volumes:
   redis_data:
     driver: local
 
-# 启动:
-#   IMAGE_TAG=v1.0 POSTGRES_PASSWORD=Fm4Q8rLBoJf09A docker compose up -d
+# 启动（必须传入以下变量）:
+#   POSTGRES_USER=admin POSTGRES_DB=admin POSTGRES_PASSWORD=xxx IMAGE_TAG=v1.0 docker compose up -d
 #
 # 仅启动基础设施:
-#   POSTGRES_PASSWORD=secret docker compose up -d postgres redis
+#   POSTGRES_USER=admin POSTGRES_DB=admin POSTGRES_PASSWORD=xxx docker compose up -d postgres redis
