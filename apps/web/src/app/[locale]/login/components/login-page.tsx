@@ -15,6 +15,7 @@ import pkg from '../../../../../package.json';
 import { getCaptcha, login } from '../api';
 import { type LoginValues, loginSchema } from '../schema';
 import type { LoginRequestPayload } from '../type';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { LoginAside } from './login-aside';
 import { LoginForm } from './login-form';
 
@@ -145,8 +146,9 @@ export function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/60" />
       </div>
 
-      {/* Theme toggle */}
-      <div className="fixed right-4 top-4 z-30 md:right-6 md:top-6">
+      {/* Theme toggle + Language switcher */}
+      <div className="fixed right-4 top-4 z-30 flex items-center gap-2 md:right-6 md:top-6">
+        <LanguageSwitcher />
         <ThemeToggle />
       </div>
 

@@ -1,5 +1,13 @@
 # 获取当前时间并格式化版本号
-VERSION := $(shell TZ="Asia/Shanghai" date +"%y.%m%d.%H%M")
+VERSION := $(shell node -e "\
+  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Shanghai'}));\
+  const y=String(d.getFullYear()).slice(-2);\
+  const m=d.getMonth()+1;\
+  const day=d.getDate();\
+  const h=String(d.getHours()).padStart(2,'0');\
+  const mn=String(d.getMinutes()).padStart(2,'0');\
+  process.stdout.write(y+'.'+m+day+'.'+h+mn);\
+")
 # 默认提交消息
 DEFAULT_MSG := "bump version to v$(VERSION)"
 

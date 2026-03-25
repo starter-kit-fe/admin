@@ -55,5 +55,7 @@ jobs:
             --set "app.tags=${REGISTRY}/${IMAGE_OWNER}/admin:${VERSION}" \
             --set "app.tags=${REGISTRY}/${IMAGE_OWNER}/admin:latest" \
             --set "app.labels.org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --set "app.cache-from=type=registry,ref=${REGISTRY}/${IMAGE_OWNER}/admin:buildcache" \
+            --set "app.cache-to=type=registry,ref=${REGISTRY}/${IMAGE_OWNER}/admin:buildcache,mode=max" \
             --push \
             app
