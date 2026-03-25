@@ -24,12 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@repo/ui/components/empty';
+import { TableEmptyState } from '@/components/table/table-empty-state';
 import {
   Sheet,
   SheetContent,
@@ -559,21 +554,11 @@ export function UserTable({
               </TableCell>
             </TableRow>
           ) : table.getRowModel().rows.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={visibleColumnCount}
-                className="h-48 text-center align-middle"
-              >
-                <Empty className="border-0 bg-transparent p-4">
-                  <EmptyHeader>
-                    <EmptyTitle>{t('table.state.emptyTitle')}</EmptyTitle>
-                    <EmptyDescription>
-                      {t('table.state.emptyDescription')}
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              </TableCell>
-            </TableRow>
+            <TableEmptyState
+              colSpan={visibleColumnCount}
+              title={t('table.state.emptyTitle')}
+              description={t('table.state.emptyDescription')}
+            />
           ) : (
             table.getRowModel().rows.map((row) => {
               const user = row.original;

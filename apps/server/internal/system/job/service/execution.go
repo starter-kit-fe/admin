@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/starter-kit-fe/admin/internal/model"
-	"github.com/starter-kit-fe/admin/internal/system/job/executor"
+	"github.com/starter-kit-fe/admin/internal/system/job/steplog"
 	"github.com/starter-kit-fe/admin/internal/system/job/types"
 )
 
@@ -93,7 +93,7 @@ func (s *Service) executeJob(ctx context.Context, job types.Job, opts jobRunOpti
 }
 
 // startJobRun initializes a job run and returns the log ID and step logger
-func (s *Service) startJobRun(ctx context.Context, job types.Job, meta jobRunContext, opts jobRunOptions) (int64, *executor.StepLogger, error) {
+func (s *Service) startJobRun(ctx context.Context, job types.Job, meta jobRunContext, opts jobRunOptions) (int64, *steplog.StepLogger, error) {
 	if s == nil || s.repo == nil {
 		return 0, nil, ErrServiceUnavailable
 	}
@@ -199,12 +199,12 @@ func (s *Service) createRunningLogRecord(ctx context.Context, job types.Job, met
 }
 
 // newStepLogger creates a new step logger for a job log
-func (s *Service) newStepLogger(jobLogID int64) *executor.StepLogger {
+func (s *Service) newStepLogger(jobLogID int64) *steplog.StepLogger {
 	if s == nil || jobLogID == 0 {
 		return nil
 	}
 
-	return executor.NewStepLogger(jobLogID, s.repo, s.logger, func(event *types.StepEvent) {
+	return steplog.New(jobLogID, s.repo, s.logger, func(event *types.StepEvent) {
 		if s.streams != nil && event != nil {
 			s.streams.Publish(jobLogID, event)
 		}

@@ -20,10 +20,6 @@ type SysDept struct {
 	UpdateBy string `gorm:"column:update_by" json:"update_by"`
 }
 
-func (SysDept) TableName() string {
-	return tableName("sys_dept")
-}
-
 type SysUser struct {
 	DeptID      *int64 `gorm:"column:dept_id" json:"dept_id,omitempty"`
 	UserName    string `gorm:"column:user_name" json:"user_name"`
@@ -45,10 +41,6 @@ type SysUser struct {
 	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
 }
 
-func (SysUser) TableName() string {
-	return tableName("sys_user")
-}
-
 type SysPost struct {
 	PostCode string `gorm:"column:post_code" json:"post_code"`
 	PostName string `gorm:"column:post_name" json:"post_name"`
@@ -58,10 +50,6 @@ type SysPost struct {
 	CreateBy string  `gorm:"column:create_by" json:"create_by"`
 	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
 	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
-}
-
-func (SysPost) TableName() string {
-	return tableName("sys_post")
 }
 
 type SysRole struct {
@@ -77,10 +65,6 @@ type SysRole struct {
 	CreateBy string  `gorm:"column:create_by" json:"create_by"`
 	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
 	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
-}
-
-func (SysRole) TableName() string {
-	return tableName("sys_role")
 }
 
 type SysMenu struct {
@@ -102,17 +86,9 @@ type SysMenu struct {
 	Remark   string `gorm:"column:remark" json:"remark"`
 }
 
-func (SysMenu) TableName() string {
-	return tableName("sys_menu")
-}
-
 type SysUserRole struct {
 	UserID int64 `gorm:"column:user_id;primaryKey" json:"user_id"`
 	RoleID int64 `gorm:"column:role_id;primaryKey" json:"role_id"`
-}
-
-func (SysUserRole) TableName() string {
-	return tableName("sys_user_role")
 }
 
 type SysRoleMenu struct {
@@ -120,26 +96,14 @@ type SysRoleMenu struct {
 	MenuID int64 `gorm:"column:menu_id;primaryKey" json:"menu_id"`
 }
 
-func (SysRoleMenu) TableName() string {
-	return tableName("sys_role_menu")
-}
-
 type SysRoleDept struct {
 	RoleID int64 `gorm:"column:role_id;primaryKey" json:"role_id"`
 	DeptID int64 `gorm:"column:dept_id;primaryKey" json:"dept_id"`
 }
 
-func (SysRoleDept) TableName() string {
-	return tableName("sys_role_dept")
-}
-
 type SysUserPost struct {
 	UserID int64 `gorm:"column:user_id;primaryKey" json:"user_id"`
 	PostID int64 `gorm:"column:post_id;primaryKey" json:"post_id"`
-}
-
-func (SysUserPost) TableName() string {
-	return tableName("sys_user_post")
 }
 
 type SysDictType struct {
@@ -150,10 +114,6 @@ type SysDictType struct {
 	CreateBy string  `gorm:"column:create_by" json:"create_by"`
 	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
 	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
-}
-
-func (SysDictType) TableName() string {
-	return tableName("sys_dict_type")
 }
 
 type SysDictData struct {
@@ -171,10 +131,6 @@ type SysDictData struct {
 	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
 }
 
-func (SysDictData) TableName() string {
-	return tableName("sys_dict_data")
-}
-
 type SysConfig struct {
 	ConfigName  string `gorm:"column:config_name" json:"config_name"`
 	ConfigKey   string `gorm:"column:config_key" json:"config_key"`
@@ -184,10 +140,6 @@ type SysConfig struct {
 	CreateBy string  `gorm:"column:create_by" json:"create_by"`
 	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
 	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
-}
-
-func (SysConfig) TableName() string {
-	return tableName("sys_config")
 }
 
 type SysJob struct {
@@ -205,10 +157,6 @@ type SysJob struct {
 	Remark   string `gorm:"column:remark" json:"remark"`
 }
 
-func (SysJob) TableName() string {
-	return tableName("sys_job")
-}
-
 type SysJobLog struct {
 	JobID         int64   `gorm:"column:job_id" json:"job_id"`
 	JobName       string  `gorm:"column:job_name" json:"job_name"`
@@ -219,10 +167,6 @@ type SysJobLog struct {
 	Status        string  `gorm:"column:status" json:"status"`
 	ExceptionInfo string  `gorm:"column:exception_info" json:"exception_info"`
 	BaseModel
-}
-
-func (SysJobLog) TableName() string {
-	return tableName("sys_job_log")
 }
 
 // SysJobLogStep 定时任务执行步骤日志
@@ -240,11 +184,6 @@ type SysJobLogStep struct {
 	DurationMs *int64     `gorm:"column:duration_ms" json:"durationMs,omitempty"`
 }
 
-// TableName 指定表名
-func (SysJobLogStep) TableName() string {
-	return tableName("sys_job_log_step")
-}
-
 type SysNotice struct {
 	NoticeTitle   string `gorm:"column:notice_title" json:"notice_title"`
 	NoticeType    string `gorm:"column:notice_type" json:"notice_type"`
@@ -254,8 +193,4 @@ type SysNotice struct {
 	CreateBy string  `gorm:"column:create_by" json:"create_by"`
 	UpdateBy string  `gorm:"column:update_by" json:"update_by"`
 	Remark   *string `gorm:"column:remark" json:"remark,omitempty"`
-}
-
-func (SysNotice) TableName() string {
-	return tableName("sys_notice")
 }

@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/starter-kit-fe/admin/constant"
 	"github.com/starter-kit-fe/admin/internal/model"
 )
 
@@ -115,7 +116,7 @@ func ensureUserPostCompositePrimaryKey(db *gorm.DB) error {
 		return errors.New("gorm db is nil")
 	}
 
-	tableName := model.SysUserPost{}.TableName()
+	tableName := constant.DB_PREFIX + "sys_user_post"
 	dialect := db.Dialector.Name()
 
 	switch dialect {

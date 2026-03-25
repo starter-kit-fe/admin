@@ -18,12 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@repo/ui/components/empty';
+import { TableEmptyState } from '@/components/table/table-empty-state';
 import {
   Sheet,
   SheetContent,
@@ -475,18 +470,11 @@ export function NoticeTable({
               </TableCell>
             </TableRow>
           ) : rows.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={visibleColumnCount} className="h-48">
-                <Empty className="border-0 bg-transparent p-6">
-                  <EmptyHeader>
-                    <EmptyTitle>{t('table.feedback.emptyTitle')}</EmptyTitle>
-                    <EmptyDescription>
-                      {t('table.feedback.emptyDescription')}
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              </TableCell>
-            </TableRow>
+            <TableEmptyState
+              colSpan={visibleColumnCount}
+              title={t('table.feedback.emptyTitle')}
+              description={t('table.feedback.emptyDescription')}
+            />
           ) : (
             rows.map((row) => (
               <TableRow

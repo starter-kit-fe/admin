@@ -1,5 +1,7 @@
 package model
 
+import "github.com/starter-kit-fe/admin/constant"
+
 // SysOperLog 操作日志
 type SysOperLog struct {
 	BaseModel
@@ -20,10 +22,6 @@ type SysOperLog struct {
 	CostTime      int64  `gorm:"column:cost_time" json:"cost_time"`
 }
 
-func (SysOperLog) TableName() string {
-	return tableName("sys_oper_log")
-}
-
 // SysLogininfor 登录日志
 type SysLogininfor struct {
 	BaseModel
@@ -34,10 +32,6 @@ type SysLogininfor struct {
 	OS            string `gorm:"column:os;type:varchar(120)" json:"os"`
 	Status        string `gorm:"column:status;index" json:"status"`
 	Msg           string `gorm:"column:msg;type:varchar(255)" json:"msg"`
-}
-
-func (SysLogininfor) TableName() string {
-	return tableName("sys_logininfor")
 }
 
 // LogIndexSpec describes an index to create for a log table.
@@ -58,7 +52,7 @@ type LogTableSpec struct {
 }
 
 func OperLogTableSpec() LogTableSpec {
-	tableName := SysOperLog{}.TableName()
+	tableName := constant.DB_PREFIX + "sys_oper_log"
 	return LogTableSpec{
 		TableName:  tableName,
 		TimeColumn: "created_at",
@@ -99,7 +93,7 @@ func OperLogTableSpec() LogTableSpec {
 }
 
 func LoginLogTableSpec() LogTableSpec {
-	tableName := SysLogininfor{}.TableName()
+	tableName := constant.DB_PREFIX + "sys_logininfor"
 	return LogTableSpec{
 		TableName:  tableName,
 		TimeColumn: "created_at",

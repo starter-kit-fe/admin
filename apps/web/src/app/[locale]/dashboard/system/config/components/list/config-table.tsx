@@ -18,12 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@repo/ui/components/empty';
+import { TableEmptyState } from '@/components/table/table-empty-state';
 import {
   Sheet,
   SheetContent,
@@ -268,27 +263,11 @@ export function ConfigTable({
             </TableHeader>
             <TableBody>
               {rowModel.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={visibleColumnCount}
-                    className="py-10 text-center align-middle"
-                  >
-                    <Empty className="border-0 bg-transparent p-4">
-                      <EmptyHeader>
-                        <EmptyTitle>
-                          {isLoading
-                            ? t('table.empty.title.loading')
-                            : t('table.empty.title.idle')}
-                        </EmptyTitle>
-                        <EmptyDescription>
-                          {isLoading
-                            ? t('table.empty.description.loading')
-                            : t('table.empty.description.idle')}
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  </TableCell>
-                </TableRow>
+                <TableEmptyState
+                  colSpan={visibleColumnCount}
+                  title={isLoading ? t('table.empty.title.loading') : t('table.empty.title.idle')}
+                  description={isLoading ? t('table.empty.description.loading') : t('table.empty.description.idle')}
+                />
               ) : (
                 rowModel.map((row) => (
                   <TableRow

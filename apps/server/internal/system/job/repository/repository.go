@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgconn"
 	"gorm.io/gorm"
 
+	"github.com/starter-kit-fe/admin/constant"
 	"github.com/starter-kit-fe/admin/internal/model"
 	"github.com/starter-kit-fe/admin/internal/system/job/types"
 )
@@ -332,7 +333,7 @@ func (r *Repository) DeleteJobLogs(ctx context.Context, jobID int64) error {
 
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var logIDs []int64
-		logTable := model.SysJobLog{}.TableName()
+		logTable := constant.DB_PREFIX + "sys_job_log"
 		if err := tx.
 			Model(&model.SysJobLog{}).
 			Where("job_id = ?", jobID).
@@ -353,7 +354,7 @@ func (r *Repository) DeleteJobLogs(ctx context.Context, jobID int64) error {
 			if err := tx.
 				Where("job_log_id IN ?", logIDs).
 				Delete(&model.SysJobLogStep{}).Error; err != nil {
-				if !isMissingTableErr(err, model.SysJobLogStep{}.TableName()) {
+				if !isMissingTableErr(err, constant.DB_PREFIX+"sys_job_log_step") {
 					return err
 				}
 				// Legacy fallback: some deployments used an unprefixed table name for steps.

@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/starter-kit-fe/admin/constant"
 	"github.com/starter-kit-fe/admin/internal/model"
 )
 
@@ -32,9 +33,9 @@ func (r *Repository) LoadPermissions(ctx context.Context, userID uint) ([]string
 	}
 
 	var permissions []string
-	menuTable := model.SysMenu{}.TableName()
-	roleMenuTable := model.SysRoleMenu{}.TableName()
-	userRoleTable := model.SysUserRole{}.TableName()
+	menuTable := constant.DB_PREFIX + "sys_menu"
+	roleMenuTable := constant.DB_PREFIX + "sys_role_menu"
+	userRoleTable := constant.DB_PREFIX + "sys_user_role"
 
 	query := r.db.WithContext(ctx).
 		Table(menuTable).
@@ -97,8 +98,8 @@ func (r *Repository) GetRoles(ctx context.Context, userID uint) ([]string, error
 		return nil, ErrRepositoryUnavailable
 	}
 
-	roleTable := model.SysRole{}.TableName()
-	userRoleTable := model.SysUserRole{}.TableName()
+	roleTable := constant.DB_PREFIX + "sys_role"
+	userRoleTable := constant.DB_PREFIX + "sys_user_role"
 
 	var roles []string
 	err := r.db.WithContext(ctx).
@@ -120,9 +121,9 @@ func (r *Repository) GetMenus(ctx context.Context, userID uint) ([]model.SysMenu
 		return nil, ErrRepositoryUnavailable
 	}
 
-	menuTable := model.SysMenu{}.TableName()
-	roleMenuTable := model.SysRoleMenu{}.TableName()
-	userRoleTable := model.SysUserRole{}.TableName()
+	menuTable := constant.DB_PREFIX + "sys_menu"
+	roleMenuTable := constant.DB_PREFIX + "sys_role_menu"
+	userRoleTable := constant.DB_PREFIX + "sys_user_role"
 
 	baseQuery := r.db.WithContext(ctx).
 		Table(menuTable).

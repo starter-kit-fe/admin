@@ -32,7 +32,7 @@ import (
 	"github.com/starter-kit-fe/admin/internal/system/dict"
 	"github.com/starter-kit-fe/admin/internal/system/docs"
 	"github.com/starter-kit-fe/admin/internal/system/health"
-	"github.com/starter-kit-fe/admin/internal/system/job"
+	jobhandler "github.com/starter-kit-fe/admin/internal/system/job/handler"
 	"github.com/starter-kit-fe/admin/internal/system/loginlog"
 	"github.com/starter-kit-fe/admin/internal/system/menu"
 	"github.com/starter-kit-fe/admin/internal/system/notice"
@@ -61,7 +61,7 @@ type Options struct {
 	NoticeHandler      *notice.Handler
 	OperLogHandler     *operlog.Handler
 	LoginLogHandler    *loginlog.Handler
-	JobHandler         *job.Handler
+	JobHandler         *jobhandler.Handler
 	OnlineHandler      *online.Handler
 	ServerHandler      *server.Handler
 	CacheHandler       *cache.Handler
