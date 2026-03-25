@@ -322,7 +322,7 @@ func syncSequences(ctx context.Context, db *gorm.DB, prefix string, logger *slog
 		"sys_logininfor": "id",
 		"sys_oper_log":   "id",
 		"sys_job":        "job_name",
-		"sys_job_log":    "job_log_id",
+		"sys_job_log":    "id",
 		"sys_notice":     "id",
 	}
 

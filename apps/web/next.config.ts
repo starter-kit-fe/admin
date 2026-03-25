@@ -21,6 +21,7 @@ switch (process.env.NODE_ENV) {
     break;
   case 'development':
     nextConfig.rewrites = proxy;
+    nextConfig.allowedDevOrigins = ['127.0.0.1'];
     break;
 }
 
