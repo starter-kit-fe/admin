@@ -27,8 +27,10 @@ jobs:
         include:
           - platform: linux/amd64
             runner: ubuntu-latest
+            suffix: amd64
           - platform: linux/arm64
             runner: ubuntu-24.04-arm
+            suffix: arm64
 
     steps:
       - name: Checkout
@@ -39,9 +41,7 @@ jobs:
 
       - name: Normalize Image Owner
         id: meta
-        run: |
-          echo "image_owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
-          echo "platform_pair=$(echo ${{ matrix.platform }} | tr '/' '-')" >> "$GITHUB_OUTPUT"
+        run: echo "image_owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -53,11 +53,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push digest
-        id: build
+      - name: Build and push platform image
         env:
           IMAGE_OWNER: ${{ steps.meta.outputs.image_owner }}
-          PLATFORM_PAIR: ${{ steps.meta.outputs.platform_pair }}
         run: |
           IMAGE_REF="${REGISTRY}/${IMAGE_OWNER}/admin"
           docker buildx bake \
@@ -65,21 +63,12 @@ jobs:
             --set "app.platform=${{ matrix.platform }}" \
             --set "app.args.VERSION=${VERSION}" \
             --set "app.args.COMMIT=${COMMIT}" \
+            --set "app.tags=${IMAGE_REF}:${VERSION}-${{ matrix.suffix }}" \
             --set "app.labels.org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
-            --set "app.cache-from=type=registry,ref=${IMAGE_REF}:buildcache-${PLATFORM_PAIR}" \
-            --set "app.cache-to=type=registry,ref=${IMAGE_REF}:buildcache-${PLATFORM_PAIR},mode=max" \
-            --set "app.output=type=image,name=${IMAGE_REF},push-by-digest=true,name-canonical=true,push=true" \
-            --metadata-file /tmp/bake-metadata.json \
+            --set "app.cache-from=type=registry,ref=${IMAGE_REF}:buildcache-${{ matrix.suffix }}" \
+            --set "app.cache-to=type=registry,ref=${IMAGE_REF}:buildcache-${{ matrix.suffix }},mode=max" \
+            --push \
             app
-          echo "digest=$(jq -r '.app."containerimage.digest"' /tmp/bake-metadata.json)" >> "$GITHUB_OUTPUT"
-
-      - name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digest-${{ steps.meta.outputs.platform_pair }}
-          path: /tmp/bake-metadata.json
-          if-no-files-found: error
-          retention-days: 1
 
   merge:
     needs: build
@@ -92,13 +81,6 @@ jobs:
       - name: Normalize Image Owner
         id: meta
         run: echo "image_owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
-
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          pattern: digest-*
-          path: /tmp/digests
-          merge-multiple: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -115,9 +97,8 @@ jobs:
           IMAGE_OWNER: ${{ steps.meta.outputs.image_owner }}
         run: |
           IMAGE_REF="${REGISTRY}/${IMAGE_OWNER}/admin"
-          SOURCES=$(jq -r '.app."containerimage.digest"' /tmp/digests/*.json \
-            | awk -v ref="${IMAGE_REF}" '{print ref"@"$0}')
           docker buildx imagetools create \
             --tag "${IMAGE_REF}:${VERSION}" \
             --tag "${IMAGE_REF}:latest" \
-            ${SOURCES}
+            "${IMAGE_REF}:${VERSION}-amd64" \
+            "${IMAGE_REF}:${VERSION}-arm64"
