@@ -13,95 +13,28 @@ services:
       - path: .env
         required: false
     environment:
-      DB_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-admin}?sslmode=disable
-      REDIS_URL: redis://:${POSTGRES_PASSWORD:-changeme}@redis:6379/0
+      DB_URL: ${DB_URL}
+      REDIS_URL: ${REDIS_URL}
     ports:
       - "${APP_PORT:-27507}:27507"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
 
-  postgres:
-    container_name: admin-postgers
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-admin}
-      POSTGRES_USER: ${POSTGRES_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
-    shm_size: "256mb"
-    command: >
-      postgres
-      -c shared_buffers=256MB
-      -c effective_cache_size=768MB
-      -c work_mem=16MB
-      -c maintenance_work_mem=128MB
-      -c wal_compression=on
-      -c synchronous_commit=on
-      -c max_wal_size=2GB
-      -c min_wal_size=256MB
-      -c checkpoint_timeout=10min
-      -c checkpoint_completion_target=0.9
-      -c default_statistics_target=100
-      -c random_page_cost=1.1
-      -c effective_io_concurrency=200
-      -c max_worker_processes=4
-      -c max_parallel_workers_per_gather=2
-      -c max_parallel_workers=4
-      -c max_parallel_maintenance_workers=2
-      -c jit=off
-    networks:
-      default:
-        aliases:
-          - db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    expose:
-      - "5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    stop_grace_period: 1m
-
-  redis:
-    container_name: admin-redis
-    image: redis:7-alpine
-    restart: unless-stopped
-    command: >
-      redis-server
-      --save 60 1000
-      --appendonly yes
-      --appendfsync everysec
-      --maxmemory ${REDIS_MAXMEMORY:-512mb}
-      --maxmemory-policy volatile-lru
-      --tcp-keepalive 300
-      --requirepass "${POSTGRES_PASSWORD:-changeme}"
-      --notify-keyspace-events KEA
-    expose:
-      - "6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${POSTGRES_PASSWORD:-changeme}", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    stop_grace_period: 30s
-
-volumes:
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local
-
-# 启动（建议覆盖默认密码）:
-#   IMAGE_TAG=v1.0 POSTGRES_PASSWORD=your_password docker compose up -d
+# ── 启动方式 ──────────────────────────────────────────────────
 #
-# 仅启动基础设施:
-#   POSTGRES_PASSWORD=your_password docker compose up -d postgres redis
+# 1. 使用外部 Postgres / Redis（提供连接串即可）:
+#      DB_URL=postgres://user:pass@host:5432/db \
+#      REDIS_URL=redis://:pass@host:6379/0 \
+#      docker compose up -d
+#
+#    也可以写入 .env 文件后直接运行:
+#      docker compose up -d
+#
+# 2. 使用内置 Postgres / Redis（叠加 infra 文件）:
+#      docker compose -f docker-compose.yml -f docker-compose.infra.yml up -d
+#
+#    指定镜像版本和密码:
+#      IMAGE_TAG=v1.0 POSTGRES_PASSWORD=your_password \
+#      docker compose -f docker-compose.yml -f docker-compose.infra.yml up -d
+#
+# 3. 仅启动基础设施（用于本地开发）:
+#      POSTGRES_PASSWORD=your_password \
+#      docker compose -f docker-compose.infra.yml up -d postgres redis

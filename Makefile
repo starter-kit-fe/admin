@@ -18,6 +18,10 @@ ifeq ($(strip $(NPM)),)
 $(error npm is not installed. Please install Node.js and npm)
 endif
 
+# Docker Compose
+COMPOSE       := docker compose
+COMPOSE_INFRA := docker compose -f docker-compose.yml -f docker-compose.infra.yml
+
 # 更新版本号，增加错误处理
 update-version:
 	@if [ -f "package.json" ]; then \
@@ -60,15 +64,26 @@ deploy:
 
 # Docker 打包（构建单体镜像）
 docker-build:
-	@docker compose build
+	@$(COMPOSE_INFRA) build
 
-# 启动（首次自动初始化 .env 和 AUTH_SECRET）
+# 启动（默认使用内置 Postgres / Redis）
 up:
 	@if [ ! -f .env ]; then cp .env.example .env; fi
 	@grep -q "^AUTH_SECRET=" .env 2>/dev/null || \
 		(printf "AUTH_SECRET=%s\n" "$$(openssl rand -hex 32)" >> .env && echo "✓ AUTH_SECRET generated")
-	@docker compose up -d
+	@$(COMPOSE_INFRA) up -d
+
+# 启动（使用外部 Postgres / Redis，需在 .env 中配置 DB_URL / REDIS_URL）
+up-external:
+	@if [ ! -f .env ]; then cp .env.example .env; fi
+	@grep -q "^AUTH_SECRET=" .env 2>/dev/null || \
+		(printf "AUTH_SECRET=%s\n" "$$(openssl rand -hex 32)" >> .env && echo "✓ AUTH_SECRET generated")
+	@$(COMPOSE) up -d
 
 # 停止
 down:
-	@docker compose down
+	@$(COMPOSE_INFRA) down
+
+# 停止（外部数据库模式）
+down-external:
+	@$(COMPOSE) down
