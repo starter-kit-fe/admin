@@ -60,4 +60,15 @@ deploy:
 
 # Docker 打包（构建单体镜像）
 docker-build:
-	@docker compose --env-file .env build
+	@docker compose build
+
+# 启动（首次自动初始化 .env 和 AUTH_SECRET）
+up:
+	@if [ ! -f .env ]; then cp .env.example .env; fi
+	@grep -q "^AUTH_SECRET=" .env 2>/dev/null || \
+		(printf "AUTH_SECRET=%s\n" "$$(openssl rand -hex 32)" >> .env && echo "✓ AUTH_SECRET generated")
+	@docker compose up -d
+
+# 停止
+down:
+	@docker compose down

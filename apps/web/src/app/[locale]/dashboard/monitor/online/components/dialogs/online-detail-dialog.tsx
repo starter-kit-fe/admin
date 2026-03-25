@@ -53,21 +53,18 @@ export function OnlineUserDetailDialog() {
       })
     : t('detail.description.generic');
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const statusBadge = detail ? (
-    <Badge variant={resolveStatusBadgeVariant(detail.status)}>
-      {detail.status === '0' || !detail.status
-        ? t('status.online')
-        : t('status.abnormal')}
-    </Badge>
-  ) : (
-    '—'
-  );
-
+   
   const sessionFields = useMemo(() => {
     if (!detail) {
       return [];
     }
+    const statusBadge = (
+      <Badge variant={resolveStatusBadgeVariant(detail.status)}>
+        {detail.status === '0' || !detail.status
+          ? t('status.online')
+          : t('status.abnormal')}
+      </Badge>
+    );
     return [
       { label: t('detail.fields.userName'), value: detail.userName || '—' },
       { label: t('detail.fields.nickName'), value: detail.nickName || '—' },
@@ -105,7 +102,7 @@ export function OnlineUserDetailDialog() {
       { label: t('detail.fields.tokenId'), value: detail.tokenId || '—' },
       { label: t('detail.fields.uuid'), value: detail.uuid || '—' },
     ];
-  }, [detail, statusBadge, t]);
+  }, [dateFnsLocale, detail, t]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {

@@ -308,6 +308,7 @@ export function OnlineUserTable({
     canViewDetail,
     canSelectRows,
     columnHelper,
+    dateFnsLocale,
     isForceMutating,
     onForceLogout,
     onViewDetail,

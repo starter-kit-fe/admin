@@ -1,137 +1,239 @@
-# Admin 部署说明
+# Admin
 
-## 项目概览
+A full-stack admin panel built with Next.js + Go, packaged into a single Docker image.
 
-- `apps/web`: Next.js 前端（构建产物由后端镜像打包）
-- `apps/server`: Go 后端 + 前端静态产物打包入口，镜像名 `admin`
+[中文文档](./README.zh.md)
 
-## 系统架构
+## Table of Contents
 
-### Monorepo 布局
+- [Project Structure](#project-structure)
+- [Local Development](#local-development)
+- [Updating Dependencies](#updating-dependencies)
+- [Updating shadcn/ui Components](#updating-shadcnui-components)
+- [Docker Deployment](#docker-deployment)
+- [Releasing a New Version](#releasing-a-new-version)
 
-- 使用 `pnpm` + Turborepo 管理前后端与共享包，根目录脚本统一通过 `pnpm <task>` 驱动（例如 `pnpm dev` 同时拉起 web/server）。
-- `apps/web`、`apps/server`、`apps/docs` 处于同一工作区，`packages/` 目录则提供 UI 组件库（`packages/ui`）、ESLint 配置与 TS 配置，供各应用通过 `workspace:*` 方式直接复用。
-- Dockerfile（`apps/server/Dockerfile`）负责在单一镜像中构建 web 与 server，`docker-compose.yml` 负责编排 `app + postgres + redis` 环境。
+---
 
-### Web（`apps/web`）
-
-- 基于 Next.js 16 App Router（目录 `apps/web/src/app`），使用 Server/Client Component 组合、Jotai 状态（`src/stores.ts`）与 TanStack Query 发起数据请求，Tailwind v4 与 `packages/ui` 中的共享组件一起提供 UI 能力。
-- `src/app/api/[[...path]]/route.ts` 实现了一个 BASE_URL 透传代理，把 `/api/*` 请求转发到 Go 服务（容器内默认直连 `http://server:27507`），这样 Cloudflare Workers、Node 运行器以及 Docker Compose 都能复用同一前端构建。
-- `wrangler.toml` + `open-next.config.ts` 说明前端可以通过 OpenNext 打包成 Cloudflare Worker；在容器场景下则使用 `pnpm start` 启动传统 Node 服务器。
-
-### Server（`apps/server`）
-
-- Go 1.24 服务以 `cmd/main.go` 为入口，通过 `internal/cli`（Cobra）解析 `start`、`version` 等子命令，最终调用 `internal/app` 构建依赖并启动 HTTP 服务。
-- `internal/app` 负责初始化 slog、GORM、Redis、全局节流以及 Gin Router，并在 `modules.go` 中把系统模块（auth/user/role/menu/dept/... 等位于 `internal/system/*` 的 handler/service/repository）注入到 `internal/router` 统一注册 `/v1` REST API。
-- 配置使用 `internal/config` + Viper 装载，数据库与缓存联接由 `internal/db`、`internal/system/*` 中的仓储层实现；Swagger 文档通过 `pnpm docs` 触发 `apps/server/internal/docs/swagger.json` 更新，`/docs` 路由直接托管静态 UI。
-- 中间件（`middleware/`）提供 JWT、权限、操作审计、速率限制等横切能力，公共响应体定义集中在 `pkg/`。
-
-### 数据与基础设施
-
-- PostgreSQL 使用官方 `postgres:16-alpine`（见 `docker-compose.yml`）作为主数据存储，容器预置数据卷与健康检查，Go 服务通过 `DB_URL` 环境变量连入；`internal/db/migrate.go`、`seed.go` 提供迁移与初始化脚本。
-- Redis 使用官方 `redis:7-alpine`（见 `docker-compose.yml`）承载会话、验证码、在线用户、缓存等，服务层的 session store（`internal/system/auth/session_store.go`）及缓存模块共用一个地址，通过 `REDIS_URL` 配置。
-- `docker-compose.yml` 编排 `app → (db, redis)`，支持本地 `docker compose build` 构建单体 `admin` 镜像用于离线环境。
-
-### 架构数据流
+## Project Structure
 
 ```
-┌──────────────┐    HTTPS /api     ┌───────────────────────┐
-│ Next.js Web  │ ────────────────▶ │ Go API (Gin + GORM)   │
-│ (apps/web)   │ ◀───────────────┐ │ internal/system 模块  │
-└──────┬───────┘                 │ └──────────┬────────────┘
-       │ 共享 UI & lint config   │            │
-       │ (packages/*)            │            │
-┌──────▼───────┐                 │            │
-│ packages/ui  │                 │            │
-└──────────────┘                 │            │
-                                 │   ┌────────▼─────────┐
-                                 │   │PostgreSQL (db)   │
-                                 │   ├────────┬─────────┤
-                                 │   │Redis (cache)     │
-                                 │   └────────┴─────────┘
-                                 │
-                                 └── Docker Compose / GHCR 镜像用于统一部署
+.
+├── apps/
+│   ├── web/          # Next.js frontend (App Router)
+│   └── server/       # Go backend + Dockerfile
+├── packages/
+│   └── ui/           # Shared shadcn/ui component library
+├── deployments/
+│   └── nginx.conf    # Reference Nginx reverse proxy config
+├── docker-compose.yml
+├── .env.example
+└── Makefile
 ```
 
-### Cloudflare BFF 拓扑
+**Tech Stack**
 
-```
-┌────────────┐   HTTPS requests    ┌──────────────────────────┐   Internal RPCs   ┌────────────────┐
-│ Browser /  │ ──────────────────▶ │ Cloudflare Worker (BFF)  │ ────────────────▶ │ Go API Service │
-│ Mobile App │   (login, dashboard)│  Next.js App Router      │   /v1 REST        │ (apps/server)  │
-└────────────┘                    │  Proxy / auth cookies    │                  └──────┬─────────┘
-                                  └────────────┬─────────────┘                         │
-                                               │ BASE_URL                               │
-                                               ▼                                        ▼
-                                         ┌───────────────┐                    ┌──────────────────┐
-                                         │ Web Assets    │                    │ PostgreSQL /     │
-                                         │ (static cache)│                    │ Redis            │
-                                         └───────────────┘                    └──────────────────┘
-```
+| Layer    | Technology                                        |
+| -------- | ------------------------------------------------- |
+| Frontend | Next.js 16, Tailwind v4, TanStack Query, Jotai    |
+| Backend  | Go 1.24, Gin, GORM                                |
+| Database | PostgreSQL 17                                     |
+| Cache    | Redis 7                                           |
+| Deploy   | Docker + GHCR multi-arch images (amd64 / arm64)   |
 
-Cloudflare Worker 运行 Next.js 构建产物并作为 BFF，负责：
-
-- 终端用户与 Go API 之间的 TLS 边界，复用 Cloudflare 身份策略、防护能力。
-- 利用 `apps/web/src/app/api/[[...path]]/route.ts` 代理 `/api/*` 请求，并在边缘处理 Cookie、Session、Fetch 重试等逻辑。
-- 静态资源由 Cloudflare KV/Assets 分发，动态请求再命中后台 `apps/server`，后者继续访问 Postgres/Redis。
-
-## 发布镜像（推送 tag 自动构建）
-
-1. 确认代码干净并更新版本号。
-2. 打标签并推送：
-   ```sh
-   git tag vX.Y.Z
-   git push origin vX.Y.Z
-   ```
-3. GitHub Actions 会为 tag 构建并推送多架构镜像到 GHCR：
-   - `ghcr.io/<owner>/admin:<tag>` 与 `:latest`
-
-## 一键部署（Docker Compose）
-
-前置：服务器已安装 Docker + Docker Compose v2，并可拉取 GHCR 镜像（`docker login ghcr.io -u <user> -p <PAT>`，PAT 需 `read:packages`）。
-
-1. 复制并填写环境变量：
-
-   ```sh
-   cp env.docker.example .env
-   ```
-
-   - 将 `IMAGE_OWNER` 设为你的 GitHub 组织或用户名。
-   - 将 `IMAGE_TAG` 设为要部署的 tag（如 `vX.Y.Z`）。
-   - 根据需要调整数据库、Redis、端口等配置。
-
-2. 拉取镜像：
-   ```sh
-   docker compose --env-file .env pull
-   ```
-3. 启动：
-   ```sh
-   docker compose --env-file .env up -d
-   ```
-4. 查看状态：
-   ```sh
-   docker compose ps
-   ```
-
-## 本地构建与调试（Docker Compose）
-
-无需推送镜像即可本地起全栈：
+---
 
 ## Local Development
 
-1. Install dependencies:
+**Prerequisites**: Node.js ≥ 18, pnpm 9, Go 1.24
 
-   ```sh
-   pnpm install
-   ```
+```sh
+# Install dependencies
+pnpm install
 
-2. Start development server:
-   ```sh
-   pnpm dev
-   ```
+# Start full-stack dev server (frontend + backend with hot reload)
+pnpm dev
+```
 
-## Other Commands
+Other commands:
 
-- `pnpm build`: Build all apps
-- `pnpm lint`: Run ESLint
-- `docker compose up -d`: Start database and redis
+```sh
+pnpm build        # Build all apps
+pnpm lint         # Run ESLint
+pnpm check-types  # TypeScript type check
+pnpm format       # Prettier format
+pnpm docs         # Generate Swagger docs
+```
+
+---
+
+## Updating Dependencies
+
+The project uses pnpm workspaces + Turborepo. All dependency updates are managed from the root.
+
+```sh
+# Interactive update (recommended)
+pnpm update --interactive --latest
+
+# Update a specific package across all workspaces
+pnpm update <package-name> --recursive
+
+# Update a package in a specific app
+pnpm --filter=web update <package-name>
+pnpm --filter=ui update <package-name>
+```
+
+Run `pnpm build` after updating to confirm there are no build errors.
+
+---
+
+## Updating shadcn/ui Components
+
+shadcn/ui components live in `packages/ui` and are consumed by `apps/web` via `@repo/ui/components`. **All component operations should be run inside `packages/ui`.**
+
+### Add a new component
+
+```sh
+cd packages/ui
+pnpm dlx shadcn@latest add <component-name>
+
+# Examples
+pnpm dlx shadcn@latest add calendar
+pnpm dlx shadcn@latest add data-table
+```
+
+### Update an existing component
+
+```sh
+cd packages/ui
+pnpm dlx shadcn@latest add <component-name> --overwrite
+```
+
+### Update all components at once
+
+```sh
+cd packages/ui
+pnpm dlx shadcn@latest add --all --overwrite
+```
+
+> **Note**: shadcn/ui components are source-copied, not npm packages. After overwriting, review the diff to ensure local customizations are not lost.
+
+Import components in `apps/web`:
+
+```tsx
+import { Button } from '@repo/ui/components/button';
+```
+
+---
+
+## Docker Deployment
+
+**Prerequisites**: Docker and Docker Compose v2 installed on the server.
+
+### First-time Setup
+
+**1. Clone the repository**
+
+```sh
+git clone <repo-url>
+cd admin
+```
+
+**2. Create the `.env` file**
+
+```sh
+cp .env.example .env
+```
+
+Only one value is required:
+
+```env
+POSTGRES_PASSWORD=your_secure_password
+```
+
+`AUTH_SECRET`, `DB_URL`, and `REDIS_URL` are auto-generated or derived automatically.
+
+Optional overrides:
+
+```env
+# Pin to a specific image version (default: latest)
+APP_IMAGE=ghcr.io/<owner>/admin:v26.325.1133
+
+# Custom port (default: 27507)
+APP_PORT=27507
+```
+
+**3. Start**
+
+```sh
+make up
+```
+
+`make up` will automatically:
+- Initialize `.env` from `.env.example` if missing
+- Generate a random `AUTH_SECRET` on first run (stable across restarts)
+- Start the `app + postgres + redis` containers
+
+**4. Verify**
+
+```sh
+docker compose ps        # Check container status
+docker compose logs -f   # Stream logs
+```
+
+Open `http://<server-ip>:27507`.
+
+---
+
+### Updating to a New Version
+
+```sh
+# Update the image version in .env
+APP_IMAGE=ghcr.io/<owner>/admin:v26.325.xxxx
+
+# Pull the new image and restart
+docker compose pull
+docker compose up -d
+```
+
+### Stopping
+
+```sh
+make down
+```
+
+### Data Persistence
+
+PostgreSQL and Redis data are stored in named volumes (`postgres_data`, `redis_data`). Running `make down` does **not** delete them.
+
+To **fully reset** (deletes all data):
+
+```sh
+docker compose down -v
+```
+
+### Private Registry
+
+If the GHCR package is private, log in before pulling:
+
+```sh
+echo <PAT> | docker login ghcr.io -u <username> --password-stdin
+```
+
+The PAT requires `read:packages` scope.
+
+---
+
+## Releasing a New Version
+
+Pushing a tag triggers GitHub Actions to build and push multi-arch images (amd64 + arm64) to GHCR.
+
+```sh
+# Bump version, commit, tag, and push in one command
+make push-tag
+```
+
+Published images:
+
+- `ghcr.io/<owner>/admin:<tag>`
+- `ghcr.io/<owner>/admin:latest`

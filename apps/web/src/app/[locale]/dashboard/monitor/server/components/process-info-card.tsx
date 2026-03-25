@@ -136,7 +136,6 @@ export function ProcessInfoCard({ process }: ProcessInfoCardProps) {
                     row.value
                   )
                 }
-                valueClassName={row.valueClassName}
               />
             ))}
           </div>
