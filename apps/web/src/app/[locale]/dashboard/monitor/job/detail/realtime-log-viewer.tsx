@@ -13,6 +13,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import type { Locale } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -118,6 +119,7 @@ export function RealtimeLogViewer({
               step={step}
               isActive={!isComplete && step.status === '2'}
               t={t}
+              dateFnsLocale={dateFnsLocale}
             />
           ))}
 
@@ -140,10 +142,12 @@ function StepItem({
   step,
   isActive,
   t,
+  dateFnsLocale,
 }: {
   step: JobLogStep;
   isActive: boolean;
   t: (key: string, values?: Record<string, string | number>) => string;
+  dateFnsLocale: Locale;
 }) {
   const [expanded, setExpanded] = useState(true);
   const meta = getLogStatusMeta(step.status, t);
