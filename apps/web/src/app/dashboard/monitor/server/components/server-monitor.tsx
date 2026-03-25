@@ -98,25 +98,27 @@ export function ServerMonitor() {
             />
             {stream.isConnected ? '实时' : '已断开，等待重连'}
           </span>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={stream.reconnect}
-            disabled={stream.isLoading}
-            className="md:w-auto"
-          >
-            {stream.isLoading ? (
-              <>
-                <Spinner className="mr-2 size-4" />
-                连接中
-              </>
-            ) : (
-              <>
-                <RefreshCcw className="mr-2 size-4" />
-                重新连接
-              </>
-            )}
-          </Button>
+          {!stream.isConnected && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={stream.reconnect}
+              disabled={stream.isLoading}
+              className="md:w-auto"
+            >
+              {stream.isLoading ? (
+                <>
+                  <Spinner className="mr-2 size-4" />
+                  连接中
+                </>
+              ) : (
+                <>
+                  <RefreshCcw className="mr-2 size-4" />
+                  重新连接
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
 

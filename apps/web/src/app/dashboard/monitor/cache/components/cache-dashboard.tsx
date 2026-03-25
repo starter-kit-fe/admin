@@ -36,16 +36,10 @@ import {
   formatBytes,
   formatNumber,
   formatPercent,
+  formatRelativeTime,
   safeMemoryGauge,
   summarizeKeys,
 } from '../utils';
-
-function formatTimestamp(value?: number | null) {
-  if (!value || Number.isNaN(value)) {
-    return '等待实时流';
-  }
-  return new Date(value).toLocaleString();
-}
 
 function renderKeyspaceRow(space: CacheKeyspaceInfo) {
   const avgTTL =
@@ -219,27 +213,29 @@ export function CacheDashboard() {
               />
               {connectionLabel}
             </div>
-            <div>概览更新时间：{formatTimestamp(stream.lastUpdated)}</div>
-            <PermissionButton
-              required="monitor:cache:list"
-              type="button"
-              variant="outline"
-              className="gap-2"
-              onClick={stream.reconnect}
-              disabled={stream.isLoading}
-            >
-              {isConnecting ? (
-                <>
-                  <Spinner className="size-4" />
-                  连接中
-                </>
-              ) : (
-                <>
-                  <RefreshCcw className="size-4" />
-                  重新连接
-                </>
-              )}
-            </PermissionButton>
+            <div>概览更新时间：{formatRelativeTime(stream.lastUpdated, '等待实时流')}</div>
+            {!stream.isConnected && (
+              <PermissionButton
+                required="monitor:cache:list"
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={stream.reconnect}
+                disabled={stream.isLoading}
+              >
+                {isConnecting ? (
+                  <>
+                    <Spinner className="size-4" />
+                    连接中
+                  </>
+                ) : (
+                  <>
+                    <RefreshCcw className="size-4" />
+                    重新连接
+                  </>
+                )}
+              </PermissionButton>
+            )}
           </div>
         </CardHeader>
         {stream.error && !stream.isConnected ? (
@@ -431,7 +427,7 @@ export function CacheDashboard() {
                 <div>
                   <div className="text-muted-foreground">上次 RDB</div>
                   <div className="text-sm font-medium text-foreground">
-                    {overview.persistence.rdbLastSaveTime || '未执行'}
+                    {formatRelativeTime(overview.persistence.rdbLastSaveTime, '未执行')}
                   </div>
                 </div>
                 <div>

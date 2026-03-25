@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -169,6 +170,10 @@ func Load(envFiles ...string) (*Config, error) {
 
 	cfg.Normalize()
 
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+
 	return cfg, nil
 }
 
@@ -260,6 +265,23 @@ func (c *Config) Normalize() {
 	if c.Backup.TempDir == "" {
 		c.Backup.TempDir = "/tmp/backups"
 	}
+}
+
+// Validate checks that required runtime configuration is present and well-formed.
+func (c *Config) Validate() error {
+	if c.Database.DSN != "" && c.Database.Driver == "postgres" {
+		u, err := url.Parse(c.Database.DSN)
+		if err != nil {
+			return fmt.Errorf("invalid DB_URL: %w", err)
+		}
+		if u.User == nil || u.User.Username() == "" {
+			return fmt.Errorf("invalid DB_URL: missing username (POSTGRES_USER not set?)")
+		}
+		if strings.TrimPrefix(u.Path, "/") == "" {
+			return fmt.Errorf("invalid DB_URL: missing database name (POSTGRES_DB not set?)")
+		}
+	}
+	return nil
 }
 
 func normalizeAddr(addr string) string {

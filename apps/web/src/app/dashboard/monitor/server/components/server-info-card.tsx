@@ -29,10 +29,6 @@ export function ServerInfoCard({ host, lastUpdated }: ServerInfoCardProps) {
       label: '服务器运行时长',
       value: host.uptime || formatDuration(host.uptimeSeconds),
     },
-    {
-      label: '服务器开机时间',
-      value: formatDateTime(host.bootTime),
-    },
     { label: '当前时间', value: formatDateTime(host.currentTime) },
   ];
 

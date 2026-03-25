@@ -1,4 +1,21 @@
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+
 import type { CacheKeyspaceInfo } from './type';
+
+export function formatRelativeTime(
+  value?: number | string | Date | null,
+  fallback?: string,
+) {
+  if (!value) return fallback ?? '-';
+  try {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return fallback ?? '-';
+    return formatDistanceToNow(date, { addSuffix: true, locale: zhCN });
+  } catch {
+    return fallback ?? '-';
+  }
+}
 
 type FormatBytesOptions = {
   decimals?: number;

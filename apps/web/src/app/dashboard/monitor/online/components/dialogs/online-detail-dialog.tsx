@@ -1,5 +1,7 @@
 'use client';
 
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -63,8 +65,24 @@ export function OnlineUserDetailDialog() {
       { label: '当前状态', value: statusBadge },
       { label: '登录 IP', value: detail.ipaddr || '—' },
       { label: '登录地点', value: detail.loginLocation || '—' },
-      { label: '登录时间', value: detail.loginTime || '—' },
-      { label: '最近活跃', value: detail.lastAccessTime || '—' },
+      {
+        label: '登录时间',
+        value: (() => {
+          if (!detail.loginTime) return '—';
+          const date = new Date(detail.loginTime);
+          if (Number.isNaN(date.getTime())) return detail.loginTime;
+          return formatDistanceToNow(date, { addSuffix: true, locale: zhCN });
+        })(),
+      },
+      {
+        label: '最近活跃',
+        value: (() => {
+          if (!detail.lastAccessTime) return '—';
+          const date = new Date(detail.lastAccessTime);
+          if (Number.isNaN(date.getTime())) return detail.lastAccessTime;
+          return formatDistanceToNow(date, { addSuffix: true, locale: zhCN });
+        })(),
+      },
       { label: '浏览器', value: detail.browser || '—' },
       { label: '操作系统', value: detail.os || '—' },
       { label: '会话 ID', value: detail.sessionId || detail.tokenId || '—' },

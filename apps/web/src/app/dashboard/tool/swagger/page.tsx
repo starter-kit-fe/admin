@@ -1,6 +1,6 @@
 
 export default async function Page() {
-    const url = `${process.env.BASE_URL}/api/docs`;
+    const url = `${process.env.BASE_URL ?? ''}/api/docs`;
     return (
         <iframe
             src={url}

@@ -48,7 +48,7 @@ next-env.d.ts
 **/.env.production.local
 .env.*
 **/.env.*
-!apps/web/.env.docker
+!.env.example
 
 # Logs & diagnostics
 npm-debug.log*

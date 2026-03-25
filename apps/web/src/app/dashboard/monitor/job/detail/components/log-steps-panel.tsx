@@ -4,6 +4,8 @@ import { Button } from '@repo/ui/components/button';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import { FileText } from 'lucide-react';
 
 import { getJobLogSteps } from '../../api';
@@ -100,8 +102,18 @@ export function LogStepsPanel({ log }: { log: JobLog }) {
                         </span>
                       ) : null}
                       {step.createdAt ? (
-                        <span className="text-muted-foreground sm:ml-auto sm:text-right">
-                          {step.createdAt}
+                        <span
+                          className="text-muted-foreground sm:ml-auto sm:text-right"
+                          title={(() => {
+                            const d = new Date(step.createdAt);
+                            return Number.isNaN(d.getTime()) ? step.createdAt : d.toLocaleString();
+                          })()}
+                        >
+                          {(() => {
+                            const d = new Date(step.createdAt);
+                            if (Number.isNaN(d.getTime())) return step.createdAt;
+                            return formatDistanceToNow(d, { addSuffix: true, locale: zhCN });
+                          })()}
                         </span>
                       ) : null}
                     </div>

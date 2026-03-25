@@ -1,4 +1,6 @@
 import { Button } from '@repo/ui/components/button';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import {
   Card,
   CardContent,
@@ -37,6 +39,13 @@ export function ProfileSessionsCard({
   onForceLogout,
   pendingSessionId,
 }: ProfileSessionsCardProps) {
+  const toRelative = (value?: string | null) => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return formatDistanceToNow(date, { addSuffix: true, locale: zhCN });
+  };
+
   return (
     <Card className="shadow-none  border-none">
       <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -104,9 +113,14 @@ export function ProfileSessionsCard({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>{session.loginTime || '-'}</div>
-                      <div className="text-xs text-muted-foreground">
-                        上次活跃：{session.lastAccessTime || '-'}
+                      <div title={session.loginTime || undefined}>
+                        {toRelative(session.loginTime) || '-'}
+                      </div>
+                      <div
+                        className="text-xs text-muted-foreground"
+                        title={session.lastAccessTime || undefined}
+                      >
+                        上次活跃：{toRelative(session.lastAccessTime) || '-'}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">

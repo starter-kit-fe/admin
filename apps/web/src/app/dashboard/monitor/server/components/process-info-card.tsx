@@ -9,11 +9,18 @@ import {
 } from '@repo/ui/components/card';
 import { ServerCog } from 'lucide-react';
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@repo/ui/components/tooltip';
+
 import { NumberTicker } from '@/components/number-ticker';
 
 import { InfoRow } from './info-row';
 import type { ProcessInfo } from '../type';
-import { formatBytes, formatDateTime, formatDuration, formatPercent } from '../lib/format';
+import { formatBytes, formatDuration, formatPercent, formatRelativeTime, truncateCommit } from '../lib/format';
 
 interface ProcessInfoCardProps {
   process: ProcessInfo;
@@ -29,17 +36,23 @@ export function ProcessInfoCard({ process }: ProcessInfoCardProps) {
     },
     {
       label: 'Commit',
-      value: process.commit || '-',
+      value: process.commit ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-default font-mono text-xs">{truncateCommit(process.commit)}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span className="font-mono">{process.commit}</span>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : '-',
       align: 'left' as const,
-      valueClassName: 'font-mono text-xs leading-tight break-all',
     },
     {
       label: 'PID',
       value: process.pid > 0 ? `#${process.pid}` : '-',
-    },
-    {
-      label: '程序启动时间',
-      value: formatDateTime(process.startTime),
     },
     {
       label: '进程运行时长',
@@ -58,7 +71,7 @@ export function ProcessInfoCard({ process }: ProcessInfoCardProps) {
     { label: '系统内存', value: process.sys, ticker: true, formatValue: formatBytes },
     { label: 'Goroutines', value: process.numGoroutine, ticker: true, formatValue: (v: number) => Math.max(0, Math.round(v)).toString() },
     { label: 'GC 次数', value: process.numGC, ticker: true, formatValue: (v: number) => Math.max(0, Math.round(v)).toString() },
-    { label: '最后 GC', value: process.lastGC || '-', valueClassName: 'font-mono text-xs break-all' },
+    { label: '最后 GC', value: formatRelativeTime(process.lastGC) },
     { label: '下一次 GC', value: process.nextGC, ticker: true, formatValue: formatBytes },
     { label: 'Cgo 调用', value: process.numCgoCall, ticker: true, formatValue: (v: number) => Math.max(0, Math.round(v)).toString() },
   ];
@@ -112,7 +125,6 @@ export function ProcessInfoCard({ process }: ProcessInfoCardProps) {
                     row.value
                   )
                 }
-                valueClassName={row.valueClassName}
               />
             ))}
           </div>

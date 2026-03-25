@@ -5,6 +5,8 @@ import {
   TooltipTrigger,
 } from '@repo/ui/components/tooltip';
 import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
@@ -31,6 +33,12 @@ export function JobSummaryPanel({
   cronDescription: string;
   formattedParams: string | undefined;
 }) {
+  const toRelative = (value?: string | null) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return formatDistanceToNow(date, { addSuffix: true, locale: zhCN });
+  };
   const StatusIcon = statusMeta.icon;
   const paramText = formattedParams ?? '';
   const shouldClampParams = paramText.length > 200;
@@ -101,12 +109,12 @@ export function JobSummaryPanel({
         <SummaryItem label="调用目标" value={job.invokeTarget || '—'} />
         <SummaryItem
           label="创建"
-          value={job.createdAt || '—'}
+          value={toRelative(job.createdAt)}
           hint={job.createBy || ''}
         />
         <SummaryItem
           label="更新"
-          value={job.updatedAt || '—'}
+          value={toRelative(job.updatedAt)}
           hint={job.updateBy || ''}
         />
         {job.remark ? <SummaryItem label="备注" value={job.remark} /> : null}

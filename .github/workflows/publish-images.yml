@@ -5,10 +5,6 @@ on:
     tags:
       - "*"
 
-permissions:
-  contents: read
-  packages: write
-
 env:
   REGISTRY: ghcr.io
   VERSION: ${{ github.ref_name }}
@@ -16,44 +12,80 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            suffix: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            suffix: arm64
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Prepare Compose Env
-        run: cp env.docker.example .env
-
-      - name: Normalize Image Owner
+      - name: Normalize image owner
         id: meta
         run: echo "image_owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push admin from docker-compose
+      - name: Build and push
         env:
           IMAGE_OWNER: ${{ steps.meta.outputs.image_owner }}
         run: |
+          IMAGE="${REGISTRY}/${IMAGE_OWNER}/admin"
           docker buildx bake \
             -f docker-compose.yml \
-            --set "app.platforms=linux/amd64,linux/arm64" \
+            --set "app.platform=${{ matrix.platform }}" \
             --set "app.args.VERSION=${VERSION}" \
             --set "app.args.COMMIT=${COMMIT}" \
-            --set "app.tags=${REGISTRY}/${IMAGE_OWNER}/admin:${VERSION}" \
-            --set "app.tags=${REGISTRY}/${IMAGE_OWNER}/admin:latest" \
+            --set "app.tags=${IMAGE}:${VERSION}-${{ matrix.suffix }}" \
             --set "app.labels.org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
-            --push \
-            app
+            --set "app.cache-from=type=registry,ref=${IMAGE}:buildcache-${{ matrix.suffix }}" \
+            --set "app.cache-to=type=registry,ref=${IMAGE}:buildcache-${{ matrix.suffix }},mode=max" \
+            --push app
+
+  merge:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Normalize image owner
+        id: meta
+        run: echo "image_owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create multi-platform manifest
+        env:
+          IMAGE_OWNER: ${{ steps.meta.outputs.image_owner }}
+        run: |
+          IMAGE="${REGISTRY}/${IMAGE_OWNER}/admin"
+          docker buildx imagetools create \
+            --tag "${IMAGE}:${VERSION}" \
+            --tag "${IMAGE}:latest" \
+            "${IMAGE}:${VERSION}-amd64" \
+            "${IMAGE}:${VERSION}-arm64"
