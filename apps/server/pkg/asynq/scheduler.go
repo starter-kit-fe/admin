@@ -70,7 +70,7 @@ func NewSchedulerFromRedisOpt(opt asynq.RedisClientOpt, logger *slog.Logger) *Sc
 }
 
 // ScheduleJob schedules a job with a cron expression
-func (s *Scheduler) ScheduleJob(jobID int64, cronExpr string, payload JobExecutionPayload, opts ...asynq.Option) error {
+func (s *Scheduler) ScheduleJob(jobID int64, cronExpr string, taskType string, payload interface{}, opts ...asynq.Option) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -82,14 +82,12 @@ func (s *Scheduler) ScheduleJob(jobID int64, cronExpr string, payload JobExecuti
 		delete(s.entries, jobID)
 	}
 
-	// Create the task
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("marshal payload: %w", err)
 	}
-	task := asynq.NewTask(TypeJobExecution, data, opts...)
+	task := asynq.NewTask(taskType, data)
 
-	// Register with scheduler
 	entryID, err := s.scheduler.Register(cronExpr, task, opts...)
 	if err != nil {
 		return fmt.Errorf("register scheduled job: %w", err)
@@ -120,8 +118,8 @@ func (s *Scheduler) UnscheduleJob(jobID int64) error {
 }
 
 // UpdateJob updates a job's schedule
-func (s *Scheduler) UpdateJob(jobID int64, cronExpr string, payload JobExecutionPayload, opts ...asynq.Option) error {
-	return s.ScheduleJob(jobID, cronExpr, payload, opts...)
+func (s *Scheduler) UpdateJob(jobID int64, cronExpr string, taskType string, payload interface{}, opts ...asynq.Option) error {
+	return s.ScheduleJob(jobID, cronExpr, taskType, payload, opts...)
 }
 
 // Start starts the scheduler

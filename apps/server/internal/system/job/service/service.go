@@ -15,7 +15,8 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	jobasynq "github.com/starter-kit-fe/admin/internal/system/job/asynq"
+	pkgasynq "github.com/starter-kit-fe/admin/pkg/asynq"
+
 	"github.com/starter-kit-fe/admin/internal/system/job/repository"
 	"github.com/starter-kit-fe/admin/internal/system/job/types"
 )
@@ -51,9 +52,9 @@ type Service struct {
 	streams        *logStreamHub
 
 	// Asynq components
-	asynqClient    *jobasynq.Client
-	asynqServer    *jobasynq.Server
-	asynqScheduler *jobasynq.Scheduler
+	asynqClient    *pkgasynq.Client
+	asynqServer    *pkgasynq.Server
+	asynqScheduler *pkgasynq.Scheduler
 	redisOpt       asynq.RedisClientOpt
 
 	mu         sync.RWMutex
@@ -134,9 +135,9 @@ func NewService(repo *repository.Repository, opts ServiceOptions) *Service {
 		defaultLockTTL: lockTTL,
 		streams:        newLogStreamHub(),
 		redisOpt:       redisOpt,
-		asynqClient:    jobasynq.NewClientFromRedisOpt(redisOpt),
-		asynqServer:    jobasynq.NewServerFromRedisOpt(redisOpt, concurrency, logger),
-		asynqScheduler: jobasynq.NewSchedulerFromRedisOpt(redisOpt, logger),
+		asynqClient:    pkgasynq.NewClientFromRedisOpt(redisOpt),
+		asynqServer:    pkgasynq.NewServerFromRedisOpt(redisOpt, concurrency, logger),
+		asynqScheduler: pkgasynq.NewSchedulerFromRedisOpt(redisOpt, logger),
 		jobs:           make(map[int64]*jobScheduleEntry),
 		lockMisses:     make(map[int64]uint64),
 	}
@@ -167,7 +168,7 @@ func (s *Service) ListAvailableExecutors() []types.AvailableExecutor {
 }
 
 // GetAsynqServer returns the Asynq server for external handler registration
-func (s *Service) GetAsynqServer() *jobasynq.Server {
+func (s *Service) GetAsynqServer() *pkgasynq.Server {
 	if s == nil {
 		return nil
 	}
@@ -175,7 +176,7 @@ func (s *Service) GetAsynqServer() *jobasynq.Server {
 }
 
 // GetAsynqClient returns the Asynq client for enqueueing tasks
-func (s *Service) GetAsynqClient() *jobasynq.Client {
+func (s *Service) GetAsynqClient() *pkgasynq.Client {
 	if s == nil {
 		return nil
 	}
@@ -519,7 +520,7 @@ func (s *Service) TriggerJob(ctx context.Context, id int64, operator string) (in
 	}
 
 	// Enqueue task via Asynq
-	payload := jobasynq.JobExecutionPayload{
+	payload := JobExecutionPayload{
 		ID:           job.ID,
 		JobName:      job.JobName,
 		JobGroup:     job.JobGroup,
@@ -531,8 +532,8 @@ func (s *Service) TriggerJob(ctx context.Context, id int64, operator string) (in
 	}
 
 	if s.asynqClient != nil {
-		_, err := s.asynqClient.EnqueueTask(ctx, jobasynq.TypeJobExecution, payload,
-			asynq.Queue(jobasynq.QueueDefault),
+		_, err := s.asynqClient.EnqueueTask(ctx, TypeJobExecution, payload,
+			asynq.Queue(pkgasynq.QueueDefault),
 			asynq.MaxRetry(0), // No retry for manual triggers
 		)
 		if err != nil {
@@ -566,9 +567,9 @@ func (s *Service) Start(ctx context.Context) error {
 	s.mu.Unlock()
 
 	// Register job execution handler
-	s.asynqServer.HandleFunc(jobasynq.TypeJobExecution, s.handleJobExecution)
-	s.asynqServer.Use(jobasynq.LoggingMiddleware(s.logger))
-	s.asynqServer.Use(jobasynq.RecoveryMiddleware(s.logger))
+	s.asynqServer.HandleFunc(TypeJobExecution, s.handleJobExecution)
+	s.asynqServer.Use(pkgasynq.LoggingMiddleware(s.logger))
+	s.asynqServer.Use(pkgasynq.RecoveryMiddleware(s.logger))
 
 	// Start Asynq server
 	if err := s.asynqServer.Start(); err != nil {
@@ -620,7 +621,7 @@ func (s *Service) Stop() {
 
 // handleJobExecution is the Asynq handler for job execution tasks
 func (s *Service) handleJobExecution(ctx context.Context, task *asynq.Task) error {
-	payload, err := jobasynq.ParseJobExecutionPayload(task)
+	payload, err := ParseJobExecutionPayload(task)
 	if err != nil {
 		return fmt.Errorf("parse job execution payload: %w", err)
 	}
@@ -680,7 +681,7 @@ func (s *Service) configureSchedule(job types.Job) error {
 
 	// Only schedule if job is enabled (status = "0")
 	if job.Status == "0" && s.asynqScheduler != nil {
-		payload := jobasynq.JobExecutionPayload{
+		payload := JobExecutionPayload{
 			ID:           job.ID,
 			JobName:      job.JobName,
 			JobGroup:     job.JobGroup,
@@ -690,8 +691,8 @@ func (s *Service) configureSchedule(job types.Job) error {
 			Message:      "定时调度",
 		}
 
-		err := s.asynqScheduler.ScheduleJob(job.ID, job.CronExpression, payload,
-			asynq.Queue(jobasynq.QueueDefault),
+		err := s.asynqScheduler.ScheduleJob(job.ID, job.CronExpression, TypeJobExecution, payload,
+			asynq.Queue(pkgasynq.QueueDefault),
 		)
 		if err != nil {
 			return err

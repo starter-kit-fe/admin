@@ -1,4 +1,4 @@
-package executor
+package steplog
 
 import (
 	"context"
@@ -26,8 +26,8 @@ type StepLogger struct {
 	closed    uint32
 }
 
-// NewStepLogger 创建步骤日志记录器
-func NewStepLogger(jobLogID int64, repo *repository.Repository, logger *slog.Logger, onEvent func(*types.StepEvent)) *StepLogger {
+// New 创建步骤日志记录器
+func New(jobLogID int64, repo *repository.Repository, logger *slog.Logger, onEvent func(*types.StepEvent)) *StepLogger {
 	return &StepLogger{
 		jobLogID:  jobLogID,
 		repo:      repo,
@@ -50,7 +50,7 @@ func (s *StepLogger) StartStep(name string) types.StepInterface {
 	s.mu.Unlock()
 
 	startTime := time.Now()
-	step := &Step{
+	step := &step{
 		logger:    s,
 		jobLogID:  s.jobLogID,
 		stepName:  name,
@@ -59,7 +59,6 @@ func (s *StepLogger) StartStep(name string) types.StepInterface {
 		outputs:   make([]string, 0),
 	}
 
-	// 创建数据库记录
 	record := &model.SysJobLogStep{
 		JobLogID:  s.jobLogID,
 		StepName:  name,
@@ -79,7 +78,6 @@ func (s *StepLogger) StartStep(name string) types.StepInterface {
 
 	step.stepID = int64(record.ID)
 
-	// 发送 SSE 事件
 	s.sendEvent(&types.StepEvent{
 		Type:      "step_start",
 		JobLogID:  s.jobLogID,
@@ -118,8 +116,8 @@ func (s *StepLogger) sendEvent(event *types.StepEvent) {
 	}
 }
 
-// Step 单个执行步骤
-type Step struct {
+// step 单个执行步骤
+type step struct {
 	logger    *StepLogger
 	jobLogID  int64
 	stepID    int64
@@ -131,7 +129,7 @@ type Step struct {
 }
 
 // Log 记录日志
-func (s *Step) Log(format string, args ...interface{}) {
+func (s *step) Log(format string, args ...interface{}) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -140,7 +138,6 @@ func (s *Step) Log(format string, args ...interface{}) {
 	output := fmt.Sprintf("[%s] %s", timestamp, message)
 	s.outputs = append(s.outputs, output)
 
-	// 发送 SSE 事件
 	s.logger.sendEvent(&types.StepEvent{
 		Type:      "step_log",
 		JobLogID:  s.jobLogID,
@@ -152,12 +149,12 @@ func (s *Step) Log(format string, args ...interface{}) {
 }
 
 // Success 标记步骤成功
-func (s *Step) Success() error {
+func (s *step) Success() error {
 	return s.finish("0", "")
 }
 
 // Fail 标记步骤失败
-func (s *Step) Fail(err error) error {
+func (s *step) Fail(err error) error {
 	errorMsg := ""
 	if err != nil {
 		errorMsg = err.Error()
@@ -165,14 +162,13 @@ func (s *Step) Fail(err error) error {
 	return s.finish("1", errorMsg)
 }
 
-func (s *Step) finish(status string, errorMsg string) error {
+func (s *step) finish(status string, errorMsg string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	endTime := time.Now()
 	duration := endTime.Sub(s.startTime).Milliseconds()
 
-	// 更新数据库
 	if s.logger != nil && s.logger.repo != nil && s.stepID > 0 {
 		updates := map[string]interface{}{
 			"status":      status,
@@ -187,7 +183,6 @@ func (s *Step) finish(status string, errorMsg string) error {
 		}
 	}
 
-	// 发送 SSE 事件
 	s.logger.sendEvent(&types.StepEvent{
 		Type:      "step_end",
 		JobLogID:  s.jobLogID,

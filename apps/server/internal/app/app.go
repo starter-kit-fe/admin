@@ -11,7 +11,7 @@ import (
 
 	"github.com/starter-kit-fe/admin/constant"
 	"github.com/starter-kit-fe/admin/internal/config"
-	"github.com/starter-kit-fe/admin/internal/system/job"
+	jobsvc "github.com/starter-kit-fe/admin/internal/system/job/service"
 )
 
 type Options struct {
@@ -25,7 +25,7 @@ type App struct {
 	server *http.Server
 	db     *gorm.DB
 	cache  *redis.Client
-	jobs   *job.Service
+	jobs   *jobsvc.Service
 }
 
 func New(ctx context.Context, opts Options) (*App, error) {

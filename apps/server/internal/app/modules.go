@@ -17,7 +17,10 @@ import (
 	"github.com/starter-kit-fe/admin/internal/system/dict"
 	"github.com/starter-kit-fe/admin/internal/system/docs"
 	"github.com/starter-kit-fe/admin/internal/system/health"
-	"github.com/starter-kit-fe/admin/internal/system/job"
+	jobexec    "github.com/starter-kit-fe/admin/internal/system/job/executor"
+	jobhandler "github.com/starter-kit-fe/admin/internal/system/job/handler"
+	jobrepo    "github.com/starter-kit-fe/admin/internal/system/job/repository"
+	jobsvc     "github.com/starter-kit-fe/admin/internal/system/job/service"
 	"github.com/starter-kit-fe/admin/internal/system/loginlog"
 	"github.com/starter-kit-fe/admin/internal/system/menu"
 	"github.com/starter-kit-fe/admin/internal/system/notice"
@@ -46,8 +49,8 @@ type moduleSet struct {
 	loginLogHandler *loginlog.Handler
 	operLogService  *operlog.Service
 	loginLogService *loginlog.Service
-	jobHandler      *job.Handler
-	jobService      *job.Service
+	jobHandler      *jobhandler.Handler
+	jobService      *jobsvc.Service
 	onlineHandler   *online.Handler
 	onlineService   *online.Service
 	serverHandler   *server.Handler
@@ -81,7 +84,7 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	onlineRepo := online.NewRepository(sqlDB, redisCache)
 	onlineSvc := online.NewService(onlineRepo, newSessionManager(sessionStore))
 	onlineHandler := online.NewHandler(onlineSvc)
-	jobRepo := job.NewRepository(sqlDB)
+	jobRepo := jobrepo.NewRepository(sqlDB)
 
 	// Parse Redis configuration for Asynq
 	var (
@@ -101,7 +104,7 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 		}
 	}
 
-	jobSvc := job.NewService(jobRepo, job.ServiceOptions{
+	jobSvc := jobsvc.NewService(jobRepo, jobsvc.ServiceOptions{
 		Logger:        logger,
 		Redis:         redisCache,
 		RedisAddr:     redisAddr,
@@ -113,11 +116,11 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	if err := jobSvc.RegisterExecutorWithDesc(
 		"db.backup",
 		"数据库备份",
-		job.NewBackupExecutor(sqlDB, cfg),
+		jobexec.NewBackupExecutor(sqlDB, cfg),
 	); err != nil {
 		logger.Error("register backup executor failed", "error", err)
 	}
-	jobHandler := job.NewHandler(jobSvc)
+	jobHandler := jobhandler.NewHandler(jobSvc)
 	serverSvc := server.NewService()
 	serverHandler := server.NewHandler(serverSvc)
 	cacheSvc := cache.NewService(redisCache)
