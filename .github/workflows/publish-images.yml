@@ -49,7 +49,7 @@ jobs:
         run: |
           docker buildx bake \
             -f docker-compose.yml \
-            --set "app.platforms=linux/amd64,linux/arm64" \
+            --set "app.platform=linux/amd64,linux/arm64" \
             --set "app.args.VERSION=${VERSION}" \
             --set "app.args.COMMIT=${COMMIT}" \
             --set "app.tags=${REGISTRY}/${IMAGE_OWNER}/admin:${VERSION}" \
