@@ -128,25 +128,27 @@ export function ServerMonitor() {
             />
             {stream.isConnected ? t('status.live') : t('status.disconnected')}
           </span>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={stream.reconnect}
-            disabled={stream.isLoading}
-            className="md:w-auto"
-          >
-            {stream.isLoading ? (
-              <>
-                <Spinner className="mr-2 size-4" />
-                {t('actions.reconnecting')}
-              </>
-            ) : (
-              <>
-                <RefreshCcw className="mr-2 size-4" />
-                {t('actions.reconnect')}
-              </>
-            )}
-          </Button>
+          {!stream.isConnected && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={stream.reconnect}
+              disabled={stream.isLoading}
+              className="md:w-auto"
+            >
+              {stream.isLoading ? (
+                <>
+                  <Spinner className="mr-2 size-4" />
+                  {t('actions.reconnecting')}
+                </>
+              ) : (
+                <>
+                  <RefreshCcw className="mr-2 size-4" />
+                  {t('actions.reconnect')}
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
 

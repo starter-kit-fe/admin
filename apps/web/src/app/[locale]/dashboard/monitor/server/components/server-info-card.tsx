@@ -11,7 +11,7 @@ import { MonitorSmartphone } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import type { HostInfo } from '../type';
-import { formatDateTime, formatDuration, formatRelativeTime, formatServerSystem } from '../lib/format';
+import { formatDateTime, formatDuration, formatServerSystem } from '../lib/format';
 import { InfoRow } from './info-row';
 
 interface ServerInfoCardProps {
@@ -36,10 +36,6 @@ export function ServerInfoCard({ host, lastUpdated }: ServerInfoCardProps) {
         formatDuration(host.uptimeSeconds, locale, {
           lessThanMinuteText: t('status.lessThanMinute'),
         }),
-    },
-    {
-      label: t('serverInfo.rows.bootTime'),
-      value: formatRelativeTime(host.bootTime, locale),
     },
     { label: t('serverInfo.rows.currentTime'), value: formatDateTime(host.currentTime, locale) },
   ];

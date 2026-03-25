@@ -224,26 +224,28 @@ export function CacheDashboard() {
                 time: formatRelativeTime(stream.lastUpdated, locale, t('dashboard.header.waitingStream')),
               })}
             </div>
-            <PermissionButton
-              required="monitor:cache:list"
-              type="button"
-              variant="outline"
-              className="gap-2"
-              onClick={stream.reconnect}
-              disabled={stream.isLoading}
-            >
-              {isConnecting ? (
-                <>
-                  <Spinner className="size-4" />
-                  {t('dashboard.header.actions.connecting')}
-                </>
-              ) : (
-                <>
-                  <RefreshCcw className="size-4" />
-                  {t('dashboard.header.actions.reconnect')}
-                </>
-              )}
-            </PermissionButton>
+            {!stream.isConnected && (
+              <PermissionButton
+                required="monitor:cache:list"
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={stream.reconnect}
+                disabled={stream.isLoading}
+              >
+                {isConnecting ? (
+                  <>
+                    <Spinner className="size-4" />
+                    {t('dashboard.header.actions.connecting')}
+                  </>
+                ) : (
+                  <>
+                    <RefreshCcw className="size-4" />
+                    {t('dashboard.header.actions.reconnect')}
+                  </>
+                )}
+              </PermissionButton>
+            )}
           </div>
         </CardHeader>
         {stream.error !== null && !stream.isConnected ? (

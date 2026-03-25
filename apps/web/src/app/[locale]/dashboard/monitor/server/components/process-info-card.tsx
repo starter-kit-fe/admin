@@ -58,10 +58,6 @@ export function ProcessInfoCard({ process }: ProcessInfoCardProps) {
       value: process.pid > 0 ? `#${process.pid}` : '-',
     },
     {
-      label: t('process.summary.startTime'),
-      value: formatRelativeTime(process.startTime, locale),
-    },
-    {
       label: t('process.summary.uptime'),
       value:
         process.uptime ||
