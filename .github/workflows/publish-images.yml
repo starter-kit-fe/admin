@@ -5,10 +5,6 @@ on:
     tags:
       - "*"
 
-permissions:
-  contents: read
-  packages: write
-
 env:
   REGISTRY: ghcr.io
   VERSION: ${{ github.ref_name }}
@@ -33,42 +29,38 @@ jobs:
             suffix: arm64
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Prepare Compose Env
+      - name: Prepare env
         run: cp env.docker.example .env
 
-      - name: Normalize Image Owner
+      - name: Normalize image owner
         id: meta
         run: echo "image_owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push platform image
+      - name: Build and push
         env:
           IMAGE_OWNER: ${{ steps.meta.outputs.image_owner }}
         run: |
-          IMAGE_REF="${REGISTRY}/${IMAGE_OWNER}/admin"
+          IMAGE="${REGISTRY}/${IMAGE_OWNER}/admin"
           docker buildx bake \
             -f docker-compose.yml \
             --set "app.platform=${{ matrix.platform }}" \
             --set "app.args.VERSION=${VERSION}" \
             --set "app.args.COMMIT=${COMMIT}" \
-            --set "app.tags=${IMAGE_REF}:${VERSION}-${{ matrix.suffix }}" \
+            --set "app.tags=${IMAGE}:${VERSION}-${{ matrix.suffix }}" \
             --set "app.labels.org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
-            --set "app.cache-from=type=registry,ref=${IMAGE_REF}:buildcache-${{ matrix.suffix }}" \
-            --set "app.cache-to=type=registry,ref=${IMAGE_REF}:buildcache-${{ matrix.suffix }},mode=max" \
-            --push \
-            app
+            --set "app.cache-from=type=registry,ref=${IMAGE}:buildcache-${{ matrix.suffix }}" \
+            --set "app.cache-to=type=registry,ref=${IMAGE}:buildcache-${{ matrix.suffix }},mode=max" \
+            --push app
 
   merge:
     needs: build
@@ -78,27 +70,25 @@ jobs:
       packages: write
 
     steps:
-      - name: Normalize Image Owner
+      - name: Normalize image owner
         id: meta
         run: echo "image_owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create and push multi-platform manifest
+      - name: Create multi-platform manifest
         env:
           IMAGE_OWNER: ${{ steps.meta.outputs.image_owner }}
         run: |
-          IMAGE_REF="${REGISTRY}/${IMAGE_OWNER}/admin"
+          IMAGE="${REGISTRY}/${IMAGE_OWNER}/admin"
           docker buildx imagetools create \
-            --tag "${IMAGE_REF}:${VERSION}" \
-            --tag "${IMAGE_REF}:latest" \
-            "${IMAGE_REF}:${VERSION}-amd64" \
-            "${IMAGE_REF}:${VERSION}-arm64"
+            --tag "${IMAGE}:${VERSION}" \
+            --tag "${IMAGE}:latest" \
+            "${IMAGE}:${VERSION}-amd64" \
+            "${IMAGE}:${VERSION}-arm64"

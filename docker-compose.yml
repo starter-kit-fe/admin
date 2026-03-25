@@ -1,6 +1,7 @@
 services:
   app:
     container_name: admin-app
+    image: ${APP_IMAGE:-ghcr.io/starter-kit-fe/admin:latest}
     build:
       context: .
       dockerfile: apps/server/Dockerfile
@@ -10,9 +11,9 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      DB_URL: ${DB_URL}
-      REDIS_URL: ${REDIS_URL}
-      AUTH_SECRET: ${AUTH_SECRET}
+      DB_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-admin}?sslmode=disable
+      REDIS_URL: redis://:${POSTGRES_PASSWORD:-changeme}@redis:6379/0
+      AUTH_SECRET: ${AUTH_SECRET:-changeme}
       FRONTEND_OUT_DIR: /app/web/out
     ports:
       - "${APP_PORT:-27507}:27507"
@@ -80,14 +81,14 @@ services:
       --maxmemory ${REDIS_MAXMEMORY:-512mb}
       --maxmemory-policy volatile-lru
       --tcp-keepalive 300
-      --requirepass "${REDIS_PASSWORD:-${POSTGRES_PASSWORD:-changeme}}"
+      --requirepass "${POSTGRES_PASSWORD:-changeme}"
       --notify-keyspace-events KEA
     expose:
       - "6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-${POSTGRES_PASSWORD:-changeme}}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${POSTGRES_PASSWORD:-changeme}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
