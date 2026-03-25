@@ -2,7 +2,7 @@
 
 import { LogoMark } from '@/components/logo-mark';
 import ThemeToggle from '@/components/theme-toggle';
-import { buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@repo/ui/components/button';
 import {
   Drawer,
   DrawerClose,
@@ -10,7 +10,7 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from '@/components/ui/drawer';
+} from '@repo/ui/components/drawer';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
 import { ArrowRight, LayoutDashboard, LogIn, Menu } from 'lucide-react';

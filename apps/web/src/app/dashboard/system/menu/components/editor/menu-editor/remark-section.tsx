@@ -4,8 +4,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
+} from '@repo/ui/components/form';
+import { Textarea } from '@repo/ui/components/textarea';
 import type { UseFormReturn } from 'react-hook-form';
 
 import type { MenuFormValues } from '@/app/dashboard/system/menu/type';

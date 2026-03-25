@@ -8,6 +8,8 @@ import {
   useReactTable,
   type RowSelectionState,
 } from '@tanstack/react-table';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import { Eye, LogOut, MoreHorizontal } from 'lucide-react';
 
 import { EllipsisText } from '@/components/table/ellipsis-text';
@@ -15,23 +17,23 @@ import {
   PINNED_ACTION_COLUMN_META,
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
-import { Spinner } from '@/components/ui/spinner';
+} from '@repo/ui/components/empty';
+import { Spinner } from '@repo/ui/components/spinner';
 import {
   Table,
   TableBody,
@@ -39,7 +41,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@repo/ui/components/table';
 import {
   Sheet,
   SheetContent,
@@ -48,7 +50,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@repo/ui/components/sheet';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -184,17 +186,32 @@ export function OnlineUserTable({
         header: () => '登录时间',
         cell: ({ row }) => {
           const user = row.original;
+          const toRelative = (value?: string | null) => {
+            if (!value) return { label: '-', title: '-' };
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return { label: value, title: value };
+            return {
+              label: formatDistanceToNow(date, { addSuffix: true, locale: zhCN }),
+              title: date.toLocaleString(),
+            };
+          };
+          const loginTime = toRelative(user.loginTime);
+          const lastAccess = toRelative(user.lastAccessTime);
           return (
             <div className="space-y-1">
-              <EllipsisText
-                value={user.loginTime || '-'}
-                className="max-w-[200px] text-sm text-foreground"
-              />
+              <p
+                className="text-sm text-foreground"
+                title={loginTime.title}
+              >
+                {loginTime.label}
+              </p>
               {user.lastAccessTime ? (
-                <EllipsisText
-                  value={`最近活跃：${user.lastAccessTime}`}
-                  className="max-w-[220px] text-xs text-muted-foreground"
-                />
+                <p
+                  className="text-xs text-muted-foreground"
+                  title={`最近活跃：${lastAccess.title}`}
+                >
+                  {`最近活跃：${lastAccess.label}`}
+                </p>
               ) : null}
             </div>
           );

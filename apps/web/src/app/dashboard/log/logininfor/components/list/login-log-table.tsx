@@ -5,20 +5,20 @@ import {
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -27,7 +27,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@repo/ui/components/sheet';
 import {
   Table,
   TableBody,
@@ -35,7 +35,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@repo/ui/components/table';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
@@ -45,6 +45,8 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -223,9 +225,22 @@ export function LoginLogTable({
       }),
       columnHelper.accessor('createdAt', {
         header: () => '登录时间',
-        cell: ({ getValue }) => (
-          <span className="text-sm text-foreground">{getValue() ?? '-'}</span>
-        ),
+        cell: ({ getValue }) => {
+          const value = getValue();
+          if (!value) return <span className="text-sm text-foreground">-</span>;
+          const date = new Date(value);
+          const isValid = !Number.isNaN(date.getTime());
+          return (
+            <span
+              className="text-sm text-foreground"
+              title={isValid ? date.toLocaleString() : value}
+            >
+              {isValid
+                ? formatDistanceToNow(date, { addSuffix: true, locale: zhCN })
+                : value}
+            </span>
+          );
+        },
         meta: {
           headerClassName: 'w-[160px]',
         },

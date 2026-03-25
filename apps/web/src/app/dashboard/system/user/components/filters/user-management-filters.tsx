@@ -1,5 +1,5 @@
 import { StatusTabs } from '@/components/status-tabs';
-import { Card } from '@/components/ui/card';
+import { Card } from '@repo/ui/components/card';
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
 

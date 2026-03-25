@@ -9,7 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@repo/ui/components/select';
 
 import type { MenuParentOption } from './types';
 import type { MenuType } from '@/app/dashboard/system/menu/type';

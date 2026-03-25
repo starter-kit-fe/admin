@@ -1,19 +1,19 @@
 'use client';
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
+import { Alert, AlertDescription } from '@repo/ui/components/alert';
+import { Button } from '@repo/ui/components/button';
+import { Input } from '@repo/ui/components/input';
+import { Label } from '@repo/ui/components/label';
+import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+} from '@repo/ui/components/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
+import { ToggleGroup, ToggleGroupItem } from '@repo/ui/components/toggle-group';
 import { Calendar, Clock } from 'lucide-react';
 import { type ChangeEvent, useEffect, useRef, useState } from 'react';
 

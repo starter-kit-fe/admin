@@ -5,21 +5,21 @@ import {
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -28,7 +28,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@repo/ui/components/sheet';
 import {
   Table,
   TableBody,
@@ -36,7 +36,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@repo/ui/components/table';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
@@ -46,6 +46,8 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -86,16 +88,22 @@ const STATUS_META: Record<
   },
 };
 
-function getDateTimeLabel(value?: string | null) {
-  if (!value) return '-';
+function getRelativeTimeLabel(value?: string | null): {
+  relative: string;
+  absolute: string;
+} {
+  if (!value) return { relative: '-', absolute: '-' };
   try {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) {
-      return value;
+      return { relative: value, absolute: value };
     }
-    return date.toLocaleString();
+    return {
+      relative: formatDistanceToNow(date, { addSuffix: true, locale: zhCN }),
+      absolute: date.toLocaleString(),
+    };
   } catch {
-    return value;
+    return { relative: value, absolute: value };
   }
 }
 
@@ -303,11 +311,17 @@ export function RoleTable({
       }),
       columnHelper.accessor('createdAt', {
         header: '创建时间',
-        cell: ({ getValue }) => (
-          <span className="text-sm text-muted-foreground">
-            {getDateTimeLabel(getValue())}
-          </span>
-        ),
+        cell: ({ getValue }) => {
+          const { relative, absolute } = getRelativeTimeLabel(getValue());
+          return (
+            <span
+              className="text-sm text-muted-foreground"
+              title={absolute}
+            >
+              {relative}
+            </span>
+          );
+        },
         meta: {
           headerClassName:
             'hidden sm:table-cell min-w-[140px] md:min-w-[180px]',

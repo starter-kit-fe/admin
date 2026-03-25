@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@repo/ui/components/card';
 import { ServerCog } from 'lucide-react';
 
 import { NumberTicker } from '@/components/number-ticker';

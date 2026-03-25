@@ -3,7 +3,7 @@
 import { useRoleManagementRefresh, useRoleManagementStatus, useRoleManagementStore } from '@/app/dashboard/system/role/store';
 import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner } from '@repo/ui/components/spinner';
 import { RefreshCw, ShieldPlus } from 'lucide-react';
 
 export function RoleManagementHeader() {

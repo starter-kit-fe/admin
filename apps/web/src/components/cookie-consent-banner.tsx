@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import {
   Card,
   CardContent,
@@ -8,7 +8,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@repo/ui/components/card';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import Link from 'next/link';
@@ -148,52 +148,64 @@ export function CookieConsentBanner() {
       aria-live="polite"
       aria-label="Cookie 同意横幅"
       className={[
-        // 移动端：底部居中；桌面端：右下角浮动
-        'pointer-events-none fixed inset-x-0 bottom-0 z-[60] min-w-7xl flex justify-center',
-        'px-4 pb-4 sm:px-6 sm:pb-6',
+        'pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-center',
+        'px-3 pb-3 sm:px-4 sm:pb-6',
         'md:inset-x-auto md:right-6 md:bottom-6 md:justify-end',
       ].join(' ')}
+      style={{
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)',
+      }}
     >
       <Card
         ref={cardRef}
         className={[
-          'pointer-events-auto w-full max-w-6xl md:max-w-md',
-          'border-border/70 bg-background/90 shadow-2xl backdrop-blur',
+          'pointer-events-auto w-full max-w-none',
+          'sm:w-[min(92vw,640px)]',
+          'md:w-[min(88vw,760px)]',
+          'lg:w-[min(82vw,900px)]',
+          'xl:w-[min(70vw,960px)] 2xl:w-[960px]',
+          'border-border/70 bg-background/95 shadow-2xl backdrop-blur',
           'supports-[backdrop-filter]:bg-background/80',
-          'rounded-2xl',
+          'rounded-t-3xl border-t border-border/60 md:rounded-2xl md:border',
+          'max-h-[80vh] overflow-y-auto overscroll-contain pr-1 sm:pr-0 md:max-h-[70vh]',
         ].join(' ')}
       >
-        <CardHeader className="gap-1 pb-2" data-cc-item>
+        <CardHeader
+          className="gap-1 pb-2 sm:pb-3 [&>*]:text-balance"
+          data-cc-item
+        >
           <CardTitle className="text-base sm:text-lg">
             让我们了解你的 Cookie 偏好设置
           </CardTitle>
           <CardDescription className="text-sm leading-relaxed">
             我们使用必要 Cookie
-            以确保网站正常运行。若选择“全部接受”，我们还会用于个性化与统计分析。
+            以确保网站正常运行。若选择"全部接受"，我们还会用于个性化与统计分析。
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          <div className="space-y-2" data-cc-item>
-            <p className="text-sm text-muted-foreground">
-              始终启用以保障基础功能：
-            </p>
-            <ul className="list-disc pl-5 text-sm leading-6 marker:text-muted-foreground">
-              <li>确保网站稳定运行</li>
-              <li>防止欺诈与滥用</li>
-              <li>监控性能与错误</li>
-            </ul>
-          </div>
+        <CardContent className="space-y-4 sm:space-y-6">
+          <div className="space-y-6 md:grid md:grid-cols-2 md:gap-6">
+            <div className="space-y-2" data-cc-item>
+              <p className="text-sm text-muted-foreground">
+                始终启用以保障基础功能：
+              </p>
+              <ul className="list-disc pl-5 text-sm leading-6 marker:text-muted-foreground [&>li]:text-pretty">
+                <li>确保网站稳定运行</li>
+                <li>防止欺诈与滥用</li>
+                <li>监控性能与错误</li>
+              </ul>
+            </div>
 
-          <div className="space-y-2" data-cc-item>
-            <p className="text-sm text-muted-foreground">
-              可选（仅在你同意后启用）：
-            </p>
-            <ul className="list-disc pl-5 text-sm leading-6 marker:text-muted-foreground">
-              <li>个性化推荐与广告</li>
-              <li>衡量广告与内容效果</li>
-              <li>改进新功能与服务</li>
-            </ul>
+            <div className="space-y-2" data-cc-item>
+              <p className="text-sm text-muted-foreground">
+                可选（仅在你同意后启用）：
+              </p>
+              <ul className="list-disc pl-5 text-sm leading-6 marker:text-muted-foreground [&>li]:text-pretty">
+                <li>个性化推荐与广告</li>
+                <li>衡量广告与内容效果</li>
+                <li>改进新功能与服务</li>
+              </ul>
+            </div>
           </div>
         </CardContent>
 

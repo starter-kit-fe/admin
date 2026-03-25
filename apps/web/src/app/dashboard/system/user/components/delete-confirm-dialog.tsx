@@ -1,5 +1,5 @@
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
-import { Button } from '@/components/ui/button';
+import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
+import { Button } from '@repo/ui/components/button';
 
 interface DeleteConfirmDialogProps {
   open: boolean;

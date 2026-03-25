@@ -1,19 +1,19 @@
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@repo/ui/components/switch';
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from '@repo/ui/components/form';
+import { Input } from '@repo/ui/components/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@repo/ui/components/select';
 import type { UseFormReturn } from 'react-hook-form';
 
 import type { MenuFormValues } from '@/app/dashboard/system/menu/type';

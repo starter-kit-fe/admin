@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
+import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface FormDialogLayoutProps {

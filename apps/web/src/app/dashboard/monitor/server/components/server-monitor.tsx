@@ -3,9 +3,9 @@
 import { useMemo } from 'react';
 import { Cpu, HardDrive, MemoryStick, RefreshCcw } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Spinner } from '@/components/ui/spinner';
+import { Button } from '@repo/ui/components/button';
+import { Card, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/card';
+import { Spinner } from '@repo/ui/components/spinner';
 
 import { ProcessInfoCard } from './process-info-card';
 import { QuickStatCard } from './quick-stat-card';

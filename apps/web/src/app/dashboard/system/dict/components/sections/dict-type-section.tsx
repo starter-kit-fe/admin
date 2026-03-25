@@ -12,7 +12,7 @@ import {
   useDictTypeStatus,
   useDictTypesState,
 } from '@/app/dashboard/system/dict/store';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@repo/ui/components/card';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 

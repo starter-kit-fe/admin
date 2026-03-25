@@ -9,8 +9,8 @@ import {
 } from '@/app/dashboard/system/menu/store';
 import type { MenuOrderUpdate } from '@/app/dashboard/system/menu/type';
 import { reorderTree } from '@/app/dashboard/system/menu/utils';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Button } from '@repo/ui/components/button';
+import { Card } from '@repo/ui/components/card';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';

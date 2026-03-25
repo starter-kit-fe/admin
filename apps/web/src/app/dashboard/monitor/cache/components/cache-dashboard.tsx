@@ -8,14 +8,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@repo/ui/components/card';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
-import { Spinner } from '@/components/ui/spinner';
+} from '@repo/ui/components/empty';
+import { Spinner } from '@repo/ui/components/spinner';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 import {

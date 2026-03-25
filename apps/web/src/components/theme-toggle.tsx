@@ -1,19 +1,19 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from '@/components/ui/drawer';
+} from '@repo/ui/components/drawer';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Monitor, Moon, Settings2, Sun } from 'lucide-react';

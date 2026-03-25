@@ -1,5 +1,5 @@
 import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import {
   Form,
   FormControl,
@@ -7,18 +7,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
+} from '@repo/ui/components/form';
+import { Input } from '@repo/ui/components/input';
+import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
+import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+} from '@repo/ui/components/select';
+import { Textarea } from '@repo/ui/components/textarea';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';

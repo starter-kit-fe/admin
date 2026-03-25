@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	appi18n "github.com/starter-kit-fe/admin/internal/middleware/i18n"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
@@ -205,7 +204,7 @@ func (h *Handler) BatchForceLogout(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": 200,
-		"msg":  appi18n.Message(ctx, "操作成功"),
+		"msg":  "操作成功",
 		"data": gin.H{
 			"count": count,
 		},

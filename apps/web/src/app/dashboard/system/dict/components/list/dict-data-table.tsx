@@ -1,20 +1,20 @@
 'use client';
 
 import type { DictData } from '@/app/dashboard/system/dict/type';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -23,7 +23,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@repo/ui/components/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';

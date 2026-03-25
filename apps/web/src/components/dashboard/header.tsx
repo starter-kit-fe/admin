@@ -1,12 +1,12 @@
 import { DashboardBreadcrumb } from '@/components/dashboard/breadcrumb';
 import { NavUser } from '@/components/dashboard/nav-user';
 import ThemeToggle from '@/components/theme-toggle';
-import { Separator } from '@/components/ui/separator';
+import { Separator } from '@repo/ui/components/separator';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
 import { useEffect, useState } from 'react';
 
-import { SidebarTrigger } from '../ui/sidebar';
+import { SidebarTrigger } from '@repo/ui/components/sidebar';
 
 export function Header() {
   const { user } = useAuthStore();

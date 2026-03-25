@@ -4,8 +4,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+} from '@repo/ui/components/card';
+import { Skeleton } from '@repo/ui/components/skeleton';
 
 type SecurityOverviewCardProps = {
   isLoading: boolean;

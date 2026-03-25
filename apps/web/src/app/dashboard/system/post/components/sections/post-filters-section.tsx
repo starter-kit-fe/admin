@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import { STATUS_TABS } from '../../constants';
 import {
   usePostManagementStore,

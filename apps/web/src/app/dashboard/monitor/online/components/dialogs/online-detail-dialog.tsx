@@ -4,9 +4,9 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { InlineLoading } from '@/components/loading';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
 
 import { getOnlineUserDetail } from '../../api';
 import { ONLINE_USERS_QUERY_KEY } from '../../constants';

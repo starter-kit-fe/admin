@@ -1,20 +1,20 @@
 'use client';
 
 import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -23,8 +23,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
-import { Skeleton } from '@/components/ui/skeleton';
+} from '@repo/ui/components/sheet';
+import { Skeleton } from '@repo/ui/components/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { resolveLucideIcon } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';

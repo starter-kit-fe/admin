@@ -1,11 +1,11 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@repo/ui/components/card';
 import {
   Form,
   FormControl,
@@ -13,8 +13,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from '@repo/ui/components/form';
+import { Input } from '@repo/ui/components/input';
 import type { UseFormReturn } from 'react-hook-form';
 
 import type { PasswordFormValues } from '../schemas';

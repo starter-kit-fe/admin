@@ -3,14 +3,14 @@ import {
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from '@/components/ui/input-group';
+} from '@repo/ui/components/input-group';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@repo/ui/components/select';
 import { Search, X } from 'lucide-react';
 
 export type FiltersFormState = {

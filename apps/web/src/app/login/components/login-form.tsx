@@ -1,18 +1,18 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@repo/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@repo/ui/components/card';
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from '@/components/ui/input-group';
-import { Spinner } from '@/components/ui/spinner';
+} from '@repo/ui/components/input-group';
+import { Spinner } from '@repo/ui/components/spinner';
 import {
   Eye,
   EyeOff,

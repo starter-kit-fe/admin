@@ -22,8 +22,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/starter-kit-fe/admin/internal/middleware"
-	appi18n "github.com/starter-kit-fe/admin/internal/middleware/i18n"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
 	"github.com/starter-kit-fe/admin/internal/system/cache"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
@@ -42,6 +40,7 @@ import (
 	"github.com/starter-kit-fe/admin/internal/system/role"
 	"github.com/starter-kit-fe/admin/internal/system/server"
 	"github.com/starter-kit-fe/admin/internal/system/user"
+	"github.com/starter-kit-fe/admin/middleware"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
@@ -85,7 +84,6 @@ func New(opts Options) *gin.Engine {
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	engine.Use(middleware.RequestLogger(opts.Logger))
-	engine.Use(appi18n.Middleware())
 
 	frontend := newFrontendHandler(opts.FrontendDir)
 	for _, mw := range opts.Middlewares {

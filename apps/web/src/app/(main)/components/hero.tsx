@@ -1,14 +1,14 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { buttonVariants } from '@/components/ui/button';
+import { Badge } from '@repo/ui/components/badge';
+import { buttonVariants } from '@repo/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@repo/ui/components/card';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
 import gsap from 'gsap';

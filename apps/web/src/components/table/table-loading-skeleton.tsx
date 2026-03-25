@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 
-import { Skeleton } from '../ui/skeleton';
-import { TableCell, TableRow } from '../ui/table';
+import { Skeleton } from '@repo/ui/components/skeleton';
+import { TableCell, TableRow } from '@repo/ui/components/table';
 
 type TableLoadingSkeletonProps = {
   columns: number;

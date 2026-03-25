@@ -2,7 +2,7 @@ import { StatusTabs, type StatusTabItem } from '@/components/status-tabs';
 import {
   InputGroup,
   InputGroupInput,
-} from '@/components/ui/input-group';
+} from '@repo/ui/components/input-group';
 
 import type { JobStatusFilter } from '../../constants';
 

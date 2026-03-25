@@ -5,9 +5,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
-import { Form } from '@/components/ui/form';
-import { Button } from '@/components/ui/button';
+import { ResponsiveDialog } from '@repo/ui/components/responsive-dialog';
+import { Form } from '@repo/ui/components/form';
+import { Button } from '@repo/ui/components/button';
 import { FormDialogLayout } from '@/components/dialogs/form-dialog-layout';
 
 import type { MenuFormValues, MenuType } from '@/app/dashboard/system/menu/type';

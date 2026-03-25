@@ -1,105 +1,19 @@
-/**
- * HTTP 请求类封装（强类型，无 any）
- * 配合 React Query 使用，简化超时和重试逻辑
- */
-interface RequestConfig {
-  baseURL?: string;
-  headers?: Record<string, string>;
-}
-
-interface RequestOptions extends RequestInit {
-  params?: Record<string, string | number | boolean>;
-  data?: unknown; // 用于传递请求体
-  skipAuthRefresh?: boolean;
-}
-
-interface ApiResponse<T> {
-  data: T;
-  status?: number;
-  ok?: boolean;
-  code?: number; // 后端业务状态码
-  msg?: string | null; // 后端消息
-}
-
-const SUCCESS_STATUS_MIN = 200;
-const SUCCESS_STATUS_MAX = 299;
-const DEFAULT_ERROR_MESSAGE = '请求失败，请稍后重试';
-const DEFAULT_UNAUTHORIZED_MESSAGE = '登录信息已过期，请重新登录';
-const LOGIN_ROUTE = '/login';
-
-let hasTriggeredUnauthorizedRedirect = false;
-let refreshPromise: Promise<boolean> | null = null;
-
-const resolveBaseURL = (baseURL?: string) =>
-  baseURL && baseURL.trim().length > 0
-    ? baseURL
-    : process.env.NEXT_PUBLIC_API_URL || '/api';
-
-export const refreshAuthToken = async (baseURL?: string): Promise<boolean> => {
-  if (refreshPromise) {
-    return refreshPromise;
-  }
-  const normalizedBase = resolveBaseURL(baseURL).replace(/\/$/, '');
-  const refreshURL = `${normalizedBase}/v1/auth/refresh`;
-
-  refreshPromise = fetch(refreshURL, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({}),
-  })
-    .then(async (response) => {
-      if (!response.ok) {
-        return false;
-      }
-      const payload = await response
-        .json()
-        .catch(() => ({ code: response.status }));
-      if (payload && typeof payload.code === 'number' && payload.code !== 200) {
-        return false;
-      }
-      return true;
-    })
-    .catch(() => false)
-    .finally(() => {
-      refreshPromise = null;
-    });
-
-  return refreshPromise;
-};
-
-const showSessionExpiredDialog = (
-  message: string,
-  onConfirm: () => void,
-  onCancel: () => void,
-) => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  const openDialog = () =>
-    import('@/components/session-expired-dialog')
-      .then(({ showSessionExpiredDialogUI }) => {
-        showSessionExpiredDialogUI({
-          message,
-          onConfirm,
-          onCancel,
-        });
-      })
-      .catch(() => {
-        const confirmed =
-          typeof window.confirm === 'function' ? window.confirm(message) : true;
-        if (confirmed) {
-          onConfirm();
-        } else {
-          onCancel();
-        }
-      });
-
-  void openDialog();
-};
+import {
+  DEFAULT_ERROR_MESSAGE,
+  DEFAULT_UNAUTHORIZED_MESSAGE,
+  SUCCESS_STATUS_MAX,
+  SUCCESS_STATUS_MIN,
+} from './constants';
+import {
+  handleUnauthorizedRedirect,
+  refreshAuthToken,
+  shouldAttemptAuthRefresh,
+} from './auth';
+import type {
+  ApiResponse,
+  RequestConfig,
+  RequestOptions,
+} from './types';
 
 function isSuccessfulStatus(code?: number) {
   if (typeof code !== 'number') {
@@ -119,6 +33,7 @@ export class HttpClient {
       ...config.headers,
     };
   }
+
   updateToken(token?: string | null) {
     if (!token) {
       Reflect.deleteProperty(this.defaultHeaders, 'Authorization');
@@ -127,48 +42,18 @@ export class HttpClient {
     this.defaultHeaders['Authorization'] = `Bearer ${token}`;
   }
 
+  updateLocale(locale?: string | null) {
+    if (typeof locale !== 'string') {
+      return;
+    }
+    const trimmed = locale.trim();
+    if (!trimmed) {
+      return;
+    }
+  }
+
   private handleUnauthorized(message?: string) {
-    this.updateToken(null);
-
-    const fallbackMessage =
-      message && message.trim().length > 0
-        ? message
-        : DEFAULT_UNAUTHORIZED_MESSAGE;
-
-    if (typeof window === 'undefined') {
-      throw new Error(fallbackMessage);
-    }
-
-    try {
-      localStorage.clear();
-    } catch {
-      // ignore storage clear failures (e.g. disabled storage)
-    }
-
-    const alreadyOnLogin = window.location.pathname.startsWith(LOGIN_ROUTE);
-    if (alreadyOnLogin) {
-      return;
-    }
-
-    if (hasTriggeredUnauthorizedRedirect) {
-      return;
-    }
-
-    hasTriggeredUnauthorizedRedirect = true;
-    const currentUrl =
-      window.location.pathname + window.location.search + window.location.hash;
-    const redirectParam = encodeURIComponent(currentUrl || '/');
-    const target = `${LOGIN_ROUTE}?redirect=${redirectParam}`;
-
-    showSessionExpiredDialog(
-      fallbackMessage,
-      () => {
-        window.location.replace(target);
-      },
-      () => {
-        hasTriggeredUnauthorizedRedirect = false;
-      },
-    );
+    handleUnauthorizedRedirect(message, () => this.updateToken(null));
   }
 
   private unwrapResponse<T>(response: ApiResponse<T>): T {
@@ -195,18 +80,6 @@ export class HttpClient {
     }
 
     return fullURL;
-  }
-
-  private shouldAttemptRefresh(url: string) {
-    const normalized = url.toLowerCase();
-    return (
-      !normalized.includes('/auth/login') &&
-      !normalized.includes('/auth/refresh')
-    );
-  }
-
-  private async tryRefreshToken(): Promise<boolean> {
-    return refreshAuthToken(this.baseURL);
   }
 
   async request<T>(
@@ -249,9 +122,9 @@ export class HttpClient {
         if (
           shouldRefresh &&
           !skipAuthRefresh &&
-          this.shouldAttemptRefresh(fullURL)
+          shouldAttemptAuthRefresh(fullURL)
         ) {
-          const refreshed = await this.tryRefreshToken();
+          const refreshed = await refreshAuthToken(this.baseURL);
           if (refreshed) {
             return this.request<T>(url, { ...options, skipAuthRefresh: true });
           }
@@ -272,9 +145,9 @@ export class HttpClient {
         if (
           response.status === 401 &&
           !skipAuthRefresh &&
-          this.shouldAttemptRefresh(fullURL)
+          shouldAttemptAuthRefresh(fullURL)
         ) {
-          const refreshed = await this.tryRefreshToken();
+          const refreshed = await refreshAuthToken(this.baseURL);
           if (refreshed) {
             return this.request<T>(url, { ...options, skipAuthRefresh: true });
           }
@@ -308,9 +181,9 @@ export class HttpClient {
       if (
         response.status === 401 &&
         !skipAuthRefresh &&
-        this.shouldAttemptRefresh(fullURL)
+        shouldAttemptAuthRefresh(fullURL)
       ) {
-        const refreshed = await this.tryRefreshToken();
+        const refreshed = await refreshAuthToken(this.baseURL);
         if (refreshed) {
           return this.request<T>(url, { ...options, skipAuthRefresh: true });
         }

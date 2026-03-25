@@ -1,7 +1,7 @@
 'use client';
 
 import { StatusTabs } from '@/components/status-tabs';
-import { Card } from '@/components/ui/card';
+import { Card } from '@repo/ui/components/card';
 
 import { NoticeAppliedFilters, type FilterChip } from './notice-applied-filters';
 import { NoticeFiltersBar } from './notice-filters-bar';

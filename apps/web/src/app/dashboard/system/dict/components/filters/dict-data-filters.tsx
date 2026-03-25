@@ -5,7 +5,7 @@ import {
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from '@/components/ui/input-group';
+} from '@repo/ui/components/input-group';
 import { Tag, Hash, X } from 'lucide-react';
 
 interface DictDataFiltersProps {

@@ -7,15 +7,15 @@ import {
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
-import { Skeleton } from '@/components/ui/skeleton';
+} from '@repo/ui/components/empty';
+import { Skeleton } from '@repo/ui/components/skeleton';
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
   SidebarRail,
   useSidebar,
-} from '@/components/ui/sidebar';
+} from '@repo/ui/components/sidebar';
 import { resolveLucideIcon } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';
 import { MenuNode } from '@/types';

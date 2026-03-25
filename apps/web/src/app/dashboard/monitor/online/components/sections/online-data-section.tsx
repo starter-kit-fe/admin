@@ -10,8 +10,8 @@ import {
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
-import { Button } from '@/components/ui/button';
+} from '@repo/ui/components/empty';
+import { Button } from '@repo/ui/components/button';
 
 import {
   listOnlineUsers,

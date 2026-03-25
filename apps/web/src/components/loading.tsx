@@ -1,6 +1,6 @@
 'use client';
 
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner } from '@repo/ui/components/spinner';
 import { cn } from '@/lib/utils';
 
 interface LoadingPageProps {
@@ -31,7 +31,7 @@ export function LoadingPage({
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .loading-top-bar {
           pointer-events: none;
           position: fixed;

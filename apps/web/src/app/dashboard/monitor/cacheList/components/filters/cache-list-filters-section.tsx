@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from '@/components/ui/input-group';
+} from '@repo/ui/components/input-group';
 
 import { DEFAULT_DEBOUNCE_MS } from '../../constants';
 import {

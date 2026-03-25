@@ -1,13 +1,13 @@
 import type { MenuTreeNode } from '@/app/dashboard/system/menu/type';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
+import { Checkbox } from '@repo/ui/components/checkbox';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import {
   type ReactElement,

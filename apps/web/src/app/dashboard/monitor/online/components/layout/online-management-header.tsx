@@ -4,7 +4,7 @@ import { RefreshCcw } from 'lucide-react';
 
 import { ManagementHeader } from '@/components/dashboard/management-header';
 import { PermissionButton } from '@/components/permission-button';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner } from '@repo/ui/components/spinner';
 
 import {
   useOnlineUserManagementRefresh,

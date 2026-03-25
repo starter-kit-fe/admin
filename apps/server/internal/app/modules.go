@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/starter-kit-fe/admin/internal/config"
-	"github.com/starter-kit-fe/admin/internal/middleware"
+	"github.com/starter-kit-fe/admin/middleware"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
 	"github.com/starter-kit-fe/admin/internal/system/cache"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"

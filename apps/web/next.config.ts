@@ -8,7 +8,7 @@ const proxy = async () => {
   return [
     {
       source: '/api/:path*',
-      destination: `${process.env.BASE_URL}/:path*`,
+      destination: `${process.env.BASE_URL}/api/:path*`,
     },
   ];
 };

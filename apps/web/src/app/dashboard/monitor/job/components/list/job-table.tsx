@@ -6,20 +6,20 @@ import {
   PINNED_TABLE_CLASS,
 } from '@/components/table/pinned-actions';
 import { TableLoadingSkeleton } from '@/components/table/table-loading-skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@repo/ui/components/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from '@/components/ui/empty';
+} from '@repo/ui/components/empty';
 import {
   Sheet,
   SheetContent,
@@ -28,8 +28,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
-import { Spinner } from '@/components/ui/spinner';
+} from '@repo/ui/components/sheet';
+import { Spinner } from '@repo/ui/components/spinner';
 import {
   Table,
   TableBody,
@@ -37,7 +37,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@repo/ui/components/table';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
@@ -47,6 +47,8 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import { Clock, Edit2, Eye, MoreHorizontal, Play, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
@@ -183,16 +185,21 @@ export function JobTable({
         header: () => '更新时间',
         cell: ({ row }) => {
           const job = row.original;
+          const toRelative = (value?: string | null) => {
+            if (!value) return { label: '-', title: '-' };
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return { label: value, title: value };
+            return {
+              label: formatDistanceToNow(date, { addSuffix: true, locale: zhCN }),
+              title: date.toLocaleString(),
+            };
+          };
+          const created = toRelative(job.createdAt);
+          const updated = toRelative(job.updatedAt);
           return (
             <div className="space-y-1 text-xs text-muted-foreground">
-              <EllipsisText
-                value={`创建：${job.createdAt || '-'}`}
-                className="max-w-[220px]"
-              />
-              <EllipsisText
-                value={`更新：${job.updatedAt || '-'}`}
-                className="max-w-[220px]"
-              />
+              <p title={`创建：${created.title}`}>{`创建：${created.label}`}</p>
+              <p title={`更新：${updated.title}`}>{`更新：${updated.label}`}</p>
             </div>
           );
         },
