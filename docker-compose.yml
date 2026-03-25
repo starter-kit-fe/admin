@@ -13,8 +13,6 @@ services:
     environment:
       DB_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-admin}?sslmode=disable
       REDIS_URL: redis://:${POSTGRES_PASSWORD:-changeme}@redis:6379/0
-      AUTH_SECRET: ${AUTH_SECRET:-changeme}
-      FRONTEND_OUT_DIR: /app/web/out
     ports:
       - "${APP_PORT:-27507}:27507"
     depends_on:

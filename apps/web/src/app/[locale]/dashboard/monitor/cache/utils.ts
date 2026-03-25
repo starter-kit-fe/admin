@@ -1,4 +1,26 @@
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
+
 import { CacheKeyspaceInfo } from './api/type';
+
+function getDateFnsLocale(locale?: string) {
+  return locale?.startsWith('zh') ? zhCN : enUS;
+}
+
+export function formatRelativeTime(
+  value?: number | string | Date | null,
+  locale?: string,
+  fallback?: string,
+) {
+  if (!value) return fallback ?? '-';
+  try {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return fallback ?? '-';
+    return formatDistanceToNow(date, { addSuffix: true, locale: getDateFnsLocale(locale) });
+  } catch {
+    return fallback ?? '-';
+  }
+}
 
 type FormatBytesOptions = {
   decimals?: number;

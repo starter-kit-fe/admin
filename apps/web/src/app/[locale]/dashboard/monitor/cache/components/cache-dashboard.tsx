@@ -29,8 +29,6 @@ import {
   Server,
   Users,
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { enUS, zhCN } from 'date-fns/locale';
 import { useLocale, useTranslations } from 'next-intl';
 
 import type { CacheKeyspaceInfo } from '../api/type';
@@ -39,6 +37,7 @@ import {
   formatBytes,
   formatNumber,
   formatPercent,
+  formatRelativeTime,
   safeMemoryGauge,
   summarizeKeys,
 } from '../utils';
@@ -100,7 +99,6 @@ const safeNumber = (value?: number | null) =>
 export function CacheDashboard() {
   const t = useTranslations('CacheMonitor');
   const locale = useLocale();
-  const dateFnsLocale = locale === 'zh-Hans' ? zhCN : enUS;
   const stream = useCacheOverviewStream();
   const overview = stream.overview;
 
@@ -121,17 +119,6 @@ export function CacheDashboard() {
     formatBytes(peakMemory, {
       decimals: 1,
     });
-
-  const formatTimestamp = (value?: number | null) => {
-    if (!value || Number.isNaN(value)) {
-      return t('dashboard.header.waitingStream');
-    }
-    try {
-      return formatDistanceToNow(new Date(value), { addSuffix: true, locale: dateFnsLocale });
-    } catch {
-      return t('dashboard.header.waitingStream');
-    }
-  };
 
   const hitRate = safeNumber(overview.stats.hitRate);
   const opsPerSec = safeNumber(overview.stats.instantaneousOps);
@@ -234,7 +221,7 @@ export function CacheDashboard() {
             </div>
             <div>
               {t('dashboard.header.updatedAt', {
-                time: formatTimestamp(stream.lastUpdated),
+                time: formatRelativeTime(stream.lastUpdated, locale, t('dashboard.header.waitingStream')),
               })}
             </div>
             <PermissionButton
@@ -461,13 +448,7 @@ export function CacheDashboard() {
                     {t('dashboard.server.persistence.lastRdb')}
                   </div>
                   <div className="text-sm font-medium text-foreground">
-                    {(() => {
-                      const v = overview.persistence.rdbLastSaveTime;
-                      if (!v) return t('common.notExecuted');
-                      const date = new Date(v);
-                      if (Number.isNaN(date.getTime())) return v;
-                      return formatDistanceToNow(date, { addSuffix: true, locale: dateFnsLocale });
-                    })()}
+                    {formatRelativeTime(overview.persistence.rdbLastSaveTime, locale, t('common.notExecuted'))}
                   </div>
                 </div>
                 <div>

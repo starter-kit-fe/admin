@@ -1,4 +1,4 @@
-import { formatDuration as formatDateFnsDuration, intervalToDuration } from 'date-fns';
+import { formatDistanceToNow, formatDuration as formatDateFnsDuration, intervalToDuration } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 
 import type { HostInfo } from '../type';
@@ -100,6 +100,18 @@ export function formatDuration(
     lessThanMinuteText ||
     (localeData === zhCN ? '不足1分钟' : 'Less than 1 minute')
   );
+}
+
+export function formatRelativeTime(value?: number | string | Date | null, locale?: string) {
+  if (value === undefined || value === null) return '-';
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return formatDistanceToNow(date, { addSuffix: true, locale: getDateFnsLocale(locale) });
+}
+
+export function truncateCommit(commit: string) {
+  if (!commit || commit.length <= 13) return commit;
+  return `${commit.slice(0, 6)}…${commit.slice(-6)}`;
 }
 
 export function formatServerSystem(host: HostInfo) {

@@ -10,11 +10,18 @@ import {
 import { ServerCog } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@repo/ui/components/tooltip';
+
 import { NumberTicker } from '@/components/number-ticker';
 
 import { InfoRow } from './info-row';
 import type { ProcessInfo } from '../type';
-import { formatBytes, formatDateTime, formatDuration, formatPercent } from '../lib/format';
+import { formatBytes, formatDuration, formatPercent, formatRelativeTime, truncateCommit } from '../lib/format';
 
 interface ProcessInfoCardProps {
   process: ProcessInfo;
@@ -32,9 +39,19 @@ export function ProcessInfoCard({ process }: ProcessInfoCardProps) {
     },
     {
       label: t('process.summary.commit'),
-      value: process.commit || '-',
+      value: process.commit ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-default font-mono text-xs">{truncateCommit(process.commit)}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span className="font-mono">{process.commit}</span>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : '-',
       align: 'left' as const,
-      valueClassName: 'font-mono text-xs leading-tight break-all',
     },
     {
       label: t('process.summary.pid'),
@@ -42,7 +59,7 @@ export function ProcessInfoCard({ process }: ProcessInfoCardProps) {
     },
     {
       label: t('process.summary.startTime'),
-      value: formatDateTime(process.startTime, locale),
+      value: formatRelativeTime(process.startTime, locale),
     },
     {
       label: t('process.summary.uptime'),
@@ -65,7 +82,7 @@ export function ProcessInfoCard({ process }: ProcessInfoCardProps) {
     { label: t('process.metrics.systemMemory'), value: process.sys, ticker: true, formatValue: formatBytes },
     { label: t('process.metrics.goroutines'), value: process.numGoroutine, ticker: true, formatValue: (v: number) => Math.max(0, Math.round(v)).toString() },
     { label: t('process.metrics.gcCount'), value: process.numGC, ticker: true, formatValue: (v: number) => Math.max(0, Math.round(v)).toString() },
-    { label: t('process.metrics.lastGC'), value: process.lastGC || '-', valueClassName: 'font-mono text-xs break-all' },
+    { label: t('process.metrics.lastGC'), value: formatRelativeTime(process.lastGC, locale) },
     { label: t('process.metrics.nextGC'), value: process.nextGC, ticker: true, formatValue: formatBytes },
     { label: t('process.metrics.cgo'), value: process.numCgoCall, ticker: true, formatValue: (v: number) => Math.max(0, Math.round(v)).toString() },
   ];
