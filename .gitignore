@@ -70,6 +70,7 @@ apps/server/bin/
 
 # Hosting & deployment
 .vercel
+.claude
 **/.vercel
 
 # Misc

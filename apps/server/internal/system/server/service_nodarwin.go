@@ -2,7 +2,9 @@
 
 package server
 
-import "errors"
+import (
+	"errors"
+)
 
 func darwinLoadAverage() (float64, float64, float64, error) {
 	return 0, 0, 0, errors.New("darwin load average not supported on this platform")

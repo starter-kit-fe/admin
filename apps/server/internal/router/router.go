@@ -3,7 +3,7 @@
 // @title Admin Service API
 // @version 0.1.0
 // @description Internal admin platform API documentation.
-// @BasePath /
+// @BasePath /api
 // @schemes http https
 // @securityDefinitions.apikey BearerAuth
 // @in header
@@ -22,6 +22,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/starter-kit-fe/admin/internal/middleware"
+	appi18n "github.com/starter-kit-fe/admin/internal/middleware/i18n"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
 	"github.com/starter-kit-fe/admin/internal/system/cache"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
@@ -40,7 +42,6 @@ import (
 	"github.com/starter-kit-fe/admin/internal/system/role"
 	"github.com/starter-kit-fe/admin/internal/system/server"
 	"github.com/starter-kit-fe/admin/internal/system/user"
-	"github.com/starter-kit-fe/admin/middleware"
 	"github.com/starter-kit-fe/admin/pkg/resp"
 )
 
@@ -84,6 +85,7 @@ func New(opts Options) *gin.Engine {
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	engine.Use(middleware.RequestLogger(opts.Logger))
+	engine.Use(appi18n.Middleware())
 
 	frontend := newFrontendHandler(opts.FrontendDir)
 	for _, mw := range opts.Middlewares {
@@ -91,13 +93,12 @@ func New(opts Options) *gin.Engine {
 			engine.Use(mw)
 		}
 	}
-	engine.GET("/healthz", opts.HealthHandler.Status)
 	engine.GET("/", func(ctx *gin.Context) {
 		if frontend != nil {
 			frontend.ServeIndex(ctx)
 			return
 		}
-		ctx.Redirect(http.StatusFound, "/docs")
+		ctx.Redirect(http.StatusFound, apiDocsPath)
 	})
 
 	registerAPIRoutes(engine, opts)
@@ -125,13 +126,19 @@ func New(opts Options) *gin.Engine {
 	return engine
 }
 
-const apiVersionPrefix = "/v1"
+const (
+	apiRootPrefix    = "/api"
+	apiDocsPath      = apiRootPrefix + "/docs"
+	apiVersionPrefix = "/v1"
+)
 
 func registerAPIRoutes(engine *gin.Engine, opts Options) {
-	registerDocsRoutes(engine, opts)
-	api := engine.Group(apiVersionPrefix)
-	registerPublicRoutes(api, opts)
-	registerProtectedRoutes(api, opts)
+	api := engine.Group(apiRootPrefix)
+	registerHealthRoutes(api, opts)
+	registerDocsRoutes(api, opts)
+	versionedAPI := api.Group(apiVersionPrefix)
+	registerPublicRoutes(versionedAPI, opts)
+	registerProtectedRoutes(versionedAPI, opts)
 }
 
 func notImplemented(feature string) gin.HandlerFunc {
@@ -174,19 +181,21 @@ func requireHandler(name string, handler interface{}) {
 	}
 }
 
-func registerDocsRoutes(engine *gin.Engine, opts Options) {
+func registerHealthRoutes(group *gin.RouterGroup, opts Options) {
+	requireHandler("health handler", opts.HealthHandler)
+	group.GET("/healthz", opts.HealthHandler.Status)
+}
+
+func registerDocsRoutes(group *gin.RouterGroup, opts Options) {
 	if opts.DocsHandler == nil {
 		return
 	}
-	engine.GET("/docs/openapi.json", opts.DocsHandler.SwaggerJSON)
-	engine.GET("/docs", opts.DocsHandler.SwaggerUI)
+	group.GET("/docs/openapi.json", opts.DocsHandler.SwaggerJSON)
+	group.GET("/docs", opts.DocsHandler.SwaggerUI)
 }
 
 func isAPIRoute(pathname string) bool {
-	if pathname == apiVersionPrefix || strings.HasPrefix(pathname, apiVersionPrefix+"/") {
-		return true
-	}
-	if pathname == "/docs" || strings.HasPrefix(pathname, "/docs/") {
+	if pathname == apiRootPrefix || strings.HasPrefix(pathname, apiRootPrefix+"/") {
 		return true
 	}
 	return false
@@ -263,17 +272,25 @@ func (h *frontendHandler) resolvePath(requestPath string) string {
 	}
 	fullPath := filepath.Join(h.baseDir, filepath.FromSlash(cleanPath))
 	info, err := os.Stat(fullPath)
-	if err != nil {
-		return ""
-	}
-	if info.IsDir() {
-		indexPath := filepath.Join(fullPath, "index.html")
-		if fileExists(indexPath) {
-			return indexPath
+	if err == nil {
+		if info.IsDir() {
+			// directory/index.html
+			indexPath := filepath.Join(fullPath, "index.html")
+			if fileExists(indexPath) {
+				return indexPath
+			}
+			// directory exists but has no index — try sibling .html file
+			// e.g. /zh-Hans → zh-Hans.html (Next.js i18n static export pattern)
+		} else {
+			return fullPath
 		}
-		return ""
 	}
-	return fullPath
+	// Next.js static export generates foo.html for the /foo route.
+	// Try appending .html when the bare path is not found or has no index.
+	if htmlPath := fullPath + ".html"; fileExists(htmlPath) {
+		return htmlPath
+	}
+	return ""
 }
 
 func fileExists(pathname string) bool {

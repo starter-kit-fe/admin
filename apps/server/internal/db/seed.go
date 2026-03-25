@@ -3,17 +3,22 @@ package db
 import (
 	"bufio"
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
+	"math/big"
 	"strings"
+	"time"
 
 	_ "embed"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"github.com/starter-kit-fe/admin/constant"
+	"github.com/starter-kit-fe/admin/internal/model"
 )
 
 //go:embed seed_data.sql
@@ -52,14 +57,29 @@ func SeedDefaults(ctx context.Context, db *gorm.DB, logger *slog.Logger) error {
 
 			roleMenuTable := prefix + "sys_role_menu"
 			menuTable := prefix + "sys_menu"
-			if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, menu_id) SELECT 1, id FROM %s ON CONFLICT DO NOTHING;", roleMenuTable, menuTable)).Error; err != nil {
-				return fmt.Errorf("seed role menus: %w", err)
-			}
-
 			roleDeptTable := prefix + "sys_role_dept"
 			deptTable := prefix + "sys_dept"
-			if err := tx.Exec(fmt.Sprintf("INSERT INTO %s (role_id, dept_id) SELECT 1, id FROM %s ON CONFLICT DO NOTHING;", roleDeptTable, deptTable)).Error; err != nil {
+
+			sqlRoleMenu := fmt.Sprintf("INSERT INTO %s (role_id, menu_id) SELECT 1, id FROM %s ON CONFLICT DO NOTHING;", roleMenuTable, menuTable)
+			sqlRoleDept := fmt.Sprintf("INSERT INTO %s (role_id, dept_id) SELECT 1, id FROM %s ON CONFLICT DO NOTHING;", roleDeptTable, deptTable)
+
+			if tx.Dialector.Name() == "mysql" {
+				sqlRoleMenu = fmt.Sprintf("INSERT IGNORE INTO %s (role_id, menu_id) SELECT 1, id FROM %s;", roleMenuTable, menuTable)
+				sqlRoleDept = fmt.Sprintf("INSERT IGNORE INTO %s (role_id, dept_id) SELECT 1, id FROM %s;", roleDeptTable, deptTable)
+			} else if tx.Dialector.Name() == "sqlite" {
+				sqlRoleMenu = fmt.Sprintf("INSERT OR IGNORE INTO %s (role_id, menu_id) SELECT 1, id FROM %s;", roleMenuTable, menuTable)
+				sqlRoleDept = fmt.Sprintf("INSERT OR IGNORE INTO %s (role_id, dept_id) SELECT 1, id FROM %s;", roleDeptTable, deptTable)
+			}
+
+			if err := tx.Exec(sqlRoleMenu).Error; err != nil {
+				return fmt.Errorf("seed role menus: %w", err)
+			}
+			if err := tx.Exec(sqlRoleDept).Error; err != nil {
 				return fmt.Errorf("seed role depts: %w", err)
+			}
+
+			if err := seedAdminUser(ctx, db, prefix, logger); err != nil {
+				return fmt.Errorf("seed admin user: %w", err)
 			}
 
 			seeded = true
@@ -76,6 +96,84 @@ func SeedDefaults(ctx context.Context, db *gorm.DB, logger *slog.Logger) error {
 	}
 
 	return nil
+}
+
+// seedAdminUser generates a random password for the initial admin account,
+// creates the user, and prints the credentials to the logger.
+func seedAdminUser(ctx context.Context, db *gorm.DB, prefix string, logger *slog.Logger) error {
+	password, err := generatePassword(16)
+	if err != nil {
+		return fmt.Errorf("generate admin password: %w", err)
+	}
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("hash admin password: %w", err)
+	}
+
+	now := time.Now()
+	deptID := int64(100)
+	remark := "系统初始化管理员"
+	user := model.SysUser{
+		DeptID:        &deptID,
+		UserName:      "admin",
+		NickName:      "超级管理员",
+		UserType:      "00",
+		Email:         "",
+		Phonenumber:   "",
+		Sex:           "1",
+		Avatar:        "",
+		Password:      string(hashed),
+		Status:        "0",
+		LoginIP:       "127.0.0.1",
+		LoginDate:     &now,
+		PwdUpdateDate: &now,
+		CreateBy:      "system",
+		Remark:        &remark,
+	}
+
+	userTable := prefix + "sys_user"
+	if err := db.WithContext(ctx).Table(userTable).Create(&user).Error; err != nil {
+		return fmt.Errorf("insert admin user: %w", err)
+	}
+
+	userRoleTable := prefix + "sys_user_role"
+	if err := db.WithContext(ctx).Table(userRoleTable).
+		Exec(fmt.Sprintf("INSERT INTO %s (user_id, role_id) VALUES (?, 1)", userRoleTable), user.ID).Error; err != nil {
+		return fmt.Errorf("assign admin role: %w", err)
+	}
+
+	userPostTable := prefix + "sys_user_post"
+	if err := db.WithContext(ctx).Table(userPostTable).
+		Exec(fmt.Sprintf("INSERT INTO %s (user_id, post_id) VALUES (?, 1)", userPostTable), user.ID).Error; err != nil {
+		return fmt.Errorf("assign admin post: %w", err)
+	}
+
+	if logger != nil {
+		logger.Info("════════════════════════════════════════════")
+		logger.Info("  INITIAL ADMIN ACCOUNT CREATED")
+		logger.Info("  Username : admin")
+		logger.Info("  Password : " + password)
+		logger.Info("  Please change the password after first login.")
+		logger.Info("════════════════════════════════════════════")
+	}
+
+	return nil
+}
+
+const passwordChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+
+func generatePassword(length int) (string, error) {
+	buf := make([]byte, length)
+	charLen := big.NewInt(int64(len(passwordChars)))
+	for i := range buf {
+		n, err := rand.Int(rand.Reader, charLen)
+		if err != nil {
+			return "", err
+		}
+		buf[i] = passwordChars[n.Int64()]
+	}
+	return string(buf), nil
 }
 
 func buildSeedStatements(prefix string) []string {
@@ -248,6 +346,10 @@ func syncSequences(ctx context.Context, db *gorm.DB, prefix string, logger *slog
 }
 
 func ensureSequenceOffset(ctx context.Context, db *gorm.DB, table, column string) error {
+	if db.Dialector.Name() != "postgres" {
+		return nil
+	}
+
 	var seqName sql.NullString
 	if err := db.WithContext(ctx).
 		Raw("SELECT pg_get_serial_sequence(?, ?) AS seq_name", table, column).

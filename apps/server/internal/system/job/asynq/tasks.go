@@ -18,7 +18,7 @@ const (
 
 // JobExecutionPayload is the payload for executing a scheduled job
 type JobExecutionPayload struct {
-	JobID        int64           `json:"jobId"`
+	ID           int64           `json:"id"`
 	JobName      string          `json:"jobName"`
 	JobGroup     string          `json:"jobGroup"`
 	InvokeTarget string          `json:"invokeTarget"`
@@ -79,7 +79,7 @@ func (a *ExecutorAdapter) ProcessTask(ctx context.Context, task *asynq.Task) err
 
 	execPayload := types.ExecutionPayload{
 		Job: types.Job{
-			JobID:        payload.JobID,
+			ID:           payload.ID,
 			JobName:      payload.JobName,
 			JobGroup:     payload.JobGroup,
 			InvokeTarget: payload.InvokeTarget,

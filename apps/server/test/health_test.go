@@ -11,7 +11,7 @@ import (
 func TestHealthCheck(t *testing.T) {
 	application, _ := SetupApp(t)
 
-	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/healthz", nil)
 	w := httptest.NewRecorder()
 
 	application.Handler().ServeHTTP(w, req)

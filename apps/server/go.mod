@@ -8,13 +8,17 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.0
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.92.0
+	github.com/gin-contrib/i18n v1.2.3
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/hibiken/asynq v0.26.0
 	github.com/jackc/pgconn v1.14.3
 	github.com/joho/godotenv v1.5.1
+	github.com/nicksnyder/go-i18n/v2 v2.5.1
 	github.com/redis/go-redis/v9 v9.14.1
+	github.com/robfig/cron/v3 v3.0.1
+
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.11.1
@@ -22,7 +26,9 @@ require (
 	golang.org/x/crypto v0.43.0
 	golang.org/x/image v0.32.0
 	golang.org/x/sys v0.37.0
+	golang.org/x/text v0.30.0
 	golang.org/x/time v0.14.0
+
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.0
@@ -105,7 +111,6 @@ require (
 	golang.org/x/mod v0.29.0 // indirect
 	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/tools v0.38.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

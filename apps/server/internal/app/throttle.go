@@ -7,7 +7,7 @@ import (
 	"golang.org/x/time/rate"
 
 	"github.com/starter-kit-fe/admin/internal/config"
-	"github.com/starter-kit-fe/admin/middleware"
+	"github.com/starter-kit-fe/admin/internal/middleware"
 )
 
 func buildThrottle(cfg *config.Config, logger *slog.Logger) gin.HandlerFunc {

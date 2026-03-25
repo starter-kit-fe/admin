@@ -33,9 +33,9 @@ func (s *Service) executeJob(ctx context.Context, job types.Job, opts jobRunOpti
 			return
 		}
 		if !proceed {
-			count := s.incrementLockMiss(job.JobID)
+			count := s.incrementLockMiss(job.ID)
 			if s.logger != nil {
-				s.logger.Info("job lock busy", "jobID", job.JobID, "misses", count)
+				s.logger.Info("job lock busy", "jobID", job.ID, "misses", count)
 			}
 			execErr = fmt.Errorf("job is already running")
 			s.finishJobRun(context.Background(), job, runCtx, logID, startTime, execErr)
@@ -44,7 +44,7 @@ func (s *Service) executeJob(ctx context.Context, job types.Job, opts jobRunOpti
 		defer func() {
 			if release != nil {
 				if err := release(context.Background()); err != nil && s.logger != nil {
-					s.logger.Error("release job lock failed", "jobID", job.JobID, "error", err)
+					s.logger.Error("release job lock failed", "jobID", job.ID, "error", err)
 				}
 			}
 		}()
@@ -67,7 +67,7 @@ func (s *Service) executeJob(ctx context.Context, job types.Job, opts jobRunOpti
 	exec, ok := s.registry.Resolve(job.InvokeTarget)
 	if !ok {
 		if s.logger != nil {
-			s.logger.Warn("no executor registered", "jobID", job.JobID, "target", job.InvokeTarget)
+			s.logger.Warn("no executor registered", "jobID", job.ID, "target", job.InvokeTarget)
 		}
 		execErr = fmt.Errorf("no executor registered for %s", job.InvokeTarget)
 		return
@@ -85,10 +85,10 @@ func (s *Service) executeJob(ctx context.Context, job types.Job, opts jobRunOpti
 	if err := exec(ctx, payload); err != nil {
 		execErr = err
 		if s.logger != nil {
-			s.logger.Error("job execution failed", "jobID", job.JobID, "error", err)
+			s.logger.Error("job execution failed", "jobID", job.ID, "error", err)
 		}
 	} else if s.logger != nil {
-		s.logger.Info("job executed", "jobID", job.JobID)
+		s.logger.Info("job executed", "jobID", job.ID)
 	}
 }
 
@@ -159,7 +159,7 @@ func (s *Service) finishJobRun(ctx context.Context, job types.Job, meta jobRunCo
 	}
 
 	if err := s.repo.UpdateJobLog(ctx, logID, updates); err != nil && s.logger != nil {
-		s.logger.Error("update job log failed", "jobID", job.JobID, "jobLogID", logID, "error", err)
+		s.logger.Error("update job log failed", "jobID", job.ID, "jobLogID", logID, "error", err)
 	}
 }
 
@@ -176,7 +176,7 @@ func (s *Service) createRunningLogRecord(ctx context.Context, job types.Job, met
 	detail := fmt.Sprintf("%s | 执行中", message)
 
 	record := &model.SysJobLog{
-		JobID:        job.JobID,
+		JobID:        job.ID,
 		JobName:      job.JobName,
 		JobGroup:     job.JobGroup,
 		InvokeTarget: job.InvokeTarget,
@@ -190,7 +190,7 @@ func (s *Service) createRunningLogRecord(ctx context.Context, job types.Job, met
 
 	if err := s.repo.CreateJobLog(ctx, record); err != nil {
 		if s.logger != nil {
-			s.logger.Error("create running job log failed", "jobID", job.JobID, "error", err)
+			s.logger.Error("create running job log failed", "jobID", job.ID, "error", err)
 		}
 		return 0, err
 	}
@@ -223,7 +223,7 @@ func (s *Service) attachRunningState(ctx context.Context, jobs []types.Job) {
 
 	ids := make([]int64, 0, len(jobs))
 	for i := range jobs {
-		ids = append(ids, jobs[i].JobID)
+		ids = append(ids, jobs[i].ID)
 	}
 
 	runningLogs, err := s.repo.GetLatestLogsByStatus(ctx, ids, []string{"2"})
@@ -235,7 +235,7 @@ func (s *Service) attachRunningState(ctx context.Context, jobs []types.Job) {
 	}
 
 	for i := range jobs {
-		if log, ok := runningLogs[jobs[i].JobID]; ok {
+		if log, ok := runningLogs[jobs[i].ID]; ok {
 			jobs[i].IsRunning = true
 			logID := int64(log.ID)
 			jobs[i].CurrentLogID = &logID

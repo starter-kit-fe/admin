@@ -17,7 +17,7 @@ type ListResult struct {
 
 // Job DTO
 type Job struct {
-	JobID          int64           `json:"jobId"`
+	ID             int64           `json:"id"`
 	JobName        string          `json:"jobName"`
 	JobGroup       string          `json:"jobGroup"`
 	InvokeTarget   string          `json:"invokeTarget"`
@@ -37,7 +37,7 @@ type Job struct {
 
 // JobLog DTO
 type JobLog struct {
-	JobLogID     int64           `json:"jobLogId"`
+	ID           int64           `json:"id"`
 	JobID        int64           `json:"jobId"`
 	JobName      string          `json:"jobName"`
 	JobGroup     string          `json:"jobGroup"`

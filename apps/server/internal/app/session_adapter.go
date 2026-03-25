@@ -3,9 +3,9 @@ package app
 import (
 	"context"
 
+	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
 	"github.com/starter-kit-fe/admin/internal/system/online"
-	"github.com/starter-kit-fe/admin/middleware"
 )
 
 type sessionValidatorAdapter struct {

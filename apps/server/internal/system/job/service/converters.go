@@ -32,7 +32,7 @@ func jobFromModel(record *model.SysJob) types.Job {
 	}
 
 	return types.Job{
-		JobID:          int64(record.ID),
+		ID:             int64(record.ID),
 		JobName:        record.JobName,
 		JobGroup:       record.JobGroup,
 		InvokeTarget:   record.InvokeTarget,
@@ -47,6 +47,7 @@ func jobFromModel(record *model.SysJob) types.Job {
 		UpdateBy:       record.UpdateBy,
 		UpdatedAt:      &record.UpdatedAt,
 	}
+
 }
 
 // jobLogFromModel converts a model.SysJobLog to types.JobLog
@@ -69,7 +70,7 @@ func jobLogFromModel(record *model.SysJobLog) types.JobLog {
 	exception := strings.TrimSpace(record.ExceptionInfo)
 
 	return types.JobLog{
-		JobLogID:     int64(record.ID),
+		ID:           int64(record.ID),
 		JobID:        record.JobID,
 		JobName:      record.JobName,
 		JobGroup:     record.JobGroup,

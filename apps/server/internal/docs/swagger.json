@@ -10,7 +10,7 @@
         "contact": {},
         "version": "0.1.0"
     },
-    "basePath": "/",
+    "basePath": "/api",
     "paths": {
         "/healthz": {
             "get": {
@@ -633,6 +633,37 @@
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/monitor/jobs/executors": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "返回系统中已注册的所有执行器，用于前端下拉选择 invokeTarget",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Monitor/Job"
+                ],
+                "summary": "获取可用的任务执行器列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/resp.Response"
                         }

@@ -2,11 +2,13 @@ package app
 
 import (
 	"log/slog"
+	"strings"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	"github.com/starter-kit-fe/admin/internal/config"
+	"github.com/starter-kit-fe/admin/internal/middleware"
 	"github.com/starter-kit-fe/admin/internal/system/auth"
 	"github.com/starter-kit-fe/admin/internal/system/cache"
 	"github.com/starter-kit-fe/admin/internal/system/captcha"
@@ -25,7 +27,6 @@ import (
 	"github.com/starter-kit-fe/admin/internal/system/role"
 	"github.com/starter-kit-fe/admin/internal/system/server"
 	"github.com/starter-kit-fe/admin/internal/system/user"
-	"github.com/starter-kit-fe/admin/middleware"
 )
 
 type moduleSet struct {
@@ -82,17 +83,32 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	onlineHandler := online.NewHandler(onlineSvc)
 	jobRepo := job.NewRepository(sqlDB)
 
-	redisOpt := parseAsynqRedisOptions(cfg.Redis.URL)
+	// Parse Redis configuration for Asynq
+	var (
+		redisAddr     string
+		redisPassword string
+		redisDB       int
+	)
+
+	if cfg.Redis.URL != "" {
+		if opt, err := redis.ParseURL(cfg.Redis.URL); err == nil {
+			redisAddr = opt.Addr
+			redisPassword = opt.Password
+			redisDB = opt.DB
+		} else {
+			// Fallback if parsing fails
+			redisAddr = parseRedisAddr(cfg.Redis.URL)
+		}
+	}
 
 	jobSvc := job.NewService(jobRepo, job.ServiceOptions{
-		Logger:         logger,
-		Redis:          redisCache,
-		RedisAddr:      redisOpt.Addr,
-		RedisUsername:  redisOpt.Username,
-		RedisPassword:  redisOpt.Password,
-		RedisDB:        redisOpt.DB,
-		RedisTLSConfig: redisOpt.TLSConfig,
+		Logger:        logger,
+		Redis:         redisCache,
+		RedisAddr:     redisAddr,
+		RedisPassword: redisPassword,
+		RedisDB:       redisDB,
 	})
+
 	// 注册定时任务执行器
 	if err := jobSvc.RegisterExecutorWithDesc(
 		"db.backup",
@@ -192,16 +208,43 @@ func buildModuleSet(cfg *config.Config, sqlDB *gorm.DB, redisCache *redis.Client
 	}
 }
 
-// parseAsynqRedisOptions keeps auth, DB, and TLS settings when reusing REDIS_URL for Asynq.
-func parseAsynqRedisOptions(redisURL string) *redis.Options {
+// parseRedisAddr extracts host:port from a Redis URL
+func parseRedisAddr(redisURL string) string {
 	if redisURL == "" {
-		return &redis.Options{}
+		return "localhost:6379"
 	}
 
-	opt, err := redis.ParseURL(redisURL)
-	if err != nil {
-		return &redis.Options{}
+	// Handle redis:// or rediss:// URLs
+	url := redisURL
+	if strings.HasPrefix(url, "redis://") {
+		url = strings.TrimPrefix(url, "redis://")
+	} else if strings.HasPrefix(url, "rediss://") {
+		url = strings.TrimPrefix(url, "rediss://")
 	}
 
-	return opt
+	// Remove auth if present (user:pass@)
+	if idx := strings.Index(url, "@"); idx != -1 {
+		url = url[idx+1:]
+	}
+
+	// Remove path if present
+	if idx := strings.Index(url, "/"); idx != -1 {
+		url = url[:idx]
+	}
+
+	// Remove query string if present
+	if idx := strings.Index(url, "?"); idx != -1 {
+		url = url[:idx]
+	}
+
+	if url == "" {
+		return "localhost:6379"
+	}
+
+	// Add default port if not present
+	if !strings.Contains(url, ":") {
+		url = url + ":6379"
+	}
+
+	return url
 }

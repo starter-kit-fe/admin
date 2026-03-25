@@ -84,7 +84,7 @@ if err := jobSvc.RegisterExecutor("my.job", job.NewMyExecutor(deps)); err != nil
 ### 3. Create Job via API
 
 ```bash
-curl -X POST /v1/monitor/jobs \
+curl -X POST /api/v1/monitor/jobs \
   -H "Content-Type: application/json" \
   -d '{
     "jobName": "My Job",
@@ -108,16 +108,16 @@ REDIS_URL=redis://localhost:6379/0
 
 | Method | Endpoint                           | Description       |
 | ------ | ---------------------------------- | ----------------- |
-| GET    | `/v1/monitor/jobs`                 | List jobs         |
-| POST   | `/v1/monitor/jobs`                 | Create job        |
-| GET    | `/v1/monitor/jobs/:id`             | Get job           |
-| PUT    | `/v1/monitor/jobs/:id`             | Update job        |
-| DELETE | `/v1/monitor/jobs/:id`             | Delete job        |
-| GET    | `/v1/monitor/jobs/:id/detail`      | Get job with logs |
-| PUT    | `/v1/monitor/jobs/:id/status`      | Change status     |
-| POST   | `/v1/monitor/jobs/:id/trigger`     | Trigger manually  |
-| DELETE | `/v1/monitor/jobs/:id/logs`        | Clear logs        |
-| GET    | `/v1/monitor/jobs/:id/logs/stream` | Stream logs (SSE) |
+| GET    | `/api/v1/monitor/jobs`                 | List jobs         |
+| POST   | `/api/v1/monitor/jobs`                 | Create job        |
+| GET    | `/api/v1/monitor/jobs/:id`             | Get job           |
+| PUT    | `/api/v1/monitor/jobs/:id`             | Update job        |
+| DELETE | `/api/v1/monitor/jobs/:id`             | Delete job        |
+| GET    | `/api/v1/monitor/jobs/:id/detail`      | Get job with logs |
+| PUT    | `/api/v1/monitor/jobs/:id/status`      | Change status     |
+| POST   | `/api/v1/monitor/jobs/:id/trigger`     | Trigger manually  |
+| DELETE | `/api/v1/monitor/jobs/:id/logs`        | Clear logs        |
+| GET    | `/api/v1/monitor/jobs/:id/logs/stream` | Stream logs (SSE) |
 
 ## Job Status
 

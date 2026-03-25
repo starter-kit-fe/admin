@@ -1,9 +1,24 @@
 import { fetchEventSource, type EventSourceMessage } from '@microsoft/fetch-event-source';
 
-import { refreshAuthToken } from './request';
+import {
+  handleUnauthorizedRedirect,
+  refreshAuthToken,
+  shouldAttemptAuthRefresh,
+} from './request/auth';
+import { DEFAULT_UNAUTHORIZED_MESSAGE } from './request/constants';
+
+class RetryableAuthError extends Error {
+  retryInMs: number;
+
+  constructor(retryInMs = 0) {
+    super('Retry SSE after refreshing auth');
+    this.retryInMs = retryInMs;
+  }
+}
+
+class FatalAuthError extends Error {}
 
 type EventHandler<T> = (event: string, data: T, raw: EventSourceMessage) => void;
-type ErrorWithStatus = Error & { status?: number };
 
 export interface SSEClientOptions<T = unknown> {
   path: string;
@@ -39,15 +54,7 @@ export function startSSE<T = unknown>(options: SSEClientOptions<T>): SSEConnecti
 
   const base = process.env.NEXT_PUBLIC_API_URL ?? '/api';
   const url = `${base.replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
-  let attemptedAuthRefresh = false;
-  let silenceUnauthorizedError = false;
-  let refreshFailed = false;
-
-  const createStatusError = (status: number, message?: string): ErrorWithStatus => {
-    const error = new Error(message ?? `SSE failed with status ${status}`) as ErrorWithStatus;
-    error.status = status;
-    return error;
-  };
+  let handledFatalError = false;
 
   fetchEventSource(url, {
     method,
@@ -58,24 +65,27 @@ export function startSSE<T = unknown>(options: SSEClientOptions<T>): SSEConnecti
     credentials: withCredentials ? 'include' : 'same-origin',
     signal: controller.signal,
     async onopen(res) {
-      if (res.status === 401) {
-        if (!attemptedAuthRefresh) {
-          attemptedAuthRefresh = true;
-          const refreshed = await refreshAuthToken(base);
-          silenceUnauthorizedError = refreshed;
-          refreshFailed = !refreshed;
-        } else {
-          refreshFailed = true;
+      if (res.ok) {
+        onOpen?.(res);
+        return;
+      }
+
+      const unauthorized = res.status === 401;
+      const refreshExpired = res.status === 402;
+
+      if (unauthorized && shouldAttemptAuthRefresh(url)) {
+        const refreshed = await refreshAuthToken(base);
+        if (refreshed) {
+          throw new RetryableAuthError(0);
         }
-        throw createStatusError(res.status, 'SSE unauthorized');
       }
-      if (!res.ok) {
-        throw createStatusError(res.status);
+
+      if (unauthorized || refreshExpired) {
+        handleUnauthorizedRedirect();
+        throw new FatalAuthError(DEFAULT_UNAUTHORIZED_MESSAGE);
       }
-      attemptedAuthRefresh = false;
-      silenceUnauthorizedError = false;
-      refreshFailed = false;
-      onOpen?.(res);
+
+      throw new Error(`SSE failed with status ${res.status}`);
     },
     onmessage(ev) {
       if (!ev.data) {
@@ -96,24 +106,22 @@ export function startSSE<T = unknown>(options: SSEClientOptions<T>): SSEConnecti
       onClose?.();
     },
     onerror(err) {
-      if (controller.signal.aborted) {
-        return;
+      if (err instanceof RetryableAuthError) {
+        return err.retryInMs;
       }
-      const error =
-        err instanceof Error
-          ? (err as ErrorWithStatus)
-          : (new Error('SSE connection error') as ErrorWithStatus);
-      if (silenceUnauthorizedError && error.status === 401) {
-        silenceUnauthorizedError = false;
-        return;
+
+      if (err instanceof FatalAuthError) {
+        handledFatalError = true;
+        onError?.(err);
+        throw err;
       }
+
+      const error = err instanceof Error ? err : new Error('SSE connection error');
       onError?.(error);
-      if (error.status === 401 && refreshFailed) {
-        controller.abort();
-      }
     },
   }).catch((err) => {
-    if (controller.signal.aborted) {
+    if (handledFatalError) {
+      handledFatalError = false;
       return;
     }
     const error = err instanceof Error ? err : new Error('SSE connection failed');

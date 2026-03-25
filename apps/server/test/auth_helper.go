@@ -33,6 +33,19 @@ func CreateUser(t *testing.T, a *app.App, username, password string) *model.SysU
 	if err := a.DB().Create(user).Error; err != nil {
 		t.Fatalf("failed to create user: %v", err)
 	}
+	userID := int64(user.ID)
+	if err := a.DB().Create(&model.SysUserRole{
+		UserID: userID,
+		RoleID: 1,
+	}).Error; err != nil {
+		t.Fatalf("failed to assign user role: %v", err)
+	}
+	if err := a.DB().Create(&model.SysUserPost{
+		UserID: userID,
+		PostID: 1,
+	}).Error; err != nil {
+		t.Fatalf("failed to assign user post: %v", err)
+	}
 
 	return user
 }
@@ -40,13 +53,13 @@ func CreateUser(t *testing.T, a *app.App, username, password string) *model.SysU
 // Login performs login and returns access token
 func Login(t *testing.T, a *app.App, mr *miniredis.Miniredis, username, password string) string {
 	// 1. Generate Captcha
-	reqCaptcha := httptest.NewRequest(http.MethodGet, "/v1/auth/captcha", nil)
+	reqCaptcha := httptest.NewRequest(http.MethodGet, "/api/v1/auth/captcha", nil)
 	wCaptcha := httptest.NewRecorder()
 	a.Handler().ServeHTTP(wCaptcha, reqCaptcha)
 
 	var captchaResp struct {
 		Data struct {
-			UUID string `json:"uuid"`
+			CaptchaID string `json:"captcha_id"`
 		} `json:"data"`
 	}
 	if wCaptcha.Code == 200 {
@@ -54,10 +67,11 @@ func Login(t *testing.T, a *app.App, mr *miniredis.Miniredis, username, password
 	}
 
 	code := "1234"
+	captchaID := captchaResp.Data.CaptchaID
 	// Retrieve code from miniredis
-	if captchaResp.Data.UUID != "" {
-		// Key format: "captcha:" + uuid
-		key := "captcha:" + captchaResp.Data.UUID
+	if captchaID != "" {
+		// Key format: "captcha:" + id
+		key := "captcha:" + captchaID
 		val, err := mr.Get(key)
 		if err == nil {
 			code = val
@@ -68,13 +82,13 @@ func Login(t *testing.T, a *app.App, mr *miniredis.Miniredis, username, password
 	payload := map[string]string{
 		"username":   username,
 		"password":   password,
-		"uuid":       captchaResp.Data.UUID,
+		"uuid":       captchaID,
 		"code":       code,
-		"captcha_id": captchaResp.Data.UUID, // Support both fields just in case
+		"captcha_id": captchaID,
 	}
 
 	body, _ := json.Marshal(payload)
-	req := httptest.NewRequest(http.MethodPost, "/v1/auth/login", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 

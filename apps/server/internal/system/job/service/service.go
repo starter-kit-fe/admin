@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -68,10 +67,8 @@ type ServiceOptions struct {
 	Logger         *slog.Logger
 	Redis          *redis.Client
 	RedisAddr      string
-	RedisUsername  string
 	RedisPassword  string
 	RedisDB        int
-	RedisTLSConfig *tls.Config
 	DefaultLockTTL time.Duration
 	Concurrency    int
 }
@@ -111,36 +108,17 @@ func NewService(repo *repository.Repository, opts ServiceOptions) *Service {
 		logger = slog.Default()
 	}
 
+	// Build Redis connection options for Asynq
 	redisAddr := opts.RedisAddr
-	redisUsername := opts.RedisUsername
-	redisPassword := opts.RedisPassword
-	redisDB := opts.RedisDB
-	redisTLSConfig := opts.RedisTLSConfig
-	if opts.Redis != nil {
-		redisClientOpts := opts.Redis.Options()
-		if redisAddr == "" {
-			redisAddr = redisClientOpts.Addr
-		}
-		if redisUsername == "" {
-			redisUsername = redisClientOpts.Username
-		}
-		if redisPassword == "" {
-			redisPassword = redisClientOpts.Password
-		}
-		if redisDB == 0 {
-			redisDB = redisClientOpts.DB
-		}
-		if redisTLSConfig == nil {
-			redisTLSConfig = redisClientOpts.TLSConfig
-		}
+	if redisAddr == "" && opts.Redis != nil {
+		// Try to get from Redis client options
+		redisAddr = "localhost:6379"
 	}
 
 	redisOpt := asynq.RedisClientOpt{
-		Addr:      redisAddr,
-		Username:  redisUsername,
-		Password:  redisPassword,
-		DB:        redisDB,
-		TLSConfig: redisTLSConfig,
+		Addr:     redisAddr,
+		Password: opts.RedisPassword,
+		DB:       opts.RedisDB,
 	}
 
 	concurrency := opts.Concurrency
@@ -329,7 +307,7 @@ func (s *Service) GetJobDetail(ctx context.Context, id int64, opts types.ListJob
 	logs := make([]types.JobLog, 0, len(records))
 	for i := range records {
 		log := jobLogFromModel(&records[i])
-		if stepRecords, ok := stepsMap[log.JobLogID]; ok {
+		if stepRecords, ok := stepsMap[log.ID]; ok {
 			for j := range stepRecords {
 				log.Steps = append(log.Steps, jobLogStepFromModel(&stepRecords[j]))
 			}
@@ -372,7 +350,7 @@ func (s *Service) CreateJob(ctx context.Context, input types.CreateJobInput) (*t
 		return nil, err
 	}
 	if err := s.configureSchedule(*job); err != nil && s.logger != nil {
-		s.logger.Error("configure job schedule failed", "jobID", job.JobID, "error", err)
+		s.logger.Error("configure job schedule failed", "jobID", job.ID, "error", err)
 	}
 	return job, nil
 }
@@ -447,7 +425,7 @@ func (s *Service) UpdateJob(ctx context.Context, input types.UpdateJobInput) (*t
 		return nil, err
 	}
 	if err := s.configureSchedule(*job); err != nil && s.logger != nil {
-		s.logger.Error("configure job schedule failed", "jobID", job.JobID, "error", err)
+		s.logger.Error("configure job schedule failed", "jobID", job.ID, "error", err)
 	}
 	return job, nil
 }
@@ -509,7 +487,7 @@ func (s *Service) ChangeStatus(ctx context.Context, id int64, status, operator s
 	job, err := s.GetJob(ctx, id)
 	if err == nil && job != nil {
 		if err := s.configureSchedule(*job); err != nil && s.logger != nil {
-			s.logger.Error("configure job schedule failed", "jobID", job.JobID, "error", err)
+			s.logger.Error("configure job schedule failed", "jobID", job.ID, "error", err)
 		}
 	}
 	return nil
@@ -526,7 +504,7 @@ func (s *Service) TriggerJob(ctx context.Context, id int64, operator string) (in
 		return 0, err
 	}
 
-	if s.isJobRunning(ctx, job.JobID) && strings.TrimSpace(job.Concurrent) == "1" {
+	if s.isJobRunning(ctx, job.ID) && strings.TrimSpace(job.Concurrent) == "1" {
 		return 0, ErrJobRunningConflict
 	}
 
@@ -542,7 +520,7 @@ func (s *Service) TriggerJob(ctx context.Context, id int64, operator string) (in
 
 	// Enqueue task via Asynq
 	payload := jobasynq.JobExecutionPayload{
-		JobID:        job.JobID,
+		ID:           job.ID,
 		JobName:      job.JobName,
 		JobGroup:     job.JobGroup,
 		InvokeTarget: job.InvokeTarget,
@@ -558,7 +536,7 @@ func (s *Service) TriggerJob(ctx context.Context, id int64, operator string) (in
 			asynq.MaxRetry(0), // No retry for manual triggers
 		)
 		if err != nil {
-			s.logger.Error("enqueue job task failed", "jobID", job.JobID, "error", err)
+			s.logger.Error("enqueue job task failed", "jobID", job.ID, "error", err)
 			// Fall back to direct execution
 			s.dispatchJob(*job, meta, jobRunOptions{logID: logID})
 		}
@@ -573,6 +551,7 @@ func (s *Service) TriggerJob(ctx context.Context, id int64, operator string) (in
 }
 
 // Start starts the job scheduler
+
 func (s *Service) Start(ctx context.Context) error {
 	if s == nil || s.repo == nil {
 		return ErrServiceUnavailable
@@ -647,7 +626,7 @@ func (s *Service) handleJobExecution(ctx context.Context, task *asynq.Task) erro
 	}
 
 	job := types.Job{
-		JobID:        payload.JobID,
+		ID:           payload.ID,
 		JobName:      payload.JobName,
 		JobGroup:     payload.JobGroup,
 		InvokeTarget: payload.InvokeTarget,
@@ -680,7 +659,7 @@ func (s *Service) loadEnabledJobs(ctx context.Context) error {
 	for i := range records {
 		job := jobFromModel(&records[i])
 		if err := s.configureSchedule(job); err != nil && s.logger != nil {
-			s.logger.Error("schedule job failed", "jobID", job.JobID, "error", err)
+			s.logger.Error("schedule job failed", "jobID", job.ID, "error", err)
 		}
 	}
 	return nil
@@ -695,14 +674,14 @@ func (s *Service) configureSchedule(job types.Job) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.detachLocked(job.JobID)
+	s.detachLocked(job.ID)
 
 	entry := &jobScheduleEntry{job: job}
 
 	// Only schedule if job is enabled (status = "0")
 	if job.Status == "0" && s.asynqScheduler != nil {
 		payload := jobasynq.JobExecutionPayload{
-			JobID:        job.JobID,
+			ID:           job.ID,
 			JobName:      job.JobName,
 			JobGroup:     job.JobGroup,
 			InvokeTarget: job.InvokeTarget,
@@ -711,23 +690,24 @@ func (s *Service) configureSchedule(job types.Job) error {
 			Message:      "定时调度",
 		}
 
-		err := s.asynqScheduler.ScheduleJob(job.JobID, job.CronExpression, payload,
+		err := s.asynqScheduler.ScheduleJob(job.ID, job.CronExpression, payload,
 			asynq.Queue(jobasynq.QueueDefault),
 		)
 		if err != nil {
 			return err
 		}
 
-		if entryID, ok := s.asynqScheduler.GetEntryID(job.JobID); ok {
+		if entryID, ok := s.asynqScheduler.GetEntryID(job.ID); ok {
 			entry.entryID = entryID
 		}
 
 		if s.logger != nil {
-			s.logger.Info("job scheduled", "jobID", job.JobID, "spec", job.CronExpression)
+			s.logger.Info("job scheduled", "jobID", job.ID, "spec", job.CronExpression)
 		}
 	}
 
-	s.jobs[job.JobID] = entry
+	s.jobs[job.ID] = entry
+
 	return nil
 }
 
@@ -765,7 +745,7 @@ func (s *Service) tryAcquireLock(ctx context.Context, job types.Job) (func(conte
 		return nil, true, nil
 	}
 
-	key := fmt.Sprintf("jobs:lock:%d", job.JobID)
+	key := fmt.Sprintf("jobs:lock:%d", job.ID)
 	token := uuid.NewString()
 	ttl := s.resolveLockTTL(job)
 
